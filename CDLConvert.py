@@ -97,6 +97,24 @@ Functions
 # IMPORTS
 #===============================================================================
 
+from argparse import ArgumentParser
+
+#===============================================================================
+# GLOBALS
+#===============================================================================
+
+INPUT_FORMATS = [
+    'ale',
+    'cc',
+    'ccc',
+    'nk'
+]
+
+OUTPUT_FORMATS = [
+    'cc',
+    'nk'
+]
+
 #===============================================================================
 # CLASSES
 #===============================================================================
@@ -280,12 +298,57 @@ class ASC_CDL(object):
 # FUNCTIONS
 #===============================================================================
 
+def parseArgs():
+    """Uses argparse to parse command line arguments"""
+    parser = ArgumentParser()
+    parser.add_argument(
+        "input_file",
+        help="the file to be converted"
+    )
+    parser.add_argument(
+        "-i",
+        "--input",
+        help="specify the filetype to convert from. Use when CDLConvert "
+             "cannot determine the filetype automatically. Supported input"
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="specify the filetype to convert to. Defaults to a .cc XML."
+    )
+
+    args = parser.parse_args()
+
+    if args.input:
+        if args.input not in INPUT_FORMATS:
+            raise ValueError(
+                "The input format: {input} is not supported".format(
+                    input=args.input
+                )
+            )
+
+    if args.output:
+        if args.output not in OUTPUT_FORMATS:
+            raise ValueError(
+                "The output format: {output} is not supported".format(
+                    output=args.output
+                )
+            )
+
+    return args
+
 #===============================================================================
 # MAIN
 #===============================================================================
 
 def main():
-    pass
+    args = parseArgs()
+
+    print args.input_file
+    if args.input:
+        print args.input
+    if args.output:
+        print args.output
 
 if __name__ == '__main__':
     try:
