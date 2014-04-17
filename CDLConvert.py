@@ -104,15 +104,11 @@ from argparse import ArgumentParser
 #===============================================================================
 
 INPUT_FORMATS = [
-    'ale',
     'cc',
-    'ccc',
-    'nk'
 ]
 
 OUTPUT_FORMATS = [
     'cc',
-    'nk'
 ]
 
 #===============================================================================
@@ -309,12 +305,16 @@ def parseArgs():
         "-i",
         "--input",
         help="specify the filetype to convert from. Use when CDLConvert "
-             "cannot determine the filetype automatically. Supported input"
+             "cannot determine the filetype automatically. Supported input "
+             "formats are: "
+             "{inputs}".format(inputs=str(INPUT_FORMATS))
     )
     parser.add_argument(
         "-o",
         "--output",
-        help="specify the filetype to convert to. Defaults to a .cc XML."
+        help="specify the filetype to convert to. Defaults to a .cc XML. "
+             "Supported output formats are: "
+             "{outputs}".format(outputs=str(OUTPUT_FORMATS))
     )
 
     args = parser.parse_args()
