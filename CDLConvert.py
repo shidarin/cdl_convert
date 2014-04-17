@@ -488,6 +488,11 @@ def writeCC(cdl):
 def main():
     args = parseArgs()
 
+    cdls = parseALE(args.input_file)
+    for cdl in cdls:
+        cdl.determineDest(args.output)
+        writeCC(cdl)
+
 if __name__ == '__main__':
     try:
         main()
