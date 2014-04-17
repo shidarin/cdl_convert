@@ -171,6 +171,8 @@ class ASC_CDL(object):
         fileIn : (str)
             Filepath used to create this CDL.
 
+            Required attribute.
+
         fileOut : (str)
             Filepath this CDL will be written to.
 
@@ -216,11 +218,11 @@ class ASC_CDL(object):
 
     """
 
-    def __init__(self, id):
+    def __init__(self, id, file):
         """Inits an instance of an ASC CDL"""
 
         # Non-ASC attributes
-        self.fileIn = None
+        self.fileIn = file
         self.fileOut = None
 
         # The id is really the only required part of an ASC CDL.
@@ -403,9 +405,7 @@ def parseALE(file):
                 offset = literal_eval(sop[1])
                 power = literal_eval(sop[2])
 
-                cdl = ASC_CDL(id)
-
-                cdl.fileIn = file
+                cdl = ASC_CDL(id, file)
 
                 cdl.sat = sat
                 cdl.slope = slope
@@ -469,6 +469,61 @@ def parseArgs():
 
 #===============================================================================
 
+def parseSS(file):
+    """Parses a space separated .cdl file for ASC CDL information.
+
+    Args:
+        file : (str)
+            The filepath to the CDL
+
+    Returns:
+        [<ASC_CDL>]
+            A list with only the single CDL object retrieved from the SS CDL
+
+    Raises:
+        N/A
+
+    A space separated cdl file is an internal Rhythm & Hues format used by
+    the Rhythm & Hues for displaying shot level and sequence level within
+    their internally developed playback software.
+
+    The file is a simple file consisting of one line. That line has 10, space
+    separated elements that correspond to the ten ASC CDL elements in order of
+    operations.
+
+    SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat
+
+    """
+    # Although we only parse one cdl file, we still want to return a list
+    cdls = []
+
+    with open(file, 'rb') as f:
+        # We only need to read the first line
+        line = f.readline()
+        line = line.split()
+
+        # The filename without extension will become the id
+        filename = os.path.basename(file).split('.')[0]
+
+        slope = [line[0], line[1], line[2]]
+        offset = [line[3], line[4], line[5]]
+        power = [line[6], line[7], line[8]]
+
+        sat = line[9]
+
+        cdl = ASC_CDL(filename, file)
+
+        cdl.slope = slope
+        cdl.offset = offset
+        cdl.power = power
+        cdl.sat = sat
+
+        cdls.append(cdl)
+
+    return cdl
+
+#===============================================================================
+
 def writeCC(cdl):
     """Writes the ASC_CDL to a .cc file"""
 
@@ -488,6 +543,27 @@ def writeCC(cdl):
 
     with open(cdl.fileOut, 'wb') as f:
         f.write(xml)
+
+#===============================================================================
+
+def writeSS(cdl):
+    """Writes the ASC_CDL to a space separated .cdl file"""
+
+    ss = SS.format(
+        slopeR=cdl.slope[0],
+        slopeG=cdl.slope[1],
+        slopeB=cdl.slope[2],
+        offsetR=cdl.offset[0],
+        offsetG=cdl.offset[1],
+        offsetB=cdl.offset[2],
+        powerR=cdl.power[0],
+        powerG=cdl.power[1],
+        powerB=cdl.power[2],
+        sat=cdl.sat
+    )
+
+    with open(cdl.fileOut, 'wb') as f:
+        f.write(ss)
 
 #===============================================================================
 # MAIN
