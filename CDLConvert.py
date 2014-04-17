@@ -98,6 +98,8 @@ Functions
 #===============================================================================
 
 from argparse import ArgumentParser
+from ast import literal_eval
+import os
 
 #===============================================================================
 # GLOBALS
@@ -292,6 +294,90 @@ class ASC_CDL(object):
 
 #===============================================================================
 # FUNCTIONS
+#===============================================================================
+
+def parseALE(file):
+    """Parses an Avid Log Exchange (ALE) file for CDLs
+
+    Args:
+        file : (str)
+            The filepath to the ALE
+
+    Returns:
+        [<ASC_CDL>]
+            A list of CDL objects retrieved from the ALE
+
+    Raises:
+        N/A
+
+    An ALE file is traditionally gathered during a telecine transfer using
+    standard ASCII characters. Each line theoretically represents a single
+    clip/take/shot.
+
+    Each field of data is tab delineated. We'll be searching for the ASC_SOP,
+    ASC_SAT fields, alone with the standard Scan Filename fields.
+
+    The Data line indicates that all the following lines are comprised of
+    shot information.
+
+    """
+    # We'll use these variables to indicate what sections of the file we are in
+    column = False
+    data = False
+
+    # We'll use these variables to indicate column indexes
+    ASC_SAT_I = None
+    ASC_SOP_I = None
+    scan_filename = None
+
+    cdls = []
+
+    with open(file, 'rb') as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.startswith('Column'):
+                column = True
+                continue
+            elif line.startswith('Data'):
+                data = True
+                continue
+            elif column:
+                columns = line.split('\t')
+                ASC_SAT_I = columns.index('ASC_SAT')
+                ASC_SOP_I = columns.index('ASC_SOP')
+                scan_filename = columns.index('Scan Filename')
+                column = False
+            elif data:
+                # First check to see if we're already parsed our last data
+                if not line:
+                    break
+
+                cdlData = line.split('\t')
+
+                sat = cdlData[ASC_SAT_I]
+                sop = cdlData[ASC_SOP_I]
+                id = cdlData[scan_filename]
+
+                # Determine slope, offset and power from sop
+                # sop should look like:
+                # (1.4 1.9 1.7)(-0.1 -0.26 -0.20)(0.87 1.0 1.32)
+                sop = sop.replace(' ', ', ')
+                sop = sop.replace(')(', ')|(')
+                sop = sop.split('|')
+                slope = literal_eval(sop[0])
+                offset = literal_eval(sop[1])
+                power = literal_eval(sop[2])
+
+                cdl = ASC_CDL(id)
+                cdl.sat = sat
+                cdl.slope = slope
+                cdl.offset = offset
+                cdl.power = power
+
+                cdls.append(cdl)
+
+    return cdls
+
 #===============================================================================
 
 def parseArgs():
