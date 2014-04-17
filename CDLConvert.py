@@ -338,6 +338,8 @@ def parseArgs():
             )
         else:
             args.output = args.output.lower()
+    else:
+        args.output = 'cc'
 
     return args
 
@@ -347,12 +349,6 @@ def parseArgs():
 
 def main():
     args = parseArgs()
-
-    print args.input_file
-    if args.input:
-        print args.input
-    if args.output:
-        print args.output
 
 if __name__ == '__main__':
     try:
