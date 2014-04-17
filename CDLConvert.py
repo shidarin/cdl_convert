@@ -108,14 +108,15 @@ import os
 # GLOBALS
 #===============================================================================
 
-INPUT_FORMATS = [
-    'ale',
-]
+INPUT_FORMATS = {
+    'ale': parseALE,
+    'ss': parseSS,
+}
 
-OUTPUT_FORMATS = [
-    'cc',
-    'ss'
-]
+OUTPUT_FORMATS = {
+    'cc': writeCC,
+    'ss': writeSS,
+}
 
 # Because it's getting late and I'm too tired to dive into writing XML today
 CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
@@ -572,10 +573,20 @@ def writeSS(cdl):
 def main():
     args = parseArgs()
 
-    cdls = parseALE(args.input_file)
+    filepath = os.path.abspath(args.input_file)
+
+    if not args.input:
+        filetypeIn = os.path.basename(filepath).split('.')[-1]
+    else:
+        filetypeIn = args.input
+
+    filetypeOut = args.output
+
+    cdls = INPUT_FORMATS[filetypeIn](filepath)
+
     for cdl in cdls:
-        cdl.determineDest(args.output)
-        writeCC(cdl)
+        cdl.determineDest(filetypeOut)
+        OUTPUT_FORMATS[filetypeOut](cdl)
 
 if __name__ == '__main__':
     try:
