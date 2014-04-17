@@ -113,6 +113,21 @@ OUTPUT_FORMATS = [
     'cc',
 ]
 
+# Because it's getting late and I'm too tired to dive into writing XML today
+CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="{id}">
+    <SOPNode>
+        <Description></Description>
+        <Slope>{slopeR} {slopeG} {slopeB}</Slope>
+        <Offset>{offsetR} {offsetG} {offsetB}</Offset>
+        <Power>{powerR} {powerG} {powerB}</Power>
+    </SOPNode>
+    <SatNode>
+        <Saturation>{sat}</Saturation>
+    </SatNode>
+</ColorCorrection>
+"""
+
 #===============================================================================
 # CLASSES
 #===============================================================================
@@ -293,6 +308,10 @@ class ASC_CDL(object):
             self._sat = float(satValue)
 
 #===============================================================================
+# PRIVATE FUNCTIONS
+#===============================================================================
+
+#===============================================================================
 # FUNCTIONS
 #===============================================================================
 
@@ -428,6 +447,28 @@ def parseArgs():
         args.output = 'cc'
 
     return args
+
+#===============================================================================
+
+def writeCC(cdl):
+    """Writes the ASC_CDL to a .cc file"""
+
+    xml = CC_XML.format(
+        id=cdl.id,
+        slopeR=cdl.slope[0],
+        slopeG=cdl.slope[1],
+        slopeB=cdl.slope[2],
+        offsetR=cdl.offset[0],
+        offsetG=cdl.offset[1],
+        offsetB=cdl.offset[2],
+        powerR=cdl.power[0],
+        powerG=cdl.power[1],
+        powerB=cdl.power[2],
+        sat=cdl.sat
+    )
+
+    with open(cdl.fileOut, 'wb') as f:
+        f.write(xml)
 
 #===============================================================================
 # MAIN
