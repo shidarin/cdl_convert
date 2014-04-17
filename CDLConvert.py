@@ -8,7 +8,7 @@
 CDLConvert
 ==========
 
-Converts between common [ASC CDL](http://en.wikipedia.org/wiki/ASC_CDL)
+Converts between common ASC CDL (http://en.wikipedia.org/wiki/ASC_CDL)
 formats. The American Society of Cinematographers Color Decision List (ASC CDL,
 or CDL for short) is a schema to simplify the process of interchanging color
 data between various programs and facilities.
@@ -25,6 +25,7 @@ formats:
 Unofficial Formats:
 
 * OCIOCDLTransform, a Foundry Nuke node
+* Space Separated CDL, a Rhythm and Hues cdl format
 
 It is the purpose of CDLConvert to convert ASC CDL information between these
 basic formats to further facilitate the ease of exchange of color data within
@@ -39,12 +40,14 @@ Currently we support converting from:
 * ALE
 * CC
 * CCC
-* OCIOCDLTransform
+* OCIOCDLTransform (nk)
+* SS
 
 To:
 
 * CC
-* OCIOCDLTransform
+* OCIOCDLTransform (nk)
+* SS
 
 With support for both from and to expanding in the future.
 
@@ -111,6 +114,7 @@ INPUT_FORMATS = [
 
 OUTPUT_FORMATS = [
     'cc',
+    'ss'
 ]
 
 # Because it's getting late and I'm too tired to dive into writing XML today
@@ -126,6 +130,10 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
         <Saturation>{sat}</Saturation>
     </SatNode>
 </ColorCorrection>
+"""
+
+# Space Separated CDL, a Rhythm & Hues format
+SS = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
 """
 
 #===============================================================================
