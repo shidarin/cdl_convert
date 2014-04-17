@@ -217,9 +217,11 @@ class ASC_CDL(object):
     def offset(self, offsetRGB):
         # Offset must be a list with 3 values.
         try:
-            assert len(offsetRGB)
+            assert len(offsetRGB) == 3
         except AssertionError:
             raise ValueError("Offset must be set with all three RGB values")
+
+        self._offset = list(offsetRGB)
 
     @property
     def power(self):
@@ -271,6 +273,8 @@ class ASC_CDL(object):
             assert satValue >= 0.0
         except AssertionError:
             raise ValueError("Saturation must be a positive value")
+        else:
+            self._sat = float(satValue)
 
 #===============================================================================
 # FUNCTIONS
