@@ -48,6 +48,8 @@ in the future. Code is written for PEP 8 compliance, although at the time of
 this writing function & variable naming uses camelCasing. Docstrings follow
 Google code standards.
 
+Development uses Git Flow model.
+
 ## License
 
 Basic MIT License. If you use or modify the project I would love to hear from
