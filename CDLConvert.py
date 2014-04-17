@@ -8,7 +8,7 @@
 CDLConvert
 ==========
 
-Converts between common [ASC CDL](http://en.wikipedia.org/wiki/ASC_CDL)
+Converts between common ASC CDL (http://en.wikipedia.org/wiki/ASC_CDL)
 formats. The American Society of Cinematographers Color Decision List (ASC CDL,
 or CDL for short) is a schema to simplify the process of interchanging color
 data between various programs and facilities.
@@ -25,6 +25,7 @@ formats:
 Unofficial Formats:
 
 * OCIOCDLTransform, a Foundry Nuke node
+* Space Separated CDL, a Rhythm and Hues cdl format
 
 It is the purpose of CDLConvert to convert ASC CDL information between these
 basic formats to further facilitate the ease of exchange of color data within
@@ -39,12 +40,14 @@ Currently we support converting from:
 * ALE
 * CC
 * CCC
-* OCIOCDLTransform
+* OCIOCDLTransform (nk)
+* SS
 
 To:
 
 * CC
-* OCIOCDLTransform
+* OCIOCDLTransform (nk)
+* SS
 
 With support for both from and to expanding in the future.
 
@@ -105,13 +108,9 @@ import os
 # GLOBALS
 #===============================================================================
 
-INPUT_FORMATS = [
-    'ale',
-]
-
-OUTPUT_FORMATS = [
-    'cc',
-]
+# INPUT_FORMATS and OUTPUT_FORMATS are globals but located in the MAIN section
+# of the file, as they are dispatcher dictionaries that require the functions
+# to be parsed by python before the dictionary can be built.
 
 # Because it's getting late and I'm too tired to dive into writing XML today
 CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
@@ -126,6 +125,10 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
         <Saturation>{sat}</Saturation>
     </SatNode>
 </ColorCorrection>
+"""
+
+# Space Separated CDL, a Rhythm & Hues format
+SS = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
 """
 
 #===============================================================================
@@ -162,6 +165,8 @@ class ASC_CDL(object):
 
         fileIn : (str)
             Filepath used to create this CDL.
+
+            Required attribute.
 
         fileOut : (str)
             Filepath this CDL will be written to.
@@ -208,11 +213,11 @@ class ASC_CDL(object):
 
     """
 
-    def __init__(self, id):
+    def __init__(self, id, file):
         """Inits an instance of an ASC CDL"""
 
         # Non-ASC attributes
-        self.fileIn = None
+        self.fileIn = file
         self.fileOut = None
 
         # The id is really the only required part of an ASC CDL.
@@ -315,6 +320,11 @@ class ASC_CDL(object):
         """Determines the destination file and sets it on the cdl"""
 
         dir = os.path.dirname(self.fileIn)
+
+        # 'ss' files are really a .cdl extension
+        if output == 'ss':
+            output = 'cdl'
+
         filename = "{id}.{ext}".format(id=self.id, ext=output)
 
         self.fileOut = os.path.join(dir, filename)
@@ -395,9 +405,7 @@ def parseALE(file):
                 offset = literal_eval(sop[1])
                 power = literal_eval(sop[2])
 
-                cdl = ASC_CDL(id)
-
-                cdl.fileIn = file
+                cdl = ASC_CDL(id, file)
 
                 cdl.sat = sat
                 cdl.slope = slope
@@ -410,54 +418,58 @@ def parseALE(file):
 
 #===============================================================================
 
-def parseArgs():
-    """Uses argparse to parse command line arguments"""
-    parser = ArgumentParser()
-    parser.add_argument(
-        "input_file",
-        help="the file to be converted"
-    )
-    parser.add_argument(
-        "-i",
-        "--input",
-        help="specify the filetype to convert from. Use when CDLConvert "
-             "cannot determine the filetype automatically. Supported input "
-             "formats are: "
-             "{inputs}".format(inputs=str(INPUT_FORMATS))
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        help="specify the filetype to convert to. Defaults to a .cc XML. "
-             "Supported output formats are: "
-             "{outputs}".format(outputs=str(OUTPUT_FORMATS))
-    )
+def parseSS(file):
+    """Parses a space separated .cdl file for ASC CDL information.
 
-    args = parser.parse_args()
+    Args:
+        file : (str)
+            The filepath to the CDL
 
-    if args.input:
-        if args.input.lower() not in INPUT_FORMATS:
-            raise ValueError(
-                "The input format: {input} is not supported".format(
-                    input=args.input
-                )
-            )
-        else:
-            args.input = args.input.lower()
+    Returns:
+        [<ASC_CDL>]
+            A list with only the single CDL object retrieved from the SS CDL
 
-    if args.output:
-        if args.output.lower() not in OUTPUT_FORMATS:
-            raise ValueError(
-                "The output format: {output} is not supported".format(
-                    output=args.output
-                )
-            )
-        else:
-            args.output = args.output.lower()
-    else:
-        args.output = 'cc'
+    Raises:
+        N/A
 
-    return args
+    A space separated cdl file is an internal Rhythm & Hues format used by
+    the Rhythm & Hues for displaying shot level and sequence level within
+    their internally developed playback software.
+
+    The file is a simple file consisting of one line. That line has 10, space
+    separated elements that correspond to the ten ASC CDL elements in order of
+    operations.
+
+    SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat
+
+    """
+    # Although we only parse one cdl file, we still want to return a list
+    cdls = []
+
+    with open(file, 'rb') as f:
+        # We only need to read the first line
+        line = f.readline()
+        line = line.split()
+
+        # The filename without extension will become the id
+        filename = os.path.basename(file).split('.')[0]
+
+        slope = [line[0], line[1], line[2]]
+        offset = [line[3], line[4], line[5]]
+        power = [line[6], line[7], line[8]]
+
+        sat = line[9]
+
+        cdl = ASC_CDL(filename, file)
+
+        cdl.slope = slope
+        cdl.offset = offset
+        cdl.power = power
+        cdl.sat = sat
+
+        cdls.append(cdl)
+
+    return cdl
 
 #===============================================================================
 
@@ -482,16 +494,126 @@ def writeCC(cdl):
         f.write(xml)
 
 #===============================================================================
+
+def writeSS(cdl):
+    """Writes the ASC_CDL to a space separated .cdl file"""
+
+    ss = SS.format(
+        slopeR=cdl.slope[0],
+        slopeG=cdl.slope[1],
+        slopeB=cdl.slope[2],
+        offsetR=cdl.offset[0],
+        offsetG=cdl.offset[1],
+        offsetB=cdl.offset[2],
+        powerR=cdl.power[0],
+        powerG=cdl.power[1],
+        powerB=cdl.power[2],
+        sat=cdl.sat
+    )
+
+    with open(cdl.fileOut, 'wb') as f:
+        f.write(ss)
+
+#===============================================================================
 # MAIN
+#===============================================================================
+
+# These globals need to be after the parse/write functions but before the
+# parseArgs.
+
+INPUT_FORMATS = {
+    'ale': parseALE,
+    'ss': parseSS,
+}
+
+OUTPUT_FORMATS = {
+    'cc': writeCC,
+    'ss': writeSS,
+}
+
+#===============================================================================
+
+def parseArgs():
+    """Uses argparse to parse command line arguments"""
+    parser = ArgumentParser()
+    parser.add_argument(
+        "input_file",
+        help="the file to be converted"
+    )
+    parser.add_argument(
+        "-i",
+        "--input",
+        help="specify the filetype to convert from. Use when CDLConvert "
+             "cannot determine the filetype automatically. Supported input "
+             "formats are: "
+             "{inputs}".format(inputs=str(INPUT_FORMATS))
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="specify the filetype to convert to, comma separated lists are "
+             "accepted. Defaults to a .cc XML. Supported output formats are: "
+             "{outputs}".format(outputs=str(OUTPUT_FORMATS))
+    )
+
+    args = parser.parse_args()
+
+    if args.input:
+        if args.input.lower() not in INPUT_FORMATS:
+            raise ValueError(
+                "The input format: {input} is not supported".format(
+                    input=args.input
+                )
+            )
+        else:
+            args.input = args.input.lower()
+
+    if args.output:
+        # This might be a string separated list of output types.
+        # We'll split it, check each against the supported types, convert
+        # them to lowercase if not already, and place the resulting list back
+        # into args.output
+        #
+        # TODO: Define and add a new argparse type as described in:
+        # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
+        outputTypes = args.output.split(',')
+        for i in xrange(len(outputTypes)):
+            if outputTypes[i].lower() not in OUTPUT_FORMATS:
+                raise ValueError(
+                    "The output format: {output} is not supported".format(
+                        output=outputTypes[i]
+                    )
+                )
+            else:
+                outputTypes[i] = outputTypes[i].lower()
+        args.output = outputTypes
+    else:
+        args.output = ['cc', ]
+
+    return args
+
 #===============================================================================
 
 def main():
     args = parseArgs()
 
-    cdls = parseALE(args.input_file)
+    filepath = os.path.abspath(args.input_file)
+
+    if not args.input:
+        filetypeIn = os.path.basename(filepath).split('.')[-1]
+    else:
+        filetypeIn = args.input
+
+    cdls = INPUT_FORMATS[filetypeIn](filepath)
+
     for cdl in cdls:
-        cdl.determineDest(args.output)
-        writeCC(cdl)
+        for ext in args.output:
+            cdl.determineDest(ext)
+            print "Writing cdl {id} to {path}".format(
+                id=cdl.id,
+                path=cdl.fileOut
+            )
+            OUTPUT_FORMATS[ext](cdl)
 
 if __name__ == '__main__':
     try:
