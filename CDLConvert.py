@@ -97,6 +97,20 @@ Functions
 # IMPORTS
 #===============================================================================
 
+from argparse import ArgumentParser
+
+#===============================================================================
+# GLOBALS
+#===============================================================================
+
+INPUT_FORMATS = [
+    'cc',
+]
+
+OUTPUT_FORMATS = [
+    'cc',
+]
+
 #===============================================================================
 # CLASSES
 #===============================================================================
@@ -280,12 +294,61 @@ class ASC_CDL(object):
 # FUNCTIONS
 #===============================================================================
 
+def parseArgs():
+    """Uses argparse to parse command line arguments"""
+    parser = ArgumentParser()
+    parser.add_argument(
+        "input_file",
+        help="the file to be converted"
+    )
+    parser.add_argument(
+        "-i",
+        "--input",
+        help="specify the filetype to convert from. Use when CDLConvert "
+             "cannot determine the filetype automatically. Supported input "
+             "formats are: "
+             "{inputs}".format(inputs=str(INPUT_FORMATS))
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="specify the filetype to convert to. Defaults to a .cc XML. "
+             "Supported output formats are: "
+             "{outputs}".format(outputs=str(OUTPUT_FORMATS))
+    )
+
+    args = parser.parse_args()
+
+    if args.input:
+        if args.input.lower() not in INPUT_FORMATS:
+            raise ValueError(
+                "The input format: {input} is not supported".format(
+                    input=args.input
+                )
+            )
+        else:
+            args.input = args.input.lower()
+
+    if args.output:
+        if args.output.lower() not in OUTPUT_FORMATS:
+            raise ValueError(
+                "The output format: {output} is not supported".format(
+                    output=args.output
+                )
+            )
+        else:
+            args.output = args.output.lower()
+    else:
+        args.output = 'cc'
+
+    return args
+
 #===============================================================================
 # MAIN
 #===============================================================================
 
 def main():
-    pass
+    args = parseArgs()
 
 if __name__ == '__main__':
     try:
