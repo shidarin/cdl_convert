@@ -108,15 +108,9 @@ import os
 # GLOBALS
 #===============================================================================
 
-INPUT_FORMATS = {
-    'ale': parseALE,
-    'ss': parseSS,
-}
-
-OUTPUT_FORMATS = {
-    'cc': writeCC,
-    'ss': writeSS,
-}
+# INPUT_FORMATS and OUTPUT_FORMATS are globals but located in the MAIN section
+# of the file, as they are dispatcher dictionaries that require the functions
+# to be parsed by python before the dictionary can be built.
 
 # Because it's getting late and I'm too tired to dive into writing XML today
 CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
@@ -326,6 +320,11 @@ class ASC_CDL(object):
         """Determines the destination file and sets it on the cdl"""
 
         dir = os.path.dirname(self.fileIn)
+
+        # 'ss' files are really a .cdl extension
+        if output == 'ss':
+            output = 'cdl'
+
         filename = "{id}.{ext}".format(id=self.id, ext=output)
 
         self.fileOut = os.path.join(dir, filename)
@@ -416,57 +415,6 @@ def parseALE(file):
                 cdls.append(cdl)
 
     return cdls
-
-#===============================================================================
-
-def parseArgs():
-    """Uses argparse to parse command line arguments"""
-    parser = ArgumentParser()
-    parser.add_argument(
-        "input_file",
-        help="the file to be converted"
-    )
-    parser.add_argument(
-        "-i",
-        "--input",
-        help="specify the filetype to convert from. Use when CDLConvert "
-             "cannot determine the filetype automatically. Supported input "
-             "formats are: "
-             "{inputs}".format(inputs=str(INPUT_FORMATS))
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        help="specify the filetype to convert to. Defaults to a .cc XML. "
-             "Supported output formats are: "
-             "{outputs}".format(outputs=str(OUTPUT_FORMATS))
-    )
-
-    args = parser.parse_args()
-
-    if args.input:
-        if args.input.lower() not in INPUT_FORMATS:
-            raise ValueError(
-                "The input format: {input} is not supported".format(
-                    input=args.input
-                )
-            )
-        else:
-            args.input = args.input.lower()
-
-    if args.output:
-        if args.output.lower() not in OUTPUT_FORMATS:
-            raise ValueError(
-                "The output format: {output} is not supported".format(
-                    output=args.output
-                )
-            )
-        else:
-            args.output = args.output.lower()
-    else:
-        args.output = 'cc'
-
-    return args
 
 #===============================================================================
 
@@ -570,6 +518,82 @@ def writeSS(cdl):
 # MAIN
 #===============================================================================
 
+# These globals need to be after the parse/write functions but before the
+# parseArgs.
+
+INPUT_FORMATS = {
+    'ale': parseALE,
+    'ss': parseSS,
+}
+
+OUTPUT_FORMATS = {
+    'cc': writeCC,
+    'ss': writeSS,
+}
+
+#===============================================================================
+
+def parseArgs():
+    """Uses argparse to parse command line arguments"""
+    parser = ArgumentParser()
+    parser.add_argument(
+        "input_file",
+        help="the file to be converted"
+    )
+    parser.add_argument(
+        "-i",
+        "--input",
+        help="specify the filetype to convert from. Use when CDLConvert "
+             "cannot determine the filetype automatically. Supported input "
+             "formats are: "
+             "{inputs}".format(inputs=str(INPUT_FORMATS))
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="specify the filetype to convert to, comma separated lists are "
+             "accepted. Defaults to a .cc XML. Supported output formats are: "
+             "{outputs}".format(outputs=str(OUTPUT_FORMATS))
+    )
+
+    args = parser.parse_args()
+
+    if args.input:
+        if args.input.lower() not in INPUT_FORMATS:
+            raise ValueError(
+                "The input format: {input} is not supported".format(
+                    input=args.input
+                )
+            )
+        else:
+            args.input = args.input.lower()
+
+    if args.output:
+        # This might be a string separated list of output types.
+        # We'll split it, check each against the supported types, convert
+        # them to lowercase if not already, and place the resulting list back
+        # into args.output
+        #
+        # TODO: Define and add a new argparse type as described in:
+        # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
+        outputTypes = args.output.split(',')
+        for i in xrange(len(outputTypes)):
+            if outputTypes[i].lower() not in OUTPUT_FORMATS:
+                raise ValueError(
+                    "The output format: {output} is not supported".format(
+                        output=outputTypes[i]
+                    )
+                )
+            else:
+                outputTypes[i] = outputTypes[i].lower()
+        args.output = outputTypes
+    else:
+        args.output = ['cc', ]
+
+    return args
+
+#===============================================================================
+
 def main():
     args = parseArgs()
 
@@ -580,13 +604,16 @@ def main():
     else:
         filetypeIn = args.input
 
-    filetypeOut = args.output
-
     cdls = INPUT_FORMATS[filetypeIn](filepath)
 
     for cdl in cdls:
-        cdl.determineDest(filetypeOut)
-        OUTPUT_FORMATS[filetypeOut](cdl)
+        for ext in args.output:
+            cdl.determineDest(ext)
+            print "Writing cdl {id} to {path}".format(
+                id=cdl.id,
+                path=cdl.fileOut
+            )
+            OUTPUT_FORMATS[ext](cdl)
 
 if __name__ == '__main__':
     try:
