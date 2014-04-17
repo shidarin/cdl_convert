@@ -104,7 +104,7 @@ from argparse import ArgumentParser
 #===============================================================================
 
 INPUT_FORMATS = [
-    'cc',
+    'ale',
 ]
 
 OUTPUT_FORMATS = [
