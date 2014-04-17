@@ -307,9 +307,17 @@ class ASC_CDL(object):
         else:
             self._sat = float(satValue)
 
-#===============================================================================
-# PRIVATE FUNCTIONS
-#===============================================================================
+    #===========================================================================
+    # METHODS
+    #===========================================================================
+
+    def determineDest(self, output):
+        """Determines the destination file and sets it on the cdl"""
+
+        dir = os.path.dirname(self.fileIn)
+        filename = "{id}.{ext}".format(id=self.id, ext=output)
+
+        self.fileOut = os.path.join(dir, filename)
 
 #===============================================================================
 # FUNCTIONS
@@ -388,6 +396,9 @@ def parseALE(file):
                 power = literal_eval(sop[2])
 
                 cdl = ASC_CDL(id)
+
+                cdl.fileIn = file
+
                 cdl.sat = sat
                 cdl.slope = slope
                 cdl.offset = offset
