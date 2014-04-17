@@ -320,20 +320,24 @@ def parseArgs():
     args = parser.parse_args()
 
     if args.input:
-        if args.input not in INPUT_FORMATS:
+        if args.input.lower() not in INPUT_FORMATS:
             raise ValueError(
                 "The input format: {input} is not supported".format(
                     input=args.input
                 )
             )
+        else:
+            args.input = args.input.lower()
 
     if args.output:
-        if args.output not in OUTPUT_FORMATS:
+        if args.output.lower() not in OUTPUT_FORMATS:
             raise ValueError(
                 "The output format: {output} is not supported".format(
                     output=args.output
                 )
             )
+        else:
+            args.output = args.output.lower()
 
     return args
 
