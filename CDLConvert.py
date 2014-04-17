@@ -330,7 +330,9 @@ def parseALE(file):
     ASC_SOP_I = None
     scan_filename = None
 
-    with open(file, rb) as f:
+    cdls = []
+
+    with open(file, 'rb') as f:
         lines = f.readlines()
         for line in lines:
             if line.startswith('Column'):
@@ -346,7 +348,12 @@ def parseALE(file):
                 scan_filename = columns.index('Scan Filename')
                 column = False
             elif data:
+                # First check to see if we're already parsed our last data
+                if not line:
+                    break
+
                 cdlData = line.split('\t')
+
                 sat = cdlData[ASC_SAT_I]
                 sop = cdlData[ASC_SOP_I]
                 id = cdlData[scan_filename]
@@ -361,11 +368,15 @@ def parseALE(file):
                 offset = literal_eval(sop[1])
                 power = literal_eval(sop[2])
 
-                print id
-                print sat
-                print slope
-                print offset
-                print power
+                cdl = ASC_CDL(id)
+                cdl.sat = sat
+                cdl.slope = slope
+                cdl.offset = offset
+                cdl.power = power
+
+                cdls.append(cdl)
+
+    return cdls
 
 #===============================================================================
 
