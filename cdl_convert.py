@@ -338,7 +338,7 @@ def parseALE(file):
 
     Args:
         file : (str)
-            The filepath to the ALE
+            The filepath to the ALE EDL
 
     Returns:
         [<AscCdl>]
@@ -415,6 +415,171 @@ def parseALE(file):
                 cdls.append(cdl)
 
     return cdls
+
+#===============================================================================
+
+def parseFLEx(file):
+    """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
+
+    Args:
+        file : (str)
+            The filepath to the FLEx EDL
+
+    Return:
+        [<AscCdl>]
+            A list of CDL objects retrieved from the FLEx
+
+    Raises:
+        N/A
+
+    The DaVinci FLEx EDL is an odd duck, it's information conveyed via an
+    extremely strict line & character addressing system.
+
+    Each line must begin with a line number header that indicated what type
+    of information the line contains, with line number 100 indicating the
+    start of a new shot/take. Lines 000-099 contain session information.
+
+    Within each line, important information is constricted to a certain
+    range of characters, rather than space or comma separated like in an
+    ALE EDL.
+
+    Some line numbers we care about, and the character indexes:
+
+        010 Project Title
+            10-79 Title
+        100 Indicates the start of a new 'record' (shot/take)
+        110 Slate Information
+            10-17 Scene
+            24-31 Take ID
+            42-49 Camera Reel ID
+        701 ASC SOP (This entry can be safely space separated)
+        702 ASC SAT (This entry can be safely space separated)
+
+    We'll try and default to using the Slate information to derive the
+    resultant filename, however that information is optional. If no
+    slate information is found, we'll iterate up at the end of the title.
+    If no title information is found, we'll have to iterate up on the
+    actual input filename, which is far from ideal.
+
+    """
+
+    cdls = []
+
+    with open(file, 'rb') as f:
+        lines = f.readlines()
+
+        filename = pass
+
+        title = None
+        scene = None
+        take = None
+        reel = None
+
+        slope = []
+        offset = []
+        power = []
+        sat = None
+
+        for line in lines:
+            if line.startswith('100'):
+                # This is the start of a take/shot
+                # We need to dump the previous records to a CDL
+                # Then clear the records.
+                if scene:
+                    id = scene
+                    if take:
+                        id += '_' + take
+                        if reel:
+                            id += '_' + reel
+                else:
+                    if title:
+                        id = title
+                    else:
+                        id = filename + str(len(cdls) + 1)
+
+                # If we already have slope/offset/power:
+                if slope and offset and power:
+                    # Make a cdl, add it to the cdls list
+                    cdl = AscCdl(id, file)
+
+                    cdl.slope = slope
+                    cdl.offset = offset
+                    cdl.power = power
+
+                    if sat:
+                        cdl.sat = sat
+                    if title:
+                        cdl.description = title
+
+                    cdls.append(cdl)
+
+                scene = None
+                take = None
+                reel = None
+
+                slope = []
+                offset = []
+                power = []
+                sat = None
+
+            elif line.startswith('010'):
+                # Title Line
+                # 10-79 Title
+                title = line[10:80].strip()
+            elif line.startswith('110'):
+                # Slate Information
+                # 10-17 Scene
+                # 24-31 Take ID
+                # 42-49 Camera Reel ID
+                scene = line[10:18].strip()
+                take = line[24:32].strip()
+                reel = line[42:50].strip()
+            elif line.startswith('701'):
+                # ASC SOP
+                # 701 ASC_SOP(# # #)(-# -# -#)(# # #)
+                slope = line[12:32].split()
+                offset = line[34:57].split()
+                power = line[59:79].split()
+                for i in xrange(3):
+                    slope[i] = float(slope[i])
+                    offset[i] = float(offset[i])
+                    power[i] = float(power[i])
+            elif line.startswith('702'):
+                # ASC SAT
+                # 702 ASC_SAT ######
+                sat = float(line.split()[-1])
+
+    # We need to dump the last record to the cdl list
+    if scene:
+        id = scene
+        if take:
+            id += '_' + take
+            if reel:
+                id += '_' + reel
+    else:
+        if title:
+            id = title
+        else:
+            id = filename + str(len(cdls) + 1)
+
+    # If we have slope/offset/power:
+    if slope and offset and power:
+        # Make a cdl, add it to the cdls list
+        cdl = AscCdl(id, file)
+
+        cdl.slope = slope
+        cdl.offset = offset
+        cdl.power = power
+
+        if sat:
+            cdl.sat = sat
+        if title:
+            cdl.description = title
+
+        cdls.append(cdl)
+
+    return cdls
+
 
 #===============================================================================
 
@@ -523,6 +688,7 @@ def writeSS(cdl):
 
 INPUT_FORMATS = {
     'ale': parseALE,
+    'flex': parseFLEx,
     'ss': parseSS,
 }
 
@@ -546,14 +712,14 @@ def parseArgs():
         help="specify the filetype to convert from. Use when CDLConvert "
              "cannot determine the filetype automatically. Supported input "
              "formats are: "
-             "{inputs}".format(inputs=str(INPUT_FORMATS))
+             "{inputs}".format(inputs=str(INPUT_FORMATS.keys()))
     )
     parser.add_argument(
         "-o",
         "--output",
         help="specify the filetype to convert to, comma separated lists are "
              "accepted. Defaults to a .cc XML. Supported output formats are: "
-             "{outputs}".format(outputs=str(OUTPUT_FORMATS))
+             "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))
     )
 
     args = parser.parse_args()
