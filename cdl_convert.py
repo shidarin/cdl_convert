@@ -5,7 +5,7 @@
 
 """
 
-CDLConvert
+CDL Convert
 ==========
 
 Converts between common ASC CDL (http://en.wikipedia.org/wiki/AscCdl)
