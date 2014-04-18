@@ -8,7 +8,7 @@
 CDLConvert
 ==========
 
-Converts between common ASC CDL (http://en.wikipedia.org/wiki/ASC_CDL)
+Converts between common ASC CDL (http://en.wikipedia.org/wiki/AscCdl)
 formats. The American Society of Cinematographers Color Decision List (ASC CDL,
 or CDL for short) is a schema to simplify the process of interchanging color
 data between various programs and facilities.
@@ -87,7 +87,7 @@ SOFTWARE.
 Classes
 -------
 
-ASC_CDL
+AscCdl
     The base class for the ASC CDL, containing attributes for all ten of the
     color conversion numbers needed to fully describe an ASC CDL.
 
@@ -135,7 +135,7 @@ SS = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {power
 # CLASSES
 #===============================================================================
 
-class ASC_CDL(object):
+class AscCdl(object):
     """The basic class for the ASC CDL
 
     Description
@@ -341,7 +341,7 @@ def parseALE(file):
             The filepath to the ALE
 
     Returns:
-        [<ASC_CDL>]
+        [<AscCdl>]
             A list of CDL objects retrieved from the ALE
 
     Raises:
@@ -405,7 +405,7 @@ def parseALE(file):
                 offset = literal_eval(sop[1])
                 power = literal_eval(sop[2])
 
-                cdl = ASC_CDL(id, file)
+                cdl = AscCdl(id, file)
 
                 cdl.sat = sat
                 cdl.slope = slope
@@ -426,7 +426,7 @@ def parseSS(file):
             The filepath to the CDL
 
     Returns:
-        [<ASC_CDL>]
+        [<AscCdl>]
             A list with only the single CDL object retrieved from the SS CDL
 
     Raises:
@@ -460,7 +460,7 @@ def parseSS(file):
 
         sat = line[9]
 
-        cdl = ASC_CDL(filename, file)
+        cdl = AscCdl(filename, file)
 
         cdl.slope = slope
         cdl.offset = offset
@@ -474,7 +474,7 @@ def parseSS(file):
 #===============================================================================
 
 def writeCC(cdl):
-    """Writes the ASC_CDL to a .cc file"""
+    """Writes the AscCdl to a .cc file"""
 
     xml = CC_XML.format(
         id=cdl.id,
@@ -496,7 +496,7 @@ def writeCC(cdl):
 #===============================================================================
 
 def writeSS(cdl):
-    """Writes the ASC_CDL to a space separated .cdl file"""
+    """Writes the AscCdl to a space separated .cdl file"""
 
     ss = SS.format(
         slopeR=cdl.slope[0],
