@@ -688,6 +688,7 @@ def writeSS(cdl):
 
 INPUT_FORMATS = {
     'ale': parseALE,
+    'flex': parseFLEx,
     'ss': parseSS,
 }
 
@@ -711,14 +712,14 @@ def parseArgs():
         help="specify the filetype to convert from. Use when CDLConvert "
              "cannot determine the filetype automatically. Supported input "
              "formats are: "
-             "{inputs}".format(inputs=str(INPUT_FORMATS))
+             "{inputs}".format(inputs=str(INPUT_FORMATS.keys()))
     )
     parser.add_argument(
         "-o",
         "--output",
         help="specify the filetype to convert to, comma separated lists are "
              "accepted. Defaults to a .cc XML. Supported output formats are: "
-             "{outputs}".format(outputs=str(OUTPUT_FORMATS))
+             "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))
     )
 
     args = parser.parse_args()
