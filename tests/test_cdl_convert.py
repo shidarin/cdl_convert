@@ -392,8 +392,100 @@ class TestAscCdl(unittest.TestCase):
         )
 
 #===============================================================================
+
+class TestParseCDLBasic(unittest.TestCase):
+    """Tests parsing a space separated cdl, a Rhythm & Hues format"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        self.slope = [1.329, 0.9833, 1.003]
+        self.offset = [0.011, 0.013, 0.11]
+        self.power = [.993, .998, 1.0113]
+        self.sat = 1.01
+
+        self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
+
+        # Build our config
+        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+            f.write(self.file)
+            self.filename = f.name
+            # Calling readlines on the temp file. Without this open fails to
+            # read it. I have no idea why.
+            f.readlines()
+            self.cdl = cdl_convert.parseCDL(f.name)[0]
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testId(self):
+        """Tests that id was set to the filename without extension"""
+        id = os.path.basename(self.filename).split('.')[0]
+        self.assertEqual(
+            id,
+            self.cdl.id
+        )
+
+    #===========================================================================
+
+    def testSlope(self):
+        """Tests that slope was set correctly"""
+        self.assertEqual(
+            self.slope,
+            self.cdl.slope
+        )
+
+    #===========================================================================
+
+    def testOffset(self):
+        """Tests that offset was set correctly"""
+        self.assertEqual(
+            self.offset,
+            self.cdl.offset
+        )
+
+    #===========================================================================
+
+    def testPower(self):
+        """Tests that power was set correctly"""
+        self.assertEqual(
+            self.power,
+            self.cdl.power
+        )
+
+    #===========================================================================
+
+    def testSat(self):
+        """Tests that sat was set correctly"""
+        self.assertEqual(
+            self.sat,
+            self.cdl.sat
+        )
+
+#===============================================================================
 # FUNCTIONS
 #===============================================================================
+
+def buildCDL(slope, offset, power, sat):
+    """Populates a CDL string and returns it"""
+
+    ssCdl = cdl_convert.CDL.format(
+        slopeR=slope[0],
+        slopeG=slope[1],
+        slopeB=slope[2],
+        offsetR=offset[0],
+        offsetG=offset[1],
+        offsetB=offset[2],
+        powerR=power[0],
+        powerG=power[1],
+        powerB=power[2],
+        sat=sat
+    )
+
+    return ssCdl
 
 if __name__ == '__main__':
     unittest.main()
