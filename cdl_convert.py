@@ -5,10 +5,10 @@
 
 """
 
-CDLConvert
+CDL Convert
 ==========
 
-Converts between common ASC CDL (http://en.wikipedia.org/wiki/ASC_CDL)
+Converts between common ASC CDL (http://en.wikipedia.org/wiki/AscCdl)
 formats. The American Society of Cinematographers Color Decision List (ASC CDL,
 or CDL for short) is a schema to simplify the process of interchanging color
 data between various programs and facilities.
@@ -41,13 +41,13 @@ Currently we support converting from:
 * CC
 * CCC
 * OCIOCDLTransform (nk)
-* SS
+* CDL
 
 To:
 
 * CC
 * OCIOCDLTransform (nk)
-* SS
+* CDL
 
 With support for both from and to expanding in the future.
 
@@ -87,7 +87,7 @@ SOFTWARE.
 Classes
 -------
 
-ASC_CDL
+AscCdl
     The base class for the ASC CDL, containing attributes for all ten of the
     color conversion numbers needed to fully describe an ASC CDL.
 
@@ -128,14 +128,14 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 # Space Separated CDL, a Rhythm & Hues format
-SS = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
+CDL = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
 """
 
 #===============================================================================
 # CLASSES
 #===============================================================================
 
-class ASC_CDL(object):
+class AscCdl(object):
     """The basic class for the ASC CDL
 
     Description
@@ -217,8 +217,8 @@ class ASC_CDL(object):
         """Inits an instance of an ASC CDL"""
 
         # Non-ASC attributes
-        self.fileIn = file
-        self.fileOut = None
+        self._fileIn = os.path.abspath(file)
+        self._fileOut = None
 
         # The id is really the only required part of an ASC CDL.
         # Each ID should be unique
@@ -242,6 +242,14 @@ class ASC_CDL(object):
     # Properties ===============================================================
 
     @property
+    def fileIn(self):
+        return self._fileIn
+
+    @property
+    def fileOut(self):
+        return self._fileOut
+
+    @property
     def id(self):
         return self._id
 
@@ -256,6 +264,16 @@ class ASC_CDL(object):
             assert len(offsetRGB) == 3
         except AssertionError:
             raise ValueError("Offset must be set with all three RGB values")
+        try:
+            assert type(offsetRGB) in [list, tuple]
+        except AssertionError:
+            raise TypeError("Offset must be a list or tuple")
+
+        for i in offsetRGB:
+            try:
+                assert type(i) in [float, int]
+            except AssertionError:
+                raise TypeError("Offset values must be ints or floats")
 
         self._offset = list(offsetRGB)
 
@@ -270,12 +288,20 @@ class ASC_CDL(object):
             assert len(powerRGB) == 3
         except AssertionError:
             raise ValueError("Power must be set with all three RGB values")
+        try:
+            assert type(powerRGB) in [list, tuple]
+        except AssertionError:
+            raise TypeError("Power must be a list or tuple")
 
         for i in powerRGB:
             try:
                 assert i >= 0.0
             except AssertionError:
                 raise ValueError("Power values must not be negative")
+            try:
+                assert type(i) in [float, int]
+            except AssertionError:
+                raise TypeError("Power values must be ints or floats")
 
         self._power = list(powerRGB)
 
@@ -290,12 +316,20 @@ class ASC_CDL(object):
             assert len(slopeRGB) == 3
         except AssertionError:
             raise ValueError("Slope must be set with all three RGB values")
+        try:
+            assert type(slopeRGB) in [list, tuple]
+        except AssertionError:
+            raise TypeError("Slope must be a list or tuple")
 
         for i in slopeRGB:
             try:
                 assert i >= 0.0
             except AssertionError:
                 raise ValueError("Slope values must not be negative")
+            try:
+                assert type(i) in [float, int]
+            except AssertionError:
+                raise TypeError("Slope values must be ints or floats")
 
         self._slope = list(slopeRGB)
 
@@ -309,8 +343,13 @@ class ASC_CDL(object):
             assert satValue >= 0.0
         except AssertionError:
             raise ValueError("Saturation must be a positive value")
-        else:
-            self._sat = float(satValue)
+
+        try:
+            assert type(satValue) in [float, int]
+        except AssertionError:
+            raise TypeError("Saturation must be a float or int")
+
+        self._sat = float(satValue)
 
     #===========================================================================
     # METHODS
@@ -321,13 +360,9 @@ class ASC_CDL(object):
 
         dir = os.path.dirname(self.fileIn)
 
-        # 'ss' files are really a .cdl extension
-        if output == 'ss':
-            output = 'cdl'
-
         filename = "{id}.{ext}".format(id=self.id, ext=output)
 
-        self.fileOut = os.path.join(dir, filename)
+        self._fileOut = os.path.join(dir, filename)
 
 #===============================================================================
 # FUNCTIONS
@@ -338,10 +373,10 @@ def parseALE(file):
 
     Args:
         file : (str)
-            The filepath to the ALE
+            The filepath to the ALE EDL
 
     Returns:
-        [<ASC_CDL>]
+        [<AscCdl>]
             A list of CDL objects retrieved from the ALE
 
     Raises:
@@ -385,10 +420,6 @@ def parseALE(file):
                 scan_filename = columns.index('Scan Filename')
                 column = False
             elif data:
-                # First check to see if we're already parsed our last data
-                if not line:
-                    break
-
                 cdlData = line.split('\t')
 
                 sat = cdlData[ASC_SAT_I]
@@ -401,13 +432,17 @@ def parseALE(file):
                 sop = sop.replace(' ', ', ')
                 sop = sop.replace(')(', ')|(')
                 sop = sop.split('|')
-                slope = literal_eval(sop[0])
-                offset = literal_eval(sop[1])
-                power = literal_eval(sop[2])
+                slope = list(literal_eval(sop[0]))
+                offset = list(literal_eval(sop[1]))
+                power = list(literal_eval(sop[2]))
+                for i in xrange(3):
+                    slope[i] = float(slope[i])
+                    offset[i] = float(offset[i])
+                    power[i] = float(power[i])
 
-                cdl = ASC_CDL(id, file)
+                cdl = AscCdl(id, file)
 
-                cdl.sat = sat
+                cdl.sat = float(sat)
                 cdl.slope = slope
                 cdl.offset = offset
                 cdl.power = power
@@ -418,7 +453,172 @@ def parseALE(file):
 
 #===============================================================================
 
-def parseSS(file):
+def parseFLEx(file):
+    """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
+
+    Args:
+        file : (str)
+            The filepath to the FLEx EDL
+
+    Return:
+        [<AscCdl>]
+            A list of CDL objects retrieved from the FLEx
+
+    Raises:
+        N/A
+
+    The DaVinci FLEx EDL is an odd duck, it's information conveyed via an
+    extremely strict line & character addressing system.
+
+    Each line must begin with a line number header that indicated what type
+    of information the line contains, with line number 100 indicating the
+    start of a new shot/take. Lines 000-099 contain session information.
+
+    Within each line, important information is constricted to a certain
+    range of characters, rather than space or comma separated like in an
+    ALE EDL.
+
+    Some line numbers we care about, and the character indexes:
+
+        010 Project Title
+            10-79 Title
+        100 Indicates the start of a new 'record' (shot/take)
+        110 Slate Information
+            10-17 Scene
+            24-31 Take ID
+            42-49 Camera Reel ID
+        701 ASC SOP (This entry can be safely space separated)
+        702 ASC SAT (This entry can be safely space separated)
+
+    We'll try and default to using the Slate information to derive the
+    resultant filename, however that information is optional. If no
+    slate information is found, we'll iterate up at the end of the title.
+    If no title information is found, we'll have to iterate up on the
+    actual input filename, which is far from ideal.
+
+    """
+
+    cdls = []
+
+    with open(file, 'rb') as f:
+        lines = f.readlines()
+
+        filename = os.path.basename(file).split('.')[0]
+
+        title = None
+        scene = None
+        take = None
+        reel = None
+
+        slope = []
+        offset = []
+        power = []
+        sat = None
+
+        for line in lines:
+            if line.startswith('100'):
+                # This is the start of a take/shot
+                # We need to dump the previous records to a CDL
+                # Then clear the records.
+                if scene:
+                    id = scene
+                    if take:
+                        id += '_' + take
+                        if reel:
+                            id += '_' + reel
+                else:
+                    if title:
+                        id = title
+                    else:
+                        id = filename + str(len(cdls) + 1)
+
+                # If we already have slope/offset/power:
+                if slope and offset and power:
+                    # Make a cdl, add it to the cdls list
+                    cdl = AscCdl(id, file)
+
+                    cdl.slope = slope
+                    cdl.offset = offset
+                    cdl.power = power
+
+                    if sat:
+                        cdl.sat = sat
+                    if title:
+                        cdl.description = title
+
+                    cdls.append(cdl)
+
+                scene = None
+                take = None
+                reel = None
+
+                slope = []
+                offset = []
+                power = []
+                sat = None
+
+            elif line.startswith('010'):
+                # Title Line
+                # 10-79 Title
+                title = line[10:80].strip()
+            elif line.startswith('110'):
+                # Slate Information
+                # 10-17 Scene
+                # 24-31 Take ID
+                # 42-49 Camera Reel ID
+                scene = line[10:18].strip()
+                take = line[24:32].strip()
+                reel = line[42:50].strip()
+            elif line.startswith('701'):
+                # ASC SOP
+                # 701 ASC_SOP(# # #)(-# -# -#)(# # #)
+                slope = line[12:32].split()
+                offset = line[34:57].split()
+                power = line[59:79].split()
+                for i in xrange(3):
+                    slope[i] = float(slope[i])
+                    offset[i] = float(offset[i])
+                    power[i] = float(power[i])
+            elif line.startswith('702'):
+                # ASC SAT
+                # 702 ASC_SAT ######
+                sat = float(line.split()[-1])
+
+    # We need to dump the last record to the cdl list
+    if scene:
+        id = scene
+        if take:
+            id += '_' + take
+            if reel:
+                id += '_' + reel
+    else:
+        if title:
+            id = title
+        else:
+            id = filename + str(len(cdls) + 1)
+
+    # If we have slope/offset/power:
+    if slope and offset and power:
+        # Make a cdl, add it to the cdls list
+        cdl = AscCdl(id, file)
+
+        cdl.slope = slope
+        cdl.offset = offset
+        cdl.power = power
+
+        if sat:
+            cdl.sat = sat
+        if title:
+            cdl.description = title
+
+        cdls.append(cdl)
+
+    return cdls
+
+
+#===============================================================================
+
+def parseCDL(file):
     """Parses a space separated .cdl file for ASC CDL information.
 
     Args:
@@ -426,7 +626,7 @@ def parseSS(file):
             The filepath to the CDL
 
     Returns:
-        [<ASC_CDL>]
+        [<AscCdl>]
             A list with only the single CDL object retrieved from the SS CDL
 
     Raises:
@@ -454,13 +654,16 @@ def parseSS(file):
         # The filename without extension will become the id
         filename = os.path.basename(file).split('.')[0]
 
+        for i in xrange(len(line)):
+            line[i] = float(line[i])
+
         slope = [line[0], line[1], line[2]]
         offset = [line[3], line[4], line[5]]
         power = [line[6], line[7], line[8]]
 
         sat = line[9]
 
-        cdl = ASC_CDL(filename, file)
+        cdl = AscCdl(filename, file)
 
         cdl.slope = slope
         cdl.offset = offset
@@ -469,12 +672,12 @@ def parseSS(file):
 
         cdls.append(cdl)
 
-    return cdl
+    return cdls
 
 #===============================================================================
 
 def writeCC(cdl):
-    """Writes the ASC_CDL to a .cc file"""
+    """Writes the AscCdl to a .cc file"""
 
     xml = CC_XML.format(
         id=cdl.id,
@@ -495,10 +698,10 @@ def writeCC(cdl):
 
 #===============================================================================
 
-def writeSS(cdl):
-    """Writes the ASC_CDL to a space separated .cdl file"""
+def writeCDL(cdl):
+    """Writes the AscCdl to a space separated .cdl file"""
 
-    ss = SS.format(
+    ssCdl = CDL.format(
         slopeR=cdl.slope[0],
         slopeG=cdl.slope[1],
         slopeB=cdl.slope[2],
@@ -512,7 +715,7 @@ def writeSS(cdl):
     )
 
     with open(cdl.fileOut, 'wb') as f:
-        f.write(ss)
+        f.write(ssCdl)
 
 #===============================================================================
 # MAIN
@@ -523,12 +726,13 @@ def writeSS(cdl):
 
 INPUT_FORMATS = {
     'ale': parseALE,
-    'ss': parseSS,
+    'flex': parseFLEx,
+    'cdl': parseCDL,
 }
 
 OUTPUT_FORMATS = {
     'cc': writeCC,
-    'ss': writeSS,
+    'cdl': writeCDL,
 }
 
 #===============================================================================
@@ -546,14 +750,14 @@ def parseArgs():
         help="specify the filetype to convert from. Use when CDLConvert "
              "cannot determine the filetype automatically. Supported input "
              "formats are: "
-             "{inputs}".format(inputs=str(INPUT_FORMATS))
+             "{inputs}".format(inputs=str(INPUT_FORMATS.keys()))
     )
     parser.add_argument(
         "-o",
         "--output",
         help="specify the filetype to convert to, comma separated lists are "
              "accepted. Defaults to a .cc XML. Supported output formats are: "
-             "{outputs}".format(outputs=str(OUTPUT_FORMATS))
+             "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))
     )
 
     args = parser.parse_args()
