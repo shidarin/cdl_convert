@@ -14,8 +14,10 @@ mock
 #===============================================================================
 
 # Standard Imports
+import datetime
 import os
 import mock
+from random import randrange
 from StringIO import StringIO
 import sys
 import tempfile
@@ -37,6 +39,20 @@ import cdl_convert
 #===============================================================================
 # GLOBALS
 #===============================================================================
+
+ALE_HEADER = """Heading
+FIELD_DELIM/tTABS
+VIDEO_FORMAT/t1080
+AUDIO_FORMAT/t48khz
+FPS/t23.976
+
+Column
+Name/tStart/tEnd/tDuration/tHandle Length/tAvid Clip Name/tScan Resolution/tASC_SAT/tASC_SOP/tScan Filename/tTotal Frame Count
+
+Data
+"""
+
+ALE_LINE = "{name}/t{tcIn}/t{tcOut}/t{duration}/t{handleLen}/t{avidClip}/t{res}/t{sat}/t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})/t{filename}/t{frames}\n"
 
 #===============================================================================
 # CLASSES
@@ -573,8 +589,304 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
             cdl_convert.writeCDL(self.cdl)
 
 #===============================================================================
+
+class TimeCodeSegment(object):
+    """Generates an SMPTE timecode segment for in, out, duration
+
+    If no args are provided, random timecode is generated and 24p assumed.
+
+    If a duration of over 24 hours is provided, timecode will roll over.
+
+    Args:
+        hour : (int)
+            The hour to start the timecode at
+        minute : (int)
+            The minute to start the timecode at
+        second : (int)
+            The second to start the timecode at
+        frame : (int)
+            The frame to start the timecode at
+        duration : (int)
+            Duration in frames (assuming 24p) If not provided, this will be
+            a random number of frames up to 5 minutes.
+        fps : (int)
+            Frames per second as an int. Drop frame timecode is not supported.
+
+    Attributes:
+        start : (str)
+            Timecode in, in the form of 10:52:55:20
+            Hours, minutes, seconds, frames
+        end : (str)
+            Timecode out
+        dur : (str)
+            Timecode duration
+        durFrames : (int)
+            Frame duration as an int
+
+    """
+    def __init__(self, hour=None, minute=None, second=None, frame=None,
+                 duration=None, fps=24):
+        # We compare against None so that 00 times are preserved.
+        if hour is None:
+            hour = randrange(00, 23)
+        if minute is None:
+            minute = randrange(00, 59)
+        if second is None:
+            second = randrange(00, 59)
+        if frame is None:
+            frame = randrange(00, 23)
+        if duration is None:
+            # We'll make these clips anything short of 5 minutes
+            duration = randrange(00, fps * 300)
+
+        # I'd like to use a time object here instead of datetime, but
+        # timedelta oddly won't do any math operations with time.
+        startTime = datetime.datetime(1, 1, 1, hour, minute, second)
+
+        durSeconds = duration / fps
+        durFrames = duration % fps
+        frameRollover = False  # Keep track of if frames roll over.
+
+        if durFrames + frame >= fps:
+            # If our leftover frames and our starting frame add up to more than
+            # 24 seconds, we need to add a second to our duration calculation.
+            durSeconds += 1
+            frameRollover = True
+
+        endFrames = (frame + duration) % fps
+        timeDelta = datetime.timedelta(seconds=durSeconds)
+
+        endTime = startTime + timeDelta
+        # If we adjusted duration up to get an accurate end time, we'll adjust
+        # it back down now.
+        if frameRollover:
+            timeDelta = timeDelta - datetime.timedelta(seconds=1)
+        durationTime = datetime.datetime(1, 1, 1, 0, 0, 0) + timeDelta
+
+        # Because we had to use datetime objects, isoformat() will be returning
+        # a string formatted as: '0001-01-01T12:10:25'
+        # So we'll split on the T
+        self.start = "{time}:{frames}".format(
+            time=startTime.isoformat().split('T')[-1],
+            frames='0' + str(frame) if frame < 10 else str(frame)
+        )
+        self.end = "{time}:{frames}".format(
+            time=endTime.isoformat().split('T')[-1],
+            frames='0' + str(endFrames) if endFrames < 10 else str(endFrames)
+        )
+        self.dur = "{time}:{frames}".format(
+            time=durationTime.isoformat().split('T')[-1],
+            frames='0' + str(durFrames) if durFrames < 10 else str(durFrames)
+        )
+        self.durFrames = duration
+
+#===============================================================================
+
+class TestTimeCodeSegment(unittest.TestCase):
+    """Tests TimeCodeSegment class for correct functionality"""
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testWholeSeconds(self):
+        """Tests timecode where seconds are an even multiple of frames"""
+        tc = TimeCodeSegment(12, 0, 0, 0, 24)
+
+        self.assertEqual(
+            '12:00:00:00',
+            tc.start
+        )
+
+        self.assertEqual(
+            '12:00:01:00',
+            tc.end
+        )
+
+        self.assertEqual(
+            '00:00:01:00',
+            tc.dur
+        )
+
+    #===========================================================================
+
+    def testLessThanOneSecond(self):
+        """Tests timecode where there's less than a second of duration"""
+        tc = TimeCodeSegment(12, 0, 0, 0, 4)
+
+        self.assertEqual(
+            '12:00:00:04',
+            tc.end
+        )
+
+        self.assertEqual(
+            '00:00:00:04',
+            tc.dur
+        )
+
+    #===========================================================================
+
+    def testMoreThanOneSecond(self):
+        """Tests timecode where there's more than a second of duration"""
+        tc = TimeCodeSegment(12, 0, 0, 0, 25)
+
+        self.assertEqual(
+            '12:00:01:01',
+            tc.end
+        )
+
+        self.assertEqual(
+            '00:00:01:01',
+            tc.dur
+        )
+
+    #===========================================================================
+
+    def testUnevenCombination(self):
+        """Tests timecode where there's less than a second of duration"""
+        tc = TimeCodeSegment(12, 0, 0, 15, 10)
+
+        self.assertEqual(
+            '12:00:00:15',
+            tc.start
+        )
+
+        self.assertEqual(
+            '12:00:01:01',
+            tc.end
+        )
+
+        self.assertEqual(
+            '00:00:00:10',
+            tc.dur
+        )
+
+    #===========================================================================
+
+    def testAddManyHours(self):
+        """Tests adding many hours, minutes and seconds of duration"""
+        tc = TimeCodeSegment(0, 0, 0, 1, 1016356)
+
+        self.assertEqual(
+            '00:00:00:01',
+            tc.start
+        )
+
+        self.assertEqual(
+            '11:45:48:05',
+            tc.end
+        )
+
+        self.assertEqual(
+            '11:45:48:04',
+            tc.dur
+        )
+
+    #===========================================================================
+
+    def testRollover(self):
+        """Tests timecode that rolls over 24 hours"""
+        tc = TimeCodeSegment(23, 59, 59, 23, 2)
+
+        self.assertEqual(
+            '23:59:59:23',
+            tc.start
+        )
+
+        self.assertEqual(
+            '00:00:00:01',
+            tc.end
+        )
+
+        self.assertEqual(
+            '00:00:00:02',
+            tc.dur
+        )
+
+    #===========================================================================
+
+    def test30Fps(self):
+        """Tests timecode with 30 fps"""
+        tc = TimeCodeSegment(12, 0, 0, 15, 10, fps=30)
+
+        self.assertEqual(
+            '12:00:00:15',
+            tc.start
+        )
+
+        self.assertEqual(
+            '12:00:00:25',
+            tc.end
+        )
+
+        self.assertEqual(
+            '00:00:00:10',
+            tc.dur
+        )
+
+    #===========================================================================
+
+    def test60Fps(self):
+        """Tests timecode with 60 fps"""
+        tc = TimeCodeSegment(12, 0, 0, 15, 40, fps=60)
+
+        self.assertEqual(
+            '12:00:00:15',
+            tc.start
+        )
+
+        self.assertEqual(
+            '12:00:00:55',
+            tc.end
+        )
+
+        self.assertEqual(
+            '00:00:00:40',
+            tc.dur
+        )
+
+    #===========================================================================
+
+    def testAllRandomSetDuration(self):
+        """Tests random timecode with set long duration"""
+        tc = TimeCodeSegment(fps=60, duration=5183999)
+
+        self.assertEqual(
+            '23:59:59:59',
+            tc.dur
+        )
+
+        self.assertEqual(
+            5183999,
+            tc.durFrames
+        )
+
+    #===========================================================================
+
+    def testDurationUnderFiveMinutes(self):
+        """Tests that duration when not provided is kept under 5 minutes"""
+        tc = TimeCodeSegment(fps=24)
+
+        self.assertLess(
+            tc.durFrames,
+            7200
+        )
+
+#===============================================================================
 # FUNCTIONS
 #===============================================================================
+
+def buildALELine():
+    # name usually looks like: D415_C001_01015RB
+    # timecode looks like: 16:16:34:14
+    # handleLen is an int: 8, 16, 32 usually
+    # avidClip looks like 2.15F-3c (wtf?)
+    # res looks like: 2k
+    # ASC Sat and Sop like normal
+    # Filename is usually the scan name, shot name, then avid clip name
+    # Frames is total frames, an int
+    # We'll only be using the sat sop and filename, so the rest can be random
+    pass
 
 def buildCDL(slope, offset, power, sat):
     """Populates a CDL string and returns it"""
