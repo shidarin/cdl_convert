@@ -41,13 +41,13 @@ Currently we support converting from:
 * CC
 * CCC
 * OCIOCDLTransform (nk)
-* SS
+* CDL
 
 To:
 
 * CC
 * OCIOCDLTransform (nk)
-* SS
+* CDL
 
 With support for both from and to expanding in the future.
 
@@ -128,7 +128,7 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 # Space Separated CDL, a Rhythm & Hues format
-SS = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
+CDL = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
 """
 
 #===============================================================================
@@ -217,8 +217,8 @@ class AscCdl(object):
         """Inits an instance of an ASC CDL"""
 
         # Non-ASC attributes
-        self.fileIn = file
-        self.fileOut = None
+        self._fileIn = os.path.abspath(file)
+        self._fileOut = None
 
         # The id is really the only required part of an ASC CDL.
         # Each ID should be unique
@@ -242,6 +242,14 @@ class AscCdl(object):
     # Properties ===============================================================
 
     @property
+    def fileIn(self):
+        return self._fileIn
+
+    @property
+    def fileOut(self):
+        return self._fileOut
+
+    @property
     def id(self):
         return self._id
 
@@ -256,6 +264,16 @@ class AscCdl(object):
             assert len(offsetRGB) == 3
         except AssertionError:
             raise ValueError("Offset must be set with all three RGB values")
+        try:
+            assert type(offsetRGB) in [list, tuple]
+        except AssertionError:
+            raise TypeError("Offset must be a list or tuple")
+
+        for i in offsetRGB:
+            try:
+                assert type(i) in [float, int]
+            except AssertionError:
+                raise TypeError("Offset values must be ints or floats")
 
         self._offset = list(offsetRGB)
 
@@ -270,12 +288,20 @@ class AscCdl(object):
             assert len(powerRGB) == 3
         except AssertionError:
             raise ValueError("Power must be set with all three RGB values")
+        try:
+            assert type(powerRGB) in [list, tuple]
+        except AssertionError:
+            raise TypeError("Power must be a list or tuple")
 
         for i in powerRGB:
             try:
                 assert i >= 0.0
             except AssertionError:
                 raise ValueError("Power values must not be negative")
+            try:
+                assert type(i) in [float, int]
+            except AssertionError:
+                raise TypeError("Power values must be ints or floats")
 
         self._power = list(powerRGB)
 
@@ -290,12 +316,20 @@ class AscCdl(object):
             assert len(slopeRGB) == 3
         except AssertionError:
             raise ValueError("Slope must be set with all three RGB values")
+        try:
+            assert type(slopeRGB) in [list, tuple]
+        except AssertionError:
+            raise TypeError("Slope must be a list or tuple")
 
         for i in slopeRGB:
             try:
                 assert i >= 0.0
             except AssertionError:
                 raise ValueError("Slope values must not be negative")
+            try:
+                assert type(i) in [float, int]
+            except AssertionError:
+                raise TypeError("Slope values must be ints or floats")
 
         self._slope = list(slopeRGB)
 
@@ -309,8 +343,13 @@ class AscCdl(object):
             assert satValue >= 0.0
         except AssertionError:
             raise ValueError("Saturation must be a positive value")
-        else:
-            self._sat = float(satValue)
+
+        try:
+            assert type(satValue) in [float, int]
+        except AssertionError:
+            raise TypeError("Saturation must be a float or int")
+
+        self._sat = float(satValue)
 
     #===========================================================================
     # METHODS
@@ -321,13 +360,9 @@ class AscCdl(object):
 
         dir = os.path.dirname(self.fileIn)
 
-        # 'ss' files are really a .cdl extension
-        if output == 'ss':
-            output = 'cdl'
-
         filename = "{id}.{ext}".format(id=self.id, ext=output)
 
-        self.fileOut = os.path.join(dir, filename)
+        self._fileOut = os.path.join(dir, filename)
 
 #===============================================================================
 # FUNCTIONS
@@ -468,7 +503,7 @@ def parseFLEx(file):
     with open(file, 'rb') as f:
         lines = f.readlines()
 
-        filename = pass
+        filename = os.path.basename(file).split('.')[0]
 
         title = None
         scene = None
@@ -583,7 +618,7 @@ def parseFLEx(file):
 
 #===============================================================================
 
-def parseSS(file):
+def parseCDL(file):
     """Parses a space separated .cdl file for ASC CDL information.
 
     Args:
@@ -660,10 +695,10 @@ def writeCC(cdl):
 
 #===============================================================================
 
-def writeSS(cdl):
+def writeCDL(cdl):
     """Writes the AscCdl to a space separated .cdl file"""
 
-    ss = SS.format(
+    ss = CDL.format(
         slopeR=cdl.slope[0],
         slopeG=cdl.slope[1],
         slopeB=cdl.slope[2],
@@ -689,12 +724,12 @@ def writeSS(cdl):
 INPUT_FORMATS = {
     'ale': parseALE,
     'flex': parseFLEx,
-    'ss': parseSS,
+    'cdl': parseCDL,
 }
 
 OUTPUT_FORMATS = {
     'cc': writeCC,
-    'ss': writeSS,
+    'cdl': writeCDL,
 }
 
 #===============================================================================
