@@ -654,6 +654,9 @@ def parseCDL(file):
         # The filename without extension will become the id
         filename = os.path.basename(file).split('.')[0]
 
+        for i in xrange(len(line)):
+            line[i] = float(line[i])
+
         slope = [line[0], line[1], line[2]]
         offset = [line[3], line[4], line[5]]
         power = [line[6], line[7], line[8]]
@@ -669,7 +672,7 @@ def parseCDL(file):
 
         cdls.append(cdl)
 
-    return cdl
+    return cdls
 
 #===============================================================================
 
@@ -698,7 +701,7 @@ def writeCC(cdl):
 def writeCDL(cdl):
     """Writes the AscCdl to a space separated .cdl file"""
 
-    ss = CDL.format(
+    ssCdl = CDL.format(
         slopeR=cdl.slope[0],
         slopeG=cdl.slope[1],
         slopeB=cdl.slope[2],
@@ -712,7 +715,7 @@ def writeCDL(cdl):
     )
 
     with open(cdl.fileOut, 'wb') as f:
-        f.write(ss)
+        f.write(ssCdl)
 
 #===============================================================================
 # MAIN
