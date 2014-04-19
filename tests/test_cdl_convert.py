@@ -466,6 +466,35 @@ class TestParseCDLBasic(unittest.TestCase):
         )
 
 #===============================================================================
+
+class TestParseCDLOdd(TestParseCDLBasic):
+    """Tests parsing a space separated cdl with odd but valid numbers"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope = [137829.329, 4327890.9833, 3489031.003]
+        self.offset = [-3424.011, -342789423.013, -4238923.11]
+        self.power = [3271893.993, .0000998, 0.0000000000000000113]
+        self.sat = 1798787.01
+
+        self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
+
+        # Build our config
+        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+            f.write(self.file)
+            self.filename = f.name
+            # Calling readlines on the temp file. Without this open fails to
+            # read it. I have no idea why.
+            f.readlines()
+            self.cdl = cdl_convert.parseCDL(f.name)[0]
+
+#===============================================================================
 # FUNCTIONS
 #===============================================================================
 
