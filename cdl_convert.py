@@ -436,13 +436,17 @@ def parseALE(file):
                 sop = sop.replace(' ', ', ')
                 sop = sop.replace(')(', ')|(')
                 sop = sop.split('|')
-                slope = literal_eval(sop[0])
-                offset = literal_eval(sop[1])
-                power = literal_eval(sop[2])
+                slope = list(literal_eval(sop[0]))
+                offset = list(literal_eval(sop[1]))
+                power = list(literal_eval(sop[2]))
+                for i in xrange(3):
+                    slope[i] = float(slope[i])
+                    offset[i] = float(offset[i])
+                    power[i] = float(power[i])
 
                 cdl = AscCdl(id, file)
 
-                cdl.sat = sat
+                cdl.sat = float(sat)
                 cdl.slope = slope
                 cdl.offset = offset
                 cdl.power = power
