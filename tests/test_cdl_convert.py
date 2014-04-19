@@ -495,6 +495,84 @@ class TestParseCDLOdd(TestParseCDLBasic):
             self.cdl = cdl_convert.parseCDL(f.name)[0]
 
 #===============================================================================
+
+class TestWriteCDLBasic(unittest.TestCase):
+    """Tests writing a space separated cdl with basic values"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        self.slope = [1.329, 0.9833, 1.003]
+        self.offset = [0.011, 0.013, 0.11]
+        self.power = [.993, .998, 1.0113]
+        self.sat = 1.01
+
+        self.cdl = cdl_convert.AscCdl('uniqueId', '../theVeryBestFile.ale')
+
+        self.cdl.determineDest('cdl')
+        self.cdl.slope = self.slope
+        self.cdl.offset = self.offset
+        self.cdl.power = self.power
+        self.cdl.sat = self.sat
+
+        self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
+
+        self.mockOpen = mock.mock_open()
+
+        with mock.patch('__builtin__.open', self.mockOpen, create=True):
+            cdl_convert.writeCDL(self.cdl)
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testOpen(self):
+        """Tests that open was called correctly"""
+        self.mockOpen.assert_called_once_with(self.cdl.fileOut, 'wb')
+
+    #===========================================================================
+
+    def testContent(self):
+        """Tests that writeCDL wrote the correct CDL"""
+        handle = self.mockOpen()
+        handle.write.assert_called_once_with(self.file)
+
+#===============================================================================
+
+class TestWriteCDLOdd(TestWriteCDLBasic):
+    """Tests writing a space separated cdl with basic values"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope = [137829.329, 4327890.9833, 3489031.003]
+        self.offset = [-3424.011, -342789423.013, -4238923.11]
+        self.power = [3271893.993, .0000998, 0.0000000000000000113]
+        self.sat = 1798787.01
+
+        self.cdl = cdl_convert.AscCdl('uniqueId', '../theVeryBestFile.ale')
+
+        self.cdl.determineDest('cdl')
+        self.cdl.slope = self.slope
+        self.cdl.offset = self.offset
+        self.cdl.power = self.power
+        self.cdl.sat = self.sat
+
+        self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
+
+        self.mockOpen = mock.mock_open()
+
+        with mock.patch('__builtin__.open', self.mockOpen, create=True):
+            cdl_convert.writeCDL(self.cdl)
+
+#===============================================================================
 # FUNCTIONS
 #===============================================================================
 
