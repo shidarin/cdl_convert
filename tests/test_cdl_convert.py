@@ -17,7 +17,7 @@ mock
 import datetime
 import os
 import mock
-from random import randrange
+from random import choice, random, randrange
 from StringIO import StringIO
 import sys
 import tempfile
@@ -41,22 +41,42 @@ import cdl_convert
 #===============================================================================
 
 ALE_HEADER = """Heading
-FIELD_DELIM/tTABS
-VIDEO_FORMAT/t1080
-AUDIO_FORMAT/t48khz
-FPS/t23.976
+FIELD_DELIM\tTABS
+VIDEO_FORMAT\t1080
+AUDIO_FORMAT\t48khz
+FPS\t24
 
 Column
-Name/tStart/tEnd/tDuration/tHandle Length/tAvid Clip Name/tScan Resolution/tASC_SAT/tASC_SOP/tScan Filename/tTotal Frame Count
+Name\tStart\tEnd\tDuration\tHandle Length\tAvid Clip Name\tScan Resolution\tASC_SAT\tASC_SOP\tScan Filename\tTotal Frame Count
 
 Data
 """
+ALE_LINE = "{name}\t{tcIn}\t{tcOut}\t{duration}\t{handleLen}\t{avidClip}\t{res}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\t{frames}\n"
 
-ALE_LINE = "{name}/t{tcIn}/t{tcOut}/t{duration}/t{handleLen}/t{avidClip}/t{res}/t{sat}/t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})/t{filename}/t{frames}\n"
+
+ALE_HEADER_SHORT = """Heading
+FIELD_DELIM\tTABS
+VIDEO_FORMAT\t1080
+AUDIO_FORMAT\t48khz
+FPS\t24
+
+Column
+Start\tEnd\tHandle Length\tAvid Clip Name\tASC_SAT\tASC_SOP\tScan Filename\tTotal Frame Count
+
+Data
+"""
+ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\t{frames}\n"
+
+
+UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
 #===============================================================================
 # CLASSES
 #===============================================================================
+
+# AscCdl =======================================================================
+
 
 class TestAscCdl(unittest.TestCase):
     """Tests all aspects of the AscCdl class"""
@@ -407,7 +427,212 @@ class TestAscCdl(unittest.TestCase):
             self.cdl.fileOut
         )
 
-#===============================================================================
+# ale ==========================================================================
+
+
+class TestParseALEBasic(unittest.TestCase):
+    """Tests basic parsing of a standard ALE"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        self.slope1 = [1.329, 0.9833, 1.003]
+        self.offset1 = [0.011, 0.013, 0.11]
+        self.power1 = [.993, .998, 1.0113]
+        self.sat1 = 1.01
+
+        line1 = buildALELine(self.slope1, self.offset1, self.power1, self.sat1,
+                             'bb94_x103_line1')
+
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope2 = [137829.329, 4327890.9833, 3489031.003]
+        self.offset2 = [-3424.011, -342789423.013, -4238923.11]
+        self.power2 = [3271893.993, .0000998, 0.0000000000000000113]
+        self.sat2 = 1798787.01
+
+        line2 = buildALELine(self.slope2, self.offset2, self.power2, self.sat2,
+                             'bb94_x104_line2')
+
+        self.slope3 = [1.2, 2.32, 10.82]
+        self.offset3 = [-1.3782, 278.32, 0.738378233782]
+        self.power3 = [1.329, 0.9833, 1.003]
+        self.sat3 = 0.99
+
+        line3 = buildALELine(self.slope3, self.offset3, self.power3, self.sat3,
+                             'bb94_x105_line3')
+
+        self.file = ALE_HEADER + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+            f.write(self.file)
+            self.filename = f.name
+            # Calling readlines on the temp file. Without this open fails to
+            # read it. I have no idea why.
+            f.readlines()
+            cdls = cdl_convert.parseALE(f.name)
+            self.cdl1 = cdls[0]
+            self.cdl2 = cdls[1]
+            self.cdl3 = cdls[2]
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testId(self):
+        """Tests that filenames were parsed correctly"""
+
+        self.assertEqual(
+            'bb94_x103_line1',
+            self.cdl1.id
+        )
+
+        self.assertEqual(
+            'bb94_x104_line2',
+            self.cdl2.id
+        )
+
+        self.assertEqual(
+            'bb94_x105_line3',
+            self.cdl3.id
+        )
+
+    #===========================================================================
+
+    def testSlope(self):
+        """Tests that slopes were parsed correctly"""
+
+        self.assertEqual(
+            self.slope1,
+            self.cdl1.slope
+        )
+
+        self.assertEqual(
+            self.slope2,
+            self.cdl2.slope
+        )
+
+        self.assertEqual(
+            self.slope3,
+            self.cdl3.slope
+        )
+
+    #===========================================================================
+    
+    def testOffset(self):
+        """Tests that offsets were parsed correctly"""
+        
+        self.assertEqual(
+            self.offset1,
+            self.cdl1.offset
+        )
+
+        self.assertEqual(
+            self.offset2,
+            self.cdl2.offset
+        )
+
+        self.assertEqual(
+            self.offset3,
+            self.cdl3.offset
+        )
+
+    #===========================================================================
+    
+    def testPower(self):
+        """Tests that powers were parsed correctly"""
+        
+        self.assertEqual(
+            self.power1,
+            self.cdl1.power
+        )
+
+        self.assertEqual(
+            self.power2,
+            self.cdl2.power
+        )
+
+        self.assertEqual(
+            self.power3,
+            self.cdl3.power
+        )
+
+    #===========================================================================
+    
+    def testSat(self):
+        """Tests that sats were parsed correctly"""
+        
+        self.assertEqual(
+            self.sat1,
+            self.cdl1.sat
+        )
+
+        self.assertEqual(
+            self.sat2,
+            self.cdl2.sat
+        )
+
+        self.assertEqual(
+            self.sat3,
+            self.cdl3.sat
+        )
+
+
+class TestParseALEShort(TestParseALEBasic):
+    """Tests basic parsing of a shortened ALE with different tab"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        self.slope1 = [1.329, 0.9833, 1.003]
+        self.offset1 = [0.011, 0.013, 0.11]
+        self.power1 = [.993, .998, 1.0113]
+        self.sat1 = 1.01
+
+        line1 = buildALELine(self.slope1, self.offset1, self.power1, self.sat1,
+                             'bb94_x103_line1', short=True)
+
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope2 = [137829.329, 4327890.9833, 3489031.003]
+        self.offset2 = [-3424.011, -342789423.013, -4238923.11]
+        self.power2 = [3271893.993, .0000998, 0.0000000000000000113]
+        self.sat2 = 1798787.01
+
+        line2 = buildALELine(self.slope2, self.offset2, self.power2, self.sat2,
+                             'bb94_x104_line2', short=True)
+
+        self.slope3 = [1.2, 2.32, 10.82]
+        self.offset3 = [-1.3782, 278.32, 0.738378233782]
+        self.power3 = [1.329, 0.9833, 1.003]
+        self.sat3 = 0.99
+
+        line3 = buildALELine(self.slope3, self.offset3, self.power3, self.sat3,
+                             'bb94_x105_line3', short=True)
+
+        self.file = ALE_HEADER_SHORT + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+            f.write(self.file)
+            self.filename = f.name
+            # Calling readlines on the temp file. Without this open fails to
+            # read it. I have no idea why.
+            f.readlines()
+            cdls = cdl_convert.parseALE(f.name)
+            self.cdl1 = cdls[0]
+            self.cdl2 = cdls[1]
+            self.cdl3 = cdls[2]
+
+# cdl ==========================================================================
+
 
 class TestParseCDLBasic(unittest.TestCase):
     """Tests parsing a space separated cdl, a Rhythm & Hues format"""
@@ -424,7 +649,7 @@ class TestParseCDLBasic(unittest.TestCase):
 
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
-        # Build our config
+        # Build our cdl
         with tempfile.NamedTemporaryFile(mode='r+b') as f:
             f.write(self.file)
             self.filename = f.name
@@ -481,7 +706,6 @@ class TestParseCDLBasic(unittest.TestCase):
             self.cdl.sat
         )
 
-#===============================================================================
 
 class TestParseCDLOdd(TestParseCDLBasic):
     """Tests parsing a space separated cdl with odd but valid numbers"""
@@ -501,7 +725,7 @@ class TestParseCDLOdd(TestParseCDLBasic):
 
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
-        # Build our config
+        # Build our cdl
         with tempfile.NamedTemporaryFile(mode='r+b') as f:
             f.write(self.file)
             self.filename = f.name
@@ -510,7 +734,6 @@ class TestParseCDLOdd(TestParseCDLBasic):
             f.readlines()
             self.cdl = cdl_convert.parseCDL(f.name)[0]
 
-#===============================================================================
 
 class TestWriteCDLBasic(unittest.TestCase):
     """Tests writing a space separated cdl with basic values"""
@@ -555,7 +778,6 @@ class TestWriteCDLBasic(unittest.TestCase):
         handle = self.mockOpen()
         handle.write.assert_called_once_with(self.file)
 
-#===============================================================================
 
 class TestWriteCDLOdd(TestWriteCDLBasic):
     """Tests writing a space separated cdl with basic values"""
@@ -588,10 +810,11 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
         with mock.patch('__builtin__.open', self.mockOpen, create=True):
             cdl_convert.writeCDL(self.cdl)
 
-#===============================================================================
+# Test Classes =================================================================
 
 # TimeCodeSegment is from my SMTPE Timecode gist at:
 # https://gist.github.com/shidarin/11091783
+
 
 class TimeCodeSegment(object):
     """Generates an SMPTE timecode segment for in, out, duration
@@ -631,13 +854,13 @@ class TimeCodeSegment(object):
                  duration=None, fps=24):
         # We compare against None so that 00 times are preserved.
         if hour is None:
-            hour = randrange(00, 23)
+            hour = randrange(00, 24)
         if minute is None:
-            minute = randrange(00, 59)
+            minute = randrange(00, 60)
         if second is None:
-            second = randrange(00, 59)
+            second = randrange(00, 60)
         if frame is None:
-            frame = randrange(00, 23)
+            frame = randrange(00, 24)
         if duration is None:
             # We'll make these clips anything short of 5 minutes
             duration = randrange(00, fps * 300)
@@ -671,19 +894,18 @@ class TimeCodeSegment(object):
         # So we'll split on the T
         self.start = "{time}:{frames}".format(
             time=startTime.isoformat().split('T')[-1],
-            frames='0' + str(frame) if frame < 10 else str(frame)
+            frames=str(frame).rjust(2, '0')
         )
         self.end = "{time}:{frames}".format(
             time=endTime.isoformat().split('T')[-1],
-            frames='0' + str(endFrames) if endFrames < 10 else str(endFrames)
+            frames=str(endFrames).rjust(2, '0')
         )
         self.dur = "{time}:{frames}".format(
             time=durationTime.isoformat().split('T')[-1],
-            frames='0' + str(durFrames) if durFrames < 10 else str(durFrames)
+            frames=str(durFrames).rjust(2, '0')
         )
         self.durFrames = duration
 
-#===============================================================================
 
 class TestTimeCodeSegment(unittest.TestCase):
     """Tests TimeCodeSegment class for correct functionality"""
@@ -879,17 +1101,80 @@ class TestTimeCodeSegment(unittest.TestCase):
 # FUNCTIONS
 #===============================================================================
 
-def buildALELine():
+def buildALELine(slope, offset, power, sat, filename, short=False):
+    """Builds a tab delineated ALE EDL line"""
     # name usually looks like: D415_C001_01015RB
     # timecode looks like: 16:16:34:14
     # handleLen is an int: 8, 16, 32 usually
-    # avidClip looks like 2.15F-3c (wtf?)
+    # avidClip looks like 3.10F-2b (wtf?)
     # res looks like: 2k
     # ASC Sat and Sop like normal
     # Filename is usually the scan name, shot name, then avid clip name
     # Frames is total frames, an int
     # We'll only be using the sat sop and filename, so the rest can be random
-    pass
+    tc = TimeCodeSegment()
+
+    name = "{a}{reelA}_{b}{reelB}_{frame}{c}{d}".format(
+        a=choice(UPPER),
+        reelA=str(randrange(0, 1000)).rjust(3, '0'),
+        b=choice(UPPER),
+        reelB=str(randrange(0, 1000)).rjust(3, '0'),
+        frame=str(randrange(0, 10000)).rjust(4, '0'),
+        c=choice(UPPER),
+        d=choice(UPPER),
+    )
+
+    avidClip = "{major}.{minor}{a}-{ver}{b}".format(
+        major=randrange(1, 10),
+        minor=randrange(10, 100),
+        a=choice(UPPER),
+        ver=randrange(1, 10),
+        b=choice(LOWER),
+    )
+
+    if not short:
+        ale = ALE_LINE.format(
+            name=name,
+            tcIn=tc.start,
+            tcOut=tc.end,
+            duration=tc.dur,
+            handleLen=randrange(1, 32),
+            avidClip=avidClip,
+            res='2k',
+            sat=sat,
+            slopeR=slope[0],
+            slopeG=slope[1],
+            slopeB=slope[2],
+            offsetR=offset[0],
+            offsetG=offset[1],
+            offsetB=offset[2],
+            powerR=power[0],
+            powerG=power[1],
+            powerB=power[2],
+            filename=filename,
+            frames=tc.durFrames
+        )
+    else:
+        ale = ALE_LINE_SHORT.format(
+            tcIn=tc.start,
+            tcOut=tc.end,
+            handleLen=randrange(1, 32),
+            avidClip=avidClip,
+            sat=sat,
+            slopeR=slope[0],
+            slopeG=slope[1],
+            slopeB=slope[2],
+            offsetR=offset[0],
+            offsetG=offset[1],
+            offsetB=offset[2],
+            powerR=power[0],
+            powerG=power[1],
+            powerB=power[2],
+            filename=filename,
+            frames=tc.durFrames
+        )
+
+    return ale
 
 def buildCDL(slope, offset, power, sat):
     """Populates a CDL string and returns it"""

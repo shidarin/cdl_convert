@@ -420,10 +420,6 @@ def parseALE(file):
                 scan_filename = columns.index('Scan Filename')
                 column = False
             elif data:
-                # First check to see if we're already parsed our last data
-                if not line:
-                    break
-
                 cdlData = line.split('\t')
 
                 sat = cdlData[ASC_SAT_I]
