@@ -590,6 +590,9 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
 
 #===============================================================================
 
+# TimeCodeSegment is from my SMTPE Timecode gist at:
+# https://gist.github.com/shidarin/11091783
+
 class TimeCodeSegment(object):
     """Generates an SMPTE timecode segment for in, out, duration
 
