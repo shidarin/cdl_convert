@@ -269,13 +269,15 @@ class AscCdl(object):
         except AssertionError:
             raise TypeError("Offset must be a list or tuple")
 
-        for i in offsetRGB:
+        offsetRGB = list(offsetRGB)
+
+        for i in xrange(len(offsetRGB)):
             try:
-                assert type(i) in [float, int]
-            except AssertionError:
+                offsetRGB[i] = float(offsetRGB[i])
+            except ValueError:
                 raise TypeError("Offset values must be ints or floats")
 
-        self._offset = list(offsetRGB)
+        self._offset = offsetRGB
 
     @property
     def power(self):
@@ -293,17 +295,19 @@ class AscCdl(object):
         except AssertionError:
             raise TypeError("Power must be a list or tuple")
 
-        for i in powerRGB:
+        powerRGB = list(powerRGB)
+
+        for i in xrange(len(powerRGB)):
             try:
-                assert i >= 0.0
+                powerRGB[i] = float(powerRGB[i])
+            except ValueError:
+                raise TypeError("Power values must be ints or floats")
+            try:
+                assert powerRGB[i] >= 0.0
             except AssertionError:
                 raise ValueError("Power values must not be negative")
-            try:
-                assert type(i) in [float, int]
-            except AssertionError:
-                raise TypeError("Power values must be ints or floats")
 
-        self._power = list(powerRGB)
+        self._power = powerRGB
 
     @property
     def slope(self):
@@ -321,17 +325,19 @@ class AscCdl(object):
         except AssertionError:
             raise TypeError("Slope must be a list or tuple")
 
-        for i in slopeRGB:
+        slopeRGB = list(slopeRGB)
+
+        for i in xrange(len(slopeRGB)):
             try:
-                assert i >= 0.0
+                slopeRGB[i] = float(slopeRGB[i])
+            except ValueError:
+                raise TypeError("Slope values must be ints or floats")
+            try:
+                assert slopeRGB[i] >= 0.0
             except AssertionError:
                 raise ValueError("Slope values must not be negative")
-            try:
-                assert type(i) in [float, int]
-            except AssertionError:
-                raise TypeError("Slope values must be ints or floats")
 
-        self._slope = list(slopeRGB)
+        self._slope = slopeRGB
 
     @property
     def sat(self):
@@ -340,14 +346,13 @@ class AscCdl(object):
     @sat.setter
     def sat(self, satValue):
         try:
+            satValue = float(satValue)
+        except ValueError:
+            raise TypeError("Saturation must be a float or int")
+        try:
             assert satValue >= 0.0
         except AssertionError:
             raise ValueError("Saturation must be a positive value")
-
-        try:
-            assert type(satValue) in [float, int]
-        except AssertionError:
-            raise TypeError("Saturation must be a float or int")
 
         self._sat = float(satValue)
 
@@ -432,13 +437,9 @@ def parseALE(file):
                 sop = sop.replace(' ', ', ')
                 sop = sop.replace(')(', ')|(')
                 sop = sop.split('|')
-                slope = list(literal_eval(sop[0]))
-                offset = list(literal_eval(sop[1]))
-                power = list(literal_eval(sop[2]))
-                for i in xrange(3):
-                    slope[i] = float(slope[i])
-                    offset[i] = float(offset[i])
-                    power[i] = float(power[i])
+                slope = literal_eval(sop[0])
+                offset = literal_eval(sop[1])
+                power = literal_eval(sop[2])
 
                 cdl = AscCdl(id, file)
 
@@ -653,9 +654,6 @@ def parseCDL(file):
 
         # The filename without extension will become the id
         filename = os.path.basename(file).split('.')[0]
-
-        for i in xrange(len(line)):
-            line[i] = float(line[i])
 
         slope = [line[0], line[1], line[2]]
         offset = [line[3], line[4], line[5]]
