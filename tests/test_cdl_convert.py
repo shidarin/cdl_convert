@@ -178,7 +178,7 @@ class TestAscCdl(unittest.TestCase):
     def testOffsetSetStrings(self):
         """Tests that TypeError raised if given strings"""
         def setOffset():
-            self.cdl.offset = [-1.3782, 278.32, '0.738378233782']
+            self.cdl.offset = [-1.3782, 278.32, 'banana']
 
         self.assertRaises(
             TypeError,
@@ -242,7 +242,7 @@ class TestAscCdl(unittest.TestCase):
     def testPowerSetStrings(self):
         """Tests that TypeError raised if given strings"""
         def setPower():
-            self.cdl.power = [1.3782, 278.32, '0.738378233782']
+            self.cdl.power = [1.3782, 278.32, 'banana']
 
         self.assertRaises(
             TypeError,
@@ -318,7 +318,7 @@ class TestAscCdl(unittest.TestCase):
     def testSlopeSetStrings(self):
         """Tests that TypeError raised if given strings"""
         def setSlope():
-            self.cdl.slope = [1.3782, 278.32, '0.738378233782']
+            self.cdl.slope = [1.3782, 278.32, 'banana']
 
         self.assertRaises(
             TypeError,
@@ -393,7 +393,7 @@ class TestAscCdl(unittest.TestCase):
     def testSatSetString(self):
         """Tests that a TypeError is raised if sat is set to string"""
         def setSat():
-            self.cdl.sat = '26.1'
+            self.cdl.sat = 'banana'
 
         self.assertRaises(
             TypeError,
