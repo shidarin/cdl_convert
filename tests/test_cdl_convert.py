@@ -997,7 +997,7 @@ class TestFLExBasic(unittest.TestCase):
 # sanitize() ===================================================================
 
 
-class TestSanitize():
+class TestSanitize(unittest.TestCase):
     """Tests the helper function sanitize()"""
 
     def testSpaces(self):
@@ -1057,7 +1057,7 @@ class TestSanitize():
 
     def testCommonBadChars(self):
         """Tests that common bad characters are removed"""
-        result = cdl_convert.sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d'):
+        result = cdl_convert.sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d')
 
         self.assertEqual(
             'abcd',

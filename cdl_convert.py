@@ -674,6 +674,29 @@ def parseCDL(file):
 
 #===============================================================================
 
+def sanitize(name):
+    """Removes any characters in string name that aren't alnum or in '_.'"""
+    from re import compile
+    # Replace any spaces with underscores
+    name = name.replace(' ', '_')
+    # If we start our string with an underscore or period, remove it
+    if name[0] in '_.':
+        name = name[1:]
+    # a-z is all lowercase
+    # A-Z is all uppercase
+    # 0-9 is all digits
+    # \. is an escaped period
+    # _ is an underscore
+    # Put them together, negate them by leading with an ^
+    # and our compiler will mark every non alnum, non ., _ character
+    pattern = compile(r'[^a-zA-Z0-9\._]+')
+    # Then we sub them with nothing
+    fixed = pattern.sub('', name)
+
+    return fixed
+
+#===============================================================================
+
 def writeCC(cdl):
     """Writes the AscCdl to a .cc file"""
 
