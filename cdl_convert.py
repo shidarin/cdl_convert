@@ -222,7 +222,7 @@ class AscCdl(object):
 
         # The id is really the only required part of an ASC CDL.
         # Each ID should be unique
-        self._id = id
+        self._id = sanitize(id)
 
         # ASC_SOP attributes
         self._slope = [1.0, 1.0, 1.0]
