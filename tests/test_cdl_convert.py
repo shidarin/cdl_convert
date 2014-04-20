@@ -40,6 +40,8 @@ import cdl_convert
 # GLOBALS
 #===============================================================================
 
+# ale ==========================================================================
+
 ALE_HEADER = """Heading
 FIELD_DELIM\tTABS
 VIDEO_FORMAT\t1080
@@ -52,7 +54,6 @@ Name\tStart\tEnd\tDuration\tHandle Length\tAvid Clip Name\tScan Resolution\tASC_
 Data
 """
 ALE_LINE = "{name}\t{tcIn}\t{tcOut}\t{duration}\t{handleLen}\t{avidClip}\t{res}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\t{frames}\n"
-
 
 ALE_HEADER_SHORT = """Heading
 FIELD_DELIM\tTABS
@@ -67,6 +68,30 @@ Data
 """
 ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\t{frames}\n"
 
+# FLEx =========================================================================
+
+# A lot of these FLEx strings are ripped straight from the flex document
+# http://www.scribd.com/doc/97598863/Flex-file-format-specification-v1005
+
+FLEX_HEADER = """000 Manufacturer Da Vinci   No. 416 Equip TLC        Version 400      FLEx 1004
+010 Title {title}
+011 Client Black Hole Studios, Inc.      Facility The Best Post Place, Ltd.
+012 Shoot Date 06-01-95  Transfer Date 06-02-95  Opr RGB  Asst YCM  Bay TC-1
+013 Notes Reels 213A and 213B are KeyKoded; reel 99 is stock shot footage.
+"""
+FLEX_100 = "100 Edit 102  to V1234       Field A1 NTSC Split 34          Delay 00:01:56:12.0\n"
+FLEX_101 = "101 Reel 001B to V12T                     Split V           Delay 00;00;05;15,1 \n"
+FLEX_110 = "110 Scene {scene} Take {take} Cam Roll {roll} Sound {sound} 00;00;05;15.0 \n"
+FLEX_120 = '120 Scrpt POV launch tower; PA: "T-minus...6...5... Abort, retry, ignore?>"     \n'
+FLEX_200 = "200 RNK-A 35 23.98 OCN-12A  000100+00 000001+08 Key EASTM KJ123456 008845+02 p2 \n"
+FLEX_300 = "300 VTR-1 Assemble  001      At 01:12:00:04.0 For 00:00:37:15.0 Using VITC      \n"
+FLEX_400 = "400 SOUND Insert    025B     At 01:12:00:04.0 For 00:05:37:15.0 Using LTC       \n"
+FLEX_500 = "500 RGB   02 Dissolve BLACK    to 026      Fx      Rate 060 Delay 00:00:05:00.0 \n"
+FLEX_600 = "600 AMX   01 Register REEL023  to Reel023B Fx 8    Rate 030 Delay               \n"
+FLEX_701 = "701 ASC_SOP({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\n"
+FLEX_702 = "702 ASC_SAT {sat}\n"
+
+# misc =========================================================================
 
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
@@ -810,6 +835,164 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
         with mock.patch('__builtin__.open', self.mockOpen, create=True):
             cdl_convert.writeCDL(self.cdl)
 
+# FLEx =========================================================================
+
+class TestFLExBasic(unittest.TestCase):
+    """Tests basic parsing of a standard FLEx
+
+    FLEx can't store more than 6 sig digits, so we'll stay within that limit"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+
+        self.title = "Bob's Big Apple Break, into the big apple. Part 365   H"
+
+        self.slope1 = [1.329, 0.9833, 1.003]
+        self.offset1 = [0.011, 0.013, 0.11]
+        self.power1 = [.993, .998, 1.0113]
+        self.sat1 = 1.01
+
+        line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
+                             'bb94', 'x103', 'line1')
+
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope2 = [13.329, 4.9334, 348908]
+        self.offset2 = [-3424.0, -34.013, -642389]
+        self.power2 = [37.993, .00009, 0.0000]
+        self.sat2 = 177.01
+
+        line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
+                             'bb94', 'x104', 'line2')
+
+        self.slope3 = [1.2, 2.32, 10.82]
+        self.offset3 = [-1.3782, 278.32, 0.7383]
+        self.power3 = [1.329, 0.9833, 1.003]
+        self.sat3 = 0.99
+
+        line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
+                             'bb94', 'x105', 'line3')
+
+        self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+            f.write(self.file)
+            self.filename = f.name
+            # Calling readlines on the temp file. Without this open fails to
+            # read it. I have no idea why.
+            f.readlines()
+            cdls = cdl_convert.parseFLEx(f.name)
+            self.cdl1 = cdls[0]
+            self.cdl2 = cdls[1]
+            self.cdl3 = cdls[2]
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testId(self):
+        """Tests that filenames were parsed correctly"""
+
+        self.assertEqual(
+            'bb94_x103_line1',
+            self.cdl1.id
+        )
+
+        self.assertEqual(
+            'bb94_x104_line2',
+            self.cdl2.id
+        )
+
+        self.assertEqual(
+            'bb94_x105_line3',
+            self.cdl3.id
+        )
+
+    #===========================================================================
+
+    def testSlope(self):
+        """Tests that slopes were parsed correctly"""
+
+        self.assertEqual(
+            self.slope1,
+            self.cdl1.slope
+        )
+
+        self.assertEqual(
+            self.slope2,
+            self.cdl2.slope
+        )
+
+        self.assertEqual(
+            self.slope3,
+            self.cdl3.slope
+        )
+
+    #===========================================================================
+
+    def testOffset(self):
+        """Tests that offsets were parsed correctly"""
+
+        self.assertEqual(
+            self.offset1,
+            self.cdl1.offset
+        )
+
+        self.assertEqual(
+            self.offset2,
+            self.cdl2.offset
+        )
+
+        self.assertEqual(
+            self.offset3,
+            self.cdl3.offset
+        )
+
+    #===========================================================================
+
+    def testPower(self):
+        """Tests that powers were parsed correctly"""
+
+        self.assertEqual(
+            self.power1,
+            self.cdl1.power
+        )
+
+        self.assertEqual(
+            self.power2,
+            self.cdl2.power
+        )
+
+        self.assertEqual(
+            self.power3,
+            self.cdl3.power
+        )
+
+    #===========================================================================
+
+    def testSat(self):
+        """Tests that sats were parsed correctly"""
+
+        self.assertEqual(
+            self.sat1,
+            self.cdl1.sat
+        )
+
+        self.assertEqual(
+            self.sat2,
+            self.cdl2.sat
+        )
+
+        self.assertEqual(
+            self.sat3,
+            self.cdl3.sat
+        )
+        
 # Test Classes =================================================================
 
 # TimeCodeSegment is from my SMTPE Timecode gist at:
@@ -1176,6 +1359,8 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
 
     return ale
 
+#===============================================================================
+
 def buildCDL(slope, offset, power, sat):
     """Populates a CDL string and returns it"""
 
@@ -1193,6 +1378,73 @@ def buildCDL(slope, offset, power, sat):
     )
 
     return ssCdl
+
+#===============================================================================
+
+def buildFLExTake(slope, offset, power, sat, scene, take, roll):
+    """Builds a multiline take for a FLEx edl
+
+    This gets a little complicated because the FLEx uses strict character
+    delineation, so that's why we have all the ljust's spacing out characters.
+    """
+
+    tf = (True, False)
+
+    flex = FLEX_100
+    if choice(tf):
+        flex += FLEX_101
+
+    flex += FLEX_110.format(
+        scene=scene.ljust(8, ' '),
+        take=take.ljust(8, ' '),
+        roll=roll.ljust(8, ' '),
+        sound='138     ',
+    )
+
+    if choice(tf):
+        flex += FLEX_120
+    if choice(tf):
+        flex += FLEX_200
+    if choice(tf):
+        flex += FLEX_300
+    if choice(tf):
+        flex += FLEX_400
+    if choice(tf):
+        flex += FLEX_500
+    if choice(tf):
+        flex += FLEX_600
+
+    # We need an extra space in front of offset values if they are not negative
+    if offset[0] >= 0:
+        offsetR = ' ' + str(offset[0]).ljust(6, ' ')[:6]
+    else:
+        offsetR = '' + str(offset[0]).ljust(7, ' ')[:7]
+    if offset[1] >= 0:
+        offsetG = ' ' + str(offset[1]).ljust(6, ' ')[:6]
+    else:
+        offsetG = '' + str(offset[1]).ljust(7, ' ')[:7]
+    if offset[2] >= 0:
+        offsetB = ' ' + str(offset[2]).ljust(6, ' ')[:6]
+    else:
+        offsetB = '' + str(offset[2]).ljust(7, ' ')[:7]
+
+    flex += FLEX_701.format(
+        slopeR=str(slope[0]).ljust(6, ' ')[:6],
+        slopeG=str(slope[1]).ljust(6, ' ')[:6],
+        slopeB=str(slope[2]).ljust(6, ' ')[:6],
+        offsetR=offsetR,
+        offsetG=offsetG,
+        offsetB=offsetB,
+        powerR=str(power[0]).ljust(6, ' ')[:6],
+        powerG=str(power[1]).ljust(6, ' ')[:6],
+        powerB=str(power[2]).ljust(6, ' ')[:6],
+    )
+
+    flex += FLEX_702.format(
+        sat=str(sat).ljust(6, ' ')[:6]
+    )
+
+    return flex
 
 if __name__ == '__main__':
     unittest.main()
