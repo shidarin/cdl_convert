@@ -837,6 +837,7 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
 
 # FLEx =========================================================================
 
+
 class TestFLExBasic(unittest.TestCase):
     """Tests basic parsing of a standard FLEx
 
@@ -992,7 +993,77 @@ class TestFLExBasic(unittest.TestCase):
             self.sat3,
             self.cdl3.sat
         )
-        
+
+# sanitize() ===================================================================
+
+
+class TestSanitize():
+    """Tests the helper function sanitize()"""
+
+    def testSpaces(self):
+        """Tests that spaces are replaced with underscores"""
+        result = cdl_convert.sanitize('banana apple blueberry')
+
+        self.assertEqual(
+            'banana_apple_blueberry',
+            result
+        )
+
+    #===========================================================================
+
+    def testUnderscoresOkay(self):
+        """Tests that underscores pass through intact"""
+        result = cdl_convert.sanitize('a_b_c')
+
+        self.assertEqual(
+            'a_b_c',
+            result
+        )
+
+    #===========================================================================
+
+    def testPeriodsOkay(self):
+        """Tests that periods pass through intact"""
+        result = cdl_convert.sanitize('a.b.c')
+
+        self.assertEqual(
+            'a.b.c',
+            result
+        )
+
+    #===========================================================================
+
+    def testLeadingPeriodRemove(self):
+        """Tests that leading periods are removed"""
+        result = cdl_convert.sanitize('.abc')
+
+        self.assertEqual(
+            'abc',
+            result
+        )
+
+    #===========================================================================
+
+    def testLeadingUnderscoreRemove(self):
+        """Tests that leading underscores are removed"""
+        result = cdl_convert.sanitize('_abc')
+
+        self.assertEqual(
+            'abc',
+            result
+        )
+
+    #===========================================================================
+
+    def testCommonBadChars(self):
+        """Tests that common bad characters are removed"""
+        result = cdl_convert.sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d'):
+
+        self.assertEqual(
+            'abcd',
+            result
+        )
+
 # Test Classes =================================================================
 
 # TimeCodeSegment is from my SMTPE Timecode gist at:
