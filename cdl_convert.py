@@ -41,13 +41,13 @@ Currently we support converting from:
 * CC
 * CCC
 * OCIOCDLTransform (nk)
-* SS
+* CDL
 
 To:
 
 * CC
 * OCIOCDLTransform (nk)
-* SS
+* CDL
 
 With support for both from and to expanding in the future.
 
@@ -128,7 +128,7 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 # Space Separated CDL, a Rhythm & Hues format
-SS = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
+CDL = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
 """
 
 #===============================================================================
@@ -217,12 +217,12 @@ class AscCdl(object):
         """Inits an instance of an ASC CDL"""
 
         # Non-ASC attributes
-        self.fileIn = file
-        self.fileOut = None
+        self._fileIn = os.path.abspath(file)
+        self._fileOut = None
 
         # The id is really the only required part of an ASC CDL.
         # Each ID should be unique
-        self._id = id
+        self._id = sanitize(id)
 
         # ASC_SOP attributes
         self._slope = [1.0, 1.0, 1.0]
@@ -242,6 +242,14 @@ class AscCdl(object):
     # Properties ===============================================================
 
     @property
+    def fileIn(self):
+        return self._fileIn
+
+    @property
+    def fileOut(self):
+        return self._fileOut
+
+    @property
     def id(self):
         return self._id
 
@@ -256,8 +264,20 @@ class AscCdl(object):
             assert len(offsetRGB) == 3
         except AssertionError:
             raise ValueError("Offset must be set with all three RGB values")
+        try:
+            assert type(offsetRGB) in [list, tuple]
+        except AssertionError:
+            raise TypeError("Offset must be a list or tuple")
 
-        self._offset = list(offsetRGB)
+        offsetRGB = list(offsetRGB)
+
+        for i in xrange(len(offsetRGB)):
+            try:
+                offsetRGB[i] = float(offsetRGB[i])
+            except ValueError:
+                raise TypeError("Offset values must be ints or floats")
+
+        self._offset = offsetRGB
 
     @property
     def power(self):
@@ -270,14 +290,24 @@ class AscCdl(object):
             assert len(powerRGB) == 3
         except AssertionError:
             raise ValueError("Power must be set with all three RGB values")
+        try:
+            assert type(powerRGB) in [list, tuple]
+        except AssertionError:
+            raise TypeError("Power must be a list or tuple")
 
-        for i in powerRGB:
+        powerRGB = list(powerRGB)
+
+        for i in xrange(len(powerRGB)):
             try:
-                assert i >= 0.0
+                powerRGB[i] = float(powerRGB[i])
+            except ValueError:
+                raise TypeError("Power values must be ints or floats")
+            try:
+                assert powerRGB[i] >= 0.0
             except AssertionError:
                 raise ValueError("Power values must not be negative")
 
-        self._power = list(powerRGB)
+        self._power = powerRGB
 
     @property
     def slope(self):
@@ -290,14 +320,24 @@ class AscCdl(object):
             assert len(slopeRGB) == 3
         except AssertionError:
             raise ValueError("Slope must be set with all three RGB values")
+        try:
+            assert type(slopeRGB) in [list, tuple]
+        except AssertionError:
+            raise TypeError("Slope must be a list or tuple")
 
-        for i in slopeRGB:
+        slopeRGB = list(slopeRGB)
+
+        for i in xrange(len(slopeRGB)):
             try:
-                assert i >= 0.0
+                slopeRGB[i] = float(slopeRGB[i])
+            except ValueError:
+                raise TypeError("Slope values must be ints or floats")
+            try:
+                assert slopeRGB[i] >= 0.0
             except AssertionError:
                 raise ValueError("Slope values must not be negative")
 
-        self._slope = list(slopeRGB)
+        self._slope = slopeRGB
 
     @property
     def sat(self):
@@ -306,11 +346,15 @@ class AscCdl(object):
     @sat.setter
     def sat(self, satValue):
         try:
+            satValue = float(satValue)
+        except ValueError:
+            raise TypeError("Saturation must be a float or int")
+        try:
             assert satValue >= 0.0
         except AssertionError:
             raise ValueError("Saturation must be a positive value")
-        else:
-            self._sat = float(satValue)
+
+        self._sat = float(satValue)
 
     #===========================================================================
     # METHODS
@@ -321,13 +365,9 @@ class AscCdl(object):
 
         dir = os.path.dirname(self.fileIn)
 
-        # 'ss' files are really a .cdl extension
-        if output == 'ss':
-            output = 'cdl'
-
         filename = "{id}.{ext}".format(id=self.id, ext=output)
 
-        self.fileOut = os.path.join(dir, filename)
+        self._fileOut = os.path.join(dir, filename)
 
 #===============================================================================
 # FUNCTIONS
@@ -385,10 +425,6 @@ def parseALE(file):
                 scan_filename = columns.index('Scan Filename')
                 column = False
             elif data:
-                # First check to see if we're already parsed our last data
-                if not line:
-                    break
-
                 cdlData = line.split('\t')
 
                 sat = cdlData[ASC_SAT_I]
@@ -407,7 +443,7 @@ def parseALE(file):
 
                 cdl = AscCdl(id, file)
 
-                cdl.sat = sat
+                cdl.sat = float(sat)
                 cdl.slope = slope
                 cdl.offset = offset
                 cdl.power = power
@@ -468,7 +504,7 @@ def parseFLEx(file):
     with open(file, 'rb') as f:
         lines = f.readlines()
 
-        filename = pass
+        filename = os.path.basename(file).split('.')[0]
 
         title = None
         scene = None
@@ -583,7 +619,7 @@ def parseFLEx(file):
 
 #===============================================================================
 
-def parseSS(file):
+def parseCDL(file):
     """Parses a space separated .cdl file for ASC CDL information.
 
     Args:
@@ -634,7 +670,30 @@ def parseSS(file):
 
         cdls.append(cdl)
 
-    return cdl
+    return cdls
+
+#===============================================================================
+
+def sanitize(name):
+    """Removes any characters in string name that aren't alnum or in '_.'"""
+    from re import compile
+    # Replace any spaces with underscores
+    name = name.replace(' ', '_')
+    # If we start our string with an underscore or period, remove it
+    if name[0] in '_.':
+        name = name[1:]
+    # a-z is all lowercase
+    # A-Z is all uppercase
+    # 0-9 is all digits
+    # \. is an escaped period
+    # _ is an underscore
+    # Put them together, negate them by leading with an ^
+    # and our compiler will mark every non alnum, non ., _ character
+    pattern = compile(r'[^a-zA-Z0-9\._]+')
+    # Then we sub them with nothing
+    fixed = pattern.sub('', name)
+
+    return fixed
 
 #===============================================================================
 
@@ -660,10 +719,10 @@ def writeCC(cdl):
 
 #===============================================================================
 
-def writeSS(cdl):
+def writeCDL(cdl):
     """Writes the AscCdl to a space separated .cdl file"""
 
-    ss = SS.format(
+    ssCdl = CDL.format(
         slopeR=cdl.slope[0],
         slopeG=cdl.slope[1],
         slopeB=cdl.slope[2],
@@ -677,7 +736,7 @@ def writeSS(cdl):
     )
 
     with open(cdl.fileOut, 'wb') as f:
-        f.write(ss)
+        f.write(ssCdl)
 
 #===============================================================================
 # MAIN
@@ -689,12 +748,12 @@ def writeSS(cdl):
 INPUT_FORMATS = {
     'ale': parseALE,
     'flex': parseFLEx,
-    'ss': parseSS,
+    'cdl': parseCDL,
 }
 
 OUTPUT_FORMATS = {
     'cc': writeCC,
-    'ss': writeSS,
+    'cdl': writeCDL,
 }
 
 #===============================================================================

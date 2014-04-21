@@ -31,14 +31,12 @@ the Film and TV industries.
 Currently we support converting from:
 
 * ALE
-* CC
-* CCC
-* OCIOCDLTransform
+* FLEx
+* CDL
 
 To:
 
 * CC
-* OCIOCDLTransform
 * Space Separated CDL
 
 With support for both from and to expanding in the future.
