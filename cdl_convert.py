@@ -529,9 +529,9 @@ def parseFLEx(file):
                             id += '_' + reel
                 else:
                     if title:
-                        id = title
+                        id = title + str(len(cdls) + 1).rjust(3, '0')
                     else:
-                        id = filename + str(len(cdls) + 1)
+                        id = filename + str(len(cdls) + 1).rjust(3, '0')
 
                 # If we already have slope/offset/power:
                 if slope and offset and power:
@@ -594,9 +594,9 @@ def parseFLEx(file):
                 id += '_' + reel
     else:
         if title:
-            id = title
+            id = title + str(len(cdls) + 1).rjust(3, '0')
         else:
-            id = filename + str(len(cdls) + 1)
+            id = filename + str(len(cdls) + 1).rjust(3, '0')
 
     # If we have slope/offset/power:
     if slope and offset and power:
