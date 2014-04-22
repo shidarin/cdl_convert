@@ -522,6 +522,13 @@ class TestParseALEBasic(unittest.TestCase):
         self.cdl3 = cdls[2]
 
     #===========================================================================
+
+    def tearDown(self):
+        # The system should clean these up automatically,
+        # but we'll be neat.
+        os.remove(self.filename)
+
+    #===========================================================================
     # TESTS
     #===========================================================================
 
@@ -695,6 +702,13 @@ class TestParseCDLBasic(unittest.TestCase):
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCDL(self.filename)[0]
+
+    #===========================================================================
+
+    def tearDown(self):
+        # The system should clean these up automatically,
+        # but we'll be neat.
+        os.remove(self.filename)
 
     #===========================================================================
     # TESTS
@@ -900,6 +914,13 @@ class TestParseFLExBasic(unittest.TestCase):
         self.cdl1 = self.cdls[0]
         self.cdl2 = self.cdls[1]
         self.cdl3 = self.cdls[2]
+
+    #===========================================================================
+
+    def tearDown(self):
+        # The system should clean these up automatically,
+        # but we'll be neat.
+        os.remove(self.filename)
 
     #===========================================================================
     # TESTS
