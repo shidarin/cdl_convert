@@ -68,6 +68,25 @@ Data
 """
 ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\t{frames}\n"
 
+# cc ===========================================================================
+
+# We'll build what we know if a valid XML tree by hand, so we can test that our
+# fancy etree code is working correctly
+
+CC_OPEN = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection{idAttrib}>
+"""
+CC_SOP_OPEN = "    <SOPNode>\n"
+CC_DESC = "        <Description>{desc}</Description>\n"
+CC_SLOPE = "        <Slope>{slopeR} {slopeG} {slopeB}</Slope>\n"
+CC_OFFSET = "        <Offset>{offsetR} {offsetG} {offsetB}</Offset>\n"
+CC_POWER = "        <Power>{powerR} {powerG} {powerB}</Power>\n"
+CC_SOP_CLOSE = "    </SOPNode>\n"
+CC_SAT_OPEN = "    <SatNode>\n"
+CC_SAT = "        <Saturation>{sat}</Saturation>\n"
+CC_SAT_CLOSE = "    </SatNode>\n"
+CC_CLOSE = "</ColorCorrection>\n"
+
 # FLEx =========================================================================
 
 # A lot of these FLEx strings are ripped straight from the flex document
@@ -849,7 +868,7 @@ class TestParseFLExBasic(unittest.TestCase):
         self.sat1 = 1.01
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
-                             'bb94', 'x103', 'line1')
+                              'bb94', 'x103', 'line1')
 
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
@@ -860,7 +879,7 @@ class TestParseFLExBasic(unittest.TestCase):
         self.sat2 = 177.01
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
-                             'bb94', 'x104', 'line2')
+                              'bb94', 'x104', 'line2')
 
         self.slope3 = [1.2, 2.32, 10.82]
         self.offset3 = [-1.3782, 278.32, 0.7383]
@@ -868,7 +887,7 @@ class TestParseFLExBasic(unittest.TestCase):
         self.sat3 = 0.99
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
-                             'bb94', 'x105', 'line3')
+                              'bb94', 'x105', 'line3')
 
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
@@ -1013,7 +1032,7 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
         self.sat1 = 1.01
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
-                             'bb94', 'x103', 'line1')
+                              'bb94', 'x103', 'line1')
 
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
@@ -1024,7 +1043,7 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
         self.sat2 = 177.01
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
-                             'bb94', 'x104')
+                              'bb94', 'x104')
 
         self.slope3 = [1.2, 2.32, 10.82]
         self.offset3 = [-1.3782, 278.32, 0.7383]
@@ -1032,7 +1051,7 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
         self.sat3 = 0.99
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
-                             'bb94')
+                              'bb94')
 
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
@@ -1780,6 +1799,48 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
         )
 
     return ale
+
+#===============================================================================
+
+def buildCC(id=None, desc=None, slope=None, offset=None, power=None, sat=None,
+            emptySop=False, emptySat=False):
+    """Builds a valid CC XML the hard way, to test against
+
+    Proving emptySop or emptySat will cause the SOPNode and SatNode to open,
+    but with no sat values placed inside
+
+    """
+    if id:
+        id = ' id="{id}"'.format(id=id)
+    else:
+        id = ''
+
+    cc = CC_OPEN.format(idAttrib=id)
+    if desc or slope or offset or power or emptySop:
+        cc += CC_SOP_OPEN
+        if desc:
+            cc += CC_DESC.format(desc=desc)
+        if slope:
+            cc += CC_SLOPE.format(
+                slopeR=slope[0], slopeG=slope[1], slopeB=slope[2]
+            )
+        if offset:
+            cc += CC_OFFSET.format(
+                offsetR=offset[0], offsetG=offset[1], offsetB=offset[2]
+            )
+        if power:
+            cc += CC_POWER.format(
+                powerR=power[0], powerG=power[1], powerB=power[2]
+            )
+        cc += CC_SOP_CLOSE
+    if sat or emptySat:
+        cc += CC_SAT_OPEN
+        if sat:
+            cc += CC_SAT.format(sat=sat)
+        cc += CC_SAT_CLOSE
+    cc += CC_CLOSE
+    
+    return cc
 
 #===============================================================================
 
