@@ -1,7 +1,7 @@
 CDL Convert
 ==========
 
-[![Build Status](https://travis-ci.org/shidarin/cdl_convert.svg?branch=feature/testing)](https://travis-ci.org/shidarin/cdl_convert)
+[![Build Status](https://travis-ci.org/shidarin/cdl_convert.svg?branch=feature/testing)](https://travis-ci.org/shidarin/cdl_convert)[![Coverage Status](https://coveralls.io/repos/shidarin/cdl_convert/badge.png?branch=feature%2Ftesting)](https://coveralls.io/r/shidarin/cdl_convert?branch=feature%2Ftesting)
 
 Converts between common [ASC CDL](http://en.wikipedia.org/wiki/ASC_CDL)
 formats. The [American Society of Cinematographers](http://www.theasc.com/) Color
