@@ -837,7 +837,8 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
 
 # FLEx =========================================================================
 
-class TestFLExBasic(unittest.TestCase):
+
+class TestParseFLExBasic(unittest.TestCase):
     """Tests basic parsing of a standard FLEx
 
     FLEx can't store more than 6 sig digits, so we'll stay within that limit"""
@@ -848,7 +849,7 @@ class TestFLExBasic(unittest.TestCase):
 
     def setUp(self):
 
-        self.title = "Bob's Big Apple Break, into the big apple. Part 365   H"
+        self.title = "Bob's Big Apple Break, into the big apple! Part 365   H"
 
         self.slope1 = [1.329, 0.9833, 1.003]
         self.offset1 = [0.011, 0.013, 0.11]
@@ -886,10 +887,10 @@ class TestFLExBasic(unittest.TestCase):
             # Calling readlines on the temp file. Without this open fails to
             # read it. I have no idea why.
             f.readlines()
-            cdls = cdl_convert.parseFLEx(f.name)
-            self.cdl1 = cdls[0]
-            self.cdl2 = cdls[1]
-            self.cdl3 = cdls[2]
+            self.cdls = cdl_convert.parseFLEx(f.name)
+            self.cdl1 = self.cdls[0]
+            self.cdl2 = self.cdls[1]
+            self.cdl3 = self.cdls[2]
 
     #===========================================================================
     # TESTS
@@ -992,7 +993,88 @@ class TestFLExBasic(unittest.TestCase):
             self.sat3,
             self.cdl3.sat
         )
-        
+
+    #===========================================================================
+
+    def testDescription(self):
+        """Tests that the descriptions have been parsed correctly"""
+
+        for i in xrange(3):
+            self.assertEqual(
+                self.title,
+                self.cdls[i].description
+            )
+
+# sanitize() ===================================================================
+
+
+class TestSanitize(unittest.TestCase):
+    """Tests the helper function sanitize()"""
+
+    def testSpaces(self):
+        """Tests that spaces are replaced with underscores"""
+        result = cdl_convert.sanitize('banana apple blueberry')
+
+        self.assertEqual(
+            'banana_apple_blueberry',
+            result
+        )
+
+    #===========================================================================
+
+    def testUnderscoresOkay(self):
+        """Tests that underscores pass through intact"""
+        result = cdl_convert.sanitize('a_b_c')
+
+        self.assertEqual(
+            'a_b_c',
+            result
+        )
+
+    #===========================================================================
+
+    def testPeriodsOkay(self):
+        """Tests that periods pass through intact"""
+        result = cdl_convert.sanitize('a.b.c')
+
+        self.assertEqual(
+            'a.b.c',
+            result
+        )
+
+    #===========================================================================
+
+    def testLeadingPeriodRemove(self):
+        """Tests that leading periods are removed"""
+        result = cdl_convert.sanitize('.abc')
+
+        self.assertEqual(
+            'abc',
+            result
+        )
+
+    #===========================================================================
+
+    def testLeadingUnderscoreRemove(self):
+        """Tests that leading underscores are removed"""
+        result = cdl_convert.sanitize('_abc')
+
+        self.assertEqual(
+            'abc',
+            result
+        )
+
+    #===========================================================================
+
+    def testCommonBadChars(self):
+        """Tests that common bad characters are removed"""
+        result = cdl_convert.sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d')
+
+        self.assertEqual(
+            'abcd',
+            result
+        )
+
 # Test Classes =================================================================
 
 # TimeCodeSegment is from my SMTPE Timecode gist at:

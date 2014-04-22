@@ -222,7 +222,7 @@ class AscCdl(object):
 
         # The id is really the only required part of an ASC CDL.
         # Each ID should be unique
-        self._id = id
+        self._id = sanitize(id)
 
         # ASC_SOP attributes
         self._slope = [1.0, 1.0, 1.0]
@@ -529,9 +529,9 @@ def parseFLEx(file):
                             id += '_' + reel
                 else:
                     if title:
-                        id = title
+                        id = title + str(len(cdls) + 1).rjust(3, '0')
                     else:
-                        id = filename + str(len(cdls) + 1)
+                        id = filename + str(len(cdls) + 1).rjust(3, '0')
 
                 # If we already have slope/offset/power:
                 if slope and offset and power:
@@ -594,9 +594,9 @@ def parseFLEx(file):
                 id += '_' + reel
     else:
         if title:
-            id = title
+            id = title + str(len(cdls) + 1).rjust(3, '0')
         else:
-            id = filename + str(len(cdls) + 1)
+            id = filename + str(len(cdls) + 1).rjust(3, '0')
 
     # If we have slope/offset/power:
     if slope and offset and power:
@@ -671,6 +671,29 @@ def parseCDL(file):
         cdls.append(cdl)
 
     return cdls
+
+#===============================================================================
+
+def sanitize(name):
+    """Removes any characters in string name that aren't alnum or in '_.'"""
+    from re import compile
+    # Replace any spaces with underscores
+    name = name.replace(' ', '_')
+    # If we start our string with an underscore or period, remove it
+    if name[0] in '_.':
+        name = name[1:]
+    # a-z is all lowercase
+    # A-Z is all uppercase
+    # 0-9 is all digits
+    # \. is an escaped period
+    # _ is an underscore
+    # Put them together, negate them by leading with an ^
+    # and our compiler will mark every non alnum, non ., _ character
+    pattern = compile(r'[^a-zA-Z0-9\._]+')
+    # Then we sub them with nothing
+    fixed = pattern.sub('', name)
+
+    return fixed
 
 #===============================================================================
 
