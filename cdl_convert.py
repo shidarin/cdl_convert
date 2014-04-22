@@ -502,30 +502,32 @@ def parseCC(file):
     except KeyError:
         raise ValueError('No id found on ColorCorrection')
 
-    cdl = AscCdl(id)
+    cdl = AscCdl(id, file)
     # Neither the SOP nor the Sat node actually HAVE to exist, it literally
     # could just be an id and that's it.
     sop = root.find('SOPNode')
     sat = root.find('SatNode')
 
-    if sop:
+    # We make a specific comparison against None, because etree creates errors
+    # otherwise (future behavior is changing)
+    if sop is not None:
         desc = sop.find('Description')
         slope = sop.find('Slope')
         offset = sop.find('Offset')
         power = sop.find('Power')
 
-        if desc:
+        if desc is not None:
             cdl.description = desc.text
-        if slope:
+        if slope is not None:
             cdl.slope = slope.text.split()
-        if offset:
+        if offset is not None:
             cdl.offset = offset.text.split()
-        if power:
+        if power is not None:
             cdl.power = power.text.split()
-    if sat:
+    if sat is not None:
         satValue = sat.find('Saturation')
 
-        if satValue:
+        if satValue is not None:
             cdl.sat = satValue.text
 
     cdls.append(cdl)
