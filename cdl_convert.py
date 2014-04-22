@@ -843,7 +843,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except Exception, err:
+    except Exception as err:
         print 'Unexpected error encountered:'
         print err
         raw_input('Press enter key to exit')
