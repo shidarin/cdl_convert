@@ -995,6 +995,231 @@ class TestParseFLExBasic(unittest.TestCase):
                 self.cdls[i].description
             )
 
+
+class TestParseFLExMissingNames(TestParseFLExBasic):
+    """Tests basic parsing of a Flex where some takes are missing name fields"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+
+        self.title = "Bob's Big Apple Break, into the big apple! Part 365   H"
+
+        self.slope1 = [1.329, 0.9833, 1.003]
+        self.offset1 = [0.011, 0.013, 0.11]
+        self.power1 = [.993, .998, 1.0113]
+        self.sat1 = 1.01
+
+        line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
+                             'bb94', 'x103', 'line1')
+
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope2 = [13.329, 4.9334, 348908]
+        self.offset2 = [-3424.0, -34.013, -642389]
+        self.power2 = [37.993, .00009, 0.0000]
+        self.sat2 = 177.01
+
+        line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
+                             'bb94', 'x104')
+
+        self.slope3 = [1.2, 2.32, 10.82]
+        self.offset3 = [-1.3782, 278.32, 0.7383]
+        self.power3 = [1.329, 0.9833, 1.003]
+        self.sat3 = 0.99
+
+        line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
+                             'bb94')
+
+        self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
+            f.write(self.file)
+            self.filename = f.name
+
+        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdl1 = self.cdls[0]
+        self.cdl2 = self.cdls[1]
+        self.cdl3 = self.cdls[2]
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testId(self):
+        """Tests that filenames were parsed correctly"""
+
+        self.assertEqual(
+            'bb94_x103_line1',
+            self.cdl1.id
+        )
+
+        self.assertEqual(
+            'bb94_x104',
+            self.cdl2.id
+        )
+
+        self.assertEqual(
+            'bb94',
+            self.cdl3.id
+        )
+
+
+class TestParseFLExTitleOnly(TestParseFLExBasic):
+    """Tests basic parsing of a Flex where no takes have scn/roll/take fields"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+
+        self.title = "Bob's Big Apple Break, into the big apple! Part.365   H"
+
+        self.slope1 = [1.329, 0.9833, 1.003]
+        self.offset1 = [0.011, 0.013, 0.11]
+        self.power1 = [.993, .998, 1.0113]
+        self.sat1 = 1.01
+
+        line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1)
+
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope2 = [13.329, 4.9334, 348908]
+        self.offset2 = [-3424.0, -34.013, -642389]
+        self.power2 = [37.993, .00009, 0.0000]
+        self.sat2 = 177.01
+
+        line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2)
+
+        self.slope3 = [1.2, 2.32, 10.82]
+        self.offset3 = [-1.3782, 278.32, 0.7383]
+        self.power3 = [1.329, 0.9833, 1.003]
+        self.sat3 = 0.99
+
+        line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3)
+
+        self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
+            f.write(self.file)
+            self.filename = f.name
+
+        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdl1 = self.cdls[0]
+        self.cdl2 = self.cdls[1]
+        self.cdl3 = self.cdls[2]
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testId(self):
+        """Tests that filenames were parsed correctly"""
+
+        self.assertEqual(
+            "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H001",
+            self.cdl1.id
+        )
+
+        self.assertEqual(
+            "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H002",
+            self.cdl2.id
+        )
+
+        self.assertEqual(
+            "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H003",
+            self.cdl3.id
+        )
+
+
+class TestParseFLExNoTitle(TestParseFLExBasic):
+    """Tests basic parsing of a Flex where id is based on filename"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+
+        self.title = ''
+
+        self.slope1 = [1.329, 0.9833, 1.003]
+        self.offset1 = [0.011, 0.013, 0.11]
+        self.power1 = [.993, .998, 1.0113]
+        self.sat1 = 1.01
+
+        line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1)
+
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope2 = [13.329, 4.9334, 348908]
+        self.offset2 = [-3424.0, -34.013, -642389]
+        self.power2 = [37.993, .00009, 0.0000]
+        self.sat2 = 177.01
+
+        line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2)
+
+        self.slope3 = [1.2, 2.32, 10.82]
+        self.offset3 = [-1.3782, 278.32, 0.7383]
+        self.power3 = [1.329, 0.9833, 1.003]
+        self.sat3 = 0.99
+
+        line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3)
+
+        self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
+            f.write(self.file)
+            self.filename = f.name
+
+        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdl1 = self.cdls[0]
+        self.cdl2 = self.cdls[1]
+        self.cdl3 = self.cdls[2]
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testId(self):
+        """Tests that filenames were parsed correctly"""
+
+        filename = os.path.basename(self.filename).split('.')[0]
+
+        self.assertEqual(
+            "{0}001".format(filename),
+            self.cdl1.id
+        )
+
+        self.assertEqual(
+            "{0}002".format(filename),
+            self.cdl2.id
+        )
+
+        self.assertEqual(
+            "{0}003".format(filename),
+            self.cdl3.id
+        )
+
+    #===========================================================================
+
+    def testDescription(self):
+        """Tests that the descriptions have been parsed correctly"""
+
+        for i in xrange(3):
+            self.assertIsNone(
+                self.cdls[i].description
+            )
+
 # sanitize() ===================================================================
 
 
@@ -1453,7 +1678,7 @@ def buildCDL(slope, offset, power, sat):
 
 #===============================================================================
 
-def buildFLExTake(slope, offset, power, sat, scene, take, roll):
+def buildFLExTake(slope, offset, power, sat, scene=None, take=None, roll=None):
     """Builds a multiline take for a FLEx edl
 
     This gets a little complicated because the FLEx uses strict character
@@ -1465,6 +1690,13 @@ def buildFLExTake(slope, offset, power, sat, scene, take, roll):
     flex = FLEX_100
     if choice(tf):
         flex += FLEX_101
+
+    if not scene:
+        scene = ''
+    if not take:
+        take = ''
+    if not roll:
+        roll = ''
 
     flex += FLEX_110.format(
         scene=scene.ljust(8, ' '),
