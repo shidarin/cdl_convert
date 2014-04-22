@@ -678,6 +678,96 @@ class TestParseALEShort(TestParseALEBasic):
         self.cdl2 = cdls[1]
         self.cdl3 = cdls[2]
 
+# cc ===========================================================================
+
+class TestParseCCBasic(unittest.TestCase):
+    """Tests parsing a cc xml"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        self.slope = [1.329, 0.9833, 1.003]
+        self.offset = [0.011, 0.013, 0.11]
+        self.power = [.993, .998, 1.0113]
+        self.sat = 1.01
+        self.id = 'cc23678'
+        self.desc = "Raised saturation a little, adjusted gamma"
+
+        self.file = buildCC(self.id, self.desc, self.slope, self.offset,
+                            self.power, self.sat)
+
+        # Build our cc
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
+            f.write(self.file)
+            self.filename = f.name
+
+        self.cdl = cdl_convert.parseCC(self.filename)[0]
+
+    #===========================================================================
+
+    def tearDown(self):
+        # The system should clean these up automatically,
+        # but we'll be neat.
+        os.remove(self.filename)
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testId(self):
+        """Tests that id was set to id attrib"""
+        self.assertEqual(
+            self.id,
+            self.cdl.id
+        )
+
+    #===========================================================================
+
+    def testDesc(self):
+        """Tests that desc was set to description element"""
+        self.assertEqual(
+            self.desc,
+            self.cdl.description
+        )
+
+    #===========================================================================
+
+    def testSlope(self):
+        """Tests that slope was set correctly"""
+        self.assertEqual(
+            self.slope,
+            self.cdl.slope
+        )
+
+    #===========================================================================
+
+    def testOffset(self):
+        """Tests that offset was set correctly"""
+        self.assertEqual(
+            self.offset,
+            self.cdl.offset
+        )
+
+    #===========================================================================
+
+    def testPower(self):
+        """Tests that power was set correctly"""
+        self.assertEqual(
+            self.power,
+            self.cdl.power
+        )
+
+    #===========================================================================
+
+    def testSat(self):
+        """Tests that sat was set correctly"""
+        self.assertEqual(
+            self.sat,
+            self.cdl.sat
+        )
+
 # cdl ==========================================================================
 
 
