@@ -493,16 +493,14 @@ class TestParseALEBasic(unittest.TestCase):
         self.file = ALE_HEADER + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
             f.write(self.file)
             self.filename = f.name
-            # Calling readlines on the temp file. Without this open fails to
-            # read it. I have no idea why.
-            f.readlines()
-            cdls = cdl_convert.parseALE(f.name)
-            self.cdl1 = cdls[0]
-            self.cdl2 = cdls[1]
-            self.cdl3 = cdls[2]
+
+        cdls = cdl_convert.parseALE(self.filename)
+        self.cdl1 = cdls[0]
+        self.cdl2 = cdls[1]
+        self.cdl3 = cdls[2]
 
     #===========================================================================
     # TESTS
@@ -645,16 +643,14 @@ class TestParseALEShort(TestParseALEBasic):
         self.file = ALE_HEADER_SHORT + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
             f.write(self.file)
             self.filename = f.name
-            # Calling readlines on the temp file. Without this open fails to
-            # read it. I have no idea why.
-            f.readlines()
-            cdls = cdl_convert.parseALE(f.name)
-            self.cdl1 = cdls[0]
-            self.cdl2 = cdls[1]
-            self.cdl3 = cdls[2]
+
+        cdls = cdl_convert.parseALE(self.filename)
+        self.cdl1 = cdls[0]
+        self.cdl2 = cdls[1]
+        self.cdl3 = cdls[2]
 
 # cdl ==========================================================================
 
@@ -675,13 +671,11 @@ class TestParseCDLBasic(unittest.TestCase):
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
             f.write(self.file)
             self.filename = f.name
-            # Calling readlines on the temp file. Without this open fails to
-            # read it. I have no idea why.
-            f.readlines()
-            self.cdl = cdl_convert.parseCDL(f.name)[0]
+
+        self.cdl = cdl_convert.parseCDL(self.filename)[0]
 
     #===========================================================================
     # TESTS
@@ -751,13 +745,11 @@ class TestParseCDLOdd(TestParseCDLBasic):
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
             f.write(self.file)
             self.filename = f.name
-            # Calling readlines on the temp file. Without this open fails to
-            # read it. I have no idea why.
-            f.readlines()
-            self.cdl = cdl_convert.parseCDL(f.name)[0]
+
+        self.cdl = cdl_convert.parseCDL(self.filename)[0]
 
 
 class TestWriteCDLBasic(unittest.TestCase):
@@ -881,16 +873,14 @@ class TestParseFLExBasic(unittest.TestCase):
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
             f.write(self.file)
             self.filename = f.name
-            # Calling readlines on the temp file. Without this open fails to
-            # read it. I have no idea why.
-            f.readlines()
-            self.cdls = cdl_convert.parseFLEx(f.name)
-            self.cdl1 = self.cdls[0]
-            self.cdl2 = self.cdls[1]
-            self.cdl3 = self.cdls[2]
+
+        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdl1 = self.cdls[0]
+        self.cdl2 = self.cdls[1]
+        self.cdl3 = self.cdls[2]
 
     #===========================================================================
     # TESTS
