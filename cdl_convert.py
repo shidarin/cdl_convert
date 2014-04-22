@@ -39,14 +39,12 @@ Currently we support converting from:
 
 * ALE
 * CC
-* CCC
-* OCIOCDLTransform (nk)
+* FLEx
 * CDL
 
 To:
 
 * CC
-* OCIOCDLTransform (nk)
 * CDL
 
 With support for both from and to expanding in the future.
@@ -103,6 +101,7 @@ Functions
 from argparse import ArgumentParser
 from ast import literal_eval
 import os
+import xml.etree.ElementTree as ET
 
 #===============================================================================
 # GLOBALS
@@ -454,6 +453,90 @@ def parseALE(file):
 
 #===============================================================================
 
+def parseCC(file):
+    """Parses a .cc file for ASC CDL information
+
+    Args:
+        file : (str)
+            The filepath to the CC
+
+    Return:
+        [<AscCdl>]
+            A list of CDL objects retrieved from the CC
+
+    Raises:
+        N/A
+
+    A CC file is really only a single element of a larger CDL or CCC XML file,
+    but this element has become a popular way of passing around single shot
+    CDLs, rather than the much bulkier CDL file.
+
+    A sample CC XML file has text like:
+
+    <ColorCorrection id="cc03340">
+        <SOPNode>
+            <Description>change +1 red, contrast boost</Description>
+            <Slope>1.2 1.3 1.4</Slope>
+            <Offset>0.3 0.0 0.0</Offset>
+            <Power>1.0 1.0 1.0</Power>
+        </SOPNode>
+        <SatNode>
+            <Saturation>1.2</Saturation>
+        </SatNode>
+    </ColorCorrection>
+
+    We'll check to see if each of these elements exist, and override the AscCdl
+    defaults if we find them.
+    """
+    tree = ET.parse(file)
+    root = tree.getroot()
+
+    cdls = []
+
+    if not root.tag == 'ColorCorrection':
+        # This is not a CC file...
+        raise ValueError('CC parsed but no ColorCorrection found')
+
+    try:
+        id = root.attrib['id']
+    except KeyError:
+        raise ValueError('No id found on ColorCorrection')
+
+    cdl = AscCdl(id, file)
+    # Neither the SOP nor the Sat node actually HAVE to exist, it literally
+    # could just be an id and that's it.
+    sop = root.find('SOPNode')
+    sat = root.find('SatNode')
+
+    # We make a specific comparison against None, because etree creates errors
+    # otherwise (future behavior is changing)
+    if sop is not None:
+        desc = sop.find('Description')
+        slope = sop.find('Slope')
+        offset = sop.find('Offset')
+        power = sop.find('Power')
+
+        if desc is not None:
+            cdl.description = desc.text
+        if slope is not None:
+            cdl.slope = slope.text.split()
+        if offset is not None:
+            cdl.offset = offset.text.split()
+        if power is not None:
+            cdl.power = power.text.split()
+    if sat is not None:
+        satValue = sat.find('Saturation')
+
+        if satValue is not None:
+            cdl.sat = satValue.text
+
+    cdls.append(cdl)
+
+    return cdls
+
+
+#===============================================================================
+
 def parseFLEx(file):
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
 
@@ -747,8 +830,9 @@ def writeCDL(cdl):
 
 INPUT_FORMATS = {
     'ale': parseALE,
-    'flex': parseFLEx,
+    'cc': parseCC,
     'cdl': parseCDL,
+    'flex': parseFLEx,
 }
 
 OUTPUT_FORMATS = {
