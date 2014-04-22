@@ -529,9 +529,9 @@ def parseFLEx(file):
                             id += '_' + reel
                 else:
                     if title:
-                        id = title
+                        id = title + str(len(cdls) + 1).rjust(3, '0')
                     else:
-                        id = filename + str(len(cdls) + 1)
+                        id = filename + str(len(cdls) + 1).rjust(3, '0')
 
                 # If we already have slope/offset/power:
                 if slope and offset and power:
@@ -594,9 +594,9 @@ def parseFLEx(file):
                 id += '_' + reel
     else:
         if title:
-            id = title
+            id = title + str(len(cdls) + 1).rjust(3, '0')
         else:
-            id = filename + str(len(cdls) + 1)
+            id = filename + str(len(cdls) + 1).rjust(3, '0')
 
     # If we have slope/offset/power:
     if slope and offset and power:
@@ -803,7 +803,7 @@ def parseArgs():
         # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
         outputTypes = args.output.split(',')
         for i in xrange(len(outputTypes)):
-            if outputTypes[i].lower() not in OUTPUT_FORMATS:
+            if outputTypes[i].lower() not in OUTPUT_FORMATS.keys():
                 raise ValueError(
                     "The output format: {output} is not supported".format(
                         output=outputTypes[i]

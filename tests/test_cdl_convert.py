@@ -493,16 +493,14 @@ class TestParseALEBasic(unittest.TestCase):
         self.file = ALE_HEADER + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
             f.write(self.file)
             self.filename = f.name
-            # Calling readlines on the temp file. Without this open fails to
-            # read it. I have no idea why.
-            f.readlines()
-            cdls = cdl_convert.parseALE(f.name)
-            self.cdl1 = cdls[0]
-            self.cdl2 = cdls[1]
-            self.cdl3 = cdls[2]
+
+        cdls = cdl_convert.parseALE(self.filename)
+        self.cdl1 = cdls[0]
+        self.cdl2 = cdls[1]
+        self.cdl3 = cdls[2]
 
     #===========================================================================
     # TESTS
@@ -645,16 +643,14 @@ class TestParseALEShort(TestParseALEBasic):
         self.file = ALE_HEADER_SHORT + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
             f.write(self.file)
             self.filename = f.name
-            # Calling readlines on the temp file. Without this open fails to
-            # read it. I have no idea why.
-            f.readlines()
-            cdls = cdl_convert.parseALE(f.name)
-            self.cdl1 = cdls[0]
-            self.cdl2 = cdls[1]
-            self.cdl3 = cdls[2]
+
+        cdls = cdl_convert.parseALE(self.filename)
+        self.cdl1 = cdls[0]
+        self.cdl2 = cdls[1]
+        self.cdl3 = cdls[2]
 
 # cdl ==========================================================================
 
@@ -675,13 +671,11 @@ class TestParseCDLBasic(unittest.TestCase):
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
             f.write(self.file)
             self.filename = f.name
-            # Calling readlines on the temp file. Without this open fails to
-            # read it. I have no idea why.
-            f.readlines()
-            self.cdl = cdl_convert.parseCDL(f.name)[0]
+
+        self.cdl = cdl_convert.parseCDL(self.filename)[0]
 
     #===========================================================================
     # TESTS
@@ -751,13 +745,11 @@ class TestParseCDLOdd(TestParseCDLBasic):
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
             f.write(self.file)
             self.filename = f.name
-            # Calling readlines on the temp file. Without this open fails to
-            # read it. I have no idea why.
-            f.readlines()
-            self.cdl = cdl_convert.parseCDL(f.name)[0]
+
+        self.cdl = cdl_convert.parseCDL(self.filename)[0]
 
 
 class TestWriteCDLBasic(unittest.TestCase):
@@ -838,7 +830,7 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
 # FLEx =========================================================================
 
 
-class TestFLExBasic(unittest.TestCase):
+class TestParseFLExBasic(unittest.TestCase):
     """Tests basic parsing of a standard FLEx
 
     FLEx can't store more than 6 sig digits, so we'll stay within that limit"""
@@ -849,7 +841,7 @@ class TestFLExBasic(unittest.TestCase):
 
     def setUp(self):
 
-        self.title = "Bob's Big Apple Break, into the big apple. Part 365   H"
+        self.title = "Bob's Big Apple Break, into the big apple! Part 365   H"
 
         self.slope1 = [1.329, 0.9833, 1.003]
         self.offset1 = [0.011, 0.013, 0.11]
@@ -881,16 +873,14 @@ class TestFLExBasic(unittest.TestCase):
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b') as f:
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
             f.write(self.file)
             self.filename = f.name
-            # Calling readlines on the temp file. Without this open fails to
-            # read it. I have no idea why.
-            f.readlines()
-            cdls = cdl_convert.parseFLEx(f.name)
-            self.cdl1 = cdls[0]
-            self.cdl2 = cdls[1]
-            self.cdl3 = cdls[2]
+
+        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdl1 = self.cdls[0]
+        self.cdl2 = self.cdls[1]
+        self.cdl3 = self.cdls[2]
 
     #===========================================================================
     # TESTS
@@ -994,6 +984,242 @@ class TestFLExBasic(unittest.TestCase):
             self.cdl3.sat
         )
 
+    #===========================================================================
+
+    def testDescription(self):
+        """Tests that the descriptions have been parsed correctly"""
+
+        for i in xrange(3):
+            self.assertEqual(
+                self.title,
+                self.cdls[i].description
+            )
+
+
+class TestParseFLExMissingNames(TestParseFLExBasic):
+    """Tests basic parsing of a Flex where some takes are missing name fields"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+
+        self.title = "Bob's Big Apple Break, into the big apple! Part 365   H"
+
+        self.slope1 = [1.329, 0.9833, 1.003]
+        self.offset1 = [0.011, 0.013, 0.11]
+        self.power1 = [.993, .998, 1.0113]
+        self.sat1 = 1.01
+
+        line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
+                             'bb94', 'x103', 'line1')
+
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope2 = [13.329, 4.9334, 348908]
+        self.offset2 = [-3424.0, -34.013, -642389]
+        self.power2 = [37.993, .00009, 0.0000]
+        self.sat2 = 177.01
+
+        line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
+                             'bb94', 'x104')
+
+        self.slope3 = [1.2, 2.32, 10.82]
+        self.offset3 = [-1.3782, 278.32, 0.7383]
+        self.power3 = [1.329, 0.9833, 1.003]
+        self.sat3 = 0.99
+
+        line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
+                             'bb94')
+
+        self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
+            f.write(self.file)
+            self.filename = f.name
+
+        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdl1 = self.cdls[0]
+        self.cdl2 = self.cdls[1]
+        self.cdl3 = self.cdls[2]
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testId(self):
+        """Tests that filenames were parsed correctly"""
+
+        self.assertEqual(
+            'bb94_x103_line1',
+            self.cdl1.id
+        )
+
+        self.assertEqual(
+            'bb94_x104',
+            self.cdl2.id
+        )
+
+        self.assertEqual(
+            'bb94',
+            self.cdl3.id
+        )
+
+
+class TestParseFLExTitleOnly(TestParseFLExBasic):
+    """Tests basic parsing of a Flex where no takes have scn/roll/take fields"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+
+        self.title = "Bob's Big Apple Break, into the big apple! Part.365   H"
+
+        self.slope1 = [1.329, 0.9833, 1.003]
+        self.offset1 = [0.011, 0.013, 0.11]
+        self.power1 = [.993, .998, 1.0113]
+        self.sat1 = 1.01
+
+        line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1)
+
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope2 = [13.329, 4.9334, 348908]
+        self.offset2 = [-3424.0, -34.013, -642389]
+        self.power2 = [37.993, .00009, 0.0000]
+        self.sat2 = 177.01
+
+        line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2)
+
+        self.slope3 = [1.2, 2.32, 10.82]
+        self.offset3 = [-1.3782, 278.32, 0.7383]
+        self.power3 = [1.329, 0.9833, 1.003]
+        self.sat3 = 0.99
+
+        line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3)
+
+        self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
+            f.write(self.file)
+            self.filename = f.name
+
+        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdl1 = self.cdls[0]
+        self.cdl2 = self.cdls[1]
+        self.cdl3 = self.cdls[2]
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testId(self):
+        """Tests that filenames were parsed correctly"""
+
+        self.assertEqual(
+            "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H001",
+            self.cdl1.id
+        )
+
+        self.assertEqual(
+            "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H002",
+            self.cdl2.id
+        )
+
+        self.assertEqual(
+            "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H003",
+            self.cdl3.id
+        )
+
+
+class TestParseFLExNoTitle(TestParseFLExBasic):
+    """Tests basic parsing of a Flex where id is based on filename"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+
+        self.title = ''
+
+        self.slope1 = [1.329, 0.9833, 1.003]
+        self.offset1 = [0.011, 0.013, 0.11]
+        self.power1 = [.993, .998, 1.0113]
+        self.sat1 = 1.01
+
+        line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1)
+
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope2 = [13.329, 4.9334, 348908]
+        self.offset2 = [-3424.0, -34.013, -642389]
+        self.power2 = [37.993, .00009, 0.0000]
+        self.sat2 = 177.01
+
+        line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2)
+
+        self.slope3 = [1.2, 2.32, 10.82]
+        self.offset3 = [-1.3782, 278.32, 0.7383]
+        self.power3 = [1.329, 0.9833, 1.003]
+        self.sat3 = 0.99
+
+        line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3)
+
+        self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
+            f.write(self.file)
+            self.filename = f.name
+
+        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdl1 = self.cdls[0]
+        self.cdl2 = self.cdls[1]
+        self.cdl3 = self.cdls[2]
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testId(self):
+        """Tests that filenames were parsed correctly"""
+
+        filename = os.path.basename(self.filename).split('.')[0]
+
+        self.assertEqual(
+            "{0}001".format(filename),
+            self.cdl1.id
+        )
+
+        self.assertEqual(
+            "{0}002".format(filename),
+            self.cdl2.id
+        )
+
+        self.assertEqual(
+            "{0}003".format(filename),
+            self.cdl3.id
+        )
+
+    #===========================================================================
+
+    def testDescription(self):
+        """Tests that the descriptions have been parsed correctly"""
+
+        for i in xrange(3):
+            self.assertIsNone(
+                self.cdls[i].description
+            )
+
 # sanitize() ===================================================================
 
 
@@ -1062,6 +1288,131 @@ class TestSanitize(unittest.TestCase):
         self.assertEqual(
             'abcd',
             result
+        )
+
+# parseArgs() ==================================================================
+
+class TestParseArgs(unittest.TestCase):
+    """Tests that arguments are being parsed correctly"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        self.sysargv = sys.argv
+
+    #===========================================================================
+
+    def tearDown(self):
+        sys.argv = self.sysargv
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testInputPositionalArg(self):
+        """Tests that the input arg is positionally gotten correctly"""
+
+        sys.argv = ['scriptname', 'inputFile.txt']
+
+        args = cdl_convert.parseArgs()
+
+        self.assertEqual(
+            'inputFile.txt',
+            args.input_file
+        )
+
+    #===========================================================================
+
+    def testGoodInputFormat(self):
+        """Tests that a good input format is accepted and lowered"""
+
+        sys.argv = ['scriptname', 'inputFile', '-i', 'ALE']
+
+        args = cdl_convert.parseArgs()
+
+        self.assertEqual(
+            'ale',
+            args.input
+        )
+
+    #===========================================================================
+
+    def testBadInputFormat(self):
+        """Tests that a bad input format is rejected with ValueError"""
+
+        sys.argv = ['scriptname', 'inputFile', '-i', 'HUYYE']
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parseArgs
+        )
+
+    #===========================================================================
+
+    def testGoodOutputFormat(self):
+        """Tests that a good output format is accepted and lowered"""
+
+        sys.argv = ['scriptname', 'inputFile', '-o', 'CDL']
+
+        args = cdl_convert.parseArgs()
+
+        self.assertEqual(
+            ['cdl'],
+            args.output
+        )
+
+    #===========================================================================
+
+    def testMultipleGoodOutputFormat(self):
+        """Tests that multiple good output formats are accepted and lowered"""
+
+        sys.argv = ['scriptname', 'inputFile', '-o', 'CDL,CC']
+
+        args = cdl_convert.parseArgs()
+
+        self.assertEqual(
+            ['cdl', 'cc'],
+            args.output
+        )
+
+    #===========================================================================
+
+    def testBadOutputFormat(self):
+        """Tests that a bad output format is rejected with ValueError"""
+
+        sys.argv = ['scriptname', 'inputFile', '-o', 'HUYYE']
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parseArgs
+        )
+
+    #===========================================================================
+
+    def testGoodWithBadOutputFormat(self):
+        """Tests that a bad output format is rejected with ValueError"""
+
+        sys.argv = ['scriptname', 'inputFile', '-o', 'cc,HUYYE']
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parseArgs
+        )
+
+    #===========================================================================
+
+    def testNoProvidedOutput(self):
+        """Tests that no provided output format is defaulted to cc"""
+
+        sys.argv = ['scriptname', 'inputFile']
+
+        args = cdl_convert.parseArgs()
+
+        self.assertEqual(
+            ['cc'],
+            args.output
         )
 
 # Test Classes =================================================================
@@ -1452,7 +1803,7 @@ def buildCDL(slope, offset, power, sat):
 
 #===============================================================================
 
-def buildFLExTake(slope, offset, power, sat, scene, take, roll):
+def buildFLExTake(slope, offset, power, sat, scene=None, take=None, roll=None):
     """Builds a multiline take for a FLEx edl
 
     This gets a little complicated because the FLEx uses strict character
@@ -1464,6 +1815,13 @@ def buildFLExTake(slope, offset, power, sat, scene, take, roll):
     flex = FLEX_100
     if choice(tf):
         flex += FLEX_101
+
+    if not scene:
+        scene = ''
+    if not take:
+        take = ''
+    if not roll:
+        roll = ''
 
     flex += FLEX_110.format(
         scene=scene.ljust(8, ' '),
