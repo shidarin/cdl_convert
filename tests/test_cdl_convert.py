@@ -1687,7 +1687,8 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
         """Tests that the descriptions have been parsed correctly"""
 
         for i in xrange(3):
-            self.assertIsNone(
+            self.assertEqual(
+                None,
                 self.cdls[i].description
             )
 
@@ -2168,9 +2169,8 @@ class TestTimeCodeSegment(unittest.TestCase):
         """Tests that duration when not provided is kept under 5 minutes"""
         tc = TimeCodeSegment(fps=24)
 
-        self.assertLess(
-            tc.durFrames,
-            7200
+        self.assertTrue(
+            tc.durFrames <= 7200
         )
 
 #===============================================================================
