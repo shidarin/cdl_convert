@@ -1,0 +1,10 @@
+language: python
+python:
+  - "2.7"
+  - "2.6"
+# command to install dependencies
+# 'mock' is only required for testing, cdl_convert runs without it
+install:
+  - pip install mock
+# command to run tests, e.g. python setup.py test
+script: python tests/test_cdl_convert.py
