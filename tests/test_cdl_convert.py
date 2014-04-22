@@ -1290,6 +1290,131 @@ class TestSanitize(unittest.TestCase):
             result
         )
 
+# parseArgs() ==================================================================
+
+class TestParseArgs(unittest.TestCase):
+    """Tests that arguments are being parsed correctly"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        self.sysargv = sys.argv
+
+    #===========================================================================
+
+    def tearDown(self):
+        sys.argv = self.sysargv
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testInputPositionalArg(self):
+        """Tests that the input arg is positionally gotten correctly"""
+
+        sys.argv = ['scriptname', 'inputFile.txt']
+
+        args = cdl_convert.parseArgs()
+
+        self.assertEqual(
+            'inputFile.txt',
+            args.input_file
+        )
+
+    #===========================================================================
+
+    def testGoodInputFormat(self):
+        """Tests that a good input format is accepted and lowered"""
+
+        sys.argv = ['scriptname', 'inputFile', '-i', 'ALE']
+
+        args = cdl_convert.parseArgs()
+
+        self.assertEqual(
+            'ale',
+            args.input
+        )
+
+    #===========================================================================
+
+    def testBadInputFormat(self):
+        """Tests that a bad input format is rejected with ValueError"""
+
+        sys.argv = ['scriptname', 'inputFile', '-i', 'HUYYE']
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parseArgs
+        )
+
+    #===========================================================================
+
+    def testGoodOutputFormat(self):
+        """Tests that a good output format is accepted and lowered"""
+
+        sys.argv = ['scriptname', 'inputFile', '-o', 'CDL']
+
+        args = cdl_convert.parseArgs()
+
+        self.assertEqual(
+            ['cdl'],
+            args.output
+        )
+
+    #===========================================================================
+
+    def testMultipleGoodOutputFormat(self):
+        """Tests that multiple good output formats are accepted and lowered"""
+
+        sys.argv = ['scriptname', 'inputFile', '-o', 'CDL,CC']
+
+        args = cdl_convert.parseArgs()
+
+        self.assertEqual(
+            ['cdl', 'cc'],
+            args.output
+        )
+
+    #===========================================================================
+
+    def testBadOutputFormat(self):
+        """Tests that a bad output format is rejected with ValueError"""
+
+        sys.argv = ['scriptname', 'inputFile', '-o', 'HUYYE']
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parseArgs
+        )
+
+    #===========================================================================
+
+    def testGoodWithBadOutputFormat(self):
+        """Tests that a bad output format is rejected with ValueError"""
+
+        sys.argv = ['scriptname', 'inputFile', '-o', 'cc,HUYYE']
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parseArgs
+        )
+
+    #===========================================================================
+
+    def testNoProvidedOutput(self):
+        """Tests that no provided output format is defaulted to cc"""
+
+        sys.argv = ['scriptname', 'inputFile']
+
+        args = cdl_convert.parseArgs()
+
+        self.assertEqual(
+            ['cc'],
+            args.output
+        )
+
 # Test Classes =================================================================
 
 # TimeCodeSegment is from my SMTPE Timecode gist at:

@@ -803,7 +803,7 @@ def parseArgs():
         # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
         outputTypes = args.output.split(',')
         for i in xrange(len(outputTypes)):
-            if outputTypes[i].lower() not in OUTPUT_FORMATS:
+            if outputTypes[i].lower() not in OUTPUT_FORMATS.keys():
                 raise ValueError(
                     "The output format: {output} is not supported".format(
                         output=outputTypes[i]
