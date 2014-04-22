@@ -6,5 +6,9 @@ python:
 # 'mock' is only required for testing, cdl_convert runs without it
 install:
   - pip install mock
+  - pip install coveralls
 # command to run tests, e.g. python setup.py test
-script: python tests/test_cdl_convert.py
+script: coverage run --source=cdl_convert.py tests/test_cdl_convert.py
+# command to run after tests have completed
+after_success:
+  coveralls
