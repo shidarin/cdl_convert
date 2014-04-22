@@ -1,6 +1,8 @@
 CDL Convert
 ==========
 
+[![Build Status](https://travis-ci.org/shidarin/cdl_convert.svg?branch=feature/testing)](https://travis-ci.org/shidarin/cdl_convert)
+
 Converts between common [ASC CDL](http://en.wikipedia.org/wiki/ASC_CDL)
 formats. The [American Society of Cinematographers](http://www.theasc.com/) Color
 Decision List (ASC CDL, or CDL for short) is a schema to simplify the process
