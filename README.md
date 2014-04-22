@@ -31,6 +31,7 @@ the Film and TV industries.
 Currently we support converting from:
 
 * ALE
+* CC
 * FLEx
 * CDL
 
