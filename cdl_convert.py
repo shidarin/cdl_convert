@@ -921,7 +921,7 @@ def parse_args():
         # into args.output
         #
         # TODO: Define and add a new argparse type as described in:
-        # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples  # pylint: disable=C0301
+        # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
         output_types = args.output.split(',')
         for i in xrange(len(output_types)):
             if output_types[i].lower() not in OUTPUT_FORMATS.keys():
@@ -958,7 +958,7 @@ def main():
         for cdl in cdls:
             for ext in args.output:
                 cdl.determine_dest(ext)
-                print(  # pylint: disable=C0325
+                print(
                     "Writing cdl {id} to {path}".format(
                         id=cdl.cc_id,
                         path=cdl.file_out
@@ -970,6 +970,6 @@ if __name__ == '__main__':  # pragma: no cover
     try:
         main()
     except Exception as err:  # pylint: disable=W0703
-        print('Unexpected error encountered:')  # pylint: disable=C0325
-        print(err)  # pylint: disable=C0325
+        print('Unexpected error encountered:')
+        print(err)
         raw_input('Press enter key to exit')
