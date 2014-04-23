@@ -104,6 +104,16 @@ from argparse import ArgumentParser
 from ast import literal_eval
 import os
 
+# Python 3 compatibility
+try:
+    xrange
+except NameError:
+    xrange = range
+try:
+    raw_input
+except NameError:
+    raw_input = input
+
 #===============================================================================
 # GLOBALS
 #===============================================================================
@@ -834,9 +844,11 @@ def main():
     for cdl in cdls:
         for ext in args.output:
             cdl.determineDest(ext)
-            print "Writing cdl {id} to {path}".format(
-                id=cdl.id,
-                path=cdl.fileOut
+            print(
+                "Writing cdl {id} to {path}".format(
+                    id=cdl.id,
+                    path=cdl.fileOut
+                )
             )
             OUTPUT_FORMATS[ext](cdl)
 
@@ -844,6 +856,6 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as err:
-        print 'Unexpected error encountered:'
-        print err
+        print('Unexpected error encountered:')
+        print(err)
         raw_input('Press enter key to exit')

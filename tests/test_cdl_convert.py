@@ -15,10 +15,12 @@ mock
 
 # Standard Imports
 import datetime
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import os
-import mock
 from random import choice, random, randrange
-from StringIO import StringIO
 import sys
 import tempfile
 import unittest
@@ -989,7 +991,7 @@ class TestParseFLExBasic(unittest.TestCase):
     def testDescription(self):
         """Tests that the descriptions have been parsed correctly"""
 
-        for i in xrange(3):
+        for i in range(3):
             self.assertEqual(
                 self.title,
                 self.cdls[i].description
@@ -1215,7 +1217,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
     def testDescription(self):
         """Tests that the descriptions have been parsed correctly"""
 
-        for i in xrange(3):
+        for i in range(3):
             self.assertIsNone(
                 self.cdls[i].description
             )
@@ -1474,7 +1476,7 @@ class TimeCodeSegment(object):
         # timedelta oddly won't do any math operations with time.
         startTime = datetime.datetime(1, 1, 1, hour, minute, second)
 
-        durSeconds = duration / fps
+        durSeconds = duration // fps
         durFrames = duration % fps
         frameRollover = False  # Keep track of if frames roll over.
 
