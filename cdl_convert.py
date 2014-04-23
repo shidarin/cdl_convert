@@ -107,11 +107,11 @@ import xml.etree.ElementTree as ET
 # Python 3 compatibility
 try:
     xrange
-except NameError:
+except NameError:  # pragma: no cover
     xrange = range
 try:
     raw_input
-except NameError:
+except NameError:  # pragma: no cover
     raw_input = input
 
 #===============================================================================
@@ -141,9 +141,9 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 CDL = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
 """
 
-if sys.version_info[0] >= 3:
+if sys.version_info[0] >= 3:  # pragma: no cover
     enc = lambda x: bytes(x, 'UTF-8')
-else:
+else:  # pragma: no cover
     enc = lambda x: x
 
 #===============================================================================
@@ -943,7 +943,7 @@ def main():
                 )
                 OUTPUT_FORMATS[ext](cdl)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     try:
         main()
     except Exception as err:
