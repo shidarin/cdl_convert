@@ -98,6 +98,16 @@ FLEX_702 = "702 ASC_SAT {sat}\n"
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
+if sys.version_info[0] >= 3:
+    enc = lambda x: bytes(x, 'UTF-8')
+else:
+    enc = lambda x: x
+
+if sys.version_info[0] >= 3:
+    builtins = 'builtins'
+else:
+    builtins = '__builtin__'
+
 #===============================================================================
 # CLASSES
 #===============================================================================
@@ -495,8 +505,8 @@ class TestParseALEBasic(unittest.TestCase):
         self.file = ALE_HEADER + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         cdls = cdl_convert.parseALE(self.filename)
@@ -645,8 +655,8 @@ class TestParseALEShort(TestParseALEBasic):
         self.file = ALE_HEADER_SHORT + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         cdls = cdl_convert.parseALE(self.filename)
@@ -673,8 +683,8 @@ class TestParseCDLBasic(unittest.TestCase):
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCDL(self.filename)[0]
@@ -747,8 +757,8 @@ class TestParseCDLOdd(TestParseCDLBasic):
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCDL(self.filename)[0]
@@ -779,7 +789,7 @@ class TestWriteCDLBasic(unittest.TestCase):
 
         self.mockOpen = mock.mock_open()
 
-        with mock.patch('__builtin__.open', self.mockOpen, create=True):
+        with mock.patch(builtins + '.open', self.mockOpen, create=True):
             cdl_convert.writeCDL(self.cdl)
 
     #===========================================================================
@@ -795,7 +805,7 @@ class TestWriteCDLBasic(unittest.TestCase):
     def testContent(self):
         """Tests that writeCDL wrote the correct CDL"""
         handle = self.mockOpen()
-        handle.write.assert_called_once_with(self.file)
+        handle.write.assert_called_once_with(enc(self.file))
 
 
 class TestWriteCDLOdd(TestWriteCDLBasic):
@@ -826,7 +836,7 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
 
         self.mockOpen = mock.mock_open()
 
-        with mock.patch('__builtin__.open', self.mockOpen, create=True):
+        with mock.patch(builtins + '.open', self.mockOpen, create=True):
             cdl_convert.writeCDL(self.cdl)
 
 # FLEx =========================================================================
@@ -875,8 +885,8 @@ class TestParseFLExBasic(unittest.TestCase):
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdls = cdl_convert.parseFLEx(self.filename)
@@ -1039,8 +1049,8 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdls = cdl_convert.parseFLEx(self.filename)
@@ -1109,8 +1119,8 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdls = cdl_convert.parseFLEx(self.filename)
@@ -1179,8 +1189,8 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdls = cdl_convert.parseFLEx(self.filename)

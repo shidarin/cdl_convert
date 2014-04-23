@@ -103,6 +103,7 @@ Functions
 from argparse import ArgumentParser
 from ast import literal_eval
 import os
+import sys
 
 # Python 3 compatibility
 try:
@@ -140,6 +141,11 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 # Space Separated CDL, a Rhythm & Hues format
 CDL = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
 """
+
+if sys.version_info[0] >= 3:
+    enc = lambda x: bytes(x, 'UTF-8')
+else:
+    enc = lambda x: x
 
 #===============================================================================
 # CLASSES
@@ -419,7 +425,7 @@ def parseALE(file):
 
     cdls = []
 
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         lines = f.readlines()
         for line in lines:
             if line.startswith('Column'):
@@ -511,7 +517,7 @@ def parseFLEx(file):
 
     cdls = []
 
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         lines = f.readlines()
 
         filename = os.path.basename(file).split('.')[0]
@@ -657,7 +663,7 @@ def parseCDL(file):
     # Although we only parse one cdl file, we still want to return a list
     cdls = []
 
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         # We only need to read the first line
         line = f.readline()
         line = line.split()
@@ -725,7 +731,7 @@ def writeCC(cdl):
     )
 
     with open(cdl.fileOut, 'wb') as f:
-        f.write(xml)
+        f.write(enc(xml))
 
 #===============================================================================
 
@@ -746,7 +752,7 @@ def writeCDL(cdl):
     )
 
     with open(cdl.fileOut, 'wb') as f:
-        f.write(ssCdl)
+        f.write(enc(ssCdl))
 
 #===============================================================================
 # MAIN
