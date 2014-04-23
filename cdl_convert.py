@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-# CDL Convert
-# Converts between common ASC CDL formats
-# By Sean Wallitsch, 2014/04/16
-__version__ = 0.4
-
 """
 
 CDL Convert
@@ -118,6 +113,15 @@ except NameError:  # pragma: no cover
 # GLOBALS
 # ==============================================================================
 
+__author__ = "Sean Wallitsch"
+__copyright__ = "Copyright 2014, Sean Wallitsch"
+__credits__ = ["Sean Wallitsch", ]
+__license__ = "MIT"
+__version__ = "0.4"
+__maintainer__ = "Sean Wallitsch"
+__email__ = "shidarin@alphamatte.com"
+__status__ = "Development"
+
 # INPUT_FORMATS and OUTPUT_FORMATS are globals but located in the MAIN section
 # of the file, as they are dispatcher dictionaries that require the functions
 # to be parsed by python before the dictionary can be built.
@@ -148,6 +152,7 @@ else:  # pragma: no cover
 # ==============================================================================
 # CLASSES
 # ==============================================================================
+
 
 class AscCdl(object):  # pylint: disable=R0902
     """The basic class for the ASC CDL
@@ -396,7 +401,8 @@ class AscCdl(object):  # pylint: disable=R0902
 # FUNCTIONS
 # ==============================================================================
 
-def parseALE(file):
+
+def parse_ale(edl_file):
     """Parses an Avid Log Exchange (ALE) file for CDLs
 
     Args:
@@ -426,14 +432,14 @@ def parseALE(file):
     data = False
 
     # We'll use these variables to indicate column indexes
-    ASC_SAT_I = None
-    ASC_SOP_I = None
+    asc_sat_index = None
+    asc_sop_index = None
     scan_filename = None
 
     cdls = []
 
-    with open(file, 'r') as f:
-        lines = f.readlines()
+    with open(edl_file, 'r') as edl:
+        lines = edl.readlines()
         for line in lines:
             if line.startswith('Column'):
                 column = True
@@ -443,16 +449,16 @@ def parseALE(file):
                 continue
             elif column:
                 columns = line.split('\t')
-                ASC_SAT_I = columns.index('ASC_SAT')
-                ASC_SOP_I = columns.index('ASC_SOP')
+                asc_sat_index = columns.index('ASC_SAT')
+                asc_sop_index = columns.index('ASC_SOP')
                 scan_filename = columns.index('Scan Filename')
                 column = False
             elif data:
-                cdlData = line.split('\t')
+                cdl_data = line.split('\t')
 
-                sat = cdlData[ASC_SAT_I]
-                sop = cdlData[ASC_SOP_I]
-                id = cdlData[scan_filename]
+                sat = cdl_data[asc_sat_index]
+                sop = cdl_data[asc_sop_index]
+                cc_id = cdl_data[scan_filename]
 
                 # Determine slope, offset and power from sop
                 # sop should look like:
@@ -464,7 +470,7 @@ def parseALE(file):
                 offset = literal_eval(sop[1])
                 power = literal_eval(sop[2])
 
-                cdl = AscCdl(id, file)
+                cdl = AscCdl(cc_id, edl_file)
 
                 cdl.sat = float(sat)
                 cdl.slope = slope
@@ -477,7 +483,8 @@ def parseALE(file):
 
 # ==============================================================================
 
-def parseCC(file):
+
+def parse_cc(cdl_file):
     """Parses a .cc file for ASC CDL information
 
     Args:
@@ -512,7 +519,7 @@ def parseCC(file):
     We'll check to see if each of these elements exist, and override the AscCdl
     defaults if we find them.
     """
-    tree = ET.parse(file)
+    tree = ET.parse(cdl_file)
     root = tree.getroot()
 
     cdls = []
@@ -522,11 +529,11 @@ def parseCC(file):
         raise ValueError('CC parsed but no ColorCorrection found')
 
     try:
-        id = root.attrib['id']
+        cc_id = root.attrib['id']
     except KeyError:
         raise ValueError('No id found on ColorCorrection')
 
-    cdl = AscCdl(id, file)
+    cdl = AscCdl(cc_id, cdl_file)
     # Neither the SOP nor the Sat node actually HAVE to exist, it literally
     # could just be an id and that's it.
     sop = root.find('SOPNode')
@@ -549,10 +556,10 @@ def parseCC(file):
         if power is not None:
             cdl.power = power.text.split()
     if sat is not None:
-        satValue = sat.find('Saturation')
+        sat_value = sat.find('Saturation')
 
-        if satValue is not None:
-            cdl.sat = satValue.text
+        if sat_value is not None:
+            cdl.sat = sat_value.text
 
     cdls.append(cdl)
 
@@ -561,7 +568,7 @@ def parseCC(file):
 
 # ==============================================================================
 
-def parseFLEx(file):
+def parse_flex(edl_file):
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
 
     Args:
@@ -608,11 +615,12 @@ def parseFLEx(file):
 
     cdls = []
 
-    with open(file, 'r') as f:
-        lines = f.readlines()
+    with open(edl_file, 'r') as edl:
+        lines = edl.readlines()
 
-        filename = os.path.basename(file).split('.')[0]
+        filename = os.path.basename(edl_file).split('.')[0]
 
+        # TODO: Make title, scene, take and reel a list or dict
         title = None
         scene = None
         take = None
@@ -629,21 +637,21 @@ def parseFLEx(file):
                 # We need to dump the previous records to a CDL
                 # Then clear the records.
                 if scene:
-                    id = scene
+                    cc_id = scene
                     if take:
-                        id += '_' + take
+                        cc_id += '_' + take
                         if reel:
-                            id += '_' + reel
+                            cc_id += '_' + reel
                 else:
                     if title:
-                        id = title + str(len(cdls) + 1).rjust(3, '0')
+                        cc_id = title + str(len(cdls) + 1).rjust(3, '0')
                     else:
-                        id = filename + str(len(cdls) + 1).rjust(3, '0')
+                        cc_id = filename + str(len(cdls) + 1).rjust(3, '0')
 
                 # If we already have slope/offset/power:
                 if slope and offset and power:
                     # Make a cdl, add it to the cdls list
-                    cdl = AscCdl(id, file)
+                    cdl = AscCdl(cc_id, edl_file)
 
                     cdl.slope = slope
                     cdl.offset = offset
@@ -694,21 +702,21 @@ def parseFLEx(file):
 
     # We need to dump the last record to the cdl list
     if scene:
-        id = scene
+        cc_id = scene
         if take:
-            id += '_' + take
+            cc_id += '_' + take
             if reel:
-                id += '_' + reel
+                cc_id += '_' + reel
     else:
         if title:
-            id = title + str(len(cdls) + 1).rjust(3, '0')
+            cc_id = title + str(len(cdls) + 1).rjust(3, '0')
         else:
-            id = filename + str(len(cdls) + 1).rjust(3, '0')
+            cc_id = filename + str(len(cdls) + 1).rjust(3, '0')
 
     # If we have slope/offset/power:
     if slope and offset and power:
         # Make a cdl, add it to the cdls list
-        cdl = AscCdl(id, file)
+        cdl = AscCdl(cc_id, edl_file)
 
         cdl.slope = slope
         cdl.offset = offset
@@ -726,7 +734,8 @@ def parseFLEx(file):
 
 # ==============================================================================
 
-def parseCDL(file):
+
+def parse_cdl(cdl_file):
     """Parses a space separated .cdl file for ASC CDL information.
 
     Args:
@@ -754,13 +763,13 @@ def parseCDL(file):
     # Although we only parse one cdl file, we still want to return a list
     cdls = []
 
-    with open(file, 'r') as f:
+    with open(cdl_file, 'r') as cdl_f:
         # We only need to read the first line
-        line = f.readline()
+        line = cdl_f.readline()
         line = line.split()
 
         # The filename without extension will become the id
-        filename = os.path.basename(file).split('.')[0]
+        filename = os.path.basename(cdl_file).split('.')[0]
 
         slope = [line[0], line[1], line[2]]
         offset = [line[3], line[4], line[5]]
@@ -768,7 +777,7 @@ def parseCDL(file):
 
         sat = line[9]
 
-        cdl = AscCdl(filename, file)
+        cdl = AscCdl(filename, cdl_file)
 
         cdl.slope = slope
         cdl.offset = offset
@@ -781,9 +790,10 @@ def parseCDL(file):
 
 # ==============================================================================
 
+
 def sanitize(name):
     """Removes any characters in string name that aren't alnum or in '_.'"""
-    from re import compile
+    import re
     # Replace any spaces with underscores
     name = name.replace(' ', '_')
     # If we start our string with an underscore or period, remove it
@@ -796,7 +806,7 @@ def sanitize(name):
     # _ is an underscore
     # Put them together, negate them by leading with an ^
     # and our compiler will mark every non alnum, non ., _ character
-    pattern = compile(r'[^a-zA-Z0-9\._]+')
+    pattern = re.compile(r'[^a-zA-Z0-9\._]+')
     # Then we sub them with nothing
     fixed = pattern.sub('', name)
 
@@ -804,7 +814,8 @@ def sanitize(name):
 
 # ==============================================================================
 
-def writeCC(cdl):
+
+def write_cc(cdl):
     """Writes the AscCdl to a .cc file"""
 
     xml = CC_XML.format(
@@ -821,15 +832,16 @@ def writeCC(cdl):
         sat=cdl.sat
     )
 
-    with open(cdl.file_out, 'wb') as f:
-        f.write(enc(xml))
+    with open(cdl.file_out, 'wb') as cdl_f:
+        cdl_f.write(enc(xml))
 
 # ==============================================================================
 
-def writeCDL(cdl):
+
+def write_cdl(cdl):
     """Writes the AscCdl to a space separated .cdl file"""
 
-    ssCdl = CDL.format(
+    ss_cdl = CDL.format(
         slopeR=cdl.slope[0],
         slopeG=cdl.slope[1],
         slopeB=cdl.slope[2],
@@ -842,31 +854,32 @@ def writeCDL(cdl):
         sat=cdl.sat
     )
 
-    with open(cdl.file_out, 'wb') as f:
-        f.write(enc(ssCdl))
+    with open(cdl.file_out, 'wb') as cdl_f:
+        cdl_f.write(enc(ss_cdl))
 
 # ==============================================================================
 # MAIN
 # ==============================================================================
 
 # These globals need to be after the parse/write functions but before the
-# parseArgs.
+# parse_args.
 
 INPUT_FORMATS = {
-    'ale': parseALE,
-    'cc': parseCC,
-    'cdl': parseCDL,
-    'flex': parseFLEx,
+    'ale': parse_ale,
+    'cc': parse_cc,
+    'cdl': parse_cdl,
+    'flex': parse_flex,
 }
 
 OUTPUT_FORMATS = {
-    'cc': writeCC,
-    'cdl': writeCDL,
+    'cc': write_cc,
+    'cdl': write_cdl,
 }
 
 # ==============================================================================
 
-def parseArgs():
+
+def parse_args():
     """Uses argparse to parse command line arguments"""
     parser = ArgumentParser()
     parser.add_argument(
@@ -908,18 +921,18 @@ def parseArgs():
         # into args.output
         #
         # TODO: Define and add a new argparse type as described in:
-        # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
-        outputTypes = args.output.split(',')
-        for i in xrange(len(outputTypes)):
-            if outputTypes[i].lower() not in OUTPUT_FORMATS.keys():
+        # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples  # pylint: disable=C0301
+        output_types = args.output.split(',')
+        for i in xrange(len(output_types)):
+            if output_types[i].lower() not in OUTPUT_FORMATS.keys():
                 raise ValueError(
                     "The output format: {output} is not supported".format(
-                        output=outputTypes[i]
+                        output=output_types[i]
                     )
                 )
             else:
-                outputTypes[i] = outputTypes[i].lower()
-        args.output = outputTypes
+                output_types[i] = output_types[i].lower()
+        args.output = output_types
     else:
         args.output = ['cc', ]
 
@@ -927,17 +940,19 @@ def parseArgs():
 
 # ==============================================================================
 
+
 def main():
-    args = parseArgs()
+    """Will figure out input and destination filetypes, then convert"""
+    args = parse_args()
 
     filepath = os.path.abspath(args.input_file)
 
     if not args.input:
-        filetypeIn = os.path.basename(filepath).split('.')[-1].lower()
+        filetype_in = os.path.basename(filepath).split('.')[-1].lower()
     else:
-        filetypeIn = args.input
+        filetype_in = args.input
 
-    cdls = INPUT_FORMATS[filetypeIn](filepath)
+    cdls = INPUT_FORMATS[filetype_in](filepath)
 
     if cdls:
         for cdl in cdls:
