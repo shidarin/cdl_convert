@@ -2,6 +2,7 @@
 # CDL Convert
 # Converts between common ASC CDL formats
 # By Sean Wallitsch, 2014/04/16
+__version__ = 0.4
 
 """
 
@@ -39,24 +40,21 @@ Currently we support converting from:
 
 * ALE
 * CC
-* CCC
-* OCIOCDLTransform (nk)
+* FLEx
 * CDL
 
 To:
 
 * CC
-* OCIOCDLTransform (nk)
 * CDL
 
 With support for both from and to expanding in the future.
 
 ## Code
 
-CDLConvert is written for Python 2.6 and up, with support for Python 3 coming
-in the future. Code is written for PEP 8 compliance, although at the time of
-this writing function & variable naming uses camelCasing. Docstrings follow
-Google code standards.
+CDL Convert is written for Python 2.6, including Python 3.2 and 3.4. Code is
+written for PEP 8 compliance, although at the time of this writing function &
+variable naming uses camelCasing. Docstrings follow Google code standards.
 
 Development uses Git Flow model.
 
@@ -103,6 +101,18 @@ Functions
 from argparse import ArgumentParser
 from ast import literal_eval
 import os
+import sys
+import xml.etree.ElementTree as ET
+
+# Python 3 compatibility
+try:
+    xrange
+except NameError:
+    xrange = range
+try:
+    raw_input
+except NameError:
+    raw_input = input
 
 #===============================================================================
 # GLOBALS
@@ -130,6 +140,11 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 # Space Separated CDL, a Rhythm & Hues format
 CDL = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
 """
+
+if sys.version_info[0] >= 3:
+    enc = lambda x: bytes(x, 'UTF-8')
+else:
+    enc = lambda x: x
 
 #===============================================================================
 # CLASSES
@@ -222,7 +237,7 @@ class AscCdl(object):
 
         # The id is really the only required part of an ASC CDL.
         # Each ID should be unique
-        self._id = id
+        self._id = sanitize(id)
 
         # ASC_SOP attributes
         self._slope = [1.0, 1.0, 1.0]
@@ -269,13 +284,15 @@ class AscCdl(object):
         except AssertionError:
             raise TypeError("Offset must be a list or tuple")
 
-        for i in offsetRGB:
+        offsetRGB = list(offsetRGB)
+
+        for i in xrange(len(offsetRGB)):
             try:
-                assert type(i) in [float, int]
-            except AssertionError:
+                offsetRGB[i] = float(offsetRGB[i])
+            except ValueError:
                 raise TypeError("Offset values must be ints or floats")
 
-        self._offset = list(offsetRGB)
+        self._offset = offsetRGB
 
     @property
     def power(self):
@@ -293,17 +310,19 @@ class AscCdl(object):
         except AssertionError:
             raise TypeError("Power must be a list or tuple")
 
-        for i in powerRGB:
+        powerRGB = list(powerRGB)
+
+        for i in xrange(len(powerRGB)):
             try:
-                assert i >= 0.0
+                powerRGB[i] = float(powerRGB[i])
+            except ValueError:
+                raise TypeError("Power values must be ints or floats")
+            try:
+                assert powerRGB[i] >= 0.0
             except AssertionError:
                 raise ValueError("Power values must not be negative")
-            try:
-                assert type(i) in [float, int]
-            except AssertionError:
-                raise TypeError("Power values must be ints or floats")
 
-        self._power = list(powerRGB)
+        self._power = powerRGB
 
     @property
     def slope(self):
@@ -321,17 +340,19 @@ class AscCdl(object):
         except AssertionError:
             raise TypeError("Slope must be a list or tuple")
 
-        for i in slopeRGB:
+        slopeRGB = list(slopeRGB)
+
+        for i in xrange(len(slopeRGB)):
             try:
-                assert i >= 0.0
+                slopeRGB[i] = float(slopeRGB[i])
+            except ValueError:
+                raise TypeError("Slope values must be ints or floats")
+            try:
+                assert slopeRGB[i] >= 0.0
             except AssertionError:
                 raise ValueError("Slope values must not be negative")
-            try:
-                assert type(i) in [float, int]
-            except AssertionError:
-                raise TypeError("Slope values must be ints or floats")
 
-        self._slope = list(slopeRGB)
+        self._slope = slopeRGB
 
     @property
     def sat(self):
@@ -340,14 +361,13 @@ class AscCdl(object):
     @sat.setter
     def sat(self, satValue):
         try:
+            satValue = float(satValue)
+        except ValueError:
+            raise TypeError("Saturation must be a float or int")
+        try:
             assert satValue >= 0.0
         except AssertionError:
             raise ValueError("Saturation must be a positive value")
-
-        try:
-            assert type(satValue) in [float, int]
-        except AssertionError:
-            raise TypeError("Saturation must be a float or int")
 
         self._sat = float(satValue)
 
@@ -404,7 +424,7 @@ def parseALE(file):
 
     cdls = []
 
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         lines = f.readlines()
         for line in lines:
             if line.startswith('Column'):
@@ -432,13 +452,9 @@ def parseALE(file):
                 sop = sop.replace(' ', ', ')
                 sop = sop.replace(')(', ')|(')
                 sop = sop.split('|')
-                slope = list(literal_eval(sop[0]))
-                offset = list(literal_eval(sop[1]))
-                power = list(literal_eval(sop[2]))
-                for i in xrange(3):
-                    slope[i] = float(slope[i])
-                    offset[i] = float(offset[i])
-                    power[i] = float(power[i])
+                slope = literal_eval(sop[0])
+                offset = literal_eval(sop[1])
+                power = literal_eval(sop[2])
 
                 cdl = AscCdl(id, file)
 
@@ -450,6 +466,90 @@ def parseALE(file):
                 cdls.append(cdl)
 
     return cdls
+
+#===============================================================================
+
+def parseCC(file):
+    """Parses a .cc file for ASC CDL information
+
+    Args:
+        file : (str)
+            The filepath to the CC
+
+    Return:
+        [<AscCdl>]
+            A list of CDL objects retrieved from the CC
+
+    Raises:
+        N/A
+
+    A CC file is really only a single element of a larger CDL or CCC XML file,
+    but this element has become a popular way of passing around single shot
+    CDLs, rather than the much bulkier CDL file.
+
+    A sample CC XML file has text like:
+
+    <ColorCorrection id="cc03340">
+        <SOPNode>
+            <Description>change +1 red, contrast boost</Description>
+            <Slope>1.2 1.3 1.4</Slope>
+            <Offset>0.3 0.0 0.0</Offset>
+            <Power>1.0 1.0 1.0</Power>
+        </SOPNode>
+        <SatNode>
+            <Saturation>1.2</Saturation>
+        </SatNode>
+    </ColorCorrection>
+
+    We'll check to see if each of these elements exist, and override the AscCdl
+    defaults if we find them.
+    """
+    tree = ET.parse(file)
+    root = tree.getroot()
+
+    cdls = []
+
+    if not root.tag == 'ColorCorrection':
+        # This is not a CC file...
+        raise ValueError('CC parsed but no ColorCorrection found')
+
+    try:
+        id = root.attrib['id']
+    except KeyError:
+        raise ValueError('No id found on ColorCorrection')
+
+    cdl = AscCdl(id, file)
+    # Neither the SOP nor the Sat node actually HAVE to exist, it literally
+    # could just be an id and that's it.
+    sop = root.find('SOPNode')
+    sat = root.find('SatNode')
+
+    # We make a specific comparison against None, because etree creates errors
+    # otherwise (future behavior is changing)
+    if sop is not None:
+        desc = sop.find('Description')
+        slope = sop.find('Slope')
+        offset = sop.find('Offset')
+        power = sop.find('Power')
+
+        if desc is not None:
+            cdl.description = desc.text
+        if slope is not None:
+            cdl.slope = slope.text.split()
+        if offset is not None:
+            cdl.offset = offset.text.split()
+        if power is not None:
+            cdl.power = power.text.split()
+    if sat is not None:
+        satValue = sat.find('Saturation')
+
+        if satValue is not None:
+            cdl.sat = satValue.text
+
+    cdls.append(cdl)
+
+    return cdls
+
 
 #===============================================================================
 
@@ -500,7 +600,7 @@ def parseFLEx(file):
 
     cdls = []
 
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         lines = f.readlines()
 
         filename = os.path.basename(file).split('.')[0]
@@ -528,9 +628,9 @@ def parseFLEx(file):
                             id += '_' + reel
                 else:
                     if title:
-                        id = title
+                        id = title + str(len(cdls) + 1).rjust(3, '0')
                     else:
-                        id = filename + str(len(cdls) + 1)
+                        id = filename + str(len(cdls) + 1).rjust(3, '0')
 
                 # If we already have slope/offset/power:
                 if slope and offset and power:
@@ -593,9 +693,9 @@ def parseFLEx(file):
                 id += '_' + reel
     else:
         if title:
-            id = title
+            id = title + str(len(cdls) + 1).rjust(3, '0')
         else:
-            id = filename + str(len(cdls) + 1)
+            id = filename + str(len(cdls) + 1).rjust(3, '0')
 
     # If we have slope/offset/power:
     if slope and offset and power:
@@ -646,16 +746,13 @@ def parseCDL(file):
     # Although we only parse one cdl file, we still want to return a list
     cdls = []
 
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         # We only need to read the first line
         line = f.readline()
         line = line.split()
 
         # The filename without extension will become the id
         filename = os.path.basename(file).split('.')[0]
-
-        for i in xrange(len(line)):
-            line[i] = float(line[i])
 
         slope = [line[0], line[1], line[2]]
         offset = [line[3], line[4], line[5]]
@@ -673,6 +770,29 @@ def parseCDL(file):
         cdls.append(cdl)
 
     return cdls
+
+#===============================================================================
+
+def sanitize(name):
+    """Removes any characters in string name that aren't alnum or in '_.'"""
+    from re import compile
+    # Replace any spaces with underscores
+    name = name.replace(' ', '_')
+    # If we start our string with an underscore or period, remove it
+    if name[0] in '_.':
+        name = name[1:]
+    # a-z is all lowercase
+    # A-Z is all uppercase
+    # 0-9 is all digits
+    # \. is an escaped period
+    # _ is an underscore
+    # Put them together, negate them by leading with an ^
+    # and our compiler will mark every non alnum, non ., _ character
+    pattern = compile(r'[^a-zA-Z0-9\._]+')
+    # Then we sub them with nothing
+    fixed = pattern.sub('', name)
+
+    return fixed
 
 #===============================================================================
 
@@ -694,7 +814,7 @@ def writeCC(cdl):
     )
 
     with open(cdl.fileOut, 'wb') as f:
-        f.write(xml)
+        f.write(enc(xml))
 
 #===============================================================================
 
@@ -715,7 +835,7 @@ def writeCDL(cdl):
     )
 
     with open(cdl.fileOut, 'wb') as f:
-        f.write(ssCdl)
+        f.write(enc(ssCdl))
 
 #===============================================================================
 # MAIN
@@ -726,8 +846,9 @@ def writeCDL(cdl):
 
 INPUT_FORMATS = {
     'ale': parseALE,
-    'flex': parseFLEx,
+    'cc': parseCC,
     'cdl': parseCDL,
+    'flex': parseFLEx,
 }
 
 OUTPUT_FORMATS = {
@@ -782,7 +903,7 @@ def parseArgs():
         # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
         outputTypes = args.output.split(',')
         for i in xrange(len(outputTypes)):
-            if outputTypes[i].lower() not in OUTPUT_FORMATS:
+            if outputTypes[i].lower() not in OUTPUT_FORMATS.keys():
                 raise ValueError(
                     "The output format: {output} is not supported".format(
                         output=outputTypes[i]
@@ -813,16 +934,18 @@ def main():
     for cdl in cdls:
         for ext in args.output:
             cdl.determineDest(ext)
-            print "Writing cdl {id} to {path}".format(
-                id=cdl.id,
-                path=cdl.fileOut
+            print(
+                "Writing cdl {id} to {path}".format(
+                    id=cdl.id,
+                    path=cdl.fileOut
+                )
             )
             OUTPUT_FORMATS[ext](cdl)
 
 if __name__ == '__main__':
     try:
         main()
-    except Exception, err:
-        print 'Unexpected error encountered:'
-        print err
+    except Exception as err:
+        print('Unexpected error encountered:')
+        print(err)
         raw_input('Press enter key to exit')
