@@ -2,6 +2,7 @@
 # CDL Convert
 # Converts between common ASC CDL formats
 # By Sean Wallitsch, 2014/04/16
+__version__ = 0.4
 
 """
 
