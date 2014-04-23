@@ -1899,6 +1899,192 @@ class TestParseArgs(unittest.TestCase):
             args.output
         )
 
+# main() =======================================================================
+
+
+class TestMain(unittest.TestCase):
+    """Tests the main() function for correct execution"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        import cdl_convert
+        # Note that the file doesn't really need to exist for our test purposes
+        self.cdl = cdl_convert.AscCdl(id='uniqueId', file='../testcdl.flex')
+        self.inputFormats = cdl_convert.INPUT_FORMATS
+        self.outputFormats = cdl_convert.OUTPUT_FORMATS
+        self.sysargv = sys.argv
+
+    #===========================================================================
+
+    def tearDown(self):
+        cdl_convert.INPUT_FORMATS = self.inputFormats
+        cdl_convert.OUTPUT_FORMATS = self.outputFormats
+        sys.argv = self.sysargv
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    @mock.patch('cdl_convert.parseFLEx')
+    @mock.patch('os.path.abspath')
+    def testGettingAbsolutePath(self, abspath, mockParse):
+        """Tests that we make sure to get the absolute path"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.flex']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        abspath.assert_called_once_with('file.flex')
+
+    #===========================================================================
+
+    @mock.patch('cdl_convert.parseFLEx')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputType(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.flex']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.flex')
+
+    #===========================================================================
+
+    @mock.patch('cdl_convert.parseFLEx')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeCased(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.fLEx'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.fLEx']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.fLEx')
+
+    #===========================================================================
+
+    @mock.patch('cdl_convert.parseFLEx')
+    @mock.patch('os.path.abspath')
+    def testOverrideInputType(self, abspath, mockParse):
+        """Tests that overriding the input type happens when provided"""
+
+        abspath.return_value = 'file.cc'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.cc', '-i', 'flex']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.cc')
+
+    #===========================================================================
+
+    @mock.patch('os.path.dirname')
+    @mock.patch('cdl_convert.writeCC')
+    @mock.patch('cdl_convert.parseFLEx')
+    @mock.patch('os.path.abspath')
+    def testDetermineDestCalled(self, abspath, mockParse, mockWrite, dirname):
+        """Tests that we try and write a converted file"""
+
+        abspath.return_value = 'file.flex'
+        dirname.return_value = ''  # determineDest method calls to get dirname
+        mockParse.return_value = [self.cdl, ]
+        sys.argv = ['scriptname', 'file.flex', '-o', 'cc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        self.assertEqual(
+            'uniqueId.cc',
+            self.cdl.fileOut
+        )
+
+
+    #===========================================================================
+
+    @mock.patch('cdl_convert.writeCC')
+    @mock.patch('cdl_convert.parseFLEx')
+    @mock.patch('os.path.abspath')
+    def testWriteCalled(self, abspath, mockParse, mockWrite):
+        """Tests that we try and write a converted file"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = [self.cdl, ]
+        sys.argv = ['scriptname', 'file.flex', '-o', 'cc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        mockWrite.assert_called_once_with(self.cdl)
+
+
+    #===========================================================================
+
+    @mock.patch('cdl_convert.writeCDL')
+    @mock.patch('cdl_convert.writeCC')
+    @mock.patch('cdl_convert.parseFLEx')
+    @mock.patch('os.path.abspath')
+    def testMultipleWritesCalled(self, abspath, mockParse, mockWriteCC,
+                                 mockWriteCDL):
+        """Tests that we try and write a converted file"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = [self.cdl, ]
+        sys.argv = ['scriptname', 'file.flex', '-o', 'cc,cdl']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWriteCC
+        mockOutputs['cdl'] = mockWriteCDL
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        mockWriteCC.assert_called_once_with(self.cdl)
+        mockWriteCDL.assert_called_once_with(self.cdl)
+
 # Test Classes =================================================================
 
 # TimeCodeSegment is from my SMTPE Timecode gist at:

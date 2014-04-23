@@ -107,11 +107,11 @@ import xml.etree.ElementTree as ET
 # Python 3 compatibility
 try:
     xrange
-except NameError:
+except NameError:  # pragma: no cover
     xrange = range
 try:
     raw_input
-except NameError:
+except NameError:  # pragma: no cover
     raw_input = input
 
 #===============================================================================
@@ -141,9 +141,9 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 CDL = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
 """
 
-if sys.version_info[0] >= 3:
+if sys.version_info[0] >= 3:  # pragma: no cover
     enc = lambda x: bytes(x, 'UTF-8')
-else:
+else:  # pragma: no cover
     enc = lambda x: x
 
 #===============================================================================
@@ -925,24 +925,25 @@ def main():
     filepath = os.path.abspath(args.input_file)
 
     if not args.input:
-        filetypeIn = os.path.basename(filepath).split('.')[-1]
+        filetypeIn = os.path.basename(filepath).split('.')[-1].lower()
     else:
         filetypeIn = args.input
 
     cdls = INPUT_FORMATS[filetypeIn](filepath)
 
-    for cdl in cdls:
-        for ext in args.output:
-            cdl.determineDest(ext)
-            print(
-                "Writing cdl {id} to {path}".format(
-                    id=cdl.id,
-                    path=cdl.fileOut
+    if cdls:
+        for cdl in cdls:
+            for ext in args.output:
+                cdl.determineDest(ext)
+                print(
+                    "Writing cdl {id} to {path}".format(
+                        id=cdl.id,
+                        path=cdl.fileOut
+                    )
                 )
-            )
-            OUTPUT_FORMATS[ext](cdl)
+                OUTPUT_FORMATS[ext](cdl)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     try:
         main()
     except Exception as err:
