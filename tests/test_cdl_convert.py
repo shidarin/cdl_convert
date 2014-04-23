@@ -15,10 +15,12 @@ mock
 
 # Standard Imports
 import datetime
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import os
-import mock
 from random import choice, random, randrange
-from StringIO import StringIO
 import sys
 import tempfile
 import unittest
@@ -114,6 +116,16 @@ FLEX_702 = "702 ASC_SAT {sat}\n"
 
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
+
+if sys.version_info[0] >= 3:
+    enc = lambda x: bytes(x, 'UTF-8')
+else:
+    enc = lambda x: x
+
+if sys.version_info[0] >= 3:
+    builtins = 'builtins'
+else:
+    builtins = '__builtin__'
 
 #===============================================================================
 # CLASSES
@@ -512,8 +524,8 @@ class TestParseALEBasic(unittest.TestCase):
         self.file = ALE_HEADER + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         cdls = cdl_convert.parseALE(self.filename)
@@ -669,8 +681,8 @@ class TestParseALEShort(TestParseALEBasic):
         self.file = ALE_HEADER_SHORT + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         cdls = cdl_convert.parseALE(self.filename)
@@ -700,8 +712,8 @@ class TestParseCCBasic(unittest.TestCase):
                             self.power, self.sat)
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCC(self.filename)[0]
@@ -795,8 +807,8 @@ class TestParseCCOdd(TestParseCCBasic):
                             self.power, self.sat)
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCC(self.filename)[0]
@@ -817,8 +829,8 @@ class TestParseCCJustSat(TestParseCCBasic):
         self.file = buildCC(self.id, self.desc, sat=self.sat)
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCC(self.filename)[0]
@@ -871,8 +883,8 @@ class TestParseCCJustSOP(TestParseCCBasic):
                             self.power)
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCC(self.filename)[0]
@@ -907,8 +919,8 @@ class TestParseCCNoSlope(TestParseCCBasic):
                             power=self.power, sat=self.sat)
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCC(self.filename)[0]
@@ -943,8 +955,8 @@ class TestParseCCNoOffset(TestParseCCBasic):
                             power=self.power, sat=self.sat)
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCC(self.filename)[0]
@@ -979,8 +991,8 @@ class TestParseCCNoPower(TestParseCCBasic):
                             slope=self.slope, sat=self.sat)
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCC(self.filename)[0]
@@ -1011,8 +1023,8 @@ class TestParseCCEmptyElems(TestParseCCBasic):
         self.file = buildCC(self.id, self.desc, emptySop=True, emptySat=True)
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCC(self.filename)[0]
@@ -1081,8 +1093,8 @@ class TestParseCCExceptions(unittest.TestCase):
         xml = buildCC(emptySop=True, emptySat=True)
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(xml)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(xml))
             self.file = f.name
 
         self.assertRaises(
@@ -1099,8 +1111,8 @@ class TestParseCCExceptions(unittest.TestCase):
 
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(xml)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(xml))
             self.file = f.name
 
         self.assertRaises(
@@ -1128,8 +1140,8 @@ class TestParseCDLBasic(unittest.TestCase):
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCDL(self.filename)[0]
@@ -1209,8 +1221,8 @@ class TestParseCDLOdd(TestParseCDLBasic):
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdl = cdl_convert.parseCDL(self.filename)[0]
@@ -1241,7 +1253,7 @@ class TestWriteCDLBasic(unittest.TestCase):
 
         self.mockOpen = mock.mock_open()
 
-        with mock.patch('__builtin__.open', self.mockOpen, create=True):
+        with mock.patch(builtins + '.open', self.mockOpen, create=True):
             cdl_convert.writeCDL(self.cdl)
 
     #===========================================================================
@@ -1257,7 +1269,7 @@ class TestWriteCDLBasic(unittest.TestCase):
     def testContent(self):
         """Tests that writeCDL wrote the correct CDL"""
         handle = self.mockOpen()
-        handle.write.assert_called_once_with(self.file)
+        handle.write.assert_called_once_with(enc(self.file))
 
 
 class TestWriteCDLOdd(TestWriteCDLBasic):
@@ -1288,7 +1300,7 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
 
         self.mockOpen = mock.mock_open()
 
-        with mock.patch('__builtin__.open', self.mockOpen, create=True):
+        with mock.patch(builtins + '.open', self.mockOpen, create=True):
             cdl_convert.writeCDL(self.cdl)
 
 # FLEx =========================================================================
@@ -1337,8 +1349,8 @@ class TestParseFLExBasic(unittest.TestCase):
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdls = cdl_convert.parseFLEx(self.filename)
@@ -1460,7 +1472,7 @@ class TestParseFLExBasic(unittest.TestCase):
     def testDescription(self):
         """Tests that the descriptions have been parsed correctly"""
 
-        for i in xrange(3):
+        for i in range(3):
             self.assertEqual(
                 self.title,
                 self.cdls[i].description
@@ -1508,8 +1520,8 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdls = cdl_convert.parseFLEx(self.filename)
@@ -1578,8 +1590,8 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdls = cdl_convert.parseFLEx(self.filename)
@@ -1648,8 +1660,8 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
         self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='r+b', delete=False) as f:
-            f.write(self.file)
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
             self.filename = f.name
 
         self.cdls = cdl_convert.parseFLEx(self.filename)
@@ -1686,7 +1698,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
     def testDescription(self):
         """Tests that the descriptions have been parsed correctly"""
 
-        for i in xrange(3):
+        for i in range(3):
             self.assertEqual(
                 None,
                 self.cdls[i].description
@@ -1946,7 +1958,7 @@ class TimeCodeSegment(object):
         # timedelta oddly won't do any math operations with time.
         startTime = datetime.datetime(1, 1, 1, hour, minute, second)
 
-        durSeconds = duration / fps
+        durSeconds = duration // fps
         durFrames = duration % fps
         frameRollover = False  # Keep track of if frames roll over.
 

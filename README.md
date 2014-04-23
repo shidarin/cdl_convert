@@ -1,7 +1,7 @@
 CDL Convert
 ==========
 
-[![Build Status](https://travis-ci.org/shidarin/cdl_convert.svg?branch=feature/testing)](https://travis-ci.org/shidarin/cdl_convert)[![Coverage Status](https://coveralls.io/repos/shidarin/cdl_convert/badge.png?branch=feature%2Ftesting)](https://coveralls.io/r/shidarin/cdl_convert?branch=feature%2Ftesting)
+[![Build Status](https://travis-ci.org/shidarin/cdl_convert.svg?branch=master)](https://travis-ci.org/shidarin/cdl_convert)[![Coverage Status](https://coveralls.io/repos/shidarin/cdl_convert/badge.png?branch=master)](https://coveralls.io/r/shidarin/cdl_convert?branch=master)
 
 Converts between common [ASC CDL](http://en.wikipedia.org/wiki/ASC_CDL)
 formats. The [American Society of Cinematographers](http://www.theasc.com/) Color
@@ -46,10 +46,9 @@ With support for both from and to expanding in the future.
 
 ## Code
 
-CDL Convert is written for Python 2.6 and up, with support for Python 3 coming
-in the future. Code is written for PEP 8 compliance, although at the time of
-this writing function & variable naming uses camelCasing. Docstrings follow
-Google code standards.
+CDL Convert is written for Python 2.6, including Python 3.2 and 3.4. Code is
+written for PEP 8 compliance, although at the time of this writing function &
+variable naming uses camelCasing. Docstrings follow Google code standards.
 
 Development uses Git Flow model.
 

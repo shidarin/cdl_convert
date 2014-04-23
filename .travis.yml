@@ -1,9 +1,10 @@
 language: python
 python:
-  - "2.7"
   - "2.6"
+  - "2.7"
+  - "3.2"
+  - "3.3"
 # command to install dependencies
-# 'mock' is only required for testing, cdl_convert runs without it
 install:
   - pip install mock
   - pip install coveralls
