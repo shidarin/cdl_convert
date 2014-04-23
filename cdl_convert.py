@@ -1,4 +1,4 @@
-#/usr/bin/python
+#!/usr/bin/env python
 # CDL Convert
 # Converts between common ASC CDL formats
 # By Sean Wallitsch, 2014/04/16
@@ -94,9 +94,9 @@ Functions
 
 """
 
-#===============================================================================
+# ==============================================================================
 # IMPORTS
-#===============================================================================
+# ==============================================================================
 
 from argparse import ArgumentParser
 from ast import literal_eval
@@ -108,15 +108,15 @@ import xml.etree.ElementTree as ET
 try:
     xrange
 except NameError:  # pragma: no cover
-    xrange = range
+    xrange = range  # pylint: disable=W0622, C0103
 try:
     raw_input
 except NameError:  # pragma: no cover
-    raw_input = input
+    raw_input = input  # pylint: disable=W0622, C0103
 
-#===============================================================================
+# ==============================================================================
 # GLOBALS
-#===============================================================================
+# ==============================================================================
 
 # INPUT_FORMATS and OUTPUT_FORMATS are globals but located in the MAIN section
 # of the file, as they are dispatcher dictionaries that require the functions
@@ -138,19 +138,18 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 # Space Separated CDL, a Rhythm & Hues format
-CDL = """{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}
-"""
+CDL = "{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}\n"  # pylint: disable=C0301
 
 if sys.version_info[0] >= 3:  # pragma: no cover
-    enc = lambda x: bytes(x, 'UTF-8')
+    enc = lambda x: bytes(x, 'UTF-8')  # pylint: disable=C0103
 else:  # pragma: no cover
-    enc = lambda x: x
+    enc = lambda x: x  # pylint: disable=C0103
 
-#===============================================================================
+# ==============================================================================
 # CLASSES
-#===============================================================================
+# ==============================================================================
 
-class AscCdl(object):
+class AscCdl(object):  # pylint: disable=R0902
     """The basic class for the ASC CDL
 
     Description
@@ -172,30 +171,30 @@ class AscCdl(object):
 
     Attributes:
 
-        colorCorrectionRef : (str)
+        cc_ref : (str)
             This is a reference to another CDL's unique id. Defaults to None.
 
-        description : (str)
+        desc : (str)
             Comments and notes on the correction. Defaults to None.
 
-        fileIn : (str)
+        file_in : (str)
             Filepath used to create this CDL.
 
             Required attribute.
 
-        fileOut : (str)
+        file_out : (str)
             Filepath this CDL will be written to.
 
-        id : (str)
-            Unique XML URI to identify this CDL. Often  a shot or sequence name.
+        cc_id : (str)
+            Unique XML URI to identify this CDL. Often a shot or sequence name.
 
             Required attribute.
 
-        inputDescription : (str)
+        input_desc : (str)
             Description of the color space, format and properties of the input
             images. Defaults to None.
 
-        mediaRef : (str)
+        media_ref : (str)
             A reference link to an image or an image sequence. Defaults to None.
 
         offset : [float, float, float]
@@ -223,21 +222,21 @@ class AscCdl(object):
 
             The default slope value is 1.0
 
-        viewingDescription : (str)
+        viewing_desc : (str)
             Viewing device, settings and environment. Defaults to None.
 
     """
 
-    def __init__(self, id, file):
+    def __init__(self, cc_id, cdl_file):
         """Inits an instance of an ASC CDL"""
 
         # Non-ASC attributes
-        self._fileIn = os.path.abspath(file)
-        self._fileOut = None
+        self._file_in = os.path.abspath(cdl_file)
+        self._file_out = None
 
-        # The id is really the only required part of an ASC CDL.
+        # The cc_id is really the only required part of an ASC CDL.
         # Each ID should be unique
-        self._id = sanitize(id)
+        self._cc_id = sanitize(cc_id)
 
         # ASC_SOP attributes
         self._slope = [1.0, 1.0, 1.0]
@@ -248,145 +247,154 @@ class AscCdl(object):
         self._sat = 1.0
 
         # Metadata
-        self.colorCorrectionRef = None
-        self.description = None
-        self.inputDescription = None
-        self.mediaRef = None
-        self.viewingDescription = None
+        self.cc_ref = None
+        self.desc = None
+        self.input_desc = None
+        self.media_ref = None
+        self.viewing_desc = None
 
     # Properties ===============================================================
 
     @property
-    def fileIn(self):
-        return self._fileIn
+    def file_in(self):
+        """Returns the absolute filepath to the input file"""
+        return self._file_in
 
     @property
-    def fileOut(self):
-        return self._fileOut
+    def file_out(self):
+        """Returns a theoretical absolute filepath based on output ext"""
+        return self._file_out
 
     @property
-    def id(self):
-        return self._id
+    def cc_id(self):
+        """Returns unique color correction id field"""
+        return self._cc_id
 
     @property
     def offset(self):
+        """Returns list of RGB offset values"""
         return self._offset
 
     @offset.setter
-    def offset(self, offsetRGB):
+    def offset(self, offset_rgb):
+        """Runs tests and converts offset rgb values before setting"""
         # Offset must be a list with 3 values.
         try:
-            assert len(offsetRGB) == 3
+            assert len(offset_rgb) == 3
         except AssertionError:
             raise ValueError("Offset must be set with all three RGB values")
         try:
-            assert type(offsetRGB) in [list, tuple]
+            assert type(offset_rgb) in [list, tuple]
         except AssertionError:
             raise TypeError("Offset must be a list or tuple")
 
-        offsetRGB = list(offsetRGB)
+        offset_rgb = list(offset_rgb)
 
-        for i in xrange(len(offsetRGB)):
+        for i in xrange(len(offset_rgb)):
             try:
-                offsetRGB[i] = float(offsetRGB[i])
+                offset_rgb[i] = float(offset_rgb[i])
             except ValueError:
                 raise TypeError("Offset values must be ints or floats")
 
-        self._offset = offsetRGB
+        self._offset = offset_rgb
 
     @property
     def power(self):
+        """Returns list of RGB power values"""
         return self._power
 
     @power.setter
-    def power(self, powerRGB):
+    def power(self, power_rgb):
+        """Runs tests and converts power rgb values before setting"""
         # Slope must be a list with 3 values, all of which are positive floats
         try:
-            assert len(powerRGB) == 3
+            assert len(power_rgb) == 3
         except AssertionError:
             raise ValueError("Power must be set with all three RGB values")
         try:
-            assert type(powerRGB) in [list, tuple]
+            assert type(power_rgb) in [list, tuple]
         except AssertionError:
             raise TypeError("Power must be a list or tuple")
 
-        powerRGB = list(powerRGB)
+        power_rgb = list(power_rgb)
 
-        for i in xrange(len(powerRGB)):
+        for i in xrange(len(power_rgb)):
             try:
-                powerRGB[i] = float(powerRGB[i])
+                power_rgb[i] = float(power_rgb[i])
             except ValueError:
                 raise TypeError("Power values must be ints or floats")
             try:
-                assert powerRGB[i] >= 0.0
+                assert power_rgb[i] >= 0.0
             except AssertionError:
                 raise ValueError("Power values must not be negative")
 
-        self._power = powerRGB
+        self._power = power_rgb
 
     @property
     def slope(self):
+        """Returns list of RGB slope values"""
         return self._slope
 
     @slope.setter
-    def slope(self, slopeRGB):
+    def slope(self, slope_rgb):
+        """Runs tests and converts slope rgb values before setting"""
         # Slope must be a list with 3 values, all of which are positive floats
         try:
-            assert len(slopeRGB) == 3
+            assert len(slope_rgb) == 3
         except AssertionError:
             raise ValueError("Slope must be set with all three RGB values")
         try:
-            assert type(slopeRGB) in [list, tuple]
+            assert type(slope_rgb) in [list, tuple]
         except AssertionError:
             raise TypeError("Slope must be a list or tuple")
 
-        slopeRGB = list(slopeRGB)
+        slope_rgb = list(slope_rgb)
 
-        for i in xrange(len(slopeRGB)):
+        for i in xrange(len(slope_rgb)):
             try:
-                slopeRGB[i] = float(slopeRGB[i])
+                slope_rgb[i] = float(slope_rgb[i])
             except ValueError:
                 raise TypeError("Slope values must be ints or floats")
             try:
-                assert slopeRGB[i] >= 0.0
+                assert slope_rgb[i] >= 0.0
             except AssertionError:
                 raise ValueError("Slope values must not be negative")
 
-        self._slope = slopeRGB
+        self._slope = slope_rgb
 
     @property
     def sat(self):
+        """Returns float value for saturation"""
         return self._sat
 
     @sat.setter
-    def sat(self, satValue):
+    def sat(self, sat_value):
+        """Makes sure provided sat value is a positive float"""
         try:
-            satValue = float(satValue)
+            sat_value = float(sat_value)
         except ValueError:
             raise TypeError("Saturation must be a float or int")
         try:
-            assert satValue >= 0.0
+            assert sat_value >= 0.0
         except AssertionError:
             raise ValueError("Saturation must be a positive value")
 
-        self._sat = float(satValue)
+        self._sat = float(sat_value)
 
-    #===========================================================================
-    # METHODS
-    #===========================================================================
+    # methods ==================================================================
 
-    def determineDest(self, output):
+    def determine_dest(self, output):
         """Determines the destination file and sets it on the cdl"""
 
-        dir = os.path.dirname(self.fileIn)
+        directory = os.path.dirname(self.file_in)
 
-        filename = "{id}.{ext}".format(id=self.id, ext=output)
+        filename = "{id}.{ext}".format(id=self.cc_id, ext=output)
 
-        self._fileOut = os.path.join(dir, filename)
+        self._file_out = os.path.join(directory, filename)
 
-#===============================================================================
+# ==============================================================================
 # FUNCTIONS
-#===============================================================================
+# ==============================================================================
 
 def parseALE(file):
     """Parses an Avid Log Exchange (ALE) file for CDLs
@@ -467,7 +475,7 @@ def parseALE(file):
 
     return cdls
 
-#===============================================================================
+# ==============================================================================
 
 def parseCC(file):
     """Parses a .cc file for ASC CDL information
@@ -533,7 +541,7 @@ def parseCC(file):
         power = sop.find('Power')
 
         if desc is not None:
-            cdl.description = desc.text
+            cdl.desc = desc.text
         if slope is not None:
             cdl.slope = slope.text.split()
         if offset is not None:
@@ -551,7 +559,7 @@ def parseCC(file):
     return cdls
 
 
-#===============================================================================
+# ==============================================================================
 
 def parseFLEx(file):
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
@@ -644,7 +652,7 @@ def parseFLEx(file):
                     if sat:
                         cdl.sat = sat
                     if title:
-                        cdl.description = title
+                        cdl.desc = title
 
                     cdls.append(cdl)
 
@@ -709,14 +717,14 @@ def parseFLEx(file):
         if sat:
             cdl.sat = sat
         if title:
-            cdl.description = title
+            cdl.desc = title
 
         cdls.append(cdl)
 
     return cdls
 
 
-#===============================================================================
+# ==============================================================================
 
 def parseCDL(file):
     """Parses a space separated .cdl file for ASC CDL information.
@@ -771,7 +779,7 @@ def parseCDL(file):
 
     return cdls
 
-#===============================================================================
+# ==============================================================================
 
 def sanitize(name):
     """Removes any characters in string name that aren't alnum or in '_.'"""
@@ -794,13 +802,13 @@ def sanitize(name):
 
     return fixed
 
-#===============================================================================
+# ==============================================================================
 
 def writeCC(cdl):
     """Writes the AscCdl to a .cc file"""
 
     xml = CC_XML.format(
-        id=cdl.id,
+        id=cdl.cc_id,
         slopeR=cdl.slope[0],
         slopeG=cdl.slope[1],
         slopeB=cdl.slope[2],
@@ -813,10 +821,10 @@ def writeCC(cdl):
         sat=cdl.sat
     )
 
-    with open(cdl.fileOut, 'wb') as f:
+    with open(cdl.file_out, 'wb') as f:
         f.write(enc(xml))
 
-#===============================================================================
+# ==============================================================================
 
 def writeCDL(cdl):
     """Writes the AscCdl to a space separated .cdl file"""
@@ -834,12 +842,12 @@ def writeCDL(cdl):
         sat=cdl.sat
     )
 
-    with open(cdl.fileOut, 'wb') as f:
+    with open(cdl.file_out, 'wb') as f:
         f.write(enc(ssCdl))
 
-#===============================================================================
+# ==============================================================================
 # MAIN
-#===============================================================================
+# ==============================================================================
 
 # These globals need to be after the parse/write functions but before the
 # parseArgs.
@@ -856,7 +864,7 @@ OUTPUT_FORMATS = {
     'cdl': writeCDL,
 }
 
-#===============================================================================
+# ==============================================================================
 
 def parseArgs():
     """Uses argparse to parse command line arguments"""
@@ -917,7 +925,7 @@ def parseArgs():
 
     return args
 
-#===============================================================================
+# ==============================================================================
 
 def main():
     args = parseArgs()
@@ -934,11 +942,11 @@ def main():
     if cdls:
         for cdl in cdls:
             for ext in args.output:
-                cdl.determineDest(ext)
-                print(
+                cdl.determine_dest(ext)
+                print(  # pylint: disable=C0325
                     "Writing cdl {id} to {path}".format(
-                        id=cdl.id,
-                        path=cdl.fileOut
+                        id=cdl.cc_id,
+                        path=cdl.file_out
                     )
                 )
                 OUTPUT_FORMATS[ext](cdl)
@@ -946,7 +954,7 @@ def main():
 if __name__ == '__main__':  # pragma: no cover
     try:
         main()
-    except Exception as err:
-        print('Unexpected error encountered:')
-        print(err)
+    except Exception as err:  # pylint: disable=W0703
+        print('Unexpected error encountered:')  # pylint: disable=C0325
+        print(err)  # pylint: disable=C0325
         raw_input('Press enter key to exit')
