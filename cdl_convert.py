@@ -200,7 +200,7 @@ class AscCdl(object):  # pylint: disable=R0902
             images. Defaults to None.
 
         media_ref : (str)
-            A reference link to an image or an image sequence. Defaults to None.
+            A reference link to an image or an image sequence. Defaults to None
 
         offset : [float, float, float]
             An rgb list representing the offset, which raises or lowers the
@@ -258,7 +258,7 @@ class AscCdl(object):  # pylint: disable=R0902
         self.media_ref = None
         self.viewing_desc = None
 
-    # Properties ===============================================================
+    # Properties ==============================================================
 
     @property
     def file_in(self):
@@ -386,7 +386,7 @@ class AscCdl(object):  # pylint: disable=R0902
 
         self._sat = float(sat_value)
 
-    # methods ==================================================================
+    # methods =================================================================
 
     def determine_dest(self, output):
         """Determines the destination file and sets it on the cdl"""
