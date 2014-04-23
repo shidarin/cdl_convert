@@ -925,22 +925,23 @@ def main():
     filepath = os.path.abspath(args.input_file)
 
     if not args.input:
-        filetypeIn = os.path.basename(filepath).split('.')[-1]
+        filetypeIn = os.path.basename(filepath).split('.')[-1].lower()
     else:
         filetypeIn = args.input
 
     cdls = INPUT_FORMATS[filetypeIn](filepath)
 
-    for cdl in cdls:
-        for ext in args.output:
-            cdl.determineDest(ext)
-            print(
-                "Writing cdl {id} to {path}".format(
-                    id=cdl.id,
-                    path=cdl.fileOut
+    if cdls:
+        for cdl in cdls:
+            for ext in args.output:
+                cdl.determineDest(ext)
+                print(
+                    "Writing cdl {id} to {path}".format(
+                        id=cdl.id,
+                        path=cdl.fileOut
+                    )
                 )
-            )
-            OUTPUT_FORMATS[ext](cdl)
+                OUTPUT_FORMATS[ext](cdl)
 
 if __name__ == '__main__':
     try:
