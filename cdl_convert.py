@@ -655,7 +655,7 @@ def parse_flex(edl_file):
                 # We need to dump the previous records to a CDL
                 # Then clear the records.
                 # Note that the first data line will also hit this.
-                metadata = filter(None, metadata)
+                metadata = [i for i in metadata if i != '']
                 if metadata:
                     cc_id = '_'.join(metadata)
                 else:
@@ -699,7 +699,7 @@ def parse_flex(edl_file):
                 sat = float(line.split()[-1])
 
     # We need to dump the last record to the cdl list
-    metadata = filter(None, metadata)
+    metadata = [i for i in metadata if i != '']
     if metadata:
         cc_id = '_'.join(metadata)
     else:
