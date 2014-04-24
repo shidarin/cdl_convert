@@ -21,6 +21,10 @@ except ImportError:
     import mock
 import os
 from random import choice, random, randrange
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import sys
 import tempfile
 import unittest
@@ -1918,6 +1922,8 @@ class TestMain(unittest.TestCase):
         self.inputFormats = cdl_convert.INPUT_FORMATS
         self.outputFormats = cdl_convert.OUTPUT_FORMATS
         self.sysargv = sys.argv
+        self.stdout = sys.stdout
+        sys.stdout = StringIO()
 
     #===========================================================================
 
@@ -1925,6 +1931,7 @@ class TestMain(unittest.TestCase):
         cdl_convert.INPUT_FORMATS = self.inputFormats
         cdl_convert.OUTPUT_FORMATS = self.outputFormats
         sys.argv = self.sysargv
+        sys.stdout = self.stdout
 
     #===========================================================================
     # TESTS
