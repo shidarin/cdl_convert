@@ -1,0 +1,8 @@
+doc-warnings: yes
+test-warnings: no
+strictness: veryhigh
+max-line-length: 80
+ignore-paths:
+    - docs
+    - tests
+autodetect: yes

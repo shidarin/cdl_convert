@@ -143,7 +143,7 @@ class TestAscCdl(unittest.TestCase):
 
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
-        self.cdl = cdl_convert.AscCdl(id='uniqueId', file='../testcdl.cc')
+        self.cdl = cdl_convert.AscCdl(cc_id='uniqueId', cdl_file='../testcdl.cc')
 
     #===========================================================================
     # TESTS
@@ -155,15 +155,15 @@ class TestAscCdl(unittest.TestCase):
         """Tests that calling AscCdl.fileIn returns the file given"""
         self.assertEqual(
             os.path.abspath('../testcdl.cc'),
-            self.cdl.fileIn
+            self.cdl.file_in
         )
 
     #===========================================================================
 
     def testFileInSetException(self):
-        """Tests that exception raised when setting fileIn after init"""
+        """Tests that exception raised when setting file_in after init"""
         def testFileIn():
-            self.cdl.fileIn = '../NewFile.cc'
+            self.cdl.file_in = '../NewFile.cc'
 
         self.assertRaises(
             AttributeError,
@@ -173,9 +173,9 @@ class TestAscCdl(unittest.TestCase):
     #===========================================================================
 
     def testFileOutSetException(self):
-        """Tests that exception raised when attempting to set fileOut direct"""
+        """Tests that exception raised when attempting to set file_out direct"""
         def testFileOut():
-            self.cdl.fileOut = '../NewFile.cc'
+            self.cdl.file_out = '../NewFile.cc'
 
         self.assertRaises(
             AttributeError,
@@ -185,10 +185,10 @@ class TestAscCdl(unittest.TestCase):
     #===========================================================================
 
     def testIdReturn(self):
-        """Tests that calling AscCdl.id returns the id"""
+        """Tests that calling AscCdl.cc_id returns the id"""
         self.assertEqual(
             'uniqueId',
-            self.cdl.id
+            self.cdl.cc_id
         )
 
     #===========================================================================
@@ -196,7 +196,7 @@ class TestAscCdl(unittest.TestCase):
     def testIdSetException(self):
         """Tests that exception raised when attempting to set cdl after init"""
         def testId():
-            self.cdl.id = 'betterId'
+            self.cdl.cc_id = 'betterId'
 
         self.assertRaises(
             AttributeError,
@@ -469,18 +469,18 @@ class TestAscCdl(unittest.TestCase):
             self.cdl.sat
         )
 
-    # determineDest() ==========================================================
+    # determine_dest() ==========================================================
 
     def testDetermineDest(self):
         """Tests that determine destination is calculated correctly"""
-        self.cdl.determineDest('cdl')
+        self.cdl.determine_dest('cdl')
 
         dir = os.path.abspath('../')
         filename = os.path.join(dir, 'uniqueId.cdl')
 
         self.assertEqual(
             filename,
-            self.cdl.fileOut
+            self.cdl.file_out
         )
 
 # ale ==========================================================================
@@ -528,7 +528,7 @@ class TestParseALEBasic(unittest.TestCase):
             f.write(enc(self.file))
             self.filename = f.name
 
-        cdls = cdl_convert.parseALE(self.filename)
+        cdls = cdl_convert.parse_ale(self.filename)
         self.cdl1 = cdls[0]
         self.cdl2 = cdls[1]
         self.cdl3 = cdls[2]
@@ -549,17 +549,17 @@ class TestParseALEBasic(unittest.TestCase):
 
         self.assertEqual(
             'bb94_x103_line1',
-            self.cdl1.id
+            self.cdl1.cc_id
         )
 
         self.assertEqual(
             'bb94_x104_line2',
-            self.cdl2.id
+            self.cdl2.cc_id
         )
 
         self.assertEqual(
             'bb94_x105_line3',
-            self.cdl3.id
+            self.cdl3.cc_id
         )
 
     #===========================================================================
@@ -685,7 +685,7 @@ class TestParseALEShort(TestParseALEBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        cdls = cdl_convert.parseALE(self.filename)
+        cdls = cdl_convert.parse_ale(self.filename)
         self.cdl1 = cdls[0]
         self.cdl2 = cdls[1]
         self.cdl3 = cdls[2]
@@ -716,7 +716,7 @@ class TestParseCCBasic(unittest.TestCase):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parseCC(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
     #===========================================================================
 
@@ -730,19 +730,19 @@ class TestParseCCBasic(unittest.TestCase):
     #===========================================================================
 
     def testId(self):
-        """Tests that id was set to id attrib"""
+        """Tests that id was set to cc_id attrib"""
         self.assertEqual(
             self.id,
-            self.cdl.id
+            self.cdl.cc_id
         )
 
     #===========================================================================
 
     def testDesc(self):
-        """Tests that desc was set to description element"""
+        """Tests that desc was set to desc element"""
         self.assertEqual(
             self.desc,
-            self.cdl.description
+            self.cdl.desc
         )
 
     #===========================================================================
@@ -811,7 +811,7 @@ class TestParseCCOdd(TestParseCCBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parseCC(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
 
 class TestParseCCJustSat(TestParseCCBasic):
@@ -833,7 +833,7 @@ class TestParseCCJustSat(TestParseCCBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parseCC(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
     #===========================================================================
     # TESTS
@@ -887,7 +887,7 @@ class TestParseCCJustSOP(TestParseCCBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parseCC(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
     #===========================================================================
     # TESTS
@@ -923,7 +923,7 @@ class TestParseCCNoSlope(TestParseCCBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parseCC(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
     #===========================================================================
     # TESTS
@@ -959,7 +959,7 @@ class TestParseCCNoOffset(TestParseCCBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parseCC(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
     #===========================================================================
     # TESTS
@@ -995,7 +995,7 @@ class TestParseCCNoPower(TestParseCCBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parseCC(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
     #===========================================================================
     # TESTS
@@ -1027,7 +1027,7 @@ class TestParseCCEmptyElems(TestParseCCBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parseCC(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
     #===========================================================================
     # TESTS
@@ -1069,7 +1069,7 @@ class TestParseCCEmptyElems(TestParseCCBasic):
 
 
 class TestParseCCExceptions(unittest.TestCase):
-    """Tests parseCC's response to some bad xml files"""
+    """Tests parse_cc's response to some bad xml files"""
 
     #===========================================================================
     # SETUP & TEARDOWN
@@ -1099,7 +1099,7 @@ class TestParseCCExceptions(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            cdl_convert.parseCC,
+            cdl_convert.parse_cc,
             self.file
         )
 
@@ -1117,7 +1117,7 @@ class TestParseCCExceptions(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            cdl_convert.parseCC,
+            cdl_convert.parse_cc,
             self.file
         )
 
@@ -1144,7 +1144,7 @@ class TestParseCDLBasic(unittest.TestCase):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parseCDL(self.filename)[0]
+        self.cdl = cdl_convert.parse_cdl(self.filename)[0]
 
     #===========================================================================
 
@@ -1158,11 +1158,11 @@ class TestParseCDLBasic(unittest.TestCase):
     #===========================================================================
 
     def testId(self):
-        """Tests that id was set to the filename without extension"""
+        """Tests that cc_id was set to the filename without extension"""
         id = os.path.basename(self.filename).split('.')[0]
         self.assertEqual(
             id,
-            self.cdl.id
+            self.cdl.cc_id
         )
 
     #===========================================================================
@@ -1225,7 +1225,7 @@ class TestParseCDLOdd(TestParseCDLBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parseCDL(self.filename)[0]
+        self.cdl = cdl_convert.parse_cdl(self.filename)[0]
 
 
 class TestWriteCDLBasic(unittest.TestCase):
@@ -1243,7 +1243,7 @@ class TestWriteCDLBasic(unittest.TestCase):
 
         self.cdl = cdl_convert.AscCdl('uniqueId', '../theVeryBestFile.ale')
 
-        self.cdl.determineDest('cdl')
+        self.cdl.determine_dest('cdl')
         self.cdl.slope = self.slope
         self.cdl.offset = self.offset
         self.cdl.power = self.power
@@ -1254,7 +1254,7 @@ class TestWriteCDLBasic(unittest.TestCase):
         self.mockOpen = mock.mock_open()
 
         with mock.patch(builtins + '.open', self.mockOpen, create=True):
-            cdl_convert.writeCDL(self.cdl)
+            cdl_convert.write_cdl(self.cdl)
 
     #===========================================================================
     # TESTS
@@ -1262,12 +1262,12 @@ class TestWriteCDLBasic(unittest.TestCase):
 
     def testOpen(self):
         """Tests that open was called correctly"""
-        self.mockOpen.assert_called_once_with(self.cdl.fileOut, 'wb')
+        self.mockOpen.assert_called_once_with(self.cdl.file_out, 'wb')
 
     #===========================================================================
 
     def testContent(self):
-        """Tests that writeCDL wrote the correct CDL"""
+        """Tests that write_cdl wrote the correct CDL"""
         handle = self.mockOpen()
         handle.write.assert_called_once_with(enc(self.file))
 
@@ -1290,7 +1290,7 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
 
         self.cdl = cdl_convert.AscCdl('uniqueId', '../theVeryBestFile.ale')
 
-        self.cdl.determineDest('cdl')
+        self.cdl.determine_dest('cdl')
         self.cdl.slope = self.slope
         self.cdl.offset = self.offset
         self.cdl.power = self.power
@@ -1301,7 +1301,7 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
         self.mockOpen = mock.mock_open()
 
         with mock.patch(builtins + '.open', self.mockOpen, create=True):
-            cdl_convert.writeCDL(self.cdl)
+            cdl_convert.write_cdl(self.cdl)
 
 # FLEx =========================================================================
 
@@ -1353,7 +1353,7 @@ class TestParseFLExBasic(unittest.TestCase):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdls = cdl_convert.parse_flex(self.filename)
         self.cdl1 = self.cdls[0]
         self.cdl2 = self.cdls[1]
         self.cdl3 = self.cdls[2]
@@ -1374,17 +1374,17 @@ class TestParseFLExBasic(unittest.TestCase):
 
         self.assertEqual(
             'bb94_x103_line1',
-            self.cdl1.id
+            self.cdl1.cc_id
         )
 
         self.assertEqual(
             'bb94_x104_line2',
-            self.cdl2.id
+            self.cdl2.cc_id
         )
 
         self.assertEqual(
             'bb94_x105_line3',
-            self.cdl3.id
+            self.cdl3.cc_id
         )
 
     #===========================================================================
@@ -1475,7 +1475,7 @@ class TestParseFLExBasic(unittest.TestCase):
         for i in range(3):
             self.assertEqual(
                 self.title,
-                self.cdls[i].description
+                self.cdls[i].desc
             )
 
 
@@ -1524,7 +1524,7 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdls = cdl_convert.parse_flex(self.filename)
         self.cdl1 = self.cdls[0]
         self.cdl2 = self.cdls[1]
         self.cdl3 = self.cdls[2]
@@ -1538,17 +1538,17 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
 
         self.assertEqual(
             'bb94_x103_line1',
-            self.cdl1.id
+            self.cdl1.cc_id
         )
 
         self.assertEqual(
             'bb94_x104',
-            self.cdl2.id
+            self.cdl2.cc_id
         )
 
         self.assertEqual(
             'bb94',
-            self.cdl3.id
+            self.cdl3.cc_id
         )
 
 
@@ -1594,7 +1594,7 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdls = cdl_convert.parse_flex(self.filename)
         self.cdl1 = self.cdls[0]
         self.cdl2 = self.cdls[1]
         self.cdl3 = self.cdls[2]
@@ -1608,17 +1608,17 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
 
         self.assertEqual(
             "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H001",
-            self.cdl1.id
+            self.cdl1.cc_id
         )
 
         self.assertEqual(
             "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H002",
-            self.cdl2.id
+            self.cdl2.cc_id
         )
 
         self.assertEqual(
             "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H003",
-            self.cdl3.id
+            self.cdl3.cc_id
         )
 
 
@@ -1664,7 +1664,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdls = cdl_convert.parseFLEx(self.filename)
+        self.cdls = cdl_convert.parse_flex(self.filename)
         self.cdl1 = self.cdls[0]
         self.cdl2 = self.cdls[1]
         self.cdl3 = self.cdls[2]
@@ -1680,17 +1680,17 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
 
         self.assertEqual(
             "{0}001".format(filename),
-            self.cdl1.id
+            self.cdl1.cc_id
         )
 
         self.assertEqual(
             "{0}002".format(filename),
-            self.cdl2.id
+            self.cdl2.cc_id
         )
 
         self.assertEqual(
             "{0}003".format(filename),
-            self.cdl3.id
+            self.cdl3.cc_id
         )
 
     #===========================================================================
@@ -1701,7 +1701,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
         for i in range(3):
             self.assertEqual(
                 None,
-                self.cdls[i].description
+                self.cdls[i].desc
             )
 
 # sanitize() ===================================================================
@@ -1774,7 +1774,7 @@ class TestSanitize(unittest.TestCase):
             result
         )
 
-# parseArgs() ==================================================================
+# parse_args() =================================================================
 
 class TestParseArgs(unittest.TestCase):
     """Tests that arguments are being parsed correctly"""
@@ -1800,7 +1800,7 @@ class TestParseArgs(unittest.TestCase):
 
         sys.argv = ['scriptname', 'inputFile.txt']
 
-        args = cdl_convert.parseArgs()
+        args = cdl_convert.parse_args()
 
         self.assertEqual(
             'inputFile.txt',
@@ -1814,7 +1814,7 @@ class TestParseArgs(unittest.TestCase):
 
         sys.argv = ['scriptname', 'inputFile', '-i', 'ALE']
 
-        args = cdl_convert.parseArgs()
+        args = cdl_convert.parse_args()
 
         self.assertEqual(
             'ale',
@@ -1830,7 +1830,7 @@ class TestParseArgs(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            cdl_convert.parseArgs
+            cdl_convert.parse_args
         )
 
     #===========================================================================
@@ -1840,7 +1840,7 @@ class TestParseArgs(unittest.TestCase):
 
         sys.argv = ['scriptname', 'inputFile', '-o', 'CDL']
 
-        args = cdl_convert.parseArgs()
+        args = cdl_convert.parse_args()
 
         self.assertEqual(
             ['cdl'],
@@ -1854,7 +1854,7 @@ class TestParseArgs(unittest.TestCase):
 
         sys.argv = ['scriptname', 'inputFile', '-o', 'CDL,CC']
 
-        args = cdl_convert.parseArgs()
+        args = cdl_convert.parse_args()
 
         self.assertEqual(
             ['cdl', 'cc'],
@@ -1870,7 +1870,7 @@ class TestParseArgs(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            cdl_convert.parseArgs
+            cdl_convert.parse_args
         )
 
     #===========================================================================
@@ -1882,7 +1882,7 @@ class TestParseArgs(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            cdl_convert.parseArgs
+            cdl_convert.parse_args
         )
 
     #===========================================================================
@@ -1892,12 +1892,200 @@ class TestParseArgs(unittest.TestCase):
 
         sys.argv = ['scriptname', 'inputFile']
 
-        args = cdl_convert.parseArgs()
+        args = cdl_convert.parse_args()
 
         self.assertEqual(
             ['cc'],
             args.output
         )
+
+# main() =======================================================================
+
+
+class TestMain(unittest.TestCase):
+    """Tests the main() function for correct execution"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        import cdl_convert
+        # Note that the file doesn't really need to exist for our test purposes
+        self.cdl = cdl_convert.AscCdl(
+            cc_id='uniqueId', cdl_file='../testcdl.flex'
+        )
+        self.inputFormats = cdl_convert.INPUT_FORMATS
+        self.outputFormats = cdl_convert.OUTPUT_FORMATS
+        self.sysargv = sys.argv
+
+    #===========================================================================
+
+    def tearDown(self):
+        cdl_convert.INPUT_FORMATS = self.inputFormats
+        cdl_convert.OUTPUT_FORMATS = self.outputFormats
+        sys.argv = self.sysargv
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testGettingAbsolutePath(self, abspath, mockParse):
+        """Tests that we make sure to get the absolute path"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.flex']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        abspath.assert_called_once_with('file.flex')
+
+    #===========================================================================
+
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputType(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.flex']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.flex')
+
+    #===========================================================================
+
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeCased(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.fLEx'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.fLEx']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.fLEx')
+
+    #===========================================================================
+
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testOverrideInputType(self, abspath, mockParse):
+        """Tests that overriding the input type happens when provided"""
+
+        abspath.return_value = 'file.cc'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.cc', '-i', 'flex']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.cc')
+
+    #===========================================================================
+
+    @mock.patch('os.path.dirname')
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testDetermineDestCalled(self, abspath, mockParse, mockWrite, dirname):
+        """Tests that we try and write a converted file"""
+
+        abspath.return_value = 'file.flex'
+        dirname.return_value = ''  # determine_dest method calls to get dirname
+        mockParse.return_value = [self.cdl, ]
+        sys.argv = ['scriptname', 'file.flex', '-o', 'cc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        self.assertEqual(
+            'uniqueId.cc',
+            self.cdl.file_out
+        )
+
+
+    #===========================================================================
+
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testWriteCalled(self, abspath, mockParse, mockWrite):
+        """Tests that we try and write a converted file"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = [self.cdl, ]
+        sys.argv = ['scriptname', 'file.flex', '-o', 'cc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        mockWrite.assert_called_once_with(self.cdl)
+
+
+    #===========================================================================
+
+    @mock.patch('cdl_convert.write_cdl')
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testMultipleWritesCalled(self, abspath, mockParse, mockWriteCC,
+                                 mockWriteCDL):
+        """Tests that we try and write a converted file"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = [self.cdl, ]
+        sys.argv = ['scriptname', 'file.flex', '-o', 'cc,cdl']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWriteCC
+        mockOutputs['cdl'] = mockWriteCDL
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        mockWriteCC.assert_called_once_with(self.cdl)
+        mockWriteCDL.assert_called_once_with(self.cdl)
 
 # Test Classes =================================================================
 
