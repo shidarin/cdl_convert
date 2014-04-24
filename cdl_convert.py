@@ -99,7 +99,7 @@ from argparse import ArgumentParser
 from ast import literal_eval
 import os
 import sys
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ElementTree
 
 # Python 3 compatibility
 try:
@@ -526,8 +526,7 @@ def parse_cc(cdl_file):
     We'll check to see if each of these elements exist, and override the AscCdl
     defaults if we find them.
     """
-    tree = ET.parse(cdl_file)
-    root = tree.getroot()
+    root = ElementTree.parse(cdl_file).getroot()
 
     cdls = []
 
@@ -627,57 +626,49 @@ def parse_flex(edl_file):
 
         filename = os.path.basename(edl_file).split('.')[0]
 
-        # TODO: Make title, scene, take and reel a list or dict
         title = None
-        scene = None
-        take = None
-        reel = None
+        # Metadata will store, in order, the various scene, take, reel fields
+        # it finds.
+        metadata = []
 
-        slope = []
-        offset = []
-        power = []
+        sop = {}
         sat = None
+
+        def build_cdl(line_id, edl_path, sop_dict, sat_value, title_line):
+            """Builds and returns a cdl if sop/sat values found"""
+            cdl = AscCdl(line_id, edl_path)
+            if title_line:
+                cdl.metadata['desc'] = title_line
+            if sop_dict:
+                # If it finds the 701 line, it will have all three
+                cdl.slope = sop_dict['slope']
+                cdl.offset = sop_dict['offset']
+                cdl.power = sop_dict['power']
+            if sat_value:
+                cdl.sat = sat_value
+
+            return cdl
 
         for line in lines:
             if line.startswith('100'):
                 # This is the start of a take/shot
                 # We need to dump the previous records to a CDL
                 # Then clear the records.
-                if scene:
-                    cc_id = scene
-                    if take:
-                        cc_id += '_' + take
-                        if reel:
-                            cc_id += '_' + reel
+                # Note that the first data line will also hit this.
+                metadata = filter(None, metadata)
+                if metadata:
+                    cc_id = '_'.join(metadata)
                 else:
-                    if title:
-                        cc_id = title + str(len(cdls) + 1).rjust(3, '0')
-                    else:
-                        cc_id = filename + str(len(cdls) + 1).rjust(3, '0')
+                    field = title if title else filename
+                    cc_id = field + str(len(cdls) + 1).rjust(3, '0')
 
-                # If we already have slope/offset/power:
-                if slope and offset and power:
-                    # Make a cdl, add it to the cdls list
-                    cdl = AscCdl(cc_id, edl_file)
-
-                    cdl.slope = slope
-                    cdl.offset = offset
-                    cdl.power = power
-
-                    if sat:
-                        cdl.sat = sat
-                    if title:
-                        cdl.metadata['desc'] = title
-
+                # If we already have values:
+                if sop or sat:
+                    cdl = build_cdl(cc_id, edl_file, sop, sat, title)
                     cdls.append(cdl)
 
-                scene = None
-                take = None
-                reel = None
-
-                slope = []
-                offset = []
-                power = []
+                metadata = []
+                sop = {}
                 sat = None
 
             elif line.startswith('010'):
@@ -689,51 +680,35 @@ def parse_flex(edl_file):
                 # 10-17 Scene
                 # 24-31 Take ID
                 # 42-49 Camera Reel ID
-                scene = line[10:18].strip()
-                take = line[24:32].strip()
-                reel = line[42:50].strip()
+                metadata = [
+                    line[10:18].strip(),  # Scene
+                    line[24:32].strip(),  # Take
+                    line[42:50].strip(),  # Reel
+                ]
             elif line.startswith('701'):
                 # ASC SOP
                 # 701 ASC_SOP(# # #)(-# -# -#)(# # #)
-                slope = line[12:32].split()
-                offset = line[34:57].split()
-                power = line[59:79].split()
-                for i in xrange(3):
-                    slope[i] = float(slope[i])
-                    offset[i] = float(offset[i])
-                    power[i] = float(power[i])
+                sop = {
+                    'slope': line[12:32].split(),
+                    'offset': line[34:57].split(),
+                    'power': line[59:79].split()
+                }
             elif line.startswith('702'):
                 # ASC SAT
                 # 702 ASC_SAT ######
                 sat = float(line.split()[-1])
 
     # We need to dump the last record to the cdl list
-    if scene:
-        cc_id = scene
-        if take:
-            cc_id += '_' + take
-            if reel:
-                cc_id += '_' + reel
+    metadata = filter(None, metadata)
+    if metadata:
+        cc_id = '_'.join(metadata)
     else:
-        if title:
-            cc_id = title + str(len(cdls) + 1).rjust(3, '0')
-        else:
-            cc_id = filename + str(len(cdls) + 1).rjust(3, '0')
+        field = title if title else filename
+        cc_id = field + str(len(cdls) + 1).rjust(3, '0')
 
-    # If we have slope/offset/power:
-    if slope and offset and power:
-        # Make a cdl, add it to the cdls list
-        cdl = AscCdl(cc_id, edl_file)
-
-        cdl.slope = slope
-        cdl.offset = offset
-        cdl.power = power
-
-        if sat:
-            cdl.sat = sat
-        if title:
-            cdl.metadata['desc'] = title
-
+    # If we found values at all:
+    if sop or sat:
+        cdl = build_cdl(cc_id, edl_file, sop, sat, title)
         cdls.append(cdl)
 
     return cdls

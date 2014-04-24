@@ -1708,6 +1708,67 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
                 self.cdls[i].metadata['desc']
             )
 
+
+class TestParseFLExMissingSopSat(TestParseFLExBasic):
+    """Tests basic parsing of a Flex where sop/sat are missing"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+
+        self.title = "Hanky Panky Bromance"
+
+        self.slope1 = [1.0, 1.0, 1.0]
+        self.offset1 = [0.0, 0.0, 0.0]
+        self.power1 = [1.0, 1.0, 1.0]
+        self.sat1 = 1.01
+
+        line1 = buildFLExTake(sat=self.sat1, scene='bb94', take='x103',
+                              roll='line1')
+
+        self.slope2 = [1.2, 2.32, 10.82]
+        self.offset2 = [-1.32, 2.32, 0.73]
+        self.power2 = [1.329, 0.9833, 1.003]
+        self.sat2 = 1.0
+
+        line2 = buildFLExTake(self.slope2, self.offset2, self.power2,
+                              scene='bb94', take='x104', roll='line2')
+
+        self.slope3 = [1.0, 1.0, 1.0]
+        self.offset3 = [0.0, 0.0, 0.0]
+        self.power3 = [1.0, 1.0, 1.0]
+        self.sat3 = 1.0
+
+        line3 = buildFLExTake()
+
+        self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
+            self.filename = f.name
+
+        self.cdls = cdl_convert.parse_flex(self.filename)
+        self.cdl1 = self.cdls[0]
+        self.cdl2 = self.cdls[1]
+        self.cdl3 = cdl_convert.AscCdl('bb94_x105_line3', self.filename)
+        self.cdl3.metadata['desc'] = self.title
+        self.cdls.append(self.cdl3)
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testOnlyTwoCDLsReturned(self):
+        """Tests that with no SOP or SAT value, only 2 lines will become cdls"""
+
+        self.assertEqual(
+            2,
+            len(cdl_convert.parse_flex(self.filename))
+        )
+
 # sanitize() ===================================================================
 
 
@@ -2523,7 +2584,8 @@ def buildCDL(slope, offset, power, sat):
 
 #===============================================================================
 
-def buildFLExTake(slope, offset, power, sat, scene=None, take=None, roll=None):
+def buildFLExTake(slope=None, offset=None, power=None, sat=None, scene=None,
+                  take=None, roll=None):
     """Builds a multiline take for a FLEx edl
 
     This gets a little complicated because the FLEx uses strict character
@@ -2563,35 +2625,37 @@ def buildFLExTake(slope, offset, power, sat, scene=None, take=None, roll=None):
     if choice(tf):
         flex += FLEX_600
 
-    # We need an extra space in front of offset values if they are not negative
-    if offset[0] >= 0:
-        offsetR = ' ' + str(offset[0]).ljust(6, ' ')[:6]
-    else:
-        offsetR = '' + str(offset[0]).ljust(7, ' ')[:7]
-    if offset[1] >= 0:
-        offsetG = ' ' + str(offset[1]).ljust(6, ' ')[:6]
-    else:
-        offsetG = '' + str(offset[1]).ljust(7, ' ')[:7]
-    if offset[2] >= 0:
-        offsetB = ' ' + str(offset[2]).ljust(6, ' ')[:6]
-    else:
-        offsetB = '' + str(offset[2]).ljust(7, ' ')[:7]
+    if slope and offset and power:
+        # We need an extra space in front of offset values if they are not neg
+        if offset[0] >= 0:
+            offsetR = ' ' + str(offset[0]).ljust(6, ' ')[:6]
+        else:
+            offsetR = '' + str(offset[0]).ljust(7, ' ')[:7]
+        if offset[1] >= 0:
+            offsetG = ' ' + str(offset[1]).ljust(6, ' ')[:6]
+        else:
+            offsetG = '' + str(offset[1]).ljust(7, ' ')[:7]
+        if offset[2] >= 0:
+            offsetB = ' ' + str(offset[2]).ljust(6, ' ')[:6]
+        else:
+            offsetB = '' + str(offset[2]).ljust(7, ' ')[:7]
 
-    flex += FLEX_701.format(
-        slopeR=str(slope[0]).ljust(6, ' ')[:6],
-        slopeG=str(slope[1]).ljust(6, ' ')[:6],
-        slopeB=str(slope[2]).ljust(6, ' ')[:6],
-        offsetR=offsetR,
-        offsetG=offsetG,
-        offsetB=offsetB,
-        powerR=str(power[0]).ljust(6, ' ')[:6],
-        powerG=str(power[1]).ljust(6, ' ')[:6],
-        powerB=str(power[2]).ljust(6, ' ')[:6],
-    )
+        flex += FLEX_701.format(
+            slopeR=str(slope[0]).ljust(6, ' ')[:6],
+            slopeG=str(slope[1]).ljust(6, ' ')[:6],
+            slopeB=str(slope[2]).ljust(6, ' ')[:6],
+            offsetR=offsetR,
+            offsetG=offsetG,
+            offsetB=offsetB,
+            powerR=str(power[0]).ljust(6, ' ')[:6],
+            powerG=str(power[1]).ljust(6, ' ')[:6],
+            powerB=str(power[2]).ljust(6, ' ')[:6],
+        )
 
-    flex += FLEX_702.format(
-        sat=str(sat).ljust(6, ' ')[:6]
-    )
+    if sat:
+        flex += FLEX_702.format(
+            sat=str(sat).ljust(6, ' ')[:6]
+        )
 
     return flex
 
