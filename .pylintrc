@@ -44,12 +44,10 @@ persistent=yes
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=W0511, I0011, C0325,
+disable=W0511, I0011
 
 # We're disabling TODOs, and warnings about locally disabled pylints.
 # They're locally disabled for a reason.
-# For Python 3 compatibility, we're also disabling warnings about using
-# parenthesis with print
 
 [REPORTS]
 

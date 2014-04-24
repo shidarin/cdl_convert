@@ -109,6 +109,8 @@ try:
 except NameError:  # pragma: no cover
     raw_input = input  # pylint: disable=W0622, C0103
 
+from __future__ import print_function
+
 # ==============================================================================
 # GLOBALS
 # ==============================================================================
