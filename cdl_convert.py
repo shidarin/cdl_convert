@@ -93,6 +93,8 @@ Functions
 # IMPORTS
 # ==============================================================================
 
+from __future__ import print_function
+
 from argparse import ArgumentParser
 from ast import literal_eval
 import os
@@ -108,8 +110,6 @@ try:
     raw_input
 except NameError:  # pragma: no cover
     raw_input = input  # pylint: disable=W0622, C0103
-
-from __future__ import print_function
 
 # ==============================================================================
 # GLOBALS
