@@ -143,9 +143,6 @@ CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrection>
 """
 
-# Space Separated CDL, a Rhythm & Hues format
-CDL = "{slopeR} {slopeG} {slopeB} {offsetR} {offsetG} {offsetB} {powerR} {powerG} {powerB} {sat}\n"  # pylint: disable=C0301
-
 if sys.version_info[0] >= 3:  # pragma: no cover
     enc = lambda x: bytes(x, 'UTF-8')  # pylint: disable=C0103
 else:  # pragma: no cover
@@ -823,18 +820,13 @@ def write_cc(cdl):
 def write_cdl(cdl):
     """Writes the AscCdl to a space separated .cdl file"""
 
-    ss_cdl = CDL.format(
-        slopeR=cdl.slope[0],
-        slopeG=cdl.slope[1],
-        slopeB=cdl.slope[2],
-        offsetR=cdl.offset[0],
-        offsetG=cdl.offset[1],
-        offsetB=cdl.offset[2],
-        powerR=cdl.power[0],
-        powerG=cdl.power[1],
-        powerB=cdl.power[2],
-        sat=cdl.sat
-    )
+    values = cdl.slope[:]
+    values.extend(cdl.offset)
+    values.extend(cdl.power)
+    values.append(cdl.sat)
+    values = [str(i) for i in values]
+
+    ss_cdl = ' '.join(values)
 
     with open(cdl.file_out, 'wb') as cdl_f:
         cdl_f.write(enc(ss_cdl))

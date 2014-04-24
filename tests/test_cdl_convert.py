@@ -2567,20 +2567,15 @@ def buildCC(id=None, desc=None, slope=None, offset=None, power=None, sat=None,
 def buildCDL(slope, offset, power, sat):
     """Populates a CDL string and returns it"""
 
-    ssCdl = cdl_convert.CDL.format(
-        slopeR=slope[0],
-        slopeG=slope[1],
-        slopeB=slope[2],
-        offsetR=offset[0],
-        offsetG=offset[1],
-        offsetB=offset[2],
-        powerR=power[0],
-        powerG=power[1],
-        powerB=power[2],
-        sat=sat
-    )
+    values = slope[:]
+    values.extend(offset)
+    values.extend(power)
+    values.append(sat)
+    values = [str(i) for i in values]
 
-    return ssCdl
+    ss_cdl = ' '.join(values)
+
+    return ss_cdl
 
 #===============================================================================
 
