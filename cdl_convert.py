@@ -178,9 +178,6 @@ class AscCdl(object):  # pylint: disable=R0902
 
     Attributes:
 
-        cc_ref : (str)
-            This is a reference to another CDL's unique id. Defaults to None.
-
         desc : (str)
             Comments and notes on the correction. Defaults to None.
 
@@ -197,12 +194,17 @@ class AscCdl(object):  # pylint: disable=R0902
 
             Required attribute.
 
-        input_desc : (str)
-            Description of the color space, format and properties of the input
-            images. Defaults to None.
+        metadata : {str}
+            metadata is a dictionary of the various descriptions that a CDL
+            might have. Included are the 5 default:
 
-        media_ref : (str)
-            A reference link to an image or an image sequence. Defaults to None
+                cc_ref : This is a reference to another CDL's unique id.
+                desc : Comments and notes on the correction.
+                input_desc : Description of the color space, format and
+                    properties of the input images.
+                media_ref : A reference link to an image or an image sequence.
+                viewing_desc : Viewing device, settings and environment.
+
 
         offset : [float, float, float]
             An rgb list representing the offset, which raises or lowers the
@@ -229,48 +231,51 @@ class AscCdl(object):  # pylint: disable=R0902
 
             The default slope value is 1.0
 
-        viewing_desc : (str)
-            Viewing device, settings and environment. Defaults to None.
-
     """
 
     def __init__(self, cc_id, cdl_file):
         """Inits an instance of an ASC CDL"""
 
         # Non-ASC attributes
-        self._file_in = os.path.abspath(cdl_file)
-        self._file_out = None
+        self._files = {
+            'file_in': os.path.abspath(cdl_file),
+            'file_out': None
+        }
 
         # The cc_id is really the only required part of an ASC CDL.
         # Each ID should be unique
         self._cc_id = sanitize(cc_id)
 
         # ASC_SOP attributes
-        self._slope = [1.0, 1.0, 1.0]
-        self._offset = [0.0, 0.0, 0.0]
-        self._power = [1.0, 1.0, 1.0]
+        self._sop = {
+            'slope': [1.0, 1.0, 1.0],
+            'offset': [0.0, 0.0, 0.0],
+            'power': [1.0, 1.0, 1.0]
+        }
 
         # ASC_SAT attribute
         self._sat = 1.0
 
         # Metadata
-        self.cc_ref = None
-        self.desc = None
-        self.input_desc = None
-        self.media_ref = None
-        self.viewing_desc = None
+        self.metadata = {
+            'cc_ref': None,
+            'desc': None,
+            'input_desc': None,
+            'media_ref': None,
+            'viewing_desc': None
+        }
 
     # Properties ==============================================================
 
     @property
     def file_in(self):
         """Returns the absolute filepath to the input file"""
-        return self._file_in
+        return self._files['file_in']
 
     @property
     def file_out(self):
         """Returns a theoretical absolute filepath based on output ext"""
-        return self._file_out
+        return self._files['file_out']
 
     @property
     def cc_id(self):
@@ -280,7 +285,7 @@ class AscCdl(object):  # pylint: disable=R0902
     @property
     def offset(self):
         """Returns list of RGB offset values"""
-        return self._offset
+        return self._sop['offset']
 
     @offset.setter
     def offset(self, offset_rgb):
@@ -303,12 +308,12 @@ class AscCdl(object):  # pylint: disable=R0902
             except ValueError:
                 raise TypeError("Offset values must be ints or floats")
 
-        self._offset = offset_rgb
+        self._sop['offset'] = offset_rgb
 
     @property
     def power(self):
         """Returns list of RGB power values"""
-        return self._power
+        return self._sop['power']
 
     @power.setter
     def power(self, power_rgb):
@@ -335,12 +340,12 @@ class AscCdl(object):  # pylint: disable=R0902
             except AssertionError:
                 raise ValueError("Power values must not be negative")
 
-        self._power = power_rgb
+        self._sop['power'] = power_rgb
 
     @property
     def slope(self):
         """Returns list of RGB slope values"""
-        return self._slope
+        return self._sop['slope']
 
     @slope.setter
     def slope(self, slope_rgb):
@@ -367,7 +372,7 @@ class AscCdl(object):  # pylint: disable=R0902
             except AssertionError:
                 raise ValueError("Slope values must not be negative")
 
-        self._slope = slope_rgb
+        self._sop['slope'] = slope_rgb
 
     @property
     def sat(self):
@@ -397,7 +402,7 @@ class AscCdl(object):  # pylint: disable=R0902
 
         filename = "{id}.{ext}".format(id=self.cc_id, ext=output)
 
-        self._file_out = os.path.join(directory, filename)
+        self._files['file_out'] = os.path.join(directory, filename)
 
 # ==============================================================================
 # FUNCTIONS
@@ -550,7 +555,7 @@ def parse_cc(cdl_file):
         power = sop.find('Power')
 
         if desc is not None:
-            cdl.desc = desc.text
+            cdl.metadata['desc'] = desc.text
         if slope is not None:
             cdl.slope = slope.text.split()
         if offset is not None:
@@ -662,7 +667,7 @@ def parse_flex(edl_file):
                     if sat:
                         cdl.sat = sat
                     if title:
-                        cdl.desc = title
+                        cdl.metadata['desc'] = title
 
                     cdls.append(cdl)
 
@@ -727,7 +732,7 @@ def parse_flex(edl_file):
         if sat:
             cdl.sat = sat
         if title:
-            cdl.desc = title
+            cdl.metadata['desc'] = title
 
         cdls.append(cdl)
 

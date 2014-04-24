@@ -746,7 +746,7 @@ class TestParseCCBasic(unittest.TestCase):
         """Tests that desc was set to desc element"""
         self.assertEqual(
             self.desc,
-            self.cdl.desc
+            self.cdl.metadata['desc']
         )
 
     #===========================================================================
@@ -1479,7 +1479,7 @@ class TestParseFLExBasic(unittest.TestCase):
         for i in range(3):
             self.assertEqual(
                 self.title,
-                self.cdls[i].desc
+                self.cdls[i].metadata['desc']
             )
 
 
@@ -1705,7 +1705,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
         for i in range(3):
             self.assertEqual(
                 None,
-                self.cdls[i].desc
+                self.cdls[i].metadata['desc']
             )
 
 # sanitize() ===================================================================
