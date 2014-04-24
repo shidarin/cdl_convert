@@ -434,14 +434,14 @@ def parse_ale(edl_file):
     shot information.
 
     """
-    # We'll use these variables to indicate what sections of the file we are in
-    column = False
-    data = False
+    # When we enter a section, we're store the section name
+    section = {
+        'column': False,
+        'data': False
+    }
 
-    # We'll use these variables to indicate column indexes
-    asc_sat_index = None
-    asc_sop_index = None
-    scan_filename = None
+    # We'll store the correlation between index and field name
+    ale_indexes = {}
 
     cdls = []
 
@@ -449,23 +449,21 @@ def parse_ale(edl_file):
         lines = edl.readlines()
         for line in lines:
             if line.startswith('Column'):
-                column = True
+                section['column'] = True
                 continue
             elif line.startswith('Data'):
-                data = True
+                section['data'] = True
                 continue
-            elif column:
-                columns = line.split('\t')
-                asc_sat_index = columns.index('ASC_SAT')
-                asc_sop_index = columns.index('ASC_SOP')
-                scan_filename = columns.index('Scan Filename')
-                column = False
-            elif data:
+            elif section['column']:
+                for i, field in enumerate(line.split('\t')):
+                    ale_indexes[field] = i
+                section['column'] = False
+            elif section['data']:
                 cdl_data = line.split('\t')
 
-                sat = cdl_data[asc_sat_index]
-                sop = cdl_data[asc_sop_index]
-                cc_id = cdl_data[scan_filename]
+                sat = cdl_data[ale_indexes['ASC_SAT']]
+                sop = cdl_data[ale_indexes['ASC_SOP']]
+                cc_id = cdl_data[ale_indexes['Scan Filename']]
 
                 # Determine slope, offset and power from sop
                 # sop should look like:
@@ -473,16 +471,18 @@ def parse_ale(edl_file):
                 sop = sop.replace(' ', ', ')
                 sop = sop.replace(')(', ')|(')
                 sop = sop.split('|')
-                slope = literal_eval(sop[0])
-                offset = literal_eval(sop[1])
-                power = literal_eval(sop[2])
+                sop_values = {
+                    'slope': literal_eval(sop[0]),
+                    'offset': literal_eval(sop[1]),
+                    'power': literal_eval(sop[2])
+                }
 
                 cdl = AscCdl(cc_id, edl_file)
 
-                cdl.sat = float(sat)
-                cdl.slope = slope
-                cdl.offset = offset
-                cdl.power = power
+                cdl.sat = sat
+                cdl.slope = sop_values['slope']
+                cdl.offset = sop_values['offset']
+                cdl.power = sop_values['power']
 
                 cdls.append(cdl)
 
