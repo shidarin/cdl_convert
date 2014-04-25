@@ -3,6 +3,9 @@ test-warnings: no
 strictness: veryhigh
 max-line-length: 80
 ignore-paths:
+    - setup.py
+    - cdl_convert/__init__.py
     - docs
     - tests
+ignore-patterns:
 autodetect: yes
