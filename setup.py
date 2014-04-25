@@ -63,7 +63,7 @@ def find_metadata(filepath):
 metadata = find_metadata(main_file)
 
 # Get the long description from the relevant file
-with codecs.open(main_file, encoding='utf-8') as f:
+with codecs.open('README.rst', encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -81,7 +81,7 @@ setup(
     maintainer=metadata['maintainer'],
 
     # Choose your license
-    license=metadata['email'],
+    license=metadata['license'],
 
     classifiers=[
         # How mature is this project? Common values are
@@ -131,10 +131,15 @@ setup(
     # project is installed.
     install_requires=['argparse'],
 
+    # Testing
+    test_suite='nose.collector',
+    tests_require=['nose'],
+
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={},
+    include_package_data=True,
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages.
@@ -142,12 +147,15 @@ setup(
     # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
     data_files=[],
 
+    # Targeted OS
+    platforms='any',
+
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'cdl_convert=cdl_convert:main',
+            'cdl_convert=cdl_convert.cdl_convert:main',
         ],
     },
 )
