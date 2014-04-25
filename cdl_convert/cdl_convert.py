@@ -149,6 +149,20 @@ else:  # pragma: no cover
     enc = lambda x: x  # pylint: disable=C0103
 
 # ==============================================================================
+# EXPORTS
+# ==============================================================================
+
+__all__ = [
+    'AscCdl',
+    'parse_ale',
+    'parse_cc',
+    'parse_cdl',
+    'parse_flex',
+    'write_cc',
+    'write_cdl',
+]
+
+# ==============================================================================
 # CLASSES
 # ==============================================================================
 
@@ -241,7 +255,7 @@ class AscCdl(object):  # pylint: disable=R0902
 
         # The cc_id is really the only required part of an ASC CDL.
         # Each ID should be unique
-        self._cc_id = sanitize(cc_id)
+        self._cc_id = _sanitize(cc_id)
 
         # ASC_SOP attributes
         self._sop = {
@@ -400,6 +414,32 @@ class AscCdl(object):  # pylint: disable=R0902
         filename = "{id}.{ext}".format(id=self.cc_id, ext=output)
 
         self._files['file_out'] = os.path.join(directory, filename)
+
+# ==============================================================================
+# PRIVATE FUNCTIONS
+# ==============================================================================
+
+
+def _sanitize(name):
+    """Removes any characters in string name that aren't alnum or in '_.'"""
+    import re
+    # Replace any spaces with underscores
+    name = name.replace(' ', '_')
+    # If we start our string with an underscore or period, remove it
+    if name[0] in '_.':
+        name = name[1:]
+    # a-z is all lowercase
+    # A-Z is all uppercase
+    # 0-9 is all digits
+    # \. is an escaped period
+    # _ is an underscore
+    # Put them together, negate them by leading with an ^
+    # and our compiler will mark every non alnum, non ., _ character
+    pattern = re.compile(r'[^a-zA-Z0-9\._]+')
+    # Then we sub them with nothing
+    fixed = pattern.sub('', name)
+
+    return fixed
 
 # ==============================================================================
 # FUNCTIONS
@@ -568,8 +608,64 @@ def parse_cc(cdl_file):
 
     return cdls
 
+# ==============================================================================
+
+
+def parse_cdl(cdl_file):
+    """Parses a space separated .cdl file for ASC CDL information.
+
+    Args:
+        file : (str)
+            The filepath to the CDL
+
+    Returns:
+        [<AscCdl>]
+            A list with only the single CDL object retrieved from the SS CDL
+
+    Raises:
+        N/A
+
+    A space separated cdl file is an internal Rhythm & Hues format used by
+    the Rhythm & Hues for displaying shot level and sequence level within
+    their internally developed playback software.
+
+    The file is a simple file consisting of one line. That line has 10, space
+    separated elements that correspond to the ten ASC CDL elements in order of
+    operations.
+
+    SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat
+
+    """
+    # Although we only parse one cdl file, we still want to return a list
+    cdls = []
+
+    with open(cdl_file, 'r') as cdl_f:
+        # We only need to read the first line
+        line = cdl_f.readline()
+        line = line.split()
+
+        # The filename without extension will become the id
+        filename = os.path.basename(cdl_file).split('.')[0]
+
+        slope = [line[0], line[1], line[2]]
+        offset = [line[3], line[4], line[5]]
+        power = [line[6], line[7], line[8]]
+
+        sat = line[9]
+
+        cdl = AscCdl(filename, cdl_file)
+
+        cdl.slope = slope
+        cdl.offset = offset
+        cdl.power = power
+        cdl.sat = sat
+
+        cdls.append(cdl)
+
+    return cdls
 
 # ==============================================================================
+
 
 def parse_flex(edl_file):
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
@@ -709,87 +805,6 @@ def parse_flex(edl_file):
         cdls.append(cdl)
 
     return cdls
-
-
-# ==============================================================================
-
-
-def parse_cdl(cdl_file):
-    """Parses a space separated .cdl file for ASC CDL information.
-
-    Args:
-        file : (str)
-            The filepath to the CDL
-
-    Returns:
-        [<AscCdl>]
-            A list with only the single CDL object retrieved from the SS CDL
-
-    Raises:
-        N/A
-
-    A space separated cdl file is an internal Rhythm & Hues format used by
-    the Rhythm & Hues for displaying shot level and sequence level within
-    their internally developed playback software.
-
-    The file is a simple file consisting of one line. That line has 10, space
-    separated elements that correspond to the ten ASC CDL elements in order of
-    operations.
-
-    SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat
-
-    """
-    # Although we only parse one cdl file, we still want to return a list
-    cdls = []
-
-    with open(cdl_file, 'r') as cdl_f:
-        # We only need to read the first line
-        line = cdl_f.readline()
-        line = line.split()
-
-        # The filename without extension will become the id
-        filename = os.path.basename(cdl_file).split('.')[0]
-
-        slope = [line[0], line[1], line[2]]
-        offset = [line[3], line[4], line[5]]
-        power = [line[6], line[7], line[8]]
-
-        sat = line[9]
-
-        cdl = AscCdl(filename, cdl_file)
-
-        cdl.slope = slope
-        cdl.offset = offset
-        cdl.power = power
-        cdl.sat = sat
-
-        cdls.append(cdl)
-
-    return cdls
-
-# ==============================================================================
-
-
-def sanitize(name):
-    """Removes any characters in string name that aren't alnum or in '_.'"""
-    import re
-    # Replace any spaces with underscores
-    name = name.replace(' ', '_')
-    # If we start our string with an underscore or period, remove it
-    if name[0] in '_.':
-        name = name[1:]
-    # a-z is all lowercase
-    # A-Z is all uppercase
-    # 0-9 is all digits
-    # \. is an escaped period
-    # _ is an underscore
-    # Put them together, negate them by leading with an ^
-    # and our compiler will mark every non alnum, non ., _ character
-    pattern = re.compile(r'[^a-zA-Z0-9\._]+')
-    # Then we sub them with nothing
-    fixed = pattern.sub('', name)
-
-    return fixed
 
 # ==============================================================================
 
