@@ -98,7 +98,7 @@ file that accompanies the project.
 .. _Foundry Nuke: http://www.thefoundry.co.uk/nuke/
 .. _landscape.io: https://landscape.io/
 
-.. |PyPI Version| image:: https://badge.fury.io/py/cdl_convert.svg
+.. |PyPI Version| image:: https://badge.fury.io/py/cdl_convert.png
    :target: http://badge.fury.io/py/cdl_convert
 .. |Build Status| image:: https://travis-ci.org/shidarin/cdl_convert.svg?branch=master
    :target: https://travis-ci.org/shidarin/cdl_convert
