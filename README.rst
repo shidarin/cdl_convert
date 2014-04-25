@@ -2,7 +2,7 @@
 CDL Convert
 ===========
 
-|Build Status|\ |Coverage Status|\ |Code Health|
+|PyPI Version|\ |Build Status|\ |Coverage Status|\ |Code Health|
 
 Converts between common `ASC CDL`_ formats. The `American Society of
 Cinematographers`_ Color Decision List (ASC CDL, or CDL for short) is a
@@ -47,13 +47,39 @@ To:
 
 With support for both from and to expanding in the future.
 
+Installation
+------------
+
+Installing is as simple as using pip:
+
+::
+
+    $ pip install cdl_convert
+If you don't want to bother with a pip style install, you can alternatively
+grab ``cdl_convert/cdl_convert.py``, As this file is the script and all the
+functions and classes needed.
+
+Usage
+-----
+
+If you just want to convert to a ``.cc`` XML file, the only required argument
+is an input file, like so:
+::
+
+    $ cdl_convert ./di_v001.flex
+You can override the default ``.cc`` output, or provide multiple outputs with
+the ``-o`` flag.
+::
+
+    $ cdl_convert ./di_v001.flex -o cc,cdl
+Full help is available with ``--help``
+
 Code
 ----
 
-CDL Convert is written for Python 2.6, including Python 3.2 and 3.4.
-Code is written for PEP 8 compliance, although at the time of this
-writing function & variable naming uses camelCasing. Docstrings follow
-Google code standards.
+CDL Convert is written for Python 2.6 through 3.4.
+Code is written for strict PEP 8 compliance, with all code being checked on
+push through `landscape.io`_. Docstrings follow Google code standards.
 
 Development uses Git Flow model.
 
@@ -67,7 +93,10 @@ file that accompanies the project.
 .. _ASC CDL: http://en.wikipedia.org/wiki/ASC_CDL
 .. _American Society of Cinematographers: http://www.theasc.com/
 .. _Foundry Nuke: http://www.thefoundry.co.uk/nuke/
+.. _landscape.io: https://landscape.io/
 
+.. |PyPI Version| image:: https://badge.fury.io/py/cdl_convert.svg
+   :target: http://badge.fury.io/py/cdl_convert
 .. |Build Status| image:: https://travis-ci.org/shidarin/cdl_convert.svg?branch=master
    :target: https://travis-ci.org/shidarin/cdl_convert
 .. |Coverage Status| image:: https://coveralls.io/repos/shidarin/cdl_convert/badge.png?branch=master
