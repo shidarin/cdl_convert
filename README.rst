@@ -55,6 +55,7 @@ Installing is as simple as using pip:
 ::
 
     $ pip install cdl_convert
+
 If you don't want to bother with a pip style install, you can alternatively
 grab ``cdl_convert/cdl_convert.py``, As this file is the script and all the
 functions and classes needed.
@@ -67,11 +68,13 @@ is an input file, like so:
 ::
 
     $ cdl_convert ./di_v001.flex
+
 You can override the default ``.cc`` output, or provide multiple outputs with
 the ``-o`` flag.
 ::
 
     $ cdl_convert ./di_v001.flex -o cc,cdl
+
 Full help is available with ``--help``
 
 Code
