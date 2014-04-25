@@ -20,7 +20,7 @@ try:
 except ImportError:
     import mock
 import os
-from random import choice, random, randrange
+from random import choice, randrange
 try:
     from StringIO import StringIO
 except ImportError:
@@ -40,7 +40,7 @@ import unittest
 
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
-import cdl_convert
+import cdl_convert.cdl_convert as cdl_convert
 
 #===============================================================================
 # GLOBALS
@@ -746,7 +746,7 @@ class TestParseCCBasic(unittest.TestCase):
         """Tests that desc was set to desc element"""
         self.assertEqual(
             self.desc,
-            self.cdl.desc
+            self.cdl.metadata['desc']
         )
 
     #===========================================================================
@@ -1479,7 +1479,7 @@ class TestParseFLExBasic(unittest.TestCase):
         for i in range(3):
             self.assertEqual(
                 self.title,
-                self.cdls[i].desc
+                self.cdls[i].metadata['desc']
             )
 
 
@@ -1705,18 +1705,79 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
         for i in range(3):
             self.assertEqual(
                 None,
-                self.cdls[i].desc
+                self.cdls[i].metadata['desc']
             )
 
-# sanitize() ===================================================================
+
+class TestParseFLExMissingSopSat(TestParseFLExBasic):
+    """Tests basic parsing of a Flex where sop/sat are missing"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+
+        self.title = "Hanky Panky Bromance"
+
+        self.slope1 = [1.0, 1.0, 1.0]
+        self.offset1 = [0.0, 0.0, 0.0]
+        self.power1 = [1.0, 1.0, 1.0]
+        self.sat1 = 1.01
+
+        line1 = buildFLExTake(sat=self.sat1, scene='bb94', take='x103',
+                              roll='line1')
+
+        self.slope2 = [1.2, 2.32, 10.82]
+        self.offset2 = [-1.32, 2.32, 0.73]
+        self.power2 = [1.329, 0.9833, 1.003]
+        self.sat2 = 1.0
+
+        line2 = buildFLExTake(self.slope2, self.offset2, self.power2,
+                              scene='bb94', take='x104', roll='line2')
+
+        self.slope3 = [1.0, 1.0, 1.0]
+        self.offset3 = [0.0, 0.0, 0.0]
+        self.power3 = [1.0, 1.0, 1.0]
+        self.sat3 = 1.0
+
+        line3 = buildFLExTake()
+
+        self.file = FLEX_HEADER.format(title=self.title) + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
+            self.filename = f.name
+
+        self.cdls = cdl_convert.parse_flex(self.filename)
+        self.cdl1 = self.cdls[0]
+        self.cdl2 = self.cdls[1]
+        self.cdl3 = cdl_convert.AscCdl('bb94_x105_line3', self.filename)
+        self.cdl3.metadata['desc'] = self.title
+        self.cdls.append(self.cdl3)
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testOnlyTwoCDLsReturned(self):
+        """Tests that with no SOP or SAT value, only 2 lines will become cdls"""
+
+        self.assertEqual(
+            2,
+            len(cdl_convert.parse_flex(self.filename))
+        )
+
+# _sanitize() ==================================================================
 
 
 class TestSanitize(unittest.TestCase):
-    """Tests the helper function sanitize()"""
+    """Tests the helper function _sanitize()"""
 
     def testSpaces(self):
         """Tests that spaces are replaced with underscores"""
-        result = cdl_convert.sanitize('banana apple blueberry')
+        result = cdl_convert._sanitize('banana apple blueberry')
 
         self.assertEqual(
             'banana_apple_blueberry',
@@ -1727,7 +1788,7 @@ class TestSanitize(unittest.TestCase):
 
     def testUnderscoresOkay(self):
         """Tests that underscores pass through intact"""
-        result = cdl_convert.sanitize('a_b_c')
+        result = cdl_convert._sanitize('a_b_c')
 
         self.assertEqual(
             'a_b_c',
@@ -1738,7 +1799,7 @@ class TestSanitize(unittest.TestCase):
 
     def testPeriodsOkay(self):
         """Tests that periods pass through intact"""
-        result = cdl_convert.sanitize('a.b.c')
+        result = cdl_convert._sanitize('a.b.c')
 
         self.assertEqual(
             'a.b.c',
@@ -1749,7 +1810,7 @@ class TestSanitize(unittest.TestCase):
 
     def testLeadingPeriodRemove(self):
         """Tests that leading periods are removed"""
-        result = cdl_convert.sanitize('.abc')
+        result = cdl_convert._sanitize('.abc')
 
         self.assertEqual(
             'abc',
@@ -1760,7 +1821,7 @@ class TestSanitize(unittest.TestCase):
 
     def testLeadingUnderscoreRemove(self):
         """Tests that leading underscores are removed"""
-        result = cdl_convert.sanitize('_abc')
+        result = cdl_convert._sanitize('_abc')
 
         self.assertEqual(
             'abc',
@@ -1771,7 +1832,7 @@ class TestSanitize(unittest.TestCase):
 
     def testCommonBadChars(self):
         """Tests that common bad characters are removed"""
-        result = cdl_convert.sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d')
+        result = cdl_convert._sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d')
 
         self.assertEqual(
             'abcd',
@@ -1914,7 +1975,6 @@ class TestMain(unittest.TestCase):
     #===========================================================================
 
     def setUp(self):
-        import cdl_convert
         # Note that the file doesn't really need to exist for our test purposes
         self.cdl = cdl_convert.AscCdl(
             cc_id='uniqueId', cdl_file='../testcdl.flex'
@@ -1937,7 +1997,7 @@ class TestMain(unittest.TestCase):
     # TESTS
     #===========================================================================
 
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testGettingAbsolutePath(self, abspath, mockParse):
         """Tests that we make sure to get the absolute path"""
@@ -1956,7 +2016,7 @@ class TestMain(unittest.TestCase):
 
     #===========================================================================
 
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testDerivingInputType(self, abspath, mockParse):
         """Tests that input type will be derived from file extension"""
@@ -1975,7 +2035,7 @@ class TestMain(unittest.TestCase):
 
     #===========================================================================
 
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testDerivingInputTypeCased(self, abspath, mockParse):
         """Tests that input type will be derived from file extension"""
@@ -1994,7 +2054,7 @@ class TestMain(unittest.TestCase):
 
     #===========================================================================
 
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testOverrideInputType(self, abspath, mockParse):
         """Tests that overriding the input type happens when provided"""
@@ -2014,8 +2074,8 @@ class TestMain(unittest.TestCase):
     #===========================================================================
 
     @mock.patch('os.path.dirname')
-    @mock.patch('cdl_convert.write_cc')
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testDetermineDestCalled(self, abspath, mockParse, mockWrite, dirname):
         """Tests that we try and write a converted file"""
@@ -2043,8 +2103,8 @@ class TestMain(unittest.TestCase):
 
     #===========================================================================
 
-    @mock.patch('cdl_convert.write_cc')
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testWriteCalled(self, abspath, mockParse, mockWrite):
         """Tests that we try and write a converted file"""
@@ -2068,9 +2128,9 @@ class TestMain(unittest.TestCase):
 
     #===========================================================================
 
-    @mock.patch('cdl_convert.write_cdl')
-    @mock.patch('cdl_convert.write_cc')
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.write_cdl')
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testMultipleWritesCalled(self, abspath, mockParse, mockWriteCC,
                                  mockWriteCDL):
@@ -2506,24 +2566,20 @@ def buildCC(id=None, desc=None, slope=None, offset=None, power=None, sat=None,
 def buildCDL(slope, offset, power, sat):
     """Populates a CDL string and returns it"""
 
-    ssCdl = cdl_convert.CDL.format(
-        slopeR=slope[0],
-        slopeG=slope[1],
-        slopeB=slope[2],
-        offsetR=offset[0],
-        offsetG=offset[1],
-        offsetB=offset[2],
-        powerR=power[0],
-        powerG=power[1],
-        powerB=power[2],
-        sat=sat
-    )
+    values = slope[:]
+    values.extend(offset)
+    values.extend(power)
+    values.append(sat)
+    values = [str(i) for i in values]
 
-    return ssCdl
+    ss_cdl = ' '.join(values)
+
+    return ss_cdl
 
 #===============================================================================
 
-def buildFLExTake(slope, offset, power, sat, scene=None, take=None, roll=None):
+def buildFLExTake(slope=None, offset=None, power=None, sat=None, scene=None,
+                  take=None, roll=None):
     """Builds a multiline take for a FLEx edl
 
     This gets a little complicated because the FLEx uses strict character
@@ -2563,35 +2619,37 @@ def buildFLExTake(slope, offset, power, sat, scene=None, take=None, roll=None):
     if choice(tf):
         flex += FLEX_600
 
-    # We need an extra space in front of offset values if they are not negative
-    if offset[0] >= 0:
-        offsetR = ' ' + str(offset[0]).ljust(6, ' ')[:6]
-    else:
-        offsetR = '' + str(offset[0]).ljust(7, ' ')[:7]
-    if offset[1] >= 0:
-        offsetG = ' ' + str(offset[1]).ljust(6, ' ')[:6]
-    else:
-        offsetG = '' + str(offset[1]).ljust(7, ' ')[:7]
-    if offset[2] >= 0:
-        offsetB = ' ' + str(offset[2]).ljust(6, ' ')[:6]
-    else:
-        offsetB = '' + str(offset[2]).ljust(7, ' ')[:7]
+    if slope and offset and power:
+        # We need an extra space in front of offset values if they are not neg
+        if offset[0] >= 0:
+            offsetR = ' ' + str(offset[0]).ljust(6, ' ')[:6]
+        else:
+            offsetR = '' + str(offset[0]).ljust(7, ' ')[:7]
+        if offset[1] >= 0:
+            offsetG = ' ' + str(offset[1]).ljust(6, ' ')[:6]
+        else:
+            offsetG = '' + str(offset[1]).ljust(7, ' ')[:7]
+        if offset[2] >= 0:
+            offsetB = ' ' + str(offset[2]).ljust(6, ' ')[:6]
+        else:
+            offsetB = '' + str(offset[2]).ljust(7, ' ')[:7]
 
-    flex += FLEX_701.format(
-        slopeR=str(slope[0]).ljust(6, ' ')[:6],
-        slopeG=str(slope[1]).ljust(6, ' ')[:6],
-        slopeB=str(slope[2]).ljust(6, ' ')[:6],
-        offsetR=offsetR,
-        offsetG=offsetG,
-        offsetB=offsetB,
-        powerR=str(power[0]).ljust(6, ' ')[:6],
-        powerG=str(power[1]).ljust(6, ' ')[:6],
-        powerB=str(power[2]).ljust(6, ' ')[:6],
-    )
+        flex += FLEX_701.format(
+            slopeR=str(slope[0]).ljust(6, ' ')[:6],
+            slopeG=str(slope[1]).ljust(6, ' ')[:6],
+            slopeB=str(slope[2]).ljust(6, ' ')[:6],
+            offsetR=offsetR,
+            offsetG=offsetG,
+            offsetB=offsetB,
+            powerR=str(power[0]).ljust(6, ' ')[:6],
+            powerG=str(power[1]).ljust(6, ' ')[:6],
+            powerB=str(power[2]).ljust(6, ' ')[:6],
+        )
 
-    flex += FLEX_702.format(
-        sat=str(sat).ljust(6, ' ')[:6]
-    )
+    if sat:
+        flex += FLEX_702.format(
+            sat=str(sat).ljust(6, ' ')[:6]
+        )
 
     return flex
 
