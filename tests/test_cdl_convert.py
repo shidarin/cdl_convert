@@ -20,7 +20,7 @@ try:
 except ImportError:
     import mock
 import os
-from random import choice, random, randrange
+from random import choice, randrange
 try:
     from StringIO import StringIO
 except ImportError:
@@ -40,7 +40,7 @@ import unittest
 
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
-import cdl_convert
+import cdl_convert.cdl_convert as cdl_convert
 
 #===============================================================================
 # GLOBALS
@@ -1769,15 +1769,15 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
             len(cdl_convert.parse_flex(self.filename))
         )
 
-# sanitize() ===================================================================
+# _sanitize() ==================================================================
 
 
 class TestSanitize(unittest.TestCase):
-    """Tests the helper function sanitize()"""
+    """Tests the helper function _sanitize()"""
 
     def testSpaces(self):
         """Tests that spaces are replaced with underscores"""
-        result = cdl_convert.sanitize('banana apple blueberry')
+        result = cdl_convert._sanitize('banana apple blueberry')
 
         self.assertEqual(
             'banana_apple_blueberry',
@@ -1788,7 +1788,7 @@ class TestSanitize(unittest.TestCase):
 
     def testUnderscoresOkay(self):
         """Tests that underscores pass through intact"""
-        result = cdl_convert.sanitize('a_b_c')
+        result = cdl_convert._sanitize('a_b_c')
 
         self.assertEqual(
             'a_b_c',
@@ -1799,7 +1799,7 @@ class TestSanitize(unittest.TestCase):
 
     def testPeriodsOkay(self):
         """Tests that periods pass through intact"""
-        result = cdl_convert.sanitize('a.b.c')
+        result = cdl_convert._sanitize('a.b.c')
 
         self.assertEqual(
             'a.b.c',
@@ -1810,7 +1810,7 @@ class TestSanitize(unittest.TestCase):
 
     def testLeadingPeriodRemove(self):
         """Tests that leading periods are removed"""
-        result = cdl_convert.sanitize('.abc')
+        result = cdl_convert._sanitize('.abc')
 
         self.assertEqual(
             'abc',
@@ -1821,7 +1821,7 @@ class TestSanitize(unittest.TestCase):
 
     def testLeadingUnderscoreRemove(self):
         """Tests that leading underscores are removed"""
-        result = cdl_convert.sanitize('_abc')
+        result = cdl_convert._sanitize('_abc')
 
         self.assertEqual(
             'abc',
@@ -1832,7 +1832,7 @@ class TestSanitize(unittest.TestCase):
 
     def testCommonBadChars(self):
         """Tests that common bad characters are removed"""
-        result = cdl_convert.sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d')
+        result = cdl_convert._sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d')
 
         self.assertEqual(
             'abcd',
@@ -1975,7 +1975,6 @@ class TestMain(unittest.TestCase):
     #===========================================================================
 
     def setUp(self):
-        import cdl_convert
         # Note that the file doesn't really need to exist for our test purposes
         self.cdl = cdl_convert.AscCdl(
             cc_id='uniqueId', cdl_file='../testcdl.flex'
@@ -1998,7 +1997,7 @@ class TestMain(unittest.TestCase):
     # TESTS
     #===========================================================================
 
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testGettingAbsolutePath(self, abspath, mockParse):
         """Tests that we make sure to get the absolute path"""
@@ -2017,7 +2016,7 @@ class TestMain(unittest.TestCase):
 
     #===========================================================================
 
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testDerivingInputType(self, abspath, mockParse):
         """Tests that input type will be derived from file extension"""
@@ -2036,7 +2035,7 @@ class TestMain(unittest.TestCase):
 
     #===========================================================================
 
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testDerivingInputTypeCased(self, abspath, mockParse):
         """Tests that input type will be derived from file extension"""
@@ -2055,7 +2054,7 @@ class TestMain(unittest.TestCase):
 
     #===========================================================================
 
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testOverrideInputType(self, abspath, mockParse):
         """Tests that overriding the input type happens when provided"""
@@ -2075,8 +2074,8 @@ class TestMain(unittest.TestCase):
     #===========================================================================
 
     @mock.patch('os.path.dirname')
-    @mock.patch('cdl_convert.write_cc')
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testDetermineDestCalled(self, abspath, mockParse, mockWrite, dirname):
         """Tests that we try and write a converted file"""
@@ -2104,8 +2103,8 @@ class TestMain(unittest.TestCase):
 
     #===========================================================================
 
-    @mock.patch('cdl_convert.write_cc')
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testWriteCalled(self, abspath, mockParse, mockWrite):
         """Tests that we try and write a converted file"""
@@ -2129,9 +2128,9 @@ class TestMain(unittest.TestCase):
 
     #===========================================================================
 
-    @mock.patch('cdl_convert.write_cdl')
-    @mock.patch('cdl_convert.write_cc')
-    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.write_cdl')
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testMultipleWritesCalled(self, abspath, mockParse, mockWriteCC,
                                  mockWriteCDL):
