@@ -64,14 +64,7 @@ metadata = find_metadata(main_file)
 
 # Get the long description from the relevant file
 with codecs.open(main_file, encoding='utf-8') as f:
-    text = f.readlines()
-    text = text[2:]
-    description_lines = []
-    for line in text:
-        if line.startswith('"""'):
-            break
-        description_lines.append(line)
-    long_description = '\n'.join(description_lines)
+    long_description = f.read()
 
 setup(
     name="cdl_convert",

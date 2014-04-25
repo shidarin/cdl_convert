@@ -65,7 +65,7 @@ file that accompanies the project.
 
 .. _ASC CDL: http://en.wikipedia.org/wiki/ASC_CDL
 .. _American Society of Cinematographers: http://www.theasc.com/
-.. _Foundry Nuke: www.thefoundry.co.uk/nuke/
+.. _Foundry Nuke: http://www.thefoundry.co.uk/nuke/
 
 .. |Build Status| image:: https://travis-ci.org/shidarin/cdl_convert.svg?branch=master
    :target: https://travis-ci.org/shidarin/cdl_convert
