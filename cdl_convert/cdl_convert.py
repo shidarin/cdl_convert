@@ -187,7 +187,7 @@ class AscCdl(object):  # pylint: disable=R0902
 
     Order of operations is Slope, Offset, Power, then Saturation.
 
-    Attributes:
+    **Attributes:**
 
         desc : (str)
             Comments and notes on the correction. Defaults to None.
@@ -209,12 +209,21 @@ class AscCdl(object):  # pylint: disable=R0902
             metadata is a dictionary of the various descriptions that a CDL
             might have. Included are the 5 default:
 
-                cc_ref : This is a reference to another CDL's unique id.
-                desc : Comments and notes on the correction.
-                input_desc : Description of the color space, format and
+                cc_ref:
+                    This is a reference to another CDL's unique id.
+
+                desc:
+                    Comments and notes on the correction.
+
+                input_desc:
+                    Description of the color space, format and
                     properties of the input images.
-                media_ref : A reference link to an image or an image sequence.
-                viewing_desc : Viewing device, settings and environment.
+
+                media_ref:
+                    A reference link to an image or an image sequence.
+
+                viewing_desc:
+                    Viewing device, settings and environment.
 
 
         offset : [float, float, float]
@@ -449,15 +458,15 @@ def _sanitize(name):
 def parse_ale(edl_file):
     """Parses an Avid Log Exchange (ALE) file for CDLs
 
-    Args:
+    **Args:**
         file : (str)
             The filepath to the ALE EDL
 
-    Returns:
-        [<AscCdl>]
+    **Returns:**
+        [:class:`AscCdl`]
             A list of CDL objects retrieved from the ALE
 
-    Raises:
+    **Raises:**
         N/A
 
     An ALE file is traditionally gathered during a telecine transfer using
@@ -531,15 +540,15 @@ def parse_ale(edl_file):
 def parse_cc(cdl_file):
     """Parses a .cc file for ASC CDL information
 
-    Args:
+    **Args:**
         file : (str)
             The filepath to the CC
 
-    Return:
-        [<AscCdl>]
+    **Returns:**
+        [:class:`AscCdl`]
             A list of CDL objects retrieved from the CC
 
-    Raises:
+    **Raises:**
         N/A
 
     A CC file is really only a single element of a larger CDL or CCC XML file,
@@ -547,18 +556,18 @@ def parse_cc(cdl_file):
     CDLs, rather than the much bulkier CDL file.
 
     A sample CC XML file has text like:
-
-    <ColorCorrection id="cc03340">
-        <SOPNode>
-            <Description>change +1 red, contrast boost</Description>
-            <Slope>1.2 1.3 1.4</Slope>
-            <Offset>0.3 0.0 0.0</Offset>
-            <Power>1.0 1.0 1.0</Power>
-        </SOPNode>
-        <SatNode>
-            <Saturation>1.2</Saturation>
-        </SatNode>
-    </ColorCorrection>
+    ::
+        <ColorCorrection id="cc03340">
+            <SOPNode>
+                <Description>change +1 red, contrast boost</Description>
+                <Slope>1.2 1.3 1.4</Slope>
+                <Offset>0.3 0.0 0.0</Offset>
+                <Power>1.0 1.0 1.0</Power>
+            </SOPNode>
+            <SatNode>
+                <Saturation>1.2</Saturation>
+            </SatNode>
+        </ColorCorrection>
 
     We'll check to see if each of these elements exist, and override the AscCdl
     defaults if we find them.
@@ -615,15 +624,15 @@ def parse_cc(cdl_file):
 def parse_cdl(cdl_file):
     """Parses a space separated .cdl file for ASC CDL information.
 
-    Args:
+    **Args:**
         file : (str)
             The filepath to the CDL
 
-    Returns:
-        [<AscCdl>]
+    **Returns:**
+        [:class:`AscCdl`]
             A list with only the single CDL object retrieved from the SS CDL
 
-    Raises:
+    **Raises:**
         N/A
 
     A space separated cdl file is an internal Rhythm & Hues format used by
@@ -634,7 +643,7 @@ def parse_cdl(cdl_file):
     separated elements that correspond to the ten ASC CDL elements in order of
     operations.
 
-    SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat
+    ``SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat``
 
     """
     # Although we only parse one cdl file, we still want to return a list
@@ -671,15 +680,15 @@ def parse_cdl(cdl_file):
 def parse_flex(edl_file):
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
 
-    Args:
+    **Args:**
         file : (str)
             The filepath to the FLEx EDL
 
-    Return:
-        [<AscCdl>]
+    **Returns:**
+        [:class:`AscCdl`]
             A list of CDL objects retrieved from the FLEx
 
-    Raises:
+    **Raises:**
         N/A
 
     The DaVinci FLEx EDL is an odd duck, it's information conveyed via an
@@ -695,15 +704,21 @@ def parse_flex(edl_file):
 
     Some line numbers we care about, and the character indexes:
 
-        010 Project Title
-            10-79 Title
-        100 Indicates the start of a new 'record' (shot/take)
-        110 Slate Information
-            10-17 Scene
-            24-31 Take ID
-            42-49 Camera Reel ID
-        701 ASC SOP (This entry can be safely space separated)
-        702 ASC SAT (This entry can be safely space separated)
+    +--------+---------------+------------+---------------------------------+
+    | Line # | Line Name     | Char Index | Data Type                       |
+    +========+===============+============+=================================+
+    | 010    | Project Title | 10-79      | Title                           |
+    +--------+---------------+------------+---------------------------------+
+    | 100    | Slate Info    | 10-17      | Scene                           |
+    +--------+---------------+------------+---------------------------------+
+    |        |               | 24-31      | Take ID                         |
+    +--------+---------------+------------+---------------------------------+
+    |        |               | 42-49      | Camera Reel ID                  |
+    +--------+---------------+------------+---------------------------------+
+    | 701    | ASC SOP       | (This entry can be safely space separated)   |
+    +--------+---------------+------------+---------------------------------+
+    | 702    | ASC SAT       | (This entry can be safely space separated)   |
+    +--------+---------------+------------+---------------------------------+
 
     We'll try and default to using the Slate information to derive the
     resultant filename, however that information is optional. If no
