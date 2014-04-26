@@ -50,9 +50,7 @@ With support for both from and to expanding in the future.
 Installation
 ------------
 
-Installing is as simple as using pip:
-
-::
+Installing is as simple as using pip:::
 
     $ pip install cdl_convert
 
@@ -64,14 +62,12 @@ Usage
 -----
 
 If you just want to convert to a ``.cc`` XML file, the only required argument
-is an input file, like so:
-::
+is an input file, like so:::
 
     $ cdl_convert ./di_v001.flex
 
 You can override the default ``.cc`` output, or provide multiple outputs with
-the ``-o`` flag.
-::
+the ``-o`` flag.::
 
     $ cdl_convert ./di_v001.flex -o cc,cdl
 
