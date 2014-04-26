@@ -3,29 +3,26 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-cdl_convert's documentation
-###########################
+cdl_convert
+###########
 
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-   usage
-   installation
-   support
-   faq
-   contributing
-   license
-   cdl_convert
-
-Read Me Contents
-================
+Project Info
+============
 
 |PyPI Version|\ |Build Status|\ |Coverage Status|\ |Code Health|
 
+- **Name:** cdl_convert
+- **Version:** |release|
+- **Author/Maintainer:** Sean Wallitsch
+- **Email:** shidarin@alphamatte.com
+- **License:** MIT
+- **Status:** Development
+- **GitHub:** https://github.com/shidarin/cdl_convert
+- **PyPI:** https://pypi.python.org/pypi/cdl_convert
+- **Python Versions:** 2.6-3.4
+
 Introduction
-------------
+============
 
 ``cdl_convert`` converts between common `ASC CDL`_ formats. The `American Society of
 Cinematographers`_ Color Decision List (ASC CDL, or CDL for short) is a
@@ -52,6 +49,20 @@ data within the Film and TV industries.
 
 **cdl_convert is not associated with the American Society of
 Cinematographers**
+
+Table of Contents
+=================
+
+.. toctree::
+   :maxdepth: 2
+
+   usage
+   installation
+   support
+   faq
+   contributing
+   license
+   cdl_convert
 
 Indices and tables
 ==================
