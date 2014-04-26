@@ -562,6 +562,7 @@ def parse_cc(cdl_file):
 
     We'll check to see if each of these elements exist, and override the AscCdl
     defaults if we find them.
+
     """
     root = ElementTree.parse(cdl_file).getroot()
 

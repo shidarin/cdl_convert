@@ -4,14 +4,19 @@
    contain the root `toctree` directive.
 
 cdl_convert's documentation
-===========================
-
-|PyPI Version|\ |Build Status|\ |Coverage Status|\ |Code Health|
+###########################
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
+
+   cdl_convert
+
+Read Me Contents
+================
+
+|PyPI Version|\ |Build Status|\ |Coverage Status|\ |Code Health|
 
 Introduction
 ------------
