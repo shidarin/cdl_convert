@@ -29,30 +29,6 @@ the Film and TV industries.
 
 **CDLConvert is not associated with the American Society of Cinematographers**
 
-## Conversions
-
-Currently we support converting from:
-
-* ALE
-* CC
-* FLEx
-* CDL
-
-To:
-
-* CC
-* CDL
-
-With support for both from and to expanding in the future.
-
-## Code
-
-CDL Convert is written for Python 2.6, including Python 3.2 and 3.4. Code is
-written for PEP 8 compliance, although at the time of this writing function &
-variable naming uses camelCasing. Docstrings follow Google code standards.
-
-Development uses Git Flow model.
-
 ## License
 
 The MIT License (MIT)
