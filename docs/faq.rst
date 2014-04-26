@@ -47,7 +47,6 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
 .. _Travis-ci.org: http://travis-ci.org/shidarin/cdl_convert

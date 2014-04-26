@@ -68,7 +68,6 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
 .. _ASC CDL: http://en.wikipedia.org/wiki/ASC_CDL

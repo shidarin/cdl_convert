@@ -88,7 +88,6 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
 .. _OpenComparison project docs: http://opencomparison.readthedocs.org/en/latest/contributing.html

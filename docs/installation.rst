@@ -27,7 +27,6 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
 .. _cdl_convert/cdl_convert.py: http://github.com/shidarin/cdl_convert/blob/master/cdl_convert/cdl_convert.py

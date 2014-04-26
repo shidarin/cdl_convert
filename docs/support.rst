@@ -35,7 +35,6 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
 .. _GitHub: http://github.com/shidarin/cdl_convert
