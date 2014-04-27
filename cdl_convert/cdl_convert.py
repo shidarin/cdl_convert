@@ -130,6 +130,9 @@ else:  # pragma: no cover
 
 __all__ = [
     'AscCdl',
+    'ColorNodeBase',
+    'SatNode',
+    'SopNode',
     'parse_ale',
     'parse_cc',
     'parse_cdl',
@@ -329,7 +332,8 @@ class ColorNodeBase(object):  # pylint: disable=R0903
             every single description found during parsing.
 
             Setting desc directly will cause the value given to append to the
-            end of the list.
+            end of the list, but desc can also be extended by passing it a list
+            or tuple.
 
     """
     def __init__(self):
