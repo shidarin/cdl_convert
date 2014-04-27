@@ -74,7 +74,12 @@ filename (``cdl_file``).
     >>> cc = cdl.AscCdl(cc_id='cc1', cdl_file='./myfirstcdl.cc')
 
 .. warning::
-    cdl_file is likely to not be a required attribute in the future.
+    Currently ``cc_id`` does no checking to ensure that it's id is unique among
+    all the :class:`AscCdl` that currently exist. At some point this will likely
+    be added.
+
+.. warning::
+    ``cdl_file`` is likely to not be a required attribute in the future.
 
 An :class:`AscCdl` is created with the 10 required values (RGB values for slope,
 offset and power, and a single float for saturation) set to their defaults.

@@ -21,6 +21,14 @@ see :doc:`usage` for a walkthrough.
 AscCdl
 ------
 
+.. warning::
+    Currently ``cc_id`` does no checking to ensure that it's id is unique among
+    all the :class:`AscCdl` that currently exist. At some point this will likely
+    be added.
+
+.. warning::
+    ``cdl_file`` is likely to not be a required attribute in the future.
+
 .. autoclass:: cdl_convert.AscCdl
 
 Parse Functions
