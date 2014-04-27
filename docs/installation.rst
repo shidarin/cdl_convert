@@ -23,10 +23,4 @@ an alias to the file location.
 
 Creating aliases, etc are beyond the scope of this documentation.
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-
 .. _cdl_convert/cdl_convert.py: http://github.com/shidarin/cdl_convert/blob/master/cdl_convert/cdl_convert.py

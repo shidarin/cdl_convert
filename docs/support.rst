@@ -31,12 +31,6 @@ currently working on, you can try me at one of the following:
 - email: shidarin@alphamatte.com
 - github blog: http://shidarin.github.io/
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-
 .. _GitHub: http://github.com/shidarin/cdl_convert
 .. _PyPI: http://pypi.python.org/pypi/cdl_convert
 .. _issues: http://github.com/shidarin/cdl_convert/issues

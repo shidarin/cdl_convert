@@ -74,9 +74,3 @@ Write cdl
 ---------
 
 .. autofunction:: cdl_convert.write_cdl
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`

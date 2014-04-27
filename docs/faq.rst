@@ -43,12 +43,6 @@ Project Structure
     into a larger, more generic film & tv python module, which will be named
     properly.
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-
 .. _Travis-ci.org: http://travis-ci.org/shidarin/cdl_convert
 .. _coveralls.io: http://coveralls.io/r/shidarin/cdl_convert
 .. _PEP-8: http://legacy.python.org/dev/peps/pep-0008/

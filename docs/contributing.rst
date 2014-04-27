@@ -134,12 +134,6 @@ When submitting, you'll be asked to waive copyright to your submitted code to
 the listed authors. This is so we can keep a tight handle on the code and change
 the license for future releases if needed.
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-
 .. _OpenComparison project docs: http://opencomparison.readthedocs.org/en/latest/contributing.html
 .. _Travis-ci.org: http://travis-ci.org/shidarin/cdl_convert
 .. _issues: http://github.com/shidarin/cdl_convert/issues

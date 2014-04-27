@@ -84,10 +84,4 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-
 .. _OpenComparison project docs: http://opencomparison.readthedocs.org/en/latest/contributing.html

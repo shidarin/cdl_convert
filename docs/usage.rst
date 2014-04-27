@@ -272,9 +272,3 @@ desired, then write that format to disk.
     It is highly likely that in the future, these will be methods on the
     :class:`AscCdl` class itself, and that instead of writing the file directly,
     they will instead return a string formatted for writing.
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
