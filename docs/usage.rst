@@ -3,7 +3,7 @@ Usage
 #####
 
 Most likely you'll use ``cdl_convert`` as a script, instead of a python package
-itself (indeed, even the name is formatted more like a script (with an
+itself. Indeed, even the name is formatted more like a script (with an
 underscore) than the more common all lowercase of python modules.
 
 Script Usage
@@ -24,10 +24,13 @@ input file format. This can be done with the ``-i`` flag.
 ::
     $ cdl_convert ./ca102_x34.cdl -i cdl
 
-In this case, ``.cdl`` could have indicated either a space separated cdl, or an XML
-cdl. ``cdl_convert`` does it's best to try and guess which one the file is, but
-if you're running into trouble, it might help to indicate to ``cdl_convert``
-what the input file type is.
+.. note::
+    You should not normally need to do this, but it is possible especially since
+    there are multiple formats sharing the same file extension. In this case,
+    ``.cdl`` could have indicated either a space separated cdl, or an XML
+    cdl. ``cdl_convert`` does it's best to try and guess which one the file is, but
+    if you're running into trouble, it might help to indicate to ``cdl_convert``
+    what the input file type is.
 
 Full help is available using the standard ``--help`` command:
 ::
@@ -68,8 +71,7 @@ Direct Creation
 ^^^^^^^^^^^^^^^
 
 If you want to create a new instance of :class:`AscCdl`, you have to provide a
-``cc_id``, for the unique cdl identifier and you have to provide a source
-filename (``cdl_file``).
+``cc_id``, for the unique cdl identifier and a source filename to ``cdl_file``.
 
     >>> cc = cdl.AscCdl(cc_id='cc1', cdl_file='./myfirstcdl.cc')
 
@@ -77,6 +79,10 @@ filename (``cdl_file``).
     Currently ``cc_id`` does no checking to ensure that it's id is unique among
     all the :class:`AscCdl` that currently exist. At some point this will likely
     be added.
+
+.. warning::
+    It's not possible to change ``cc_id`` or the ``file_in`` attribute once they
+    are set with these args.
 
 .. warning::
     ``cdl_file`` is likely to not be a required attribute in the future.
@@ -105,11 +111,23 @@ the metadata attribute.
         'desc': None
     }
 
+.. note::
+    All of these values should be a single string with the exception of the
+    ``desc``, because XML ``cc``s, ``cdl``s, and ``ccc``s can actually have
+    an infinite number of descriptions at different levels, this attribute
+    should be set to a list of tuple value pairs, with one value being the level
+    of XML the description was encountered on (root or lower) and the other being the
+    text of the description.
+
+.. warning::
+    ``desc`` might move back into it's own protected attribute with a setter
+    that enforces the behavior described above.
+
 Parsing a CDL file
 ^^^^^^^^^^^^^^^^^^
 
 Instead of creating a blank CDL object, you can parse a file from disk, and it
-will return a list of :class:`AscCdl`s found in the file. For some formats like
+will return a list of :class:`AscCdl` found in the file. For some formats like
 ``cc``, this list will be one member long. For others like ``flex`` or ``ale``,
 this list could contain hundreds of cdls.
 
@@ -149,7 +167,7 @@ it found on the file now exist on the instance of :class:`AscCdl`.
     explicitly tagged ``id`` field that is always used. Other formats, like
     ``flex``, have no such field and the parser tries to grab any scene/take
     metadata it can find to construct one. The last fallback is always the
-    filename. For formats that can export multiple :class:`AscCdl`s, the ``cc_id``
+    filename. For formats that can export multiple :class:`AscCdl` , the ``cc_id``
     has a created instance number after it.
 
 Working with :class:`AscCdl`
@@ -201,15 +219,15 @@ number is positive.
     >>> cc.slope
     [1.234, -1.0, 273891.37823]
 
-As you can see, we were successful in setting the slope values we wanted, but none
-of the values we set were checked to see if they were valid. This resulted in us
-setting the green value of the slope to a non-numeric string, a numeric string,
-and a negative value.
+    As you can see, we were successful in setting the slope values we wanted, but none
+    of the values we set were checked to see if they were valid. This resulted in us
+    setting the green value of the slope to a non-numeric string, a numeric string,
+    and a negative value.
 
 Saturation
 ^^^^^^^^^^
 
-Saturation is a single positive float values, and the same checks and conversions
+Saturation is a positive float values, and the same checks and conversions
 that we do on SOP values happen for saturation as well.
 
     >>> cc.sat = 1.1
@@ -233,9 +251,9 @@ Metadata
 
 The metadata dictionary is set like any other dictionary.
 
-    >>> cc.metadata['desc'] = "Zach's mp7 explodes in his hard, sending metal shards everywhere"
-    >>> cc.metadata['desc']
-    "Zach's mp7 explodes in his hard, sending metal shards everywhere"
+    >>> cc.metadata['viewing_desc'] = "DCIrgb through Christie 4k"
+    >>> cc.metadata['viewing_desc']
+    "DCIrgb through Christie 4k"
 
 Id and Files
 ^^^^^^^^^^^^

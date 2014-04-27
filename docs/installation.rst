@@ -17,7 +17,7 @@ If you don't want to bother with a pip style install, you can alternatively
 grab `cdl_convert/cdl_convert.py`_, as this file is the script and all the
 functions and classes needed.
 
-You will need to place the python file somewhere (such as a ``bin/`` folder),
+You will need to place the python file somewhere (such as a ``bin`` folder),
 and either run the script by directly invoking the file directly or creating
 an alias to the file location.
 

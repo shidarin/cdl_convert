@@ -153,11 +153,10 @@ class AscCdl(object):  # pylint: disable=R0902
     for an ASC CDL, as well as other metadata like shot names that typically
     accompanies a CDL.
 
-    Because these names are standardized by the ASC and it would be odd to
-    change them for the sake of a style convention, the attribute names will
-    follow the ASC schema. Descriptions for some of these attributes are
-    paraphrasing the ASC CDL documentation. For more information on the ASC CDL
-    standard and the operations described below, you can obtain the ASC CDL
+    These names are standardized by the ASC and where possible the attribute
+    names will follow the ASC schema. Descriptions for some of these attributes
+    are paraphrasing the ASC CDL documentation. For more information on the ASC
+    CDL standard and the operations described below, you can obtain the ASC CDL
     implementor-oriented documentation by sending an email to:
     asc-cdl at theasc dot com
 
@@ -171,15 +170,11 @@ class AscCdl(object):  # pylint: disable=R0902
         file_in : (str)
             Filepath used to create this CDL.
 
-            Required attribute.
-
         file_out : (str)
             Filepath this CDL will be written to.
 
         cc_id : (str)
             Unique XML URI to identify this CDL. Often a shot or sequence name.
-
-            Required attribute.
 
         metadata : {str}
             metadata is a dictionary of the various descriptions that a CDL
@@ -188,8 +183,11 @@ class AscCdl(object):  # pylint: disable=R0902
                 cc_ref:
                     This is a reference to another CDL's unique id.
 
-                desc:
-                    Comments and notes on the correction.
+                desc: [(int, str)]
+                    Comments and notes on the correction, this is a list of
+                    tuple pairs with the first index being an int representing
+                    the *layer* the description note was found on, and the
+                    second being the actual string of the description.
 
                 input_desc:
                     Description of the color space, format and
@@ -206,7 +204,7 @@ class AscCdl(object):  # pylint: disable=R0902
             An rgb list representing the offset, which raises or lowers the
             input brightness while holding the slope constant.
 
-            The default offset value is 0.0
+            default: [0.0, 0.0, 0.0]
 
         power : [float, float, float]
             An rgb list representing the power, which is the only function that
@@ -214,18 +212,20 @@ class AscCdl(object):  # pylint: disable=R0902
             opposite response to adjustments than a traditional gamma operator.
             These values must be positive.
 
-            The default power value is 1.0
+            default: [1.0, 1.0, 1.0]
 
         sat : (float)
             A single float to adjust the relative saturation of all three color
             channels. Calculations use the rec709 implementation of saturation.
+
+            default: 1.0
 
         slope : [float, float, float]
             An rgb list representing the slope, which changes the slope of the
             input without shifting the black level established by the offset.
             These values must be positive.
 
-            The default slope value is 1.0
+            default: [1.0, 1.0, 1.0]
 
     """
 

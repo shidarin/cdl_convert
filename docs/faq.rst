@@ -9,7 +9,7 @@ Python 2 & 3 Support
     ``cdl_convert`` works in Python 2.6 through 3.4, with a full test suite
     running continuous integration through `Travis-ci.org`_, coverage through
     `coveralls.io`_, and code quality checked with `landscape.io`_. **Code is**
-    `PEP-8`_ **compliant**, with docstrings following `google code`_ docstring
+    :pep:`8` **compliant**, with docstrings following `google code`_ docstring
     standards.
 
 - Really? It works on both Python 2 and 3?
@@ -45,7 +45,6 @@ Project Structure
 
 .. _Travis-ci.org: http://travis-ci.org/shidarin/cdl_convert
 .. _coveralls.io: http://coveralls.io/r/shidarin/cdl_convert
-.. _PEP-8: http://legacy.python.org/dev/peps/pep-0008/
 .. _google code: http://google-styleguide.googlecode.com/svn/trunk/pyguide.html#Comments
 .. _landscape.io: http://landscape.io/
 .. _issues: http://github.com/shidarin/cdl_convert/issues

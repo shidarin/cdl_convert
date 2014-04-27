@@ -55,9 +55,9 @@ We'll shortly be notified of your request and it will be reviewed as soon as
 possible.
 
 .. warning::
-    If you can continue to add commits to the feature branch you submitted as
+    If you continue to add commits to the feature branch you submitted as
     a pull request, the pull request will be updated with those changes (as
-    long as you push those changes to GitHub. This is why you should not
+    long as you push those changes to GitHub). This is why you should not
     submit a pull request of the ``develop`` branch.
 
 Pull Request Tips
@@ -125,7 +125,7 @@ Furthermore, the pixel shortage is over. We want to see:
 * `grid` instead of `g`
 * `my_function_that_does_things` instead of `mftdt`
 
-If the code style doesn't follow PEP-8, it's going to be **rejected**.
+If the code style doesn't follow :pep:`8` , it's going to be **rejected**.
 
 Copyright of Submitted Contributions
 ====================================
