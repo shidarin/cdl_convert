@@ -212,7 +212,7 @@ class TestAscCdl(unittest.TestCase):
     def testOffsetSetAndGet(self):
         """Tests setting and getting the offset"""
 
-        offset = [-1.3782, 278.32, 0.738378233782]
+        offset = (-1.3782, 278.32, 0.738378233782)
 
         self.cdl.offset = offset
 
@@ -259,15 +259,15 @@ class TestAscCdl(unittest.TestCase):
 
     #===========================================================================
 
-    def testOffsetBecomesList(self):
-        """Tests offset is converted to list from tuple"""
+    def testOffsetBecomesTuple(self):
+        """Tests offset is converted to tuple from list"""
 
-        offset = (-1.3782, 278.32, 0.738378233782)
+        offset = [-1.3782, 278.32, 0.738378233782]
 
         self.cdl.offset = offset
 
         self.assertEqual(
-            list(offset),
+            tuple(offset),
             self.cdl.offset
         )
 
@@ -276,7 +276,7 @@ class TestAscCdl(unittest.TestCase):
     def testPowerSetAndGet(self):
         """Tests setting and getting the power"""
 
-        power = [1.3782, 278.32, 0.738378233782]
+        power = (1.3782, 278.32, 0.738378233782)
 
         self.cdl.power = power
 
@@ -335,15 +335,15 @@ class TestAscCdl(unittest.TestCase):
 
     #===========================================================================
 
-    def testPowerBecomesList(self):
-        """Tests power is converted to list from tuple"""
+    def testPowerBecomesTuple(self):
+        """Tests power is converted to tuple from list"""
 
-        power = (1.3782, 278.32, 0.738378233782)
+        power = [1.3782, 278.32, 0.738378233782]
 
         self.cdl.power = power
 
         self.assertEqual(
-            list(power),
+            tuple(power),
             self.cdl.power
         )
 
@@ -352,7 +352,7 @@ class TestAscCdl(unittest.TestCase):
     def testSlopeSetAndGet(self):
         """Tests setting and getting the slope"""
 
-        slope = [1.3782, 278.32, 0.738378233782]
+        slope = (1.3782, 278.32, 0.738378233782)
 
         self.cdl.slope = slope
 
@@ -411,15 +411,15 @@ class TestAscCdl(unittest.TestCase):
 
     #===========================================================================
 
-    def testSlopeBecomesList(self):
-        """Tests slope is converted to list from tuple"""
+    def testSlopeBecomesTuple(self):
+        """Tests slope is converted to tuple from list"""
 
-        slope = (1.3782, 278.32, 0.738378233782)
+        slope = [1.3782, 278.32, 0.738378233782]
 
         self.cdl.slope = slope
 
         self.assertEqual(
-            list(slope),
+            tuple(slope),
             self.cdl.slope
         )
 
@@ -498,9 +498,9 @@ class TestParseALEBasic(unittest.TestCase):
     #===========================================================================
 
     def setUp(self):
-        self.slope1 = [1.329, 0.9833, 1.003]
-        self.offset1 = [0.011, 0.013, 0.11]
-        self.power1 = [.993, .998, 1.0113]
+        self.slope1 = (1.329, 0.9833, 1.003)
+        self.offset1 = (0.011, 0.013, 0.11)
+        self.power1 = (.993, .998, 1.0113)
         self.sat1 = 1.01
 
         line1 = buildALELine(self.slope1, self.offset1, self.power1, self.sat1,
@@ -509,17 +509,17 @@ class TestParseALEBasic(unittest.TestCase):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = [137829.329, 4327890.9833, 3489031.003]
-        self.offset2 = [-3424.011, -342789423.013, -4238923.11]
-        self.power2 = [3271893.993, .0000998, 0.0000000000000000113]
+        self.slope2 = (137829.329, 4327890.9833, 3489031.003)
+        self.offset2 = (-3424.011, -342789423.013, -4238923.11)
+        self.power2 = (3271893.993, .0000998, 0.0000000000000000113)
         self.sat2 = 1798787.01
 
         line2 = buildALELine(self.slope2, self.offset2, self.power2, self.sat2,
                              'bb94_x104_line2')
 
-        self.slope3 = [1.2, 2.32, 10.82]
-        self.offset3 = [-1.3782, 278.32, 0.738378233782]
-        self.power3 = [1.329, 0.9833, 1.003]
+        self.slope3 = (1.2, 2.32, 10.82)
+        self.offset3 = (-1.3782, 278.32, 0.738378233782)
+        self.power3 = (1.329, 0.9833, 1.003)
         self.sat3 = 0.99
 
         line3 = buildALELine(self.slope3, self.offset3, self.power3, self.sat3,
@@ -655,9 +655,9 @@ class TestParseALEShort(TestParseALEBasic):
     #===========================================================================
 
     def setUp(self):
-        self.slope1 = [1.329, 0.9833, 1.003]
-        self.offset1 = [0.011, 0.013, 0.11]
-        self.power1 = [.993, .998, 1.0113]
+        self.slope1 = (1.329, 0.9833, 1.003)
+        self.offset1 = (0.011, 0.013, 0.11)
+        self.power1 = (.993, .998, 1.0113)
         self.sat1 = 1.01
 
         line1 = buildALELine(self.slope1, self.offset1, self.power1, self.sat1,
@@ -666,17 +666,17 @@ class TestParseALEShort(TestParseALEBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = [137829.329, 4327890.9833, 3489031.003]
-        self.offset2 = [-3424.011, -342789423.013, -4238923.11]
-        self.power2 = [3271893.993, .0000998, 0.0000000000000000113]
+        self.slope2 = (137829.329, 4327890.9833, 3489031.003)
+        self.offset2 = (-3424.011, -342789423.013, -4238923.11)
+        self.power2 = (3271893.993, .0000998, 0.0000000000000000113)
         self.sat2 = 1798787.01
 
         line2 = buildALELine(self.slope2, self.offset2, self.power2, self.sat2,
                              'bb94_x104_line2', short=True)
 
-        self.slope3 = [1.2, 2.32, 10.82]
-        self.offset3 = [-1.3782, 278.32, 0.738378233782]
-        self.power3 = [1.329, 0.9833, 1.003]
+        self.slope3 = (1.2, 2.32, 10.82)
+        self.offset3 = (-1.3782, 278.32, 0.738378233782)
+        self.power3 = (1.329, 0.9833, 1.003)
         self.sat3 = 0.99
 
         line3 = buildALELine(self.slope3, self.offset3, self.power3, self.sat3,
@@ -705,9 +705,9 @@ class TestParseCCBasic(unittest.TestCase):
     #===========================================================================
 
     def setUp(self):
-        self.slope = [1.329, 0.9833, 1.003]
-        self.offset = [0.011, 0.013, 0.11]
-        self.power = [.993, .998, 1.0113]
+        self.slope = (1.329, 0.9833, 1.003)
+        self.offset = (0.011, 0.013, 0.11)
+        self.power = (.993, .998, 1.0113)
         self.sat = 1.01
         self.id = 'cc23678'
         self.desc = "Raised saturation a little, adjusted gamma"
@@ -797,9 +797,9 @@ class TestParseCCOdd(TestParseCCBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope = [137829.329, 4327890.9833, 3489031.003]
-        self.offset = [-3424.011, -342789423.013, -4238923.11]
-        self.power = [3271893.993, .0000998, 0.0000000000000000113]
+        self.slope = (137829.329, 4327890.9833, 3489031.003)
+        self.offset = (-3424.011, -342789423.013, -4238923.11)
+        self.power = (3271893.993, .0000998, 0.0000000000000000113)
         self.sat = 1798787.01
         self.id = 'cc23678_who_what_where.period_are__cool__so_is_youz66867868'
         # Note that including < in desc WILL break XML parsing. We should
@@ -846,7 +846,7 @@ class TestParseCCJustSat(TestParseCCBasic):
     def testSlope(self):
         """Tests that slope is still at defaults"""
         self.assertEqual(
-            [1.0, 1.0, 1.0],
+            (1.0, 1.0, 1.0),
             self.cdl.slope
         )
 
@@ -855,7 +855,7 @@ class TestParseCCJustSat(TestParseCCBasic):
     def testOffset(self):
         """Tests that offset is still at defaults"""
         self.assertEqual(
-            [0.0, 0.0, 0.0],
+            (0.0, 0.0, 0.0),
             self.cdl.offset
         )
 
@@ -864,7 +864,7 @@ class TestParseCCJustSat(TestParseCCBasic):
     def testPower(self):
         """Tests that power is still at defaults"""
         self.assertEqual(
-            [1.0, 1.0, 1.0],
+            (1.0, 1.0, 1.0),
             self.cdl.power
         )
 
@@ -877,9 +877,9 @@ class TestParseCCJustSOP(TestParseCCBasic):
     #===========================================================================
 
     def setUp(self):
-        self.slope = [1.329, 0.9833, 1.003]
-        self.offset = [0.011, 0.013, 0.11]
-        self.power = [.993, .998, 1.0113]
+        self.slope = (1.329, 0.9833, 1.003)
+        self.offset = (0.011, 0.013, 0.11)
+        self.power = (.993, .998, 1.0113)
         self.id = 'cc23678'
         self.desc = "Raised saturation a little, adjusted gamma"
 
@@ -913,8 +913,8 @@ class TestParseCCNoSlope(TestParseCCBasic):
     #===========================================================================
 
     def setUp(self):
-        self.offset = [0.011, 0.013, 0.11]
-        self.power = [.993, .998, 1.0113]
+        self.offset = (0.011, 0.013, 0.11)
+        self.power = (.993, .998, 1.0113)
         self.sat = 1.23
         self.id = 'cc23678'
         self.desc = "Raised saturation a little, adjusted gamma"
@@ -936,7 +936,7 @@ class TestParseCCNoSlope(TestParseCCBasic):
     def testSlope(self):
         """Tests that slope is still at default"""
         self.assertEqual(
-            [1.0, 1.0, 1.0],
+            (1.0, 1.0, 1.0),
             self.cdl.slope
         )
 
@@ -949,8 +949,8 @@ class TestParseCCNoOffset(TestParseCCBasic):
     #===========================================================================
 
     def setUp(self):
-        self.slope = [0.011, 0.013, 0.11]
-        self.power = [.993, .998, 1.0113]
+        self.slope = (0.011, 0.013, 0.11)
+        self.power = (.993, .998, 1.0113)
         self.sat = 1.23
         self.id = 'cc23678'
         self.desc = "Raised saturation a little, adjusted gamma"
@@ -972,7 +972,7 @@ class TestParseCCNoOffset(TestParseCCBasic):
     def testOffset(self):
         """Tests that offset is still at default"""
         self.assertEqual(
-            [0.0, 0.0, 0.0],
+            (0.0, 0.0, 0.0),
             self.cdl.offset
         )
 
@@ -985,8 +985,8 @@ class TestParseCCNoPower(TestParseCCBasic):
     #===========================================================================
 
     def setUp(self):
-        self.slope = [.993, .998, 1.0113]
-        self.offset = [0.011, 0.013, 0.11]
+        self.slope = (.993, .998, 1.0113)
+        self.offset = (0.011, 0.013, 0.11)
         self.sat = 1.23
         self.id = 'cc23678'
         self.desc = "Raised saturation a little, adjusted gamma"
@@ -1008,7 +1008,7 @@ class TestParseCCNoPower(TestParseCCBasic):
     def testPower(self):
         """Tests that power is still at defaults"""
         self.assertEqual(
-            [1.0, 1.0, 1.0],
+            (1.0, 1.0, 1.0),
             self.cdl.power
         )
 
@@ -1040,7 +1040,7 @@ class TestParseCCEmptyElems(TestParseCCBasic):
     def testSlope(self):
         """Tests that slope is still at defaults"""
         self.assertEqual(
-            [1.0, 1.0, 1.0],
+            (1.0, 1.0, 1.0),
             self.cdl.slope
         )
 
@@ -1049,7 +1049,7 @@ class TestParseCCEmptyElems(TestParseCCBasic):
     def testOffset(self):
         """Tests that offset is still at defaults"""
         self.assertEqual(
-            [0.0, 0.0, 0.0],
+            (0.0, 0.0, 0.0),
             self.cdl.offset
         )
 
@@ -1058,7 +1058,7 @@ class TestParseCCEmptyElems(TestParseCCBasic):
     def testPower(self):
         """Tests that power is still at defaults"""
         self.assertEqual(
-            [1.0, 1.0, 1.0],
+            (1.0, 1.0, 1.0),
             self.cdl.power
         )
 
@@ -1136,9 +1136,9 @@ class TestParseCDLBasic(unittest.TestCase):
     #===========================================================================
 
     def setUp(self):
-        self.slope = [1.329, 0.9833, 1.003]
-        self.offset = [0.011, 0.013, 0.11]
-        self.power = [.993, .998, 1.0113]
+        self.slope = (1.329, 0.9833, 1.003)
+        self.offset = (0.011, 0.013, 0.11)
+        self.power = (.993, .998, 1.0113)
         self.sat = 1.01
 
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
@@ -1217,9 +1217,9 @@ class TestParseCDLOdd(TestParseCDLBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope = [137829.329, 4327890.9833, 3489031.003]
-        self.offset = [-3424.011, -342789423.013, -4238923.11]
-        self.power = [3271893.993, .0000998, 0.0000000000000000113]
+        self.slope = (137829.329, 4327890.9833, 3489031.003)
+        self.offset = (-3424.011, -342789423.013, -4238923.11)
+        self.power = (3271893.993, .0000998, 0.0000000000000000113)
         self.sat = 1798787.01
 
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
@@ -1323,9 +1323,9 @@ class TestParseFLExBasic(unittest.TestCase):
 
         self.title = "Bob's Big Apple Break, into the big apple! Part 365   H"
 
-        self.slope1 = [1.329, 0.9833, 1.003]
-        self.offset1 = [0.011, 0.013, 0.11]
-        self.power1 = [.993, .998, 1.0113]
+        self.slope1 = (1.329, 0.9833, 1.003)
+        self.offset1 = (0.011, 0.013, 0.11)
+        self.power1 = (.993, .998, 1.0113)
         self.sat1 = 1.01
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
@@ -1334,17 +1334,17 @@ class TestParseFLExBasic(unittest.TestCase):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = [13.329, 4.9334, 348908]
-        self.offset2 = [-3424.0, -34.013, -642389]
-        self.power2 = [37.993, .00009, 0.0000]
+        self.slope2 = (13.329, 4.9334, 348908)
+        self.offset2 = (-3424.0, -34.013, -642389)
+        self.power2 = (37.993, .00009, 0.0000)
         self.sat2 = 177.01
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
                               'bb94', 'x104', 'line2')
 
-        self.slope3 = [1.2, 2.32, 10.82]
-        self.offset3 = [-1.3782, 278.32, 0.7383]
-        self.power3 = [1.329, 0.9833, 1.003]
+        self.slope3 = (1.2, 2.32, 10.82)
+        self.offset3 = (-1.3782, 278.32, 0.7383)
+        self.power3 = (1.329, 0.9833, 1.003)
         self.sat3 = 0.99
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
@@ -1494,9 +1494,9 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
 
         self.title = "Bob's Big Apple Break, into the big apple! Part 365   H"
 
-        self.slope1 = [1.329, 0.9833, 1.003]
-        self.offset1 = [0.011, 0.013, 0.11]
-        self.power1 = [.993, .998, 1.0113]
+        self.slope1 = (1.329, 0.9833, 1.003)
+        self.offset1 = (0.011, 0.013, 0.11)
+        self.power1 = (.993, .998, 1.0113)
         self.sat1 = 1.01
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
@@ -1505,17 +1505,17 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = [13.329, 4.9334, 348908]
-        self.offset2 = [-3424.0, -34.013, -642389]
-        self.power2 = [37.993, .00009, 0.0000]
+        self.slope2 = (13.329, 4.9334, 348908)
+        self.offset2 = (-3424.0, -34.013, -642389)
+        self.power2 = (37.993, .00009, 0.0000)
         self.sat2 = 177.01
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
                               'bb94', 'x104')
 
-        self.slope3 = [1.2, 2.32, 10.82]
-        self.offset3 = [-1.3782, 278.32, 0.7383]
-        self.power3 = [1.329, 0.9833, 1.003]
+        self.slope3 = (1.2, 2.32, 10.82)
+        self.offset3 = (-1.3782, 278.32, 0.7383)
+        self.power3 = (1.329, 0.9833, 1.003)
         self.sat3 = 0.99
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
@@ -1567,9 +1567,9 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
 
         self.title = "Bob's Big Apple Break, into the big apple! Part.365   H"
 
-        self.slope1 = [1.329, 0.9833, 1.003]
-        self.offset1 = [0.011, 0.013, 0.11]
-        self.power1 = [.993, .998, 1.0113]
+        self.slope1 = (1.329, 0.9833, 1.003)
+        self.offset1 = (0.011, 0.013, 0.11)
+        self.power1 = (.993, .998, 1.0113)
         self.sat1 = 1.01
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1)
@@ -1577,16 +1577,16 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = [13.329, 4.9334, 348908]
-        self.offset2 = [-3424.0, -34.013, -642389]
-        self.power2 = [37.993, .00009, 0.0000]
+        self.slope2 = (13.329, 4.9334, 348908)
+        self.offset2 = (-3424.0, -34.013, -642389)
+        self.power2 = (37.993, .00009, 0.0000)
         self.sat2 = 177.01
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2)
 
-        self.slope3 = [1.2, 2.32, 10.82]
-        self.offset3 = [-1.3782, 278.32, 0.7383]
-        self.power3 = [1.329, 0.9833, 1.003]
+        self.slope3 = (1.2, 2.32, 10.82)
+        self.offset3 = (-1.3782, 278.32, 0.7383)
+        self.power3 = (1.329, 0.9833, 1.003)
         self.sat3 = 0.99
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3)
@@ -1637,9 +1637,9 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
 
         self.title = ''
 
-        self.slope1 = [1.329, 0.9833, 1.003]
-        self.offset1 = [0.011, 0.013, 0.11]
-        self.power1 = [.993, .998, 1.0113]
+        self.slope1 = (1.329, 0.9833, 1.003)
+        self.offset1 = (0.011, 0.013, 0.11)
+        self.power1 = (.993, .998, 1.0113)
         self.sat1 = 1.01
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1)
@@ -1647,16 +1647,16 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = [13.329, 4.9334, 348908]
-        self.offset2 = [-3424.0, -34.013, -642389]
-        self.power2 = [37.993, .00009, 0.0000]
+        self.slope2 = (13.329, 4.9334, 348908)
+        self.offset2 = (-3424.0, -34.013, -642389)
+        self.power2 = (37.993, .00009, 0.0000)
         self.sat2 = 177.01
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2)
 
-        self.slope3 = [1.2, 2.32, 10.82]
-        self.offset3 = [-1.3782, 278.32, 0.7383]
-        self.power3 = [1.329, 0.9833, 1.003]
+        self.slope3 = (1.2, 2.32, 10.82)
+        self.offset3 = (-1.3782, 278.32, 0.7383)
+        self.power3 = (1.329, 0.9833, 1.003)
         self.sat3 = 0.99
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3)
@@ -1704,7 +1704,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
 
         for i in range(3):
             self.assertEqual(
-                None,
+                [],
                 self.cdls[i].metadata['desc']
             )
 
@@ -1720,25 +1720,25 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
 
         self.title = "Hanky Panky Bromance"
 
-        self.slope1 = [1.0, 1.0, 1.0]
-        self.offset1 = [0.0, 0.0, 0.0]
-        self.power1 = [1.0, 1.0, 1.0]
+        self.slope1 = (1.0, 1.0, 1.0)
+        self.offset1 = (0.0, 0.0, 0.0)
+        self.power1 = (1.0, 1.0, 1.0)
         self.sat1 = 1.01
 
         line1 = buildFLExTake(sat=self.sat1, scene='bb94', take='x103',
                               roll='line1')
 
-        self.slope2 = [1.2, 2.32, 10.82]
-        self.offset2 = [-1.32, 2.32, 0.73]
-        self.power2 = [1.329, 0.9833, 1.003]
+        self.slope2 = (1.2, 2.32, 10.82)
+        self.offset2 = (-1.32, 2.32, 0.73)
+        self.power2 = (1.329, 0.9833, 1.003)
         self.sat2 = 1.0
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2,
                               scene='bb94', take='x104', roll='line2')
 
-        self.slope3 = [1.0, 1.0, 1.0]
-        self.offset3 = [0.0, 0.0, 0.0]
-        self.power3 = [1.0, 1.0, 1.0]
+        self.slope3 = (1.0, 1.0, 1.0)
+        self.offset3 = (0.0, 0.0, 0.0)
+        self.power3 = (1.0, 1.0, 1.0)
         self.sat3 = 1.0
 
         line3 = buildFLExTake()
@@ -2566,7 +2566,7 @@ def buildCC(id=None, desc=None, slope=None, offset=None, power=None, sat=None,
 def buildCDL(slope, offset, power, sat):
     """Populates a CDL string and returns it"""
 
-    values = slope[:]
+    values = list(slope)
     values.extend(offset)
     values.extend(power)
     values.append(sat)
