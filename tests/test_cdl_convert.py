@@ -139,7 +139,13 @@ else:
 
 
 class TestAscCdl(unittest.TestCase):
-    """Tests all aspects of the AscCdl class"""
+    """Tests all aspects of the AscCdl class.
+
+    Many of the tests involving Sop and Sat values are obsolete, since those
+    values have been moved into their own class. However, the tests will remain
+    as they're still an attribute of AscCdl
+
+    """
 
     #===========================================================================
     # SETUP & TEARDOWN
@@ -1768,6 +1774,768 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
             2,
             len(cdl_convert.parse_flex(self.filename))
         )
+
+# ColorNodeBase ================================================================
+
+
+class TestColorNodeBase(unittest.TestCase):
+    """Tests the very simple base class ColorNodeBase"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        self.node = cdl_convert.ColorNodeBase()
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testInit(self):
+        """Tests that on init desc is created and empty"""
+
+        self.assertEqual(
+            (),
+            self.node.desc
+        )
+
+    #===========================================================================
+
+    def testFirstSet(self):
+        """Tests setting desc to a string appends it to the list"""
+
+        self.node.desc = 'first description'
+
+        self.assertEqual(
+            ('first description', ),
+            self.node.desc
+        )
+
+    #===========================================================================
+
+    def testAppendAdditional(self):
+        """Tests that setting desc more than once appends to list"""
+
+        self.node.desc = 'first description'
+
+        self.assertEqual(
+            ('first description', ),
+            self.node.desc
+        )
+
+        self.node.desc = 'second description'
+
+        self.assertEqual(
+            ('first description', 'second description'),
+            self.node.desc
+        )
+
+    #===========================================================================
+
+    def testExtendWithList(self):
+        """Tests extending the desc with another list"""
+
+        # Bypass setter
+        self.node._desc = ['first description']
+
+        self.node.desc = ['second description', 'third description']
+
+        self.assertEqual(
+            ('first description', 'second description', 'third description'),
+            self.node.desc
+        )
+
+    #===========================================================================
+
+    def testExtendWithTuple(self):
+        """Tests extending the desc with another tuple"""
+
+        # Bypass setter
+        self.node._desc = ['first description']
+
+        self.node.desc = ('second description', 'third description')
+
+        self.assertEqual(
+            ('first description', 'second description', 'third description'),
+            self.node.desc
+        )
+
+
+# SatNode ======================================================================
+
+
+class TestSatNode(unittest.TestCase):
+    """Tests all aspects of SatNode"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        self.node = cdl_convert.SatNode(self)
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testParent(self):
+        """Tests that parent was attached to us correctly"""
+        self.assertEqual(
+            self,
+            self.node.parent
+        )
+
+    #===========================================================================
+
+    def testSetParent(self):
+        """Tests that we can't set the parent property after init"""
+        def setParent():
+            self.node.parent = 'banana'
+
+        self.assertRaises(
+            AttributeError,
+            setParent
+        )
+
+    #===========================================================================
+
+    def testDefault(self):
+        """Tests that saturation starts off with a default value of 1.0"""
+        self.assertEqual(
+            1.0,
+            self.node.sat
+        )
+
+    #===========================================================================
+
+    def testGetSat(self):
+        """Tests that we can get the saturation value"""
+        # Bypass setter
+        self.node._sat = 12.8
+
+        self.assertEqual(
+            12.8,
+            self.node.sat,
+        )
+
+    #===========================================================================
+
+    def testSetWithString(self):
+        """Tests that we can set sat with a single string"""
+        self.node.sat = '12.3'
+
+        self.assertEqual(
+            12.3,
+            self.node.sat
+        )
+
+    #===========================================================================
+
+    def testSetWithBadString(self):
+        """Tests that we can't set sat with a single bad string"""
+        def setSat():
+            self.node.sat = 'banana'
+
+        self.assertRaises(
+            TypeError,
+            setSat
+        )
+
+    #===========================================================================
+
+    def testSetWithNegativeString(self):
+        """Tests that we can't set sat with a single negative string"""
+        def setSat():
+            self.node.sat = '-20'
+
+        self.assertRaises(
+            ValueError,
+            setSat
+        )
+
+    #===========================================================================
+
+    def testSetWithFloat(self):
+        """Tests that we can set sat with a single float"""
+        self.node.sat = 100.1
+
+        self.assertEqual(
+            100.1,
+            self.node.sat
+        )
+
+    #===========================================================================
+
+    def testSetWithNegativeFloat(self):
+        """Tests that we can't set sat with a single negative float"""
+        def setSat():
+            self.node.sat = -20.1
+
+        self.assertRaises(
+            ValueError,
+            setSat
+        )
+
+    #===========================================================================
+
+    def testSetWithInt(self):
+        """Tests that we can set sat with a single int"""
+        self.node.sat = 2
+
+        self.assertEqual(
+            2,
+            self.node.sat
+        )
+
+    #===========================================================================
+
+    def testSetWithNegativeInt(self):
+        """Tests that we can't set sat with a single negative float"""
+        def setSat():
+            self.node.sat = -20
+
+        self.assertRaises(
+            ValueError,
+            setSat
+        )
+
+    #===========================================================================
+
+    def testSetWithListFails(self):
+        """Tests that we can't set sat with a list"""
+        def setSat():
+            self.node.sat = [-1.1]
+
+        self.assertRaises(
+            TypeError,
+            setSat
+        )
+
+# SopNode ======================================================================
+
+
+class TestSopNode(unittest.TestCase):
+    """Tests all aspects of SopNode"""
+
+    #===========================================================================
+    # SETUP & TEARDOWN
+    #===========================================================================
+
+    def setUp(self):
+        self.node = cdl_convert.SopNode(self)
+
+    #===========================================================================
+    # TESTS
+    #===========================================================================
+
+    def testParent(self):
+        """Tests that parent was attached to us correctly"""
+        self.assertEqual(
+            self,
+            self.node.parent
+        )
+
+    #===========================================================================
+
+    def testSetParent(self):
+        """Tests that we can't set the parent property after init"""
+        def setParent():
+            self.node.parent = 'banana'
+
+        self.assertRaises(
+            AttributeError,
+            setParent
+        )
+
+    #===========================================================================
+
+    def testSlopeDefault(self):
+        """Tests that slope starts off with a default value of 1.0"""
+        self.assertEqual(
+            (1.0, 1.0, 1.0),
+            self.node.slope
+        )
+
+    #===========================================================================
+
+    def testGetSlope(self):
+        """Tests that we can get the slope value"""
+        # Bypass setter
+        self.node._slope = [12.8, 1.2, 1.4]
+
+        self.assertEqual(
+            (12.8, 1.2, 1.4),
+            self.node.slope,
+        )
+
+    #===========================================================================
+
+    def testSetSlopeWithString(self):
+        """Tests that we can set slope with a single string"""
+        self.node.slope = '12.3'
+
+        self.assertEqual(
+            (12.3, 12.3, 12.3),
+            self.node.slope
+        )
+
+    #===========================================================================
+
+    def testSetSlopeWithBadString(self):
+        """Tests that we can't set slope with a single bad string"""
+        def setSlope():
+            self.node.slope = 'banana'
+
+        self.assertRaises(
+            TypeError,
+            setSlope
+        )
+
+    #===========================================================================
+
+    def testSetSlopeWithNegativeString(self):
+        """Tests that we can't set slope with a single negative string"""
+        def setSlope():
+            self.node.slope = '-20'
+
+        self.assertRaises(
+            ValueError,
+            setSlope
+        )
+
+    #===========================================================================
+
+    def testSetSlopeWithFloat(self):
+        """Tests that we can set slope with a single float"""
+        self.node.slope = 100.1
+
+        self.assertEqual(
+            (100.1, 100.1, 100.1),
+            self.node.slope
+        )
+
+    #===========================================================================
+
+    def testSetSlopeWithNegativeFloat(self):
+        """Tests that we can't set slope with a single negative float"""
+        def setSlope():
+            self.node.slope = -20.1
+
+        self.assertRaises(
+            ValueError,
+            setSlope
+        )
+
+    #===========================================================================
+
+    def testSetSlopeWithInt(self):
+        """Tests that we can set slope with a single int"""
+        self.node.slope = 2
+
+        self.assertEqual(
+            (2, 2, 2),
+            self.node.slope
+        )
+
+    #===========================================================================
+
+    def testSetSlopeWithNegativeInt(self):
+        """Tests that we can't set slope with a single negative float"""
+        def setSlope():
+            self.node.slope = -20
+
+        self.assertRaises(
+            ValueError,
+            setSlope
+        )
+
+    #===========================================================================
+
+    def testSlopeSetNegative(self):
+        """Tests that ValueError raised if negative value"""
+        def setSlope():
+            self.node.slope = [-1.3782, 278.32, 0.738378233782]
+
+        self.assertRaises(
+            ValueError,
+            setSlope
+        )
+
+    #===========================================================================
+
+    def testSlopeSetStrings(self):
+        """Tests that TypeError raised if given strings"""
+        def setSlope():
+            self.node.slope = [1.3782, 278.32, 'banana']
+
+        self.assertRaises(
+            TypeError,
+            setSlope
+        )
+
+    #===========================================================================
+
+    def testSlopeFromDict(self):
+        """Tests that TypeError raised if given dict"""
+        def setSlope():
+            self.node.slope = {'r': 1.3782, 'g': 278.32, 'b': 2}
+
+        self.assertRaises(
+            TypeError,
+            setSlope
+        )
+
+    #===========================================================================
+
+    def testSlopeBadLength(self):
+        """Tests passing slope an incorrect length list"""
+        def setSlope():
+            self.node.slope = ['banana']
+
+        self.assertRaises(
+            ValueError,
+            setSlope
+        )
+
+    #===========================================================================
+
+    def testSlopeBecomesTuple(self):
+        """Tests slope is converted to tuple from list"""
+
+        slope = [1.3782, 278.32, 0.738378233782]
+
+        self.node.slope = slope
+
+        self.assertEqual(
+            tuple(slope),
+            self.node.slope
+        )
+
+    #===========================================================================
+
+    def testOffsetDefault(self):
+        """Tests that offset starts off with a default value of 1.0"""
+        self.assertEqual(
+            (0.0, 0.0, 0.0),
+            self.node.offset
+        )
+
+    #===========================================================================
+
+    def testGetOffset(self):
+        """Tests that we can get the offset value"""
+        # Bypass setter
+        self.node._offset = [12.8, 1.2, 1.4]
+
+        self.assertEqual(
+            (12.8, 1.2, 1.4),
+            self.node.offset,
+        )
+
+    #===========================================================================
+
+    def testSetOffsetWithString(self):
+        """Tests that we can set offset with a single string"""
+        self.node.offset = '12.3'
+
+        self.assertEqual(
+            (12.3, 12.3, 12.3),
+            self.node.offset
+        )
+
+    #===========================================================================
+
+    def testSetOffsetWithBadString(self):
+        """Tests that we can't set offset with a single bad string"""
+        def setOffset():
+            self.node.offset = 'banana'
+
+        self.assertRaises(
+            TypeError,
+            setOffset
+        )
+
+    #===========================================================================
+
+    def testSetOffsetWithNegativeString(self):
+        """Tests that we can set offset with a single negative string"""
+        self.node.offset = '-20'
+
+        self.assertEqual(
+            (-20.0, -20.0, -20.0),
+            self.node.offset
+        )
+
+    #===========================================================================
+
+    def testSetOffsetWithFloat(self):
+        """Tests that we can set offset with a single float"""
+        self.node.offset = 100.1
+
+        self.assertEqual(
+            (100.1, 100.1, 100.1),
+            self.node.offset
+        )
+
+    #===========================================================================
+
+    def testSetOffsetWithNegativeFloat(self):
+        """Tests that we can set offset with a single negative float"""
+        self.node.offset = -20.1
+
+        self.assertEqual(
+            (-20.1, -20.1, -20.1),
+            self.node.offset
+        )
+
+    #===========================================================================
+
+    def testSetOffsetWithInt(self):
+        """Tests that we can set offset with a single int"""
+        self.node.offset = 2
+
+        self.assertEqual(
+            (2, 2, 2),
+            self.node.offset
+        )
+
+    #===========================================================================
+
+    def testSetOffsetWithNegativeInt(self):
+        """Tests that we can set offset with a single negative int"""
+        self.node.offset = -20
+
+        self.assertEqual(
+            (-20.0, -20.0, -20.0),
+            self.node.offset
+        )
+
+    #===========================================================================
+
+    def testOffsetSetNegative(self):
+        """Tests that offset can be set to negative value"""
+        self.node.offset = [-1.3782, 278.32, 0.738378233782]
+
+        self.assertEqual(
+            (-1.3782, 278.32, 0.738378233782),
+            self.node.offset
+        )
+
+    #===========================================================================
+
+    def testOffsetSetStrings(self):
+        """Tests that TypeError raised if given strings"""
+        def setOffset():
+            self.node.offset = [1.3782, 278.32, 'banana']
+
+        self.assertRaises(
+            TypeError,
+            setOffset
+        )
+
+    #===========================================================================
+
+    def testOffsetFromDict(self):
+        """Tests that TypeError raised if given dict"""
+        def setOffset():
+            self.node.offset = {'r': 1.3782, 'g': 278.32, 'b': 2}
+
+        self.assertRaises(
+            TypeError,
+            setOffset
+        )
+
+    #===========================================================================
+
+    def testOffsetBadLength(self):
+        """Tests passing offset an incorrect length list"""
+        def setOffset():
+            self.node.offset = ['banana']
+
+        self.assertRaises(
+            ValueError,
+            setOffset
+        )
+
+    #===========================================================================
+
+    def testOffsetBecomesTuple(self):
+        """Tests offset is converted to tuple from list"""
+
+        offset = [1.3782, 278.32, 0.738378233782]
+
+        self.node.offset = offset
+
+        self.assertEqual(
+            tuple(offset),
+            self.node.offset
+        )
+
+    #===========================================================================
+
+    def testPowerDefault(self):
+        """Tests that power starts off with a default value of 1.0"""
+        self.assertEqual(
+            (1.0, 1.0, 1.0),
+            self.node.power
+        )
+
+    #===========================================================================
+
+    def testGetPower(self):
+        """Tests that we can get the power value"""
+        # Bypass setter
+        self.node._power = [12.8, 1.2, 1.4]
+
+        self.assertEqual(
+            (12.8, 1.2, 1.4),
+            self.node.power,
+        )
+
+    #===========================================================================
+
+    def testSetPowerWithString(self):
+        """Tests that we can set power with a single string"""
+        self.node.power = '12.3'
+
+        self.assertEqual(
+            (12.3, 12.3, 12.3),
+            self.node.power
+        )
+
+    #===========================================================================
+
+    def testSetPowerWithBadString(self):
+        """Tests that we can't set power with a single bad string"""
+        def setPower():
+            self.node.power = 'banana'
+
+        self.assertRaises(
+            TypeError,
+            setPower
+        )
+
+    #===========================================================================
+
+    def testSetPowerWithNegativeString(self):
+        """Tests that we can't set power with a single negative string"""
+        def setPower():
+            self.node.power = '-20'
+
+        self.assertRaises(
+            ValueError,
+            setPower
+        )
+
+    #===========================================================================
+
+    def testSetPowerWithFloat(self):
+        """Tests that we can set power with a single float"""
+        self.node.power = 100.1
+
+        self.assertEqual(
+            (100.1, 100.1, 100.1),
+            self.node.power
+        )
+
+    #===========================================================================
+
+    def testSetPowerWithNegativeFloat(self):
+        """Tests that we can't set power with a single negative float"""
+        def setPower():
+            self.node.power = -20.1
+
+        self.assertRaises(
+            ValueError,
+            setPower
+        )
+
+    #===========================================================================
+
+    def testSetPowerWithInt(self):
+        """Tests that we can set power with a single int"""
+        self.node.power = 2
+
+        self.assertEqual(
+            (2, 2, 2),
+            self.node.power
+        )
+
+    #===========================================================================
+
+    def testSetPowerWithNegativeInt(self):
+        """Tests that we can't set power with a single negative float"""
+        def setPower():
+            self.node.power = -20
+
+        self.assertRaises(
+            ValueError,
+            setPower
+        )
+
+    #===========================================================================
+
+    def testPowerSetNegative(self):
+        """Tests that ValueError raised if negative value"""
+        def setPower():
+            self.node.power = [-1.3782, 278.32, 0.738378233782]
+
+        self.assertRaises(
+            ValueError,
+            setPower
+        )
+
+    #===========================================================================
+
+    def testPowerSetStrings(self):
+        """Tests that TypeError raised if given strings"""
+        def setPower():
+            self.node.power = [1.3782, 278.32, 'banana']
+
+        self.assertRaises(
+            TypeError,
+            setPower
+        )
+
+    #===========================================================================
+
+    def testPowerFromDict(self):
+        """Tests that TypeError raised if given dict"""
+        def setPower():
+            self.node.power = {'r': 1.3782, 'g': 278.32, 'b': 2}
+
+        self.assertRaises(
+            TypeError,
+            setPower
+        )
+
+    #===========================================================================
+
+    def testPowerBadLength(self):
+        """Tests passing power an incorrect length list"""
+        def setPower():
+            self.node.power = ['banana']
+
+        self.assertRaises(
+            ValueError,
+            setPower
+        )
+
+    #===========================================================================
+
+    def testPowerBecomesTuple(self):
+        """Tests power is converted to tuple from list"""
+
+        power = [1.3782, 278.32, 0.738378233782]
+
+        self.node.power = power
+
+        self.assertEqual(
+            tuple(power),
+            self.node.power
+        )
+
 
 # _sanitize() ==================================================================
 
