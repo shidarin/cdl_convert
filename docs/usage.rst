@@ -113,7 +113,7 @@ the metadata attribute.
 
 .. note::
     All of these values should be a single string with the exception of the
-    ``desc``, because XML ``cc``s, ``cdl``s, and ``ccc``s can actually have
+    ``desc``, because XML ``cc`` , ``cdl`` , and ``ccc`` can actually have
     an infinite number of descriptions at different levels, this attribute
     should be set to a list of tuple value pairs, with one value being the level
     of XML the description was encountered on (root or lower) and the other being the
