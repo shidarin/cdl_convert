@@ -4,6 +4,15 @@ CDL Convert
 
 |PyPI Version|\ |Build Status|\ |Coverage Status|\ |Code Health|
 
+- **Author/Maintainer:** Sean Wallitsch
+- **Email:** shidarin@alphamatte.com
+- **License:** MIT
+- **Status:** Development
+- **Docs:** http://cdl-convert.readthedocs.org/
+- **GitHub:** https://github.com/shidarin/cdl_convert
+- **PyPI:** https://pypi.python.org/pypi/cdl_convert
+- **Python Versions:** 2.6-3.4
+
 Introduction
 ------------
 
