@@ -164,9 +164,6 @@ class AscCdl(object):  # pylint: disable=R0902
 
     **Attributes:**
 
-        desc : (str)
-            Comments and notes on the correction. Defaults to None.
-
         file_in : (str)
             Filepath used to create this CDL.
 
@@ -183,11 +180,8 @@ class AscCdl(object):  # pylint: disable=R0902
                 cc_ref:
                     This is a reference to another CDL's unique id.
 
-                desc: [(int, str)]
-                    Comments and notes on the correction, this is a list of
-                    tuple pairs with the first index being an int representing
-                    the *layer* the description note was found on, and the
-                    second being the actual string of the description.
+                desc: [(str)]
+                    Comments and notes on the correction.
 
                 input_desc:
                     Description of the color space, format and
@@ -199,33 +193,13 @@ class AscCdl(object):  # pylint: disable=R0902
                 viewing_desc:
                     Viewing device, settings and environment.
 
+        sat_node : ( :class:`SatNode` )
+            Contains a reference to a single instance of :class:`SatNode` ,
+            which contains the saturation value and descriptions.
 
-        offset : [float, float, float]
-            An rgb list representing the offset, which raises or lowers the
-            input brightness while holding the slope constant.
-
-            default: [0.0, 0.0, 0.0]
-
-        power : [float, float, float]
-            An rgb list representing the power, which is the only function that
-            changes the response curve of the function. Note that this has the
-            opposite response to adjustments than a traditional gamma operator.
-            These values must be positive.
-
-            default: [1.0, 1.0, 1.0]
-
-        sat : (float)
-            A single float to adjust the relative saturation of all three color
-            channels. Calculations use the rec709 implementation of saturation.
-
-            default: 1.0
-
-        slope : [float, float, float]
-            An rgb list representing the slope, which changes the slope of the
-            input without shifting the black level established by the offset.
-            These values must be positive.
-
-            default: [1.0, 1.0, 1.0]
+        sop_node : ( :class:`SopNode` )
+            Contains a reference to a single instance of :class:`SopNode` ,
+            which contains the slope, offset, power values and descriptions.
 
     """
 
@@ -242,16 +216,16 @@ class AscCdl(object):  # pylint: disable=R0902
         # Each ID should be unique
         self._cc_id = _sanitize(cc_id)
 
-        # ASC_SOP attributes
-        self.sop_node = None
-
         # ASC_SAT attribute
         self.sat_node = None
+
+        # ASC_SOP attributes
+        self.sop_node = None
 
         # Metadata
         self.metadata = {
             'cc_ref': None,
-            'desc': None,
+            'desc': [],
             'input_desc': None,
             'media_ref': None,
             'viewing_desc': None
@@ -278,56 +252,56 @@ class AscCdl(object):  # pylint: disable=R0902
     def offset(self):
         """Returns list of RGB offset values"""
         if not self.sop_node:
-            self.sop_node = SopNode()
+            self.sop_node = SopNode(self)
         return self.sop_node.offset
 
     @offset.setter
     def offset(self, offset_rgb):
         """Runs tests and converts offset rgb values before setting"""
         if not self.sop_node:
-            self.sop_node = SopNode()
+            self.sop_node = SopNode(self)
         self.sop_node.offset = offset_rgb
 
     @property
     def power(self):
         """Returns list of RGB power values"""
         if not self.sop_node:
-            self.sop_node = SopNode()
+            self.sop_node = SopNode(self)
         return self.sop_node.power
 
     @power.setter
     def power(self, power_rgb):
         """Runs tests and converts power rgb values before setting"""
         if not self.sop_node:
-            self.sop_node = SopNode()
+            self.sop_node = SopNode(self)
         self.sop_node.power = power_rgb
 
     @property
     def slope(self):
         """Returns list of RGB slope values"""
         if not self.sop_node:
-            self.sop_node = SopNode()
+            self.sop_node = SopNode(self)
         return self.sop_node.slope
 
     @slope.setter
     def slope(self, slope_rgb):
         """Runs tests and converts slope rgb values before setting"""
         if not self.sop_node:
-            self.sop_node = SopNode()
+            self.sop_node = SopNode(self)
         self.sop_node.slope = slope_rgb
 
     @property
     def sat(self):
         """Returns float value for saturation"""
         if not self.sat_node:
-            self.sat_node = SatNode()
+            self.sat_node = SatNode(self)
         return self.sat_node.sat
 
     @sat.setter
     def sat(self, sat_value):
         """Makes sure provided sat value is a positive float"""
         if not self.sat_node:
-            self.sat_node = SatNode()
+            self.sat_node = SatNode(self)
         self.sat_node.sat = sat_value
 
     # methods =================================================================
@@ -344,35 +318,74 @@ class AscCdl(object):  # pylint: disable=R0902
 # ==============================================================================
 
 
-class ColorNodeBase(object):
-    """Base class for SOP and SAT nodes"""
+class ColorNodeBase(object):  # pylint: disable=R0903
+    """Base class for SOP and SAT nodes
+
+    **Attributes:**
+
+        desc : [str]
+            Since both SAT and SOP nodes can contain an infinite number of
+            descriptions, the desc attribute is a list, allowing us to store
+            every single description found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list.
+
+    """
     def __init__(self):
         self._desc = []
 
     @property
     def desc(self):
+        """Returns the list of descriptions"""
         return self._desc
 
     @desc.setter
     def desc(self, value):
+        """Adds an entry to the descriptions"""
         self._desc.append(value)
 
 # ==============================================================================
 
 
 class SatNode(ColorNodeBase):
-    """Color node that contains saturation data"""
+    """Color node that contains saturation data.
+
+    **Class Attributes:**
+
+        element_names : [str]
+            Contains a list of XML Elements that refer to this class for use
+            in parsing XML files.
+
+    **Attributes:**
+
+        parent : ( :class:`AscCdl` )
+            The parent :class:`AscCdl` instance that created this instance.
+
+        sat : (float)
+            The saturation value (to be applied with Rec 709 coefficients) is
+            stored here. Saturation is the last operation to be applied when
+            applying a CDL.
+
+    """
 
     # XML Fields for SopNodes can be one of these names:
-    element_names = ['SATNode', 'ASC_SAT']
+    element_names = ['ASC_SAT', 'SATNode']
 
-    def __init__(self):
+    def __init__(self, parent):
         super(SatNode, self).__init__()
 
+        self._parent = parent
         self._sat = 1.0
 
     @property
+    def parent(self):
+        """Returns which :class:`AscCdl` created this SatNode"""
+        return self._parent
+
+    @property
     def sat(self):
+        """Returns the protected sat attribute"""
         return self._sat
 
     @sat.setter
@@ -413,20 +426,71 @@ class SatNode(ColorNodeBase):
 
 
 class SopNode(ColorNodeBase):
-    """Color node that contains slope, offset and power data"""
+    """Color node that contains slope, offset and power data.
+
+    slope, offset and saturation are stored internally as lists, but always
+    returned as tuples to prevent index assignment from being successful. This
+    protects the user from inadvertently setting a single value in the list
+    to be a non-valid value, which might result in values not being floats or
+    even numbers at all.
+
+    **Class Attributes:**
+
+        element_names : [str]
+            Contains a list of XML Elements that refer to this class for use
+            in parsing XML files.
+
+    **Attributes:**
+
+        parent : ( :class:`AscCdl` )
+            The parent :class:`AscCdl` instance that created this instance.
+
+        slope : (float, float, float)
+            An rgb tuple representing the slope, which changes the slope of the
+            input without shifting the black level established by the offset.
+            These values must be positive. If you set this attribute with a
+            single value, it will be copied over all 3 colors.
+
+            default: (1.0, 1.0, 1.0)
+
+        offset : (float, float, float)
+            An rgb tuple representing the offset, which raises or lowers the
+            input brightness while holding the slope constant. If you set this
+            attribute with a single value, it will be copied over all 3 colors.
+
+            default: (0.0, 0.0, 0.0)
+
+        power : (float, float, float)
+            An rgb tuple representing the power, which is the only function that
+            changes the response curve of the function. Note that this has the
+            opposite response to adjustments than a traditional gamma operator.
+            These values must be positive. If you set this attribute with a
+            single value, it will be copied over all 3 colors.
+
+            default: (1.0, 1.0, 1.0)
+
+    """
 
     # XML Fields for SopNodes can be one of these names:
-    element_names = ['SOPNode', 'ASC_SOP']
+    element_names = ['ASC_SOP', 'SOPNode']
 
-    def __init__(self):
+    def __init__(self, parent):
         super(SopNode, self).__init__()
+
+        self._parent = parent
 
         self._slope = [1.0, 1.0, 1.0]
         self._offset = [0.0, 0.0, 0.0]
         self._power = [1.0, 1.0, 1.0]
 
     @property
+    def parent(self):
+        """Returns which :class:`AscCdl` created this SopNode"""
+        return self._parent
+
+    @property
     def slope(self):
+        """Returns the slope as an tuple"""
         return tuple(self._slope)
 
     @slope.setter
@@ -503,6 +567,7 @@ class SopNode(ColorNodeBase):
 
     @property
     def offset(self):
+        """Returns the offset as a tuple"""
         return tuple(self._offset)
 
     @offset.setter
@@ -562,7 +627,9 @@ class SopNode(ColorNodeBase):
 
     @property
     def power(self):
+        """Returns the power as a tuple"""
         return tuple(self._power)
+
     @power.setter
     def power(self, value):
         """Runs tests and converts power rgb values before setting"""
