@@ -338,12 +338,15 @@ class ColorNodeBase(object):  # pylint: disable=R0903
     @property
     def desc(self):
         """Returns the list of descriptions"""
-        return self._desc
+        return tuple(self._desc)
 
     @desc.setter
     def desc(self, value):
         """Adds an entry to the descriptions"""
-        self._desc.append(value)
+        if type(value) in [list, tuple]:
+            self._desc.extend(value)
+        else:
+            self._desc.append(value)
 
 # ==============================================================================
 
