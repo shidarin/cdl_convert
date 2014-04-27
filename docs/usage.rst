@@ -19,7 +19,7 @@ the ``-o`` flag.
 ::
     $ cdl_convert ./di_v001.flex -o cc,cdl
 
-Sometimes it might be nessicary to disable cdl_convert's auto-detection of the
+Sometimes it might be necessary to disable cdl_convert's auto-detection of the
 input file format. This can be done with the ``-i`` flag.
 ::
     $ cdl_convert ./ca102_x34.cdl -i cdl
@@ -91,13 +91,19 @@ An :class:`AscCdl` is created with the 10 required values (RGB values for slope,
 offset and power, and a single float for saturation) set to their defaults.
 
     >>> cc.slope
-    [1.0, 1.0, 1.0]
+    (1.0, 1.0, 1.0)
     >>> cc.offset
-    [0.0, 0.0, 0.0]
+    (0.0, 0.0, 0.0)
     >>> cc.power
-    [1.0, 1.0, 1.0]
+    (1.0, 1.0, 1.0)
     >>> cc.sat
     1.0
+
+.. note::
+    ``slope``, ``offset``, ``power`` and ``sat`` are convenience properties that
+    actually reference two child objects of :class:`AscCdl` , a :class:`SopNode`
+    and a :class:`SatNode` . Calling them via ``cc.power`` is the same as
+    calling ``cc.sop_node.power``.
 
 Other, optional parameters are set to None, and accessible as a dictionary under
 the metadata attribute.
@@ -113,11 +119,9 @@ the metadata attribute.
 
 .. note::
     All of these values should be a single string with the exception of the
-    ``desc``, because XML ``cc`` , ``cdl`` , and ``ccc`` can actually have
-    an infinite number of descriptions at different levels, this attribute
-    should be set to a list of tuple value pairs, with one value being the level
-    of XML the description was encountered on (root or lower) and the other being the
-    text of the description.
+    ``desc``, because XML formats can contain an infinite number of ``desc``
+    elements. Desc should be a list, with each entry from the CDL level being
+    it's own string in that list.
 
 .. warning::
     ``desc`` might move back into it's own protected attribute with a setter
@@ -149,11 +153,11 @@ it found on the file now exist on the instance of :class:`AscCdl`.
 
     >>> cc = cdl.parse_cc('./xf/015.cc')[0]
     >>> cc.slope
-    [1.02401, 1.00804, 0.89562]
+    (1.02401, 1.00804, 0.89562)
     >>> cc.offset
-    [-0.00864, -0.00261, 0.03612]
+    (-0.00864, -0.00261, 0.03612)
     >>> cc.power
-    [1.0, 1.0, 1.0]
+    (1.0, 1.0, 1.0)
     >>> cc.sat
     1.2
     >>> cc.cc_id
@@ -183,46 +187,30 @@ number is positive.
 
     >>> cc.slope = ('1.234', 5, 273891.37823)
     >>> cc.slope
-    [1.234, 5.0, 273891.37823]
-    >>> cc.offset = [-0.0013, 0.097, 0.001]
+    (1.234, 5.0, 273891.37823)
+    >>> cc.offset = (-0.0013, 0.097, 0.001)
     >>> cc.offset
-    [-0.0013, 0.097, 0.001]
-    >>> cc.power = [-0.01, 1.0, 1.0]
+    (-0.0013, 0.097, 0.001)
+    >>> cc.power = (-0.01, 1.0, 1.0)
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
       File "cdl_convert/cdl_convert.py", line 352, in power
         raise ValueError("Power values must not be negative")
     ValueError: Power values must not be negative
-    >>> cc.power = [1.01, 1.007]
+    >>> cc.power = (1.01, 1.007)
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
       File "cdl_convert/cdl_convert.py", line 336, in power
         raise ValueError("Power must be set with all three RGB values")
     ValueError: Power must be set with all three RGB values
 
-.. warning::
-    It is possible to set a color value on the SOP directly by index, but this
-    skips all checks and conversions.
+It's also possible to set the SOP values with a single value, and have it 
+copy itself across all three colors. Setting SOP values this way mimics how
+color corrections typically start out.
 
-    >>> cc.slope[1] = 283.0
+    >>> cc.slope = 1.2
     >>> cc.slope
-    [1.234, 283.0, 273891.37823]
-    >>> cc.slope[1] = 'egg'
-    >>> cc.slope[1]
-    'egg'
-    >>> cc.slope
-    [1.234, 'egg', 273891.37823]
-    >>> cc.slope[1] = '2.5'
-    >>> cc.slope
-    [1.234, '2.5', 273891.37823]
-    >>> cc.slope[1] = -1.0
-    >>> cc.slope
-    [1.234, -1.0, 273891.37823]
-
-    As you can see, we were successful in setting the slope values we wanted, but none
-    of the values we set were checked to see if they were valid. This resulted in us
-    setting the green value of the slope to a non-numeric string, a numeric string,
-    and a negative value.
+    (1.2, 1.2, 1.2)
 
 Saturation
 ^^^^^^^^^^

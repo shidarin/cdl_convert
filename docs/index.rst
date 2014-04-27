@@ -37,6 +37,7 @@ different formats:
 -  Film Log EDL Exchange (FLEx)
 -  CMX EDL
 -  XML Color Correction (cc)
+-  XML Color Decision List (cdl)
 -  XML Color Correction Collection (ccc)
 
 Unofficial Formats:

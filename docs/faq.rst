@@ -27,12 +27,21 @@ CDL Format Support
 Project Structure
 =================
 
-- Why are all the parsers and writers functions, instead of methods on the :class:`AscCdl` class?
-    This seemed the current best approach for it's place in the script converter
-    that forms a backbone of this project right now. It's very possible that in
-    the future, :class:`AscCdl` will contain methods for converting its values to a
-    string object ready for writing. It's unlikely that :class:`AscCdl` will contain
-    methods for parsing, as different cdl formats can contain multiple cdls.
+- Why are all the parsers and writers functions, instead of methods on the :class:`AscCdl` class? to
+    This seemed the best approach for it's place in the script converter
+    that forms a backbone of this project. As support for the more complicated
+    formats grows, It's very like that export formats that write out a single
+    file per CDL will live as methods of :class:`AscCdl` , and export formats
+    that write out multiple CDLs will live as methods of the yet unwritten
+    container class.
+
+    It's extremely unlikely that the parser functions will ever move to be
+    methods of a class (either :class:`AscCdl` or the container) as it wouldn't
+    make logical sense to instantiate the class, call a parse method of that
+    class, then create more copies of itself.
+
+    At some point it may be desirable to create a class representing the input
+    file, and at that point that class would definitely contain parse methods.
 
 - Why the underscore?
     ``cdl_convert`` started as a simple script to convert from one format to

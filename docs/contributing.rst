@@ -15,6 +15,7 @@ Please, *please*, **please** submit samples of the following formats:
 - ALE
 - CMX
 - CCC
+- CDL
 
 These are complex formats, and seeing real world samples helps write tests
 that ensure correct parsing of real world EDLs and CDLs. If you don't even see
@@ -91,6 +92,10 @@ If your pull request adds a feature but lacks tests then it will be **rejected**
 
 Tests are written using the standard unittest framework. Please keep test cases
 as simple as possible while maintaining a good coverage of the code you added.
+
+.. warning::
+    Tests are currently written in the style of unittest with camelCased
+    method & variable names. Please follow :pep:`8` otherwise.
 
 Don't mix code changes with whitespace cleanup
 ----------------------------------------------
