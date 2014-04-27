@@ -243,14 +243,10 @@ class AscCdl(object):  # pylint: disable=R0902
         self._cc_id = _sanitize(cc_id)
 
         # ASC_SOP attributes
-        self._sop = {
-            'slope': [1.0, 1.0, 1.0],
-            'offset': [0.0, 0.0, 0.0],
-            'power': [1.0, 1.0, 1.0]
-        }
+        self.sop_node = None
 
         # ASC_SAT attribute
-        self._sat = 1.0
+        self.sat_node = None
 
         # Metadata
         self.metadata = {
@@ -281,113 +277,58 @@ class AscCdl(object):  # pylint: disable=R0902
     @property
     def offset(self):
         """Returns list of RGB offset values"""
-        return self._sop['offset']
+        if not self.sop_node:
+            self.sop_node = SopNode()
+        return self.sop_node.offset
 
     @offset.setter
     def offset(self, offset_rgb):
         """Runs tests and converts offset rgb values before setting"""
-        # Offset must be a list with 3 values.
-        try:
-            assert len(offset_rgb) == 3
-        except AssertionError:
-            raise ValueError("Offset must be set with all three RGB values")
-        try:
-            assert type(offset_rgb) in [list, tuple]
-        except AssertionError:
-            raise TypeError("Offset must be a list or tuple")
-
-        offset_rgb = list(offset_rgb)
-
-        for i in xrange(len(offset_rgb)):
-            try:
-                offset_rgb[i] = float(offset_rgb[i])
-            except ValueError:
-                raise TypeError("Offset values must be ints or floats")
-
-        self._sop['offset'] = offset_rgb
+        if not self.sop_node:
+            self.sop_node = SopNode()
+        self.sop_node.offset = offset_rgb
 
     @property
     def power(self):
         """Returns list of RGB power values"""
-        return self._sop['power']
+        if not self.sop_node:
+            self.sop_node = SopNode()
+        return self.sop_node.power
 
     @power.setter
     def power(self, power_rgb):
         """Runs tests and converts power rgb values before setting"""
-        # Slope must be a list with 3 values, all of which are positive floats
-        try:
-            assert len(power_rgb) == 3
-        except AssertionError:
-            raise ValueError("Power must be set with all three RGB values")
-        try:
-            assert type(power_rgb) in [list, tuple]
-        except AssertionError:
-            raise TypeError("Power must be a list or tuple")
-
-        power_rgb = list(power_rgb)
-
-        for i in xrange(len(power_rgb)):
-            try:
-                power_rgb[i] = float(power_rgb[i])
-            except ValueError:
-                raise TypeError("Power values must be ints or floats")
-            try:
-                assert power_rgb[i] >= 0.0
-            except AssertionError:
-                raise ValueError("Power values must not be negative")
-
-        self._sop['power'] = power_rgb
+        if not self.sop_node:
+            self.sop_node = SopNode()
+        self.sop_node.power = power_rgb
 
     @property
     def slope(self):
         """Returns list of RGB slope values"""
-        return self._sop['slope']
+        if not self.sop_node:
+            self.sop_node = SopNode()
+        return self.sop_node.slope
 
     @slope.setter
     def slope(self, slope_rgb):
         """Runs tests and converts slope rgb values before setting"""
-        # Slope must be a list with 3 values, all of which are positive floats
-        try:
-            assert len(slope_rgb) == 3
-        except AssertionError:
-            raise ValueError("Slope must be set with all three RGB values")
-        try:
-            assert type(slope_rgb) in [list, tuple]
-        except AssertionError:
-            raise TypeError("Slope must be a list or tuple")
-
-        slope_rgb = list(slope_rgb)
-
-        for i in xrange(len(slope_rgb)):
-            try:
-                slope_rgb[i] = float(slope_rgb[i])
-            except ValueError:
-                raise TypeError("Slope values must be ints or floats")
-            try:
-                assert slope_rgb[i] >= 0.0
-            except AssertionError:
-                raise ValueError("Slope values must not be negative")
-
-        self._sop['slope'] = slope_rgb
+        if not self.sop_node:
+            self.sop_node = SopNode()
+        self.sop_node.slope = slope_rgb
 
     @property
     def sat(self):
         """Returns float value for saturation"""
-        return self._sat
+        if not self.sat_node:
+            self.sat_node = SatNode()
+        return self.sat_node.sat
 
     @sat.setter
     def sat(self, sat_value):
         """Makes sure provided sat value is a positive float"""
-        try:
-            sat_value = float(sat_value)
-        except ValueError:
-            raise TypeError("Saturation must be a float or int")
-        try:
-            assert sat_value >= 0.0
-        except AssertionError:
-            raise ValueError("Saturation must be a positive value")
-
-        self._sat = float(sat_value)
+        if not self.sat_node:
+            self.sat_node = SatNode()
+        self.sat_node.sat = sat_value
 
     # methods =================================================================
 
@@ -426,7 +367,7 @@ class SatNode(ColorNodeBase):
     element_names = ['SATNode', 'ASC_SAT']
 
     def __init__(self):
-        super(SopNode, self).__init__()
+        super(SatNode, self).__init__()
 
         self._sat = 1.0
 
@@ -450,7 +391,7 @@ class SatNode(ColorNodeBase):
                 )
         # Number must be positive
         if type(value) in [float, int]:
-            if value > 0:
+            if value < 0:
                 raise ValueError(
                     'Error setting saturation with value: "{value}". '
                     'Values must not be negative'.format(
@@ -504,7 +445,7 @@ class SopNode(ColorNodeBase):
                 )
         # If given as a single number, that number must be positive
         if type(value) in [float, int]:
-            if value > 0:
+            if value < 0:
                 raise ValueError(
                     'Error setting slope with value: "{value}". '
                     'Values must not be negative'.format(
@@ -638,7 +579,7 @@ class SopNode(ColorNodeBase):
                 )
         # If given as a single number, that number must be positive
         if type(value) in [float, int]:
-            if value > 0:
+            if value < 0:
                 raise ValueError(
                     'Error setting power with value: "{value}". '
                     'Values must not be negative'.format(
@@ -1121,7 +1062,7 @@ def write_cc(cdl):
 def write_cdl(cdl):
     """Writes the AscCdl to a space separated .cdl file"""
 
-    values = cdl.slope[:]
+    values = list(cdl.slope)
     values.extend(cdl.offset)
     values.extend(cdl.power)
     values.append(cdl.sat)
