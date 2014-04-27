@@ -3,6 +3,24 @@ import codecs
 import os
 import re
 
+# Instructions for setting up a dist of cdl_convert
+#
+# Recommended to create a new clone of a fresh master before doing this,
+# and trashing the repo afterwards.
+#
+# 1. Run tests
+#       python setup.py test
+# 2. Build Sphinx Documentation
+#       python setup.py build_sphinx
+# 3. Copy the html docs the docs_html folder
+#       cp -R docs/_build/html/ ./docs_html/
+# 3. Build normal dist and wheel dist
+#       python setup.py sdist
+#       python setup.py bdist_wheel
+# 4. Check the built dists to make sure they are correct
+# 5. Upload
+#       python setup.py sdist bdist_wheel upload
+
 here = os.path.abspath(os.path.dirname(__file__))
 main_file = os.path.join(here, 'cdl_convert', 'cdl_convert.py')
 
