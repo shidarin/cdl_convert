@@ -29,30 +29,6 @@ the Film and TV industries.
 
 **CDLConvert is not associated with the American Society of Cinematographers**
 
-## Conversions
-
-Currently we support converting from:
-
-* ALE
-* CC
-* FLEx
-* CDL
-
-To:
-
-* CC
-* CDL
-
-With support for both from and to expanding in the future.
-
-## Code
-
-CDL Convert is written for Python 2.6, including Python 3.2 and 3.4. Code is
-written for PEP 8 compliance, although at the time of this writing function &
-variable naming uses camelCasing. Docstrings follow Google code standards.
-
-Development uses Git Flow model.
-
 ## License
 
 The MIT License (MIT)
@@ -177,17 +153,16 @@ class AscCdl(object):  # pylint: disable=R0902
     for an ASC CDL, as well as other metadata like shot names that typically
     accompanies a CDL.
 
-    Because these names are standardized by the ASC and it would be odd to
-    change them for the sake of a style convention, the attribute names will
-    follow the ASC schema. Descriptions for some of these attributes are
-    paraphrasing the ASC CDL documentation. For more information on the ASC CDL
-    standard and the operations described below, you can obtain the ASC CDL
+    These names are standardized by the ASC and where possible the attribute
+    names will follow the ASC schema. Descriptions for some of these attributes
+    are paraphrasing the ASC CDL documentation. For more information on the ASC
+    CDL standard and the operations described below, you can obtain the ASC CDL
     implementor-oriented documentation by sending an email to:
     asc-cdl at theasc dot com
 
     Order of operations is Slope, Offset, Power, then Saturation.
 
-    Attributes:
+    **Attributes:**
 
         desc : (str)
             Comments and notes on the correction. Defaults to None.
@@ -195,33 +170,41 @@ class AscCdl(object):  # pylint: disable=R0902
         file_in : (str)
             Filepath used to create this CDL.
 
-            Required attribute.
-
         file_out : (str)
             Filepath this CDL will be written to.
 
         cc_id : (str)
             Unique XML URI to identify this CDL. Often a shot or sequence name.
 
-            Required attribute.
-
         metadata : {str}
             metadata is a dictionary of the various descriptions that a CDL
             might have. Included are the 5 default:
 
-                cc_ref : This is a reference to another CDL's unique id.
-                desc : Comments and notes on the correction.
-                input_desc : Description of the color space, format and
+                cc_ref:
+                    This is a reference to another CDL's unique id.
+
+                desc: [(int, str)]
+                    Comments and notes on the correction, this is a list of
+                    tuple pairs with the first index being an int representing
+                    the *layer* the description note was found on, and the
+                    second being the actual string of the description.
+
+                input_desc:
+                    Description of the color space, format and
                     properties of the input images.
-                media_ref : A reference link to an image or an image sequence.
-                viewing_desc : Viewing device, settings and environment.
+
+                media_ref:
+                    A reference link to an image or an image sequence.
+
+                viewing_desc:
+                    Viewing device, settings and environment.
 
 
         offset : [float, float, float]
             An rgb list representing the offset, which raises or lowers the
             input brightness while holding the slope constant.
 
-            The default offset value is 0.0
+            default: [0.0, 0.0, 0.0]
 
         power : [float, float, float]
             An rgb list representing the power, which is the only function that
@@ -229,18 +212,20 @@ class AscCdl(object):  # pylint: disable=R0902
             opposite response to adjustments than a traditional gamma operator.
             These values must be positive.
 
-            The default power value is 1.0
+            default: [1.0, 1.0, 1.0]
 
         sat : (float)
             A single float to adjust the relative saturation of all three color
             channels. Calculations use the rec709 implementation of saturation.
+
+            default: 1.0
 
         slope : [float, float, float]
             An rgb list representing the slope, which changes the slope of the
             input without shifting the black level established by the offset.
             These values must be positive.
 
-            The default slope value is 1.0
+            default: [1.0, 1.0, 1.0]
 
     """
 
@@ -449,15 +434,15 @@ def _sanitize(name):
 def parse_ale(edl_file):
     """Parses an Avid Log Exchange (ALE) file for CDLs
 
-    Args:
+    **Args:**
         file : (str)
             The filepath to the ALE EDL
 
-    Returns:
-        [<AscCdl>]
+    **Returns:**
+        [:class:`AscCdl`]
             A list of CDL objects retrieved from the ALE
 
-    Raises:
+    **Raises:**
         N/A
 
     An ALE file is traditionally gathered during a telecine transfer using
@@ -531,15 +516,15 @@ def parse_ale(edl_file):
 def parse_cc(cdl_file):
     """Parses a .cc file for ASC CDL information
 
-    Args:
+    **Args:**
         file : (str)
             The filepath to the CC
 
-    Return:
-        [<AscCdl>]
+    **Returns:**
+        [:class:`AscCdl`]
             A list of CDL objects retrieved from the CC
 
-    Raises:
+    **Raises:**
         N/A
 
     A CC file is really only a single element of a larger CDL or CCC XML file,
@@ -547,21 +532,22 @@ def parse_cc(cdl_file):
     CDLs, rather than the much bulkier CDL file.
 
     A sample CC XML file has text like:
-
-    <ColorCorrection id="cc03340">
-        <SOPNode>
-            <Description>change +1 red, contrast boost</Description>
-            <Slope>1.2 1.3 1.4</Slope>
-            <Offset>0.3 0.0 0.0</Offset>
-            <Power>1.0 1.0 1.0</Power>
-        </SOPNode>
-        <SatNode>
-            <Saturation>1.2</Saturation>
-        </SatNode>
-    </ColorCorrection>
+    ::
+        <ColorCorrection id="cc03340">
+            <SOPNode>
+                <Description>change +1 red, contrast boost</Description>
+                <Slope>1.2 1.3 1.4</Slope>
+                <Offset>0.3 0.0 0.0</Offset>
+                <Power>1.0 1.0 1.0</Power>
+            </SOPNode>
+            <SatNode>
+                <Saturation>1.2</Saturation>
+            </SatNode>
+        </ColorCorrection>
 
     We'll check to see if each of these elements exist, and override the AscCdl
     defaults if we find them.
+
     """
     root = ElementTree.parse(cdl_file).getroot()
 
@@ -614,15 +600,15 @@ def parse_cc(cdl_file):
 def parse_cdl(cdl_file):
     """Parses a space separated .cdl file for ASC CDL information.
 
-    Args:
+    **Args:**
         file : (str)
             The filepath to the CDL
 
-    Returns:
-        [<AscCdl>]
+    **Returns:**
+        [:class:`AscCdl`]
             A list with only the single CDL object retrieved from the SS CDL
 
-    Raises:
+    **Raises:**
         N/A
 
     A space separated cdl file is an internal Rhythm & Hues format used by
@@ -633,7 +619,7 @@ def parse_cdl(cdl_file):
     separated elements that correspond to the ten ASC CDL elements in order of
     operations.
 
-    SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat
+    ``SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat``
 
     """
     # Although we only parse one cdl file, we still want to return a list
@@ -670,15 +656,15 @@ def parse_cdl(cdl_file):
 def parse_flex(edl_file):
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
 
-    Args:
+    **Args:**
         file : (str)
             The filepath to the FLEx EDL
 
-    Return:
-        [<AscCdl>]
+    **Returns:**
+        [:class:`AscCdl`]
             A list of CDL objects retrieved from the FLEx
 
-    Raises:
+    **Raises:**
         N/A
 
     The DaVinci FLEx EDL is an odd duck, it's information conveyed via an
@@ -694,15 +680,21 @@ def parse_flex(edl_file):
 
     Some line numbers we care about, and the character indexes:
 
-        010 Project Title
-            10-79 Title
-        100 Indicates the start of a new 'record' (shot/take)
-        110 Slate Information
-            10-17 Scene
-            24-31 Take ID
-            42-49 Camera Reel ID
-        701 ASC SOP (This entry can be safely space separated)
-        702 ASC SAT (This entry can be safely space separated)
+    +--------+---------------+------------+---------------------------------+
+    | Line # | Line Name     | Char Index | Data Type                       |
+    +========+===============+============+=================================+
+    | 010    | Project Title | 10-79      | Title                           |
+    +--------+---------------+------------+---------------------------------+
+    | 100    | Slate Info    | 10-17      | Scene                           |
+    +--------+---------------+------------+---------------------------------+
+    |        |               | 24-31      | Take ID                         |
+    +--------+---------------+------------+---------------------------------+
+    |        |               | 42-49      | Camera Reel ID                  |
+    +--------+---------------+------------+---------------------------------+
+    | 701    | ASC SOP       | (This entry can be safely space separated)   |
+    +--------+---------------+------------+---------------------------------+
+    | 702    | ASC SAT       | (This entry can be safely space separated)   |
+    +--------+---------------+------------+---------------------------------+
 
     We'll try and default to using the Slate information to derive the
     resultant filename, however that information is optional. If no
