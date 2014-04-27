@@ -113,11 +113,11 @@ Frequently Asked Questions
     and create a request for the format? If creating a request for a format it
     helps immensely to have a sample of that format.
 
-- Why are all the parsers and writers functions, instead of methods on the :class:`AscCdl` class?
+- Why are all the parsers and writers functions, instead of methods on the AscCdl class?
     This seemed the current best approach for it's place in the script converter
     that forms a backbone of this project right now. It's very possible that in
-    the future, :class:`AscCdl` will contain methods for converting its values to a
-    string object ready for writing. It's unlikely that :class:`AscCdl` will contain
+    the future, AscCdl will contain methods for converting its values to a
+    string object ready for writing. It's unlikely that AscCdl will contain
     methods for parsing, as different cdl formats can contain multiple cdls.
 
 Contributing
