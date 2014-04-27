@@ -370,6 +370,8 @@ class SatNode(ColorNodeBase):
             stored here. Saturation is the last operation to be applied when
             applying a CDL.
 
+            sat can be set with a float, int or numeric string.
+
     """
 
     # XML Fields for SopNodes can be one of these names:
@@ -452,7 +454,8 @@ class SopNode(ColorNodeBase):
             An rgb tuple representing the slope, which changes the slope of the
             input without shifting the black level established by the offset.
             These values must be positive. If you set this attribute with a
-            single value, it will be copied over all 3 colors.
+            single value, it will be copied over all 3 colors. Any single value
+            given can be a float, int or numeric string.
 
             default: (1.0, 1.0, 1.0)
 
@@ -460,6 +463,7 @@ class SopNode(ColorNodeBase):
             An rgb tuple representing the offset, which raises or lowers the
             input brightness while holding the slope constant. If you set this
             attribute with a single value, it will be copied over all 3 colors.
+            Any single value given can be a float, int or numeric string.
 
             default: (0.0, 0.0, 0.0)
 
@@ -468,7 +472,9 @@ class SopNode(ColorNodeBase):
             changes the response curve of the function. Note that this has the
             opposite response to adjustments than a traditional gamma operator.
             These values must be positive. If you set this attribute with a
-            single value, it will be copied over all 3 colors.
+            single value, it will be copied over all 3 colors. Any single value
+            given can be a float, int or numeric string.
+
 
             default: (1.0, 1.0, 1.0)
 
