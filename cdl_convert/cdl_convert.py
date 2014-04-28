@@ -165,6 +165,13 @@ class AscCdl(object):  # pylint: disable=R0902
 
     Order of operations is Slope, Offset, Power, then Saturation.
 
+    **Class Attributes:**
+
+        members : {str}
+            All instanced :class:`AscCdl` are added to this member dictionary,
+            with their unique id being the key and the :class:`AscCdl` being
+            the value.
+
     **Attributes:**
 
         file_in : (str)
@@ -175,6 +182,10 @@ class AscCdl(object):  # pylint: disable=R0902
 
         cc_id : (str)
             Unique XML URI to identify this CDL. Often a shot or sequence name.
+
+            Changing this value does a check against the cls.members dictionary
+            to ensure the new id is open. If it is, the key is changed to the
+            new id and the id is changed.
 
         metadata : {str}
             metadata is a dictionary of the various descriptions that a CDL
@@ -206,6 +217,8 @@ class AscCdl(object):  # pylint: disable=R0902
 
     """
 
+    members = {}
+
     def __init__(self, cc_id, cdl_file):
         """Inits an instance of an ASC CDL"""
 
@@ -217,7 +230,18 @@ class AscCdl(object):  # pylint: disable=R0902
 
         # The cc_id is really the only required part of an ASC CDL.
         # Each ID should be unique
-        self._cc_id = _sanitize(cc_id)
+        cc_id = _sanitize(cc_id)
+        if cc_id in AscCdl.members.keys():
+            raise ValueError(
+                'Error initiating cc_id to "{cc_id}". This id is already a'
+                'registered id.'.format(
+                    cc_id=cc_id
+                )
+            )
+        self._cc_id = cc_id
+
+        # Register with member dictionary
+        AscCdl.members[self._cc_id] = self
 
         # ASC_SAT attribute
         self.sat_node = None
@@ -250,6 +274,10 @@ class AscCdl(object):  # pylint: disable=R0902
     def cc_id(self):
         """Returns unique color correction id field"""
         return self._cc_id
+
+    @cc_id.setter
+    def cc_id(self, value):
+        self._set_id(value)
 
     @property
     def offset(self):
@@ -306,6 +334,26 @@ class AscCdl(object):  # pylint: disable=R0902
         if not self.sat_node:
             self.sat_node = SatNode(self)
         self.sat_node.sat = sat_value
+
+    # private methods =========================================================
+
+    def _set_id(self, new_id):
+        """Changes the id field if the new id is unique"""
+        cc_id = _sanitize(new_id)
+        # Check if this id is already registered
+        if cc_id in AscCdl.members.keys():
+            raise ValueError(
+                'Error setting the cc_id to "{cc_id}". This id is already a '
+                'registered id.'.format(
+                    cc_id=cc_id
+                )
+            )
+        else:
+            # Clear the current id from the dictionary
+            AscCdl.members.pop(self._cc_id)
+            self._cc_id = cc_id
+            # Register the new id with the dictionary
+            AscCdl.members[self._cc_id] = self
 
     # methods =================================================================
 

@@ -155,6 +155,11 @@ class TestAscCdl(unittest.TestCase):
         # Note that the file doesn't really need to exist for our test purposes
         self.cdl = cdl_convert.AscCdl(cc_id='uniqueId', cdl_file='../testcdl.cc')
 
+    def tearDown(self):
+        # We need to clear the AscCdl member dictionary so we don't have to
+        # worry about non-unique ids.
+        cdl_convert.AscCdl.members = {}
+
     #===========================================================================
     # TESTS
     #===========================================================================
@@ -203,14 +208,50 @@ class TestAscCdl(unittest.TestCase):
 
     #===========================================================================
 
-    def testIdSetException(self):
-        """Tests that exception raised when attempting to set cdl after init"""
-        def testId():
-            self.cdl.cc_id = 'betterId'
+    def testIdNonUniqueIdOnInit(self):
+        """Tests that exception raised when initializing a non-unique id."""
 
         self.assertRaises(
-            AttributeError,
-            testId
+            ValueError,
+            cdl_convert.AscCdl,
+            'uniqueId',
+            'file'
+        )
+
+    #===========================================================================
+
+    def testIdNonUniqueIdOnSet(self):
+        """Tests that exception raised when setting a non-unique id."""
+        def setId(cdl):
+            cdl.cc_id = 'uniqueId'
+
+        new = cdl_convert.AscCdl('betterId', 'file')
+
+        self.assertRaises(
+            ValueError,
+            setId,
+            new
+        )
+
+    #===========================================================================
+
+    def testIdRenameDictionary(self):
+        """Tests that dict entries are removed following a rename"""
+
+        new = cdl_convert.AscCdl('betterId', 'file')
+
+        self.assertTrue(
+            'betterId' in cdl_convert.AscCdl.members.keys()
+        )
+
+        new.cc_id = 'betterishId'
+
+        self.assertFalse(
+            'betterId' in cdl_convert.AscCdl.members.keys()
+        )
+
+        self.assertTrue(
+            'betterishId' in cdl_convert.AscCdl.members.keys()
         )
 
     #===========================================================================
@@ -549,6 +590,9 @@ class TestParseALEBasic(unittest.TestCase):
         # The system should clean these up automatically,
         # but we'll be neat.
         os.remove(self.filename)
+        # We need to clear the AscCdl member dictionary so we don't have to
+        # worry about non-unique ids.
+        cdl_convert.AscCdl.members = {}
 
     #===========================================================================
     # TESTS
@@ -734,6 +778,9 @@ class TestParseCCBasic(unittest.TestCase):
         # The system should clean these up automatically,
         # but we'll be neat.
         os.remove(self.filename)
+        # We need to clear the AscCdl member dictionary so we don't have to
+        # worry about non-unique ids.
+        cdl_convert.AscCdl.members = {}
 
     #===========================================================================
     # TESTS
@@ -1162,6 +1209,9 @@ class TestParseCDLBasic(unittest.TestCase):
         # The system should clean these up automatically,
         # but we'll be neat.
         os.remove(self.filename)
+        # We need to clear the AscCdl member dictionary so we don't have to
+        # worry about non-unique ids.
+        cdl_convert.AscCdl.members = {}
 
     #===========================================================================
     # TESTS
@@ -1265,6 +1315,11 @@ class TestWriteCDLBasic(unittest.TestCase):
 
         with mock.patch(builtins + '.open', self.mockOpen, create=True):
             cdl_convert.write_cdl(self.cdl)
+
+    def tearDown(self):
+        # We need to clear the AscCdl member dictionary so we don't have to
+        # worry about non-unique ids.
+        cdl_convert.AscCdl.members = {}
 
     #===========================================================================
     # TESTS
@@ -1374,6 +1429,9 @@ class TestParseFLExBasic(unittest.TestCase):
         # The system should clean these up automatically,
         # but we'll be neat.
         os.remove(self.filename)
+        # We need to clear the AscCdl member dictionary so we don't have to
+        # worry about non-unique ids.
+        cdl_convert.AscCdl.members = {}
 
     #===========================================================================
     # TESTS
@@ -1756,7 +1814,8 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdls = cdl_convert.parse_flex(self.filename)
+        self.raw_cdls = cdl_convert.parse_flex(self.filename)
+        self.cdls = self.raw_cdls[:]
         self.cdl1 = self.cdls[0]
         self.cdl2 = self.cdls[1]
         self.cdl3 = cdl_convert.AscCdl('bb94_x105_line3', self.filename)
@@ -1772,7 +1831,7 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
 
         self.assertEqual(
             2,
-            len(cdl_convert.parse_flex(self.filename))
+            len(self.raw_cdls)
         )
 
 # ColorNodeBase ================================================================
@@ -1787,6 +1846,11 @@ class TestColorNodeBase(unittest.TestCase):
 
     def setUp(self):
         self.node = cdl_convert.ColorNodeBase()
+
+    def tearDown(self):
+        # We need to clear the AscCdl member dictionary so we don't have to
+        # worry about non-unique ids.
+        cdl_convert.AscCdl.members = {}
 
     #===========================================================================
     # TESTS
@@ -2760,6 +2824,9 @@ class TestMain(unittest.TestCase):
         cdl_convert.OUTPUT_FORMATS = self.outputFormats
         sys.argv = self.sysargv
         sys.stdout = self.stdout
+        # We need to clear the AscCdl member dictionary so we don't have to
+        # worry about non-unique ids.
+        cdl_convert.AscCdl.members = {}
 
     #===========================================================================
     # TESTS
