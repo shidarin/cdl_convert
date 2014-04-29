@@ -271,7 +271,7 @@ class ColorCorrection(object):  # pylint: disable=R0902
 
     members = {}
 
-    def __init__(self, id, cdl_file):  #pylint: disable=W0622
+    def __init__(self, id, cdl_file):  # pylint: disable=W0622
         """Inits an instance of a ColorCorrection"""
 
         # File Attributes
@@ -1114,20 +1114,20 @@ def parse_flex(edl_file):
         sop = {}
         sat = None
 
-        def build_cdl(line_id, edl_path, sop_dict, sat_value, title_line):
-            """Builds and returns a cdl if sop/sat values found"""
-            cdl = ColorCorrection(line_id, edl_path)
+        def build_cc(line_id, edl_path, sop_dict, sat_value, title_line):
+            """Builds and returns a cc if sop/sat values found"""
+            cc = ColorCorrection(line_id, edl_path)
             if title_line:
-                cdl.metadata['desc'] = title_line
+                cc.metadata['desc'] = title_line
             if sop_dict:
                 # If it finds the 701 line, it will have all three
-                cdl.slope = sop_dict['slope']
-                cdl.offset = sop_dict['offset']
-                cdl.power = sop_dict['power']
+                cc.slope = sop_dict['slope']
+                cc.offset = sop_dict['offset']
+                cc.power = sop_dict['power']
             if sat_value:
-                cdl.sat = sat_value
+                cc.sat = sat_value
 
-            return cdl
+            return cc
 
         for line in lines:
             if line.startswith('100'):
@@ -1144,7 +1144,7 @@ def parse_flex(edl_file):
 
                 # If we already have values:
                 if sop or sat:
-                    cdl = build_cdl(cc_id, edl_file, sop, sat, title)
+                    cdl = build_cc(cc_id, edl_file, sop, sat, title)
                     cdls.append(cdl)
 
                 metadata = []
@@ -1188,7 +1188,7 @@ def parse_flex(edl_file):
 
     # If we found values at all:
     if sop or sat:
-        cdl = build_cdl(cc_id, edl_file, sop, sat, title)
+        cdl = build_cc(cc_id, edl_file, sop, sat, title)
         cdls.append(cdl)
 
     return cdls
