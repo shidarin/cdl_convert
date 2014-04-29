@@ -129,6 +129,7 @@ else:  # pragma: no cover
 # ==============================================================================
 
 __all__ = [
+    'ColorCollectionBase',
     'ColorCorrection',
     'ColorNodeBase',
     'SatNode',
@@ -143,6 +144,55 @@ __all__ = [
 
 # ==============================================================================
 # CLASSES
+# ==============================================================================
+
+
+class ColorCollectionBase(object):  # pylint: disable=R0903
+    """Base class for ColorDecisionList and ColorCorrectionCollection.
+
+    Collections need to store children and have access to descriptions,
+    input descriptions, and viewing descriptions.
+
+    **Attributes:**
+
+        desc : [str]
+            Since both SAT and SOP nodes can contain an infinite number of
+            descriptions, the desc attribute is a list, allowing us to store
+            every single description found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list, but desc can also be extended by passing it a list
+            or tuple.
+
+        input_desc : (str)
+            Description of the color space, format and properties of the input
+            images. Individual :class:`ColorCorrections` can override this.
+
+        viewing_desc : (str)
+            Viewing device, settings and environment. Individual
+            :class:`ColorCorrections` can override this.
+
+    """
+    def __init__(self):
+        self._desc = []
+        self.input_desc = None
+        self.viewing_desc = None
+
+    # Properties ==============================================================
+
+    @property
+    def desc(self):
+        """Returns the list of descriptions"""
+        return tuple(self._desc)
+
+    @desc.setter
+    def desc(self, value):
+        """Adds an entry to the descriptions"""
+        if type(value) in [list, tuple]:
+            self._desc.extend(value)
+        else:
+            self._desc.append(value)
+
 # ==============================================================================
 
 
@@ -390,6 +440,8 @@ class ColorNodeBase(object):  # pylint: disable=R0903
     def __init__(self):
         self._desc = []
 
+    # Properties ==============================================================
+
     @property
     def desc(self):
         """Returns the list of descriptions"""
@@ -438,6 +490,8 @@ class SatNode(ColorNodeBase):
 
         self._parent = parent
         self._sat = 1.0
+
+    # Properties ==============================================================
 
     @property
     def parent(self):
@@ -548,6 +602,8 @@ class SopNode(ColorNodeBase):
         self._slope = [1.0, 1.0, 1.0]
         self._offset = [0.0, 0.0, 0.0]
         self._power = [1.0, 1.0, 1.0]
+
+    # Properties ==============================================================
 
     @property
     def parent(self):

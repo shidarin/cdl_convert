@@ -6,8 +6,8 @@ API Reference
     All code for the following lives under cdl_convert.cdl_convert, and is
     imported into the local space of cdl_convert.
 
-Base Classes
-============
+Classes
+=======
 
 The class structure of ``cdl_convert`` mirrors the element structure of the
 defined XML schema for ``ccc``, ``cdl`` and ``cc`` files as defined by the
@@ -16,6 +16,14 @@ the format, and therefore it behooves the project to mimic their structure.
 
 However, where similar elements exist as entirely separate entities in the XML
 schema, they might have been combined here.
+
+ColorCollectionBase
+-------------------
+
+:class:`ColorDecisionList` and :class:`ColorCollection` use this class as a
+a base class, since they both are collections of other more specific classes.
+
+.. autoclass:: cdl_convert.ColorCollectionBase
 
 ColorCorrection
 ---------------
