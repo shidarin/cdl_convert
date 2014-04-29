@@ -1116,18 +1116,18 @@ def parse_flex(edl_file):
 
         def build_cc(line_id, edl_path, sop_dict, sat_value, title_line):
             """Builds and returns a cc if sop/sat values found"""
-            cc = ColorCorrection(line_id, edl_path)
+            col_cor = ColorCorrection(line_id, edl_path)
             if title_line:
-                cc.metadata['desc'] = title_line
+                col_cor.metadata['desc'] = title_line
             if sop_dict:
                 # If it finds the 701 line, it will have all three
-                cc.slope = sop_dict['slope']
-                cc.offset = sop_dict['offset']
-                cc.power = sop_dict['power']
+                col_cor.slope = sop_dict['slope']
+                col_cor.offset = sop_dict['offset']
+                col_cor.power = sop_dict['power']
             if sat_value:
-                cc.sat = sat_value
+                col_cor.sat = sat_value
 
-            return cc
+            return col_cor
 
         for line in lines:
             if line.startswith('100'):
