@@ -47,6 +47,134 @@ else:
 # TEST CLASSES
 #==============================================================================
 
+# ColorNodeBase ===============================================================
+
+
+class TestColorCollectionBase(unittest.TestCase):
+    """Tests the very simple base class ColorCollectionBase"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.node = cdl_convert.ColorCollectionBase()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testInit(self):
+        """Tests that on init desc is created and empty"""
+
+        self.assertEqual(
+            (),
+            self.node.desc
+        )
+
+    #==========================================================================
+
+    def testFirstSet(self):
+        """Tests setting desc to a string appends it to the list"""
+
+        self.node.desc = 'first description'
+
+        self.assertEqual(
+            ('first description', ),
+            self.node.desc
+        )
+
+    #==========================================================================
+
+    def testAppendAdditional(self):
+        """Tests that setting desc more than once appends to list"""
+
+        self.node.desc = 'first description'
+
+        self.assertEqual(
+            ('first description', ),
+            self.node.desc
+        )
+
+        self.node.desc = 'second description'
+
+        self.assertEqual(
+            ('first description', 'second description'),
+            self.node.desc
+        )
+
+    #==========================================================================
+
+    def testExtendWithList(self):
+        """Tests extending the desc with another list"""
+
+        # Bypass setter
+        self.node._desc = ['first description']
+
+        self.node.desc = ['second description', 'third description']
+
+        self.assertEqual(
+            ('first description', 'second description', 'third description'),
+            self.node.desc
+        )
+
+    #==========================================================================
+
+    def testExtendWithTuple(self):
+        """Tests extending the desc with another tuple"""
+
+        # Bypass setter
+        self.node._desc = ['first description']
+
+        self.node.desc = ('second description', 'third description')
+
+        self.assertEqual(
+            ('first description', 'second description', 'third description'),
+            self.node.desc
+        )
+
+    #==========================================================================
+
+    def testInputDesc(self):
+        """Tests that input_desc exists and defaults to none"""
+
+        self.assertTrue(
+            hasattr(self.node, 'input_desc')
+        )
+
+        self.assertEqual(
+            None,
+            self.node.input_desc
+        )
+
+        self.node.input_desc = 'Sunset with an Eizo'
+
+        self.assertEqual(
+            'Sunset with an Eizo',
+            self.node.input_desc
+        )
+
+    #==========================================================================
+
+    def testViewingDesc(self):
+        """Tests that viewing_desc exists and defaults to none"""
+
+        self.assertTrue(
+            hasattr(self.node, 'viewing_desc')
+        )
+
+        self.assertEqual(
+            None,
+            self.node.viewing_desc
+        )
+
+        self.node.viewing_desc = 'Darker with a tinge of blah'
+
+        self.assertEqual(
+            'Darker with a tinge of blah',
+            self.node.viewing_desc
+        )
+
 # ColorCorrection =============================================================
 
 
@@ -460,11 +588,6 @@ class TestColorNodeBase(unittest.TestCase):
 
     def setUp(self):
         self.node = cdl_convert.ColorNodeBase()
-
-    def tearDown(self):
-        # We need to clear the ColorCorrection member dictionary so we don't
-        # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
 
     #==========================================================================
     # TESTS
