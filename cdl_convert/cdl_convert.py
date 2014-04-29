@@ -388,7 +388,7 @@ class ColorCorrection(object):  # pylint: disable=R0902
             self.sat_node = SatNode(self)
         self.sat_node.sat = sat_value
 
-    # private methods =========================================================
+    # Private Methods =========================================================
 
     def _set_id(self, new_id):
         """Changes the id field if the new id is unique"""
@@ -408,7 +408,7 @@ class ColorCorrection(object):  # pylint: disable=R0902
             # Register the new id with the dictionary
             ColorCorrection.members[self._id] = self
 
-    # methods =================================================================
+    # Methods =================================================================
 
     def determine_dest(self, output):
         """Determines the destination file and sets it on the cdl"""
@@ -454,6 +454,59 @@ class ColorNodeBase(object):  # pylint: disable=R0903
             self._desc.extend(value)
         else:
             self._desc.append(value)
+
+    # Private Methods =========================================================
+
+    @staticmethod
+    def _check_single_value(value, name, negative_allow=False):
+        """Checks given value for legitimacy.
+
+        **Args:**
+            value : (str, float, int)
+                Any numeric value to be checked.
+
+            name : (str)
+                The type of value being checked: slope, offset, etc.
+
+            negative_allow=False : (bool)
+                If false, do not allow negative values.
+
+        **Returns:**
+            (float)
+                If value passes all tests, returns value as float.
+
+        **Raises:**
+            TypeError:
+                If value given is not a number.
+
+            ValueError:
+                If negative is False, raised if value given is negative.
+
+        """
+        # If given as a string, the string must be convertible to a float
+        if type(value) == str:
+            try:
+                value = float(value)
+            except ValueError:
+                raise TypeError(
+                    'Error setting {name} with value: "{value}". '
+                    'Value is not a number.'.format(
+                        name=name,
+                        value=value
+                    )
+                )
+        # If given as a single number, that number must be positive
+        if type(value) in [float, int] and not negative_allow:
+            if value < 0:
+                raise ValueError(
+                    'Error setting {name} with value: "{value}". '
+                    'Values must not be negative'.format(
+                        name=name,
+                        value=value
+                    )
+                )
+
+        return float(value)
 
 # ==============================================================================
 
@@ -507,27 +560,13 @@ class SatNode(ColorNodeBase):
     def sat(self, value):
         """Runs checks and converts saturation value before setting"""
         # If given as a string, the string must be convertible to a float
-        if type(value) == str:
+        if type(value) in [float, int, str]:
             try:
-                value = float(value)
-            except ValueError:
-                raise TypeError(
-                    'Error setting saturation with value: "{value}". '
-                    'Value is not a number.'.format(
-                        value=value
-                    )
-                )
-        # Number must be positive
-        if type(value) in [float, int]:
-            if value < 0:
-                raise ValueError(
-                    'Error setting saturation with value: "{value}". '
-                    'Values must not be negative'.format(
-                        value=value
-                    )
-                )
+                value = self._check_single_value(value, 'saturation')
+            except (TypeError, ValueError):
+                raise
             else:
-                self._sat = float(value)
+                self._sat = value
         else:
             raise TypeError(
                 'Saturation cannot be set directly with objects of type: '
@@ -618,74 +657,8 @@ class SopNode(ColorNodeBase):
     @slope.setter
     def slope(self, value):
         """Runs tests and converts slope rgb values before setting"""
-        # If given as a string, the string must be convertible to a float.
-        if type(value) == str:
-            try:
-                value = float(value)
-            except ValueError:
-                raise TypeError(
-                    'Error setting slope with value: "{value}". '
-                    'Value is not a number.'.format(
-                        value=value
-                    )
-                )
-        # If given as a single number, that number must be positive
-        if type(value) in [float, int]:
-            if value < 0:
-                raise ValueError(
-                    'Error setting slope with value: "{value}". '
-                    'Values must not be negative'.format(
-                        value=value
-                    )
-                )
-            else:
-                self._slope = [float(value)] * 3
-        # If given as a list or tuple, each value must be convertible to a
-        # float, and the list or tuple must have 3 values inside of it.
-        # Those values must be positive
-        elif type(value) in [list, tuple]:
-            try:
-                assert len(value) == 3
-            except AssertionError:
-                raise ValueError(
-                    'Error setting slope with value: "{value}". '
-                    'Slope values given as a list or tuple must have 3 '
-                    'elements, one for each color.'.format(
-                        value=value
-                    )
-                )
-
-            value = list(value)
-
-            for i in xrange(len(value)):
-                try:
-                    value[i] = float(value[i])
-                except ValueError:
-                    raise TypeError(
-                        'Error setting slope with value: "{value}". '
-                        'Value is not a number.'.format(
-                            value=value[i]
-                        )
-                    )
-                try:
-                    assert value[i] >= 0.0
-                except AssertionError:
-                    raise ValueError(
-                        'Error setting slope with value: "{value}". '
-                        'Values must not be negative'.format(
-                            value=value[i]
-                        )
-                    )
-
-            self._slope = value
-        else:
-            raise TypeError(
-                'Slope cannot be set directly with objects of type: "{type}". '
-                'Value given: "{value}".'.format(
-                    type=type(value),
-                    value=value,
-                )
-            )
+        value = self._check_setter_value(value, 'slope')
+        self._slope = value
 
     @property
     def offset(self):
@@ -695,57 +668,8 @@ class SopNode(ColorNodeBase):
     @offset.setter
     def offset(self, value):
         """Runs tests and converts offset rgb values before setting"""
-        # If given as a string, the string must be convertible to a float.
-        if type(value) == str:
-            try:
-                value = float(value)
-            except ValueError:
-                raise TypeError(
-                    'Error setting offset with value: "{value}". '
-                    'Value is not a number.'.format(
-                        value=value
-                    )
-                )
-        # If given as a single number, repeat 3 times for a list.
-        if type(value) in [float, int]:
-            self._offset = [float(value)] * 3
-        # If given as a list or tuple, each value must be convertible to a
-        # float, and the list or tuple must have 3 values inside of it.
-        # Those values must be positive
-        elif type(value) in [list, tuple]:
-            try:
-                assert len(value) == 3
-            except AssertionError:
-                raise ValueError(
-                    'Error setting offset with value: "{value}". '
-                    'Offset values given as a list or tuple must have 3 '
-                    'elements, one for each color.'.format(
-                        value=value
-                    )
-                )
-
-            value = list(value)
-
-            for i in xrange(len(value)):
-                try:
-                    value[i] = float(value[i])
-                except ValueError:
-                    raise TypeError(
-                        'Error setting offset with value: "{value}". '
-                        'Value is not a number.'.format(
-                            value=value[i]
-                        )
-                    )
-
-            self._offset = value
-        else:
-            raise TypeError(
-                'Offset cannot be set directly with objects of type: "{type}". '
-                'Value given: "{value}".'.format(
-                    type=type(value),
-                    value=value,
-                )
-            )
+        value = self._check_setter_value(value, 'offset', True)
+        self._offset = value
 
     @property
     def power(self):
@@ -755,74 +679,121 @@ class SopNode(ColorNodeBase):
     @power.setter
     def power(self, value):
         """Runs tests and converts power rgb values before setting"""
-        # If given as a string, the string must be convertible to a float
-        if type(value) == str:
+        value = self._check_setter_value(value, 'power')
+        self._power = value
+
+    # Private Methods =========================================================
+
+    def _check_rgb_values(self, values, name, negative_allow=False):
+        """Checks a list or tuple containing 3 values for legitimacy
+
+        **Args:**
+            value : [(str, float, int)]
+                A list of three numeric values to be checked.
+
+            name : (str)
+                The type of values being checked: slope, offset, etc.
+
+            negative_allow=False : (bool)
+                If false, do not allow negative values.
+
+        **Returns:**
+            [float, float, float]
+                If all values pass all tests, returns values as a list of
+                floats.
+
+        **Raises:**
+            TypeError:
+                If a value given is not a number.
+
+            ValueError:
+                If length of list or tuple is not 3 or if negative is False,
+                raised if value given is negative.
+
+        """
+        try:
+            assert len(values) == 3
+        except AssertionError:
+            raise ValueError(
+                'Error setting {name} with value: "{values}". '
+                '{name_upper} values given as a list or tuple must have 3 '
+                'elements, one for each color.'.format(
+                    name=name,
+                    name_upper=name.title(),
+                    values=values
+                )
+            )
+
+        values = list(values)
+
+        for i in xrange(len(values)):
             try:
-                value = float(value)
-            except ValueError:
-                raise TypeError(
-                    'Error setting power with value: "{value}". '
-                    'Value is not a number.'.format(
-                        value=value
-                    )
+                values[i] = self._check_single_value(
+                    values[i],
+                    name,
+                    negative_allow
                 )
-        # If given as a single number, that number must be positive
-        if type(value) in [float, int]:
-            if value < 0:
-                raise ValueError(
-                    'Error setting power with value: "{value}". '
-                    'Values must not be negative'.format(
-                        value=value
-                    )
-                )
+            except (TypeError, ValueError):
+                raise
+
+        return values
+
+    # =========================================================================
+
+    def _check_setter_value(self, value, name, negative_allow=False):
+        """Exception handling wrapper handling setting values
+
+        Ties together _check_single_value and _check_rgb_values
+
+                    **Args:**
+            value : [(str, float, int)] or (str, float, int)
+                A list of three (or one) numeric values to be checked.
+
+            name : (str)
+                The type of values being checked: slope, offset, etc.
+
+            negative_allow=False : (bool)
+                If false, do not allow negative values.
+
+        **Returns:**
+            [float, float, float]
+                If all values pass all tests, returns values as a list of
+                floats.
+
+        **Raises:**
+            TypeError:
+                If a value given is not a number.
+
+            ValueError:
+                If length of list or tuple is not 3 or if negative is False,
+                raised if value given is negative.
+
+        """
+        if type(value) in [float, int, str]:
+            try:
+                value = self._check_single_value(value, name, negative_allow)
+            except (TypeError, ValueError):
+                raise
             else:
-                self._power = [float(value)] * 3
-        # If given as a list or tuple, each value must be convertible to a
-        # float, and the list or tuple must have 3 values inside of it.
-        # Those values must be positive
+                set_value = [value] * 3
         elif type(value) in [list, tuple]:
             try:
-                assert len(value) == 3
-            except AssertionError:
-                raise ValueError(
-                    'Error setting power with value: "{value}". '
-                    'Power values given as a list or tuple must have 3 '
-                    'elements, one for each color.'.format(
-                        value=value
-                    )
-                )
-
-            value = list(value)
-
-            for i in xrange(len(value)):
-                try:
-                    value[i] = float(value[i])
-                except ValueError:
-                    raise TypeError(
-                        'Error setting power with value: "{value}". '
-                        'Value is not a number.'.format(
-                            value=value[i]
-                        )
-                    )
-                try:
-                    assert value[i] >= 0.0
-                except AssertionError:
-                    raise ValueError(
-                        'Error setting power with value: "{value}". '
-                        'Values must not be negative'.format(
-                            value=value[i]
-                        )
-                    )
-
-            self._power = value
+                value = self._check_rgb_values(value, name, negative_allow)
+            except (TypeError, ValueError):
+                raise
+            else:
+                set_value = value
         else:
             raise TypeError(
-                'Power cannot be set directly with objects of type: "{type}". '
+                '{name} cannot be set directly with objects of type: "{type}". '
                 'Value given: "{value}".'.format(
+                    name=name.title(),
                     type=type(value),
                     value=value,
                 )
             )
+
+        return set_value
 
 # ==============================================================================
 # PRIVATE FUNCTIONS
