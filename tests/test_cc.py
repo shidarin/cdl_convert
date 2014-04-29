@@ -119,10 +119,10 @@ class TestParseCCBasic(unittest.TestCase):
     #===========================================================================
 
     def testId(self):
-        """Tests that id was set to cc_id attrib"""
+        """Tests that id was set to id attrib"""
         self.assertEqual(
             self.id,
-            self.cdl.cc_id
+            self.cdl.id
         )
 
     #===========================================================================

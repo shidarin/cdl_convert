@@ -156,17 +156,17 @@ class TestParseFLExBasic(unittest.TestCase):
 
         self.assertEqual(
             'bb94_x103_line1',
-            self.cdl1.cc_id
+            self.cdl1.id
         )
 
         self.assertEqual(
             'bb94_x104_line2',
-            self.cdl2.cc_id
+            self.cdl2.id
         )
 
         self.assertEqual(
             'bb94_x105_line3',
-            self.cdl3.cc_id
+            self.cdl3.id
         )
 
     #===========================================================================
@@ -320,17 +320,17 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
 
         self.assertEqual(
             'bb94_x103_line1',
-            self.cdl1.cc_id
+            self.cdl1.id
         )
 
         self.assertEqual(
             'bb94_x104',
-            self.cdl2.cc_id
+            self.cdl2.id
         )
 
         self.assertEqual(
             'bb94',
-            self.cdl3.cc_id
+            self.cdl3.id
         )
 
 
@@ -390,17 +390,17 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
 
         self.assertEqual(
             "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H001",
-            self.cdl1.cc_id
+            self.cdl1.id
         )
 
         self.assertEqual(
             "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H002",
-            self.cdl2.cc_id
+            self.cdl2.id
         )
 
         self.assertEqual(
             "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H003",
-            self.cdl3.cc_id
+            self.cdl3.id
         )
 
 
@@ -462,17 +462,17 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
 
         self.assertEqual(
             "{0}001".format(filename),
-            self.cdl1.cc_id
+            self.cdl1.id
         )
 
         self.assertEqual(
             "{0}002".format(filename),
-            self.cdl2.cc_id
+            self.cdl2.id
         )
 
         self.assertEqual(
             "{0}003".format(filename),
-            self.cdl3.cc_id
+            self.cdl3.id
         )
 
     #===========================================================================

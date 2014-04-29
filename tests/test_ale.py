@@ -158,17 +158,17 @@ class TestParseALEBasic(unittest.TestCase):
 
         self.assertEqual(
             'bb94_x103_line1',
-            self.cdl1.cc_id
+            self.cdl1.id
         )
 
         self.assertEqual(
             'bb94_x104_line2',
-            self.cdl2.cc_id
+            self.cdl2.id
         )
 
         self.assertEqual(
             'bb94_x105_line3',
-            self.cdl3.cc_id
+            self.cdl3.id
         )
 
     #===========================================================================

@@ -116,11 +116,11 @@ class TestParseCDLBasic(unittest.TestCase):
     #===========================================================================
 
     def testId(self):
-        """Tests that cc_id was set to the filename without extension"""
+        """Tests that id was set to the filename without extension"""
         id = os.path.basename(self.filename).split('.')[0]
         self.assertEqual(
             id,
-            self.cdl.cc_id
+            self.cdl.id
         )
 
     #===========================================================================

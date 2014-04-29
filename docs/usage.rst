@@ -71,19 +71,19 @@ Direct Creation
 ^^^^^^^^^^^^^^^
 
 If you want to create a new instance of :class:`ColorCorrection`, you have to
-provide a ``cc_id``, for the unique cdl identifier and a source filename to
+provide an ``id``, for the unique cdl identifier and a source filename to
 ``cdl_file``.
 
-    >>> cc = cdl.ColorCorrection(cc_id='cc1', cdl_file='./myfirstcdl.cc')
+    >>> cc = cdl.ColorCorrection(id='cc1', cdl_file='./myfirstcdl.cc')
 
 .. warning::
-    Currently ``cc_id`` does no checking to ensure that it's id is unique among
-    all the :class:`ColorCorrection` that currently exist. At some point this
-    will likely be added.
+    When an instance of :class:`ColorCorrection` is first created, the ``id``
+    provided is checked against a class level dictionary variable named
+    ``members`` to ensure that no two :class:`ColorCorrection` share the same
+    ``id`` , as this is required by the specification.
 
 .. warning::
-    It's not possible to change ``cc_id`` or the ``file_in`` attribute once they
-    are set with these args.
+    It's not possible to change the ``file_in`` attribute once it has been set.
 
 .. warning::
     ``cdl_file`` is likely to not be a required attribute in the future.
@@ -163,19 +163,19 @@ whatever values it found on the file now exist on the instance of
     (1.0, 1.0, 1.0)
     >>> cc.sat
     1.2
-    >>> cc.cc_id
+    >>> cc.id
     '015_xf_seqGrade_v01'
     >>> cc.file_in
     '/Users/sean/cdls/xf/015.cc'
 
 .. note::
-    When parsing, the ``cc_id`` attribute is set in a variety of ways depending
+    When parsing, the ``id`` attribute is set in a variety of ways depending
     on how much information is available. Some formats, like ``cc``, have an
     explicitly tagged ``id`` field that is always used. Other formats, like
     ``flex``, have no such field and the parser tries to grab any scene/take
     metadata it can find to construct one. The last fallback is always the
-    filename. For formats that can export multiple :class:`ColorCorrection` , the ``cc_id``
-    has a created instance number after it.
+    filename. For formats that can export multiple :class:`ColorCorrection` ,
+    the ``id`` has a created instance number after it.
 
 Working with :class:`ColorCorrection`
 -------------------------------------
@@ -252,13 +252,13 @@ Id and Files
 At the current time, id and filepaths cannot be changed after
 :class:`ColorCorrection` instantiation. ``file_out`` is determined by using
 the class method ``determine_dest``, which takes the ``file_in`` directory,
-the cc_id and figures out the output path.
+the ``id`` and figures out the output path.
 
     >>> cc.file_in
     '/Users/sean/cdls/xf/015.cc'
     >>> cc.file_out
     >>> cc.determine_dest('cdl')
-    >>> cc.cc_id
+    >>> cc.id
     '015_xf_seqGrade_v01'
     >>> cc.file_out
     '/Users/sean/cdls/xf/015_xf_seqGrade_v01.cdl'

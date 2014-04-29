@@ -32,9 +32,10 @@ Parser --> :class:`ColorCorrection` --> Writer
 function, see :doc:`usage` for a walkthrough.
 
 .. warning::
-    Currently ``cc_id`` does no checking to ensure that it's id is unique among
-    all the :class:`ColorCorrection` that currently exist. At some point this
-    will likely be added.
+    When an instance of :class:`ColorCorrection` is first created, the ``id``
+    provided is checked against a class level dictionary variable named
+    ``members`` to ensure that no two :class:`ColorCorrection` share the same
+    ``id`` , as this is required by the specification.
 
 .. warning::
     ``cdl_file`` is likely to not be a required attribute in the future.

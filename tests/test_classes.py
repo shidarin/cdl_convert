@@ -74,7 +74,7 @@ class TestColorCorrection(unittest.TestCase):
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
         self.cdl = cdl_convert.ColorCorrection(
-            cc_id='uniqueId', cdl_file='../testcdl.cc'
+            id='uniqueId', cdl_file='../testcdl.cc'
         )
 
     def tearDown(self):
@@ -122,10 +122,10 @@ class TestColorCorrection(unittest.TestCase):
     #===========================================================================
 
     def testIdReturn(self):
-        """Tests that calling ColorCorrection.cc_id returns the id"""
+        """Tests that calling ColorCorrection.id returns the id"""
         self.assertEqual(
             'uniqueId',
-            self.cdl.cc_id
+            self.cdl.id
         )
 
     #===========================================================================
@@ -145,7 +145,7 @@ class TestColorCorrection(unittest.TestCase):
     def testIdNonUniqueIdOnSet(self):
         """Tests that exception raised when setting a non-unique id."""
         def setId(cdl):
-            cdl.cc_id = 'uniqueId'
+            cdl.id = 'uniqueId'
 
         new = cdl_convert.ColorCorrection('betterId', 'file')
 
@@ -166,7 +166,7 @@ class TestColorCorrection(unittest.TestCase):
             'betterId' in cdl_convert.ColorCorrection.members.keys()
         )
 
-        new.cc_id = 'betterishId'
+        new.id = 'betterishId'
 
         self.assertFalse(
             'betterId' in cdl_convert.ColorCorrection.members.keys()

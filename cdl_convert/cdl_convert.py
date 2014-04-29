@@ -180,12 +180,14 @@ class ColorCorrection(object):  # pylint: disable=R0902
         file_out : (str)
             Filepath this CDL will be written to.
 
-        cc_id : (str)
+        id : (str)
             Unique XML URI to identify this CDL. Often a shot or sequence name.
 
             Changing this value does a check against the cls.members dictionary
             to ensure the new id is open. If it is, the key is changed to the
             new id and the id is changed.
+
+            Note that this shadows the builtin id.
 
         metadata : {str}
             metadata is a dictionary of the various descriptions that a CDL
@@ -219,7 +221,7 @@ class ColorCorrection(object):  # pylint: disable=R0902
 
     members = {}
 
-    def __init__(self, cc_id, cdl_file):
+    def __init__(self, id, cdl_file):  #pylint: disable=W0622
         """Inits an instance of a ColorCorrection"""
 
         # File Attributes
@@ -228,20 +230,20 @@ class ColorCorrection(object):  # pylint: disable=R0902
             'file_out': None
         }
 
-        # The cc_id is really the only required part of a ColorCorrection node
+        # The id is really the only required part of a ColorCorrection node
         # Each ID should be unique
-        cc_id = _sanitize(cc_id)
-        if cc_id in ColorCorrection.members.keys():
+        id = _sanitize(id)
+        if id in ColorCorrection.members.keys():
             raise ValueError(
-                'Error initiating cc_id to "{cc_id}". This id is already a'
+                'Error initiating id to "{id}". This id is already a'
                 'registered id.'.format(
-                    cc_id=cc_id
+                    id=id
                 )
             )
-        self._cc_id = cc_id
+        self._id = id
 
         # Register with member dictionary
-        ColorCorrection.members[self._cc_id] = self
+        ColorCorrection.members[self._id] = self
 
         # ASC_SAT attribute
         self.sat_node = None
@@ -271,12 +273,12 @@ class ColorCorrection(object):  # pylint: disable=R0902
         return self._files['file_out']
 
     @property
-    def cc_id(self):
+    def id(self):  # pylint: disable=C0103
         """Returns unique color correction id field"""
-        return self._cc_id
+        return self._id
 
-    @cc_id.setter
-    def cc_id(self, value):
+    @id.setter
+    def id(self, value):  # pylint: disable=C0103
         """Before setting make sure new id is unique"""
         self._set_id(value)
 
@@ -344,17 +346,17 @@ class ColorCorrection(object):  # pylint: disable=R0902
         # Check if this id is already registered
         if cc_id in ColorCorrection.members.keys():
             raise ValueError(
-                'Error setting the cc_id to "{cc_id}". This id is already a '
+                'Error setting the id to "{cc_id}". This id is already a '
                 'registered id.'.format(
                     cc_id=cc_id
                 )
             )
         else:
             # Clear the current id from the dictionary
-            ColorCorrection.members.pop(self._cc_id)
-            self._cc_id = cc_id
+            ColorCorrection.members.pop(self._id)
+            self._id = cc_id
             # Register the new id with the dictionary
-            ColorCorrection.members[self._cc_id] = self
+            ColorCorrection.members[self._id] = self
 
     # methods =================================================================
 
@@ -363,7 +365,7 @@ class ColorCorrection(object):  # pylint: disable=R0902
 
         directory = os.path.dirname(self.file_in)
 
-        filename = "{id}.{ext}".format(id=self.cc_id, ext=output)
+        filename = "{id}.{ext}".format(id=self.id, ext=output)
 
         self._files['file_out'] = os.path.join(directory, filename)
 
@@ -1171,7 +1173,7 @@ def write_cc(cdl):
     """Writes the ColorCorrection to a .cc file"""
 
     xml = CC_XML.format(
-        id=cdl.cc_id,
+        id=cdl.id,
         slopeR=cdl.slope[0],
         slopeG=cdl.slope[1],
         slopeB=cdl.slope[2],
@@ -1307,7 +1309,7 @@ def main():
                 cdl.determine_dest(ext)
                 print(
                     "Writing cdl {id} to {path}".format(
-                        id=cdl.cc_id,
+                        id=cdl.id,
                         path=cdl.file_out
                     )
                 )
