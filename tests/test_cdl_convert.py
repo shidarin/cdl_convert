@@ -7,9 +7,9 @@ REQUIREMENTS:
 mock
 """
 
-#===============================================================================
+#==============================================================================
 # IMPORTS
-#===============================================================================
+#==============================================================================
 
 # Standard Imports
 import datetime
@@ -39,12 +39,12 @@ sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert.cdl_convert as cdl_convert
 
-#===============================================================================
+#==============================================================================
 # TEST CLASSES
-#===============================================================================
+#==============================================================================
 
 
-# _sanitize() ==================================================================
+# _sanitize() =================================================================
 
 
 class TestSanitize(unittest.TestCase):
@@ -59,7 +59,7 @@ class TestSanitize(unittest.TestCase):
             result
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testUnderscoresOkay(self):
         """Tests that underscores pass through intact"""
@@ -70,7 +70,7 @@ class TestSanitize(unittest.TestCase):
             result
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPeriodsOkay(self):
         """Tests that periods pass through intact"""
@@ -81,7 +81,7 @@ class TestSanitize(unittest.TestCase):
             result
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testLeadingPeriodRemove(self):
         """Tests that leading periods are removed"""
@@ -92,7 +92,7 @@ class TestSanitize(unittest.TestCase):
             result
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testLeadingUnderscoreRemove(self):
         """Tests that leading underscores are removed"""
@@ -103,7 +103,7 @@ class TestSanitize(unittest.TestCase):
             result
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testCommonBadChars(self):
         """Tests that common bad characters are removed"""
@@ -114,27 +114,27 @@ class TestSanitize(unittest.TestCase):
             result
         )
 
-# parse_args() =================================================================
+# parse_args() ================================================================
 
 
 class TestParseArgs(unittest.TestCase):
     """Tests that arguments are being parsed correctly"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.sysargv = sys.argv
 
-    #===========================================================================
+    #==========================================================================
 
     def tearDown(self):
         sys.argv = self.sysargv
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testInputPositionalArg(self):
         """Tests that the input arg is positionally gotten correctly"""
@@ -148,7 +148,7 @@ class TestParseArgs(unittest.TestCase):
             args.input_file
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testGoodInputFormat(self):
         """Tests that a good input format is accepted and lowered"""
@@ -162,7 +162,7 @@ class TestParseArgs(unittest.TestCase):
             args.input
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testBadInputFormat(self):
         """Tests that a bad input format is rejected with ValueError"""
@@ -174,7 +174,7 @@ class TestParseArgs(unittest.TestCase):
             cdl_convert.parse_args
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testGoodOutputFormat(self):
         """Tests that a good output format is accepted and lowered"""
@@ -188,7 +188,7 @@ class TestParseArgs(unittest.TestCase):
             args.output
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testMultipleGoodOutputFormat(self):
         """Tests that multiple good output formats are accepted and lowered"""
@@ -202,7 +202,7 @@ class TestParseArgs(unittest.TestCase):
             args.output
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testBadOutputFormat(self):
         """Tests that a bad output format is rejected with ValueError"""
@@ -214,7 +214,7 @@ class TestParseArgs(unittest.TestCase):
             cdl_convert.parse_args
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testGoodWithBadOutputFormat(self):
         """Tests that a bad output format is rejected with ValueError"""
@@ -226,7 +226,7 @@ class TestParseArgs(unittest.TestCase):
             cdl_convert.parse_args
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testNoProvidedOutput(self):
         """Tests that no provided output format is defaulted to cc"""
@@ -240,15 +240,15 @@ class TestParseArgs(unittest.TestCase):
             args.output
         )
 
-# main() =======================================================================
+# main() ======================================================================
 
 
 class TestMain(unittest.TestCase):
     """Tests the main() function for correct execution"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
@@ -261,7 +261,7 @@ class TestMain(unittest.TestCase):
         self.stdout = sys.stdout
         sys.stdout = StringIO()
 
-    #===========================================================================
+    #==========================================================================
 
     def tearDown(self):
         cdl_convert.INPUT_FORMATS = self.inputFormats
@@ -272,9 +272,9 @@ class TestMain(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.ColorCorrection.members = {}
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
@@ -293,7 +293,7 @@ class TestMain(unittest.TestCase):
 
         abspath.assert_called_once_with('file.flex')
 
-    #===========================================================================
+    #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
@@ -312,7 +312,7 @@ class TestMain(unittest.TestCase):
 
         mockParse.assert_called_once_with('file.flex')
 
-    #===========================================================================
+    #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
@@ -331,7 +331,7 @@ class TestMain(unittest.TestCase):
 
         mockParse.assert_called_once_with('file.fLEx')
 
-    #===========================================================================
+    #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
@@ -350,7 +350,7 @@ class TestMain(unittest.TestCase):
 
         mockParse.assert_called_once_with('file.cc')
 
-    #===========================================================================
+    #==========================================================================
 
     @mock.patch('os.path.dirname')
     @mock.patch('cdl_convert.cdl_convert.write_cc')
@@ -380,7 +380,7 @@ class TestMain(unittest.TestCase):
         )
 
 
-    #===========================================================================
+    #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.write_cc')
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
@@ -405,7 +405,7 @@ class TestMain(unittest.TestCase):
         mockWrite.assert_called_once_with(self.cdl)
 
 
-    #===========================================================================
+    #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.write_cdl')
     @mock.patch('cdl_convert.cdl_convert.write_cc')
@@ -433,7 +433,7 @@ class TestMain(unittest.TestCase):
         mockWriteCC.assert_called_once_with(self.cdl)
         mockWriteCDL.assert_called_once_with(self.cdl)
 
-# Test Classes =================================================================
+# Test Classes ================================================================
 
 # TimeCodeSegment is from my SMTPE Timecode gist at:
 # https://gist.github.com/shidarin/11091783
@@ -533,9 +533,9 @@ class TimeCodeSegment(object):
 class TestTimeCodeSegment(unittest.TestCase):
     """Tests TimeCodeSegment class for correct functionality"""
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testWholeSeconds(self):
         """Tests timecode where seconds are an even multiple of frames"""
@@ -556,7 +556,7 @@ class TestTimeCodeSegment(unittest.TestCase):
             tc.dur
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testLessThanOneSecond(self):
         """Tests timecode where there's less than a second of duration"""
@@ -572,7 +572,7 @@ class TestTimeCodeSegment(unittest.TestCase):
             tc.dur
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testMoreThanOneSecond(self):
         """Tests timecode where there's more than a second of duration"""
@@ -588,7 +588,7 @@ class TestTimeCodeSegment(unittest.TestCase):
             tc.dur
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testUnevenCombination(self):
         """Tests timecode where there's less than a second of duration"""
@@ -609,7 +609,7 @@ class TestTimeCodeSegment(unittest.TestCase):
             tc.dur
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testAddManyHours(self):
         """Tests adding many hours, minutes and seconds of duration"""
@@ -630,7 +630,7 @@ class TestTimeCodeSegment(unittest.TestCase):
             tc.dur
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testRollover(self):
         """Tests timecode that rolls over 24 hours"""
@@ -651,7 +651,7 @@ class TestTimeCodeSegment(unittest.TestCase):
             tc.dur
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def test30Fps(self):
         """Tests timecode with 30 fps"""
@@ -672,7 +672,7 @@ class TestTimeCodeSegment(unittest.TestCase):
             tc.dur
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def test60Fps(self):
         """Tests timecode with 60 fps"""
@@ -693,7 +693,7 @@ class TestTimeCodeSegment(unittest.TestCase):
             tc.dur
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testAllRandomSetDuration(self):
         """Tests random timecode with set long duration"""
@@ -709,7 +709,7 @@ class TestTimeCodeSegment(unittest.TestCase):
             tc.durFrames
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testDurationUnderFiveMinutes(self):
         """Tests that duration when not provided is kept under 5 minutes"""
@@ -719,8 +719,8 @@ class TestTimeCodeSegment(unittest.TestCase):
             tc.durFrames <= 7200
         )
 
-#===============================================================================
+#==============================================================================
 # RUNNER
-#===============================================================================
+#==============================================================================
 if __name__ == '__main__':
     unittest.main()

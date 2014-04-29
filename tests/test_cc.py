@@ -7,20 +7,12 @@ REQUIREMENTS:
 mock
 """
 
-#===============================================================================
+#==============================================================================
 # IMPORTS
-#===============================================================================
+#==============================================================================
 
 # Standard Imports
-try:
-    from unittest import mock
-except ImportError:
-    import mock
 import os
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 import sys
 import tempfile
 import unittest
@@ -38,9 +30,9 @@ sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert.cdl_convert as cdl_convert
 
-#===============================================================================
+#==============================================================================
 # GLOBALS
-#===============================================================================
+#==============================================================================
 
 # We'll build what we know if a valid XML tree by hand, so we can test that our
 # fancy etree code is working correctly
@@ -59,7 +51,7 @@ CC_SAT = "        <Saturation>{sat}</Saturation>\n"
 CC_SAT_CLOSE = "    </SatNode>\n"
 CC_CLOSE = "</ColorCorrection>\n"
 
-# misc =========================================================================
+# misc ========================================================================
 
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
@@ -74,17 +66,17 @@ if sys.version_info[0] >= 3:
 else:
     builtins = '__builtin__'
 
-#===============================================================================
+#==============================================================================
 # TEST CLASSES
-#===============================================================================
+#==============================================================================
 
 
 class TestParseCCBasic(unittest.TestCase):
     """Tests parsing a cc xml"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.slope = (1.329, 0.9833, 1.003)
@@ -104,7 +96,7 @@ class TestParseCCBasic(unittest.TestCase):
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #===========================================================================
+    #==========================================================================
 
     def tearDown(self):
         # The system should clean these up automatically,
@@ -114,9 +106,9 @@ class TestParseCCBasic(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.ColorCorrection.members = {}
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testId(self):
         """Tests that id was set to id attrib"""
@@ -125,7 +117,7 @@ class TestParseCCBasic(unittest.TestCase):
             self.cdl.id
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testDesc(self):
         """Tests that desc was set to desc element"""
@@ -134,7 +126,7 @@ class TestParseCCBasic(unittest.TestCase):
             self.cdl.metadata['desc']
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlope(self):
         """Tests that slope was set correctly"""
@@ -143,7 +135,7 @@ class TestParseCCBasic(unittest.TestCase):
             self.cdl.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffset(self):
         """Tests that offset was set correctly"""
@@ -152,7 +144,7 @@ class TestParseCCBasic(unittest.TestCase):
             self.cdl.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPower(self):
         """Tests that power was set correctly"""
@@ -161,7 +153,7 @@ class TestParseCCBasic(unittest.TestCase):
             self.cdl.power
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSat(self):
         """Tests that sat was set correctly"""
@@ -174,9 +166,9 @@ class TestParseCCBasic(unittest.TestCase):
 class TestParseCCOdd(TestParseCCBasic):
     """Tests parsing a cc xml with odd values"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         # Note that there are limits to the floating point precision here.
@@ -190,7 +182,7 @@ class TestParseCCOdd(TestParseCCBasic):
         # Note that including < in desc WILL break XML parsing. We should
         # probably have a function that sanitizes those type of fields
         # when we write to XML
-        self.desc = "Raised saturation a little!?! adjusted gamma... \/Offset"
+        self.desc = r"Raised saturation a little!?! adjusted gamma... \/Offset"
 
         self.file = buildCC(self.id, self.desc, self.slope, self.offset,
                             self.power, self.sat)
@@ -206,9 +198,9 @@ class TestParseCCOdd(TestParseCCBasic):
 class TestParseCCJustSat(TestParseCCBasic):
     """Tests parsing a cc xml with no SOP values"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.sat = 1.01
@@ -224,9 +216,9 @@ class TestParseCCJustSat(TestParseCCBasic):
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testSlope(self):
         """Tests that slope is still at defaults"""
@@ -235,7 +227,7 @@ class TestParseCCJustSat(TestParseCCBasic):
             self.cdl.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffset(self):
         """Tests that offset is still at defaults"""
@@ -244,7 +236,7 @@ class TestParseCCJustSat(TestParseCCBasic):
             self.cdl.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPower(self):
         """Tests that power is still at defaults"""
@@ -257,9 +249,9 @@ class TestParseCCJustSat(TestParseCCBasic):
 class TestParseCCJustSOP(TestParseCCBasic):
     """Tests parsing a cc xml with no sat value"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.slope = (1.329, 0.9833, 1.003)
@@ -278,9 +270,9 @@ class TestParseCCJustSOP(TestParseCCBasic):
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testSat(self):
         """Tests that sat was set correctly"""
@@ -293,9 +285,9 @@ class TestParseCCJustSOP(TestParseCCBasic):
 class TestParseCCNoSlope(TestParseCCBasic):
     """Tests parsing a cc xml with no slope value"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.offset = (0.011, 0.013, 0.11)
@@ -314,9 +306,9 @@ class TestParseCCNoSlope(TestParseCCBasic):
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testSlope(self):
         """Tests that slope is still at default"""
@@ -329,9 +321,9 @@ class TestParseCCNoSlope(TestParseCCBasic):
 class TestParseCCNoOffset(TestParseCCBasic):
     """Tests parsing a cc xml with no offset value"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.slope = (0.011, 0.013, 0.11)
@@ -350,9 +342,9 @@ class TestParseCCNoOffset(TestParseCCBasic):
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testOffset(self):
         """Tests that offset is still at default"""
@@ -365,9 +357,9 @@ class TestParseCCNoOffset(TestParseCCBasic):
 class TestParseCCNoPower(TestParseCCBasic):
     """Tests parsing a cc xml with no power value"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.slope = (.993, .998, 1.0113)
@@ -386,9 +378,9 @@ class TestParseCCNoPower(TestParseCCBasic):
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testPower(self):
         """Tests that power is still at defaults"""
@@ -401,9 +393,9 @@ class TestParseCCNoPower(TestParseCCBasic):
 class TestParseCCEmptyElems(TestParseCCBasic):
     """Tests parsing a cc xml with empty SOP and Sat nodes"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.id = 'cc23678'
@@ -418,9 +410,9 @@ class TestParseCCEmptyElems(TestParseCCBasic):
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testSlope(self):
         """Tests that slope is still at defaults"""
@@ -429,7 +421,7 @@ class TestParseCCEmptyElems(TestParseCCBasic):
             self.cdl.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffset(self):
         """Tests that offset is still at defaults"""
@@ -438,7 +430,7 @@ class TestParseCCEmptyElems(TestParseCCBasic):
             self.cdl.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPower(self):
         """Tests that power is still at defaults"""
@@ -447,7 +439,7 @@ class TestParseCCEmptyElems(TestParseCCBasic):
             self.cdl.power
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSat(self):
         """Tests that sat was set correctly"""
@@ -460,22 +452,22 @@ class TestParseCCEmptyElems(TestParseCCBasic):
 class TestParseCCExceptions(unittest.TestCase):
     """Tests parse_cc's response to some bad xml files"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.file = None
 
-    #===========================================================================
+    #==========================================================================
 
     def tearDown(self):
         if self.file:
             os.remove(self.file)
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testNoId(self):
         """Tests that not finding an id attrib raises ValueError"""
@@ -492,7 +484,7 @@ class TestParseCCExceptions(unittest.TestCase):
             self.file
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testBadXML(self):
         """Tests that an XML with a root tag that's not ColorCorrection"""
@@ -510,9 +502,9 @@ class TestParseCCExceptions(unittest.TestCase):
             self.file
         )
 
-#===============================================================================
+#==============================================================================
 # FUNCTIONS
-#===============================================================================
+#==============================================================================
 
 
 def buildCC(id=None, desc=None, slope=None, offset=None, power=None, sat=None,
@@ -556,8 +548,8 @@ def buildCC(id=None, desc=None, slope=None, offset=None, power=None, sat=None,
     return cc
 
 
-#===============================================================================
+#==============================================================================
 # RUNNER
-#===============================================================================
+#==============================================================================
 if __name__ == '__main__':
     unittest.main()

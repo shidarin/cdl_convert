@@ -7,9 +7,9 @@ REQUIREMENTS:
 mock
 """
 
-#===============================================================================
+#==============================================================================
 # IMPORTS
-#===============================================================================
+#==============================================================================
 
 # Standard Imports
 try:
@@ -40,9 +40,9 @@ sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert.cdl_convert as cdl_convert
 
-#===============================================================================
+#==============================================================================
 # GLOBALS
-#===============================================================================
+#==============================================================================
 
 # A lot of these FLEx strings are ripped straight from the flex document
 # http://www.scribd.com/doc/97598863/Flex-file-format-specification-v1005
@@ -65,7 +65,7 @@ FLEX_600 = "600 AMX   01 Register REEL023  to Reel023B Fx 8    Rate 030 Delay   
 FLEX_701 = "701 ASC_SOP({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\n"
 FLEX_702 = "702 ASC_SAT {sat}\n"
 
-# misc =========================================================================
+# misc ========================================================================
 
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
@@ -80,9 +80,9 @@ if sys.version_info[0] >= 3:
 else:
     builtins = '__builtin__'
 
-#===============================================================================
+#==============================================================================
 # TEST CLASSES
-#===============================================================================
+#==============================================================================
 
 
 class TestParseFLExBasic(unittest.TestCase):
@@ -90,9 +90,9 @@ class TestParseFLExBasic(unittest.TestCase):
 
     FLEx can't store more than 6 sig digits, so we'll stay within that limit"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
 
@@ -137,7 +137,7 @@ class TestParseFLExBasic(unittest.TestCase):
         self.cdl2 = self.cdls[1]
         self.cdl3 = self.cdls[2]
 
-    #===========================================================================
+    #==========================================================================
 
     def tearDown(self):
         # The system should clean these up automatically,
@@ -147,9 +147,9 @@ class TestParseFLExBasic(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.ColorCorrection.members = {}
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testId(self):
         """Tests that filenames were parsed correctly"""
@@ -169,7 +169,7 @@ class TestParseFLExBasic(unittest.TestCase):
             self.cdl3.id
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlope(self):
         """Tests that slopes were parsed correctly"""
@@ -189,7 +189,7 @@ class TestParseFLExBasic(unittest.TestCase):
             self.cdl3.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffset(self):
         """Tests that offsets were parsed correctly"""
@@ -209,7 +209,7 @@ class TestParseFLExBasic(unittest.TestCase):
             self.cdl3.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPower(self):
         """Tests that powers were parsed correctly"""
@@ -229,7 +229,7 @@ class TestParseFLExBasic(unittest.TestCase):
             self.cdl3.power
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSat(self):
         """Tests that sats were parsed correctly"""
@@ -249,7 +249,7 @@ class TestParseFLExBasic(unittest.TestCase):
             self.cdl3.sat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testDescription(self):
         """Tests that the descriptions have been parsed correctly"""
@@ -264,9 +264,9 @@ class TestParseFLExBasic(unittest.TestCase):
 class TestParseFLExMissingNames(TestParseFLExBasic):
     """Tests basic parsing of a Flex where some takes are missing name fields"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
 
@@ -311,9 +311,9 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
         self.cdl2 = self.cdls[1]
         self.cdl3 = self.cdls[2]
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testId(self):
         """Tests that filenames were parsed correctly"""
@@ -337,9 +337,9 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
 class TestParseFLExTitleOnly(TestParseFLExBasic):
     """Tests basic parsing of a Flex where no takes have scn/roll/take fields"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
 
@@ -381,9 +381,9 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
         self.cdl2 = self.cdls[1]
         self.cdl3 = self.cdls[2]
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testId(self):
         """Tests that filenames were parsed correctly"""
@@ -407,9 +407,9 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
 class TestParseFLExNoTitle(TestParseFLExBasic):
     """Tests basic parsing of a Flex where id is based on filename"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
 
@@ -451,9 +451,9 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
         self.cdl2 = self.cdls[1]
         self.cdl3 = self.cdls[2]
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testId(self):
         """Tests that filenames were parsed correctly"""
@@ -475,7 +475,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
             self.cdl3.id
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testDescription(self):
         """Tests that the descriptions have been parsed correctly"""
@@ -490,9 +490,9 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
 class TestParseFLExMissingSopSat(TestParseFLExBasic):
     """Tests basic parsing of a Flex where sop/sat are missing"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
 
@@ -538,9 +538,9 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
         self.cdl3.metadata['desc'] = self.title
         self.cdls.append(self.cdl3)
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testOnlyTwoCDLsReturned(self):
         """Tests that with no SOP or SAT value, only 2 lines will become cdls"""
@@ -550,9 +550,9 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
             len(self.raw_cdls)
         )
 
-#===============================================================================
+#==============================================================================
 # FUNCTIONS
-#===============================================================================
+#==============================================================================
 
 
 def buildFLExTake(slope=None, offset=None, power=None, sat=None, scene=None,
@@ -630,8 +630,8 @@ def buildFLExTake(slope=None, offset=None, power=None, sat=None, scene=None,
 
     return flex
 
-#===============================================================================
+#==============================================================================
 # RUNNER
-#===============================================================================
+#==============================================================================
 if __name__ == '__main__':
     unittest.main()

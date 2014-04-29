@@ -7,9 +7,9 @@ REQUIREMENTS:
 mock
 """
 
-#===============================================================================
+#==============================================================================
 # IMPORTS
-#===============================================================================
+#==============================================================================
 
 # Standard Imports
 try:
@@ -17,10 +17,6 @@ try:
 except ImportError:
     import mock
 import os
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 import sys
 import tempfile
 import unittest
@@ -38,9 +34,9 @@ sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert.cdl_convert as cdl_convert
 
-#===============================================================================
+#==============================================================================
 # GLOBALS
-#===============================================================================
+#==============================================================================
 
 # We'll build what we know if a valid XML tree by hand, so we can test that our
 # fancy etree code is working correctly
@@ -59,7 +55,7 @@ CC_SAT = "        <Saturation>{sat}</Saturation>\n"
 CC_SAT_CLOSE = "    </SatNode>\n"
 CC_CLOSE = "</ColorCorrection>\n"
 
-# misc =========================================================================
+# misc ========================================================================
 
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
@@ -74,17 +70,17 @@ if sys.version_info[0] >= 3:
 else:
     builtins = '__builtin__'
 
-#===============================================================================
+#==============================================================================
 # TEST CLASSES
-#===============================================================================
+#==============================================================================
 
 
 class TestParseCDLBasic(unittest.TestCase):
     """Tests parsing a space separated cdl, a Rhythm & Hues format"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.slope = (1.329, 0.9833, 1.003)
@@ -101,7 +97,7 @@ class TestParseCDLBasic(unittest.TestCase):
 
         self.cdl = cdl_convert.parse_cdl(self.filename)[0]
 
-    #===========================================================================
+    #==========================================================================
 
     def tearDown(self):
         # The system should clean these up automatically,
@@ -111,9 +107,9 @@ class TestParseCDLBasic(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.ColorCorrection.members = {}
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testId(self):
         """Tests that id was set to the filename without extension"""
@@ -123,7 +119,7 @@ class TestParseCDLBasic(unittest.TestCase):
             self.cdl.id
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlope(self):
         """Tests that slope was set correctly"""
@@ -132,7 +128,7 @@ class TestParseCDLBasic(unittest.TestCase):
             self.cdl.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffset(self):
         """Tests that offset was set correctly"""
@@ -141,7 +137,7 @@ class TestParseCDLBasic(unittest.TestCase):
             self.cdl.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPower(self):
         """Tests that power was set correctly"""
@@ -150,7 +146,7 @@ class TestParseCDLBasic(unittest.TestCase):
             self.cdl.power
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSat(self):
         """Tests that sat was set correctly"""
@@ -163,9 +159,9 @@ class TestParseCDLBasic(unittest.TestCase):
 class TestParseCDLOdd(TestParseCDLBasic):
     """Tests parsing a space separated cdl with odd but valid numbers"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         # Note that there are limits to the floating point precision here.
@@ -189,9 +185,9 @@ class TestParseCDLOdd(TestParseCDLBasic):
 class TestWriteCDLBasic(unittest.TestCase):
     """Tests writing a space separated cdl with basic values"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.slope = [1.329, 0.9833, 1.003]
@@ -199,7 +195,10 @@ class TestWriteCDLBasic(unittest.TestCase):
         self.power = [.993, .998, 1.0113]
         self.sat = 1.01
 
-        self.cdl = cdl_convert.ColorCorrection('uniqueId', '../theVeryBestFile.ale')
+        self.cdl = cdl_convert.ColorCorrection(
+            'uniqueId',
+            '../theVeryBestFile.ale'
+        )
 
         self.cdl.determine_dest('cdl')
         self.cdl.slope = self.slope
@@ -219,15 +218,15 @@ class TestWriteCDLBasic(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.ColorCorrection.members = {}
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testOpen(self):
         """Tests that open was called correctly"""
         self.mockOpen.assert_called_once_with(self.cdl.file_out, 'wb')
 
-    #===========================================================================
+    #==========================================================================
 
     def testContent(self):
         """Tests that write_cdl wrote the correct CDL"""
@@ -238,9 +237,9 @@ class TestWriteCDLBasic(unittest.TestCase):
 class TestWriteCDLOdd(TestWriteCDLBasic):
     """Tests writing a space separated cdl with basic values"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         # Note that there are limits to the floating point precision here.
@@ -268,9 +267,9 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
         with mock.patch(builtins + '.open', self.mockOpen, create=True):
             cdl_convert.write_cdl(self.cdl)
 
-#===============================================================================
+#==============================================================================
 # FUNCTIONS
-#===============================================================================
+#==============================================================================
 
 
 def buildCDL(slope, offset, power, sat):
@@ -286,8 +285,8 @@ def buildCDL(slope, offset, power, sat):
 
     return ss_cdl
 
-#===============================================================================
+#==============================================================================
 # RUNNER
-#===============================================================================
+#==============================================================================
 if __name__ == '__main__':
     unittest.main()

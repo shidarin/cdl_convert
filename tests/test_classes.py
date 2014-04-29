@@ -7,20 +7,12 @@ REQUIREMENTS:
 mock
 """
 
-#===============================================================================
+#==============================================================================
 # IMPORTS
-#===============================================================================
+#==============================================================================
 
 # Standard Imports
-try:
-    from unittest import mock
-except ImportError:
-    import mock
 import os
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 import sys
 import unittest
 
@@ -37,9 +29,9 @@ sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert.cdl_convert as cdl_convert
 
-#===============================================================================
+#==============================================================================
 # GLOBALS
-#===============================================================================
+#==============================================================================
 
 if sys.version_info[0] >= 3:
     enc = lambda x: bytes(x, 'UTF-8')
@@ -51,11 +43,11 @@ if sys.version_info[0] >= 3:
 else:
     builtins = '__builtin__'
 
-#===============================================================================
+#==============================================================================
 # TEST CLASSES
-#===============================================================================
+#==============================================================================
 
-# ColorCorrection ==============================================================
+# ColorCorrection =============================================================
 
 
 class TestColorCorrection(unittest.TestCase):
@@ -67,9 +59,9 @@ class TestColorCorrection(unittest.TestCase):
 
     """
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
@@ -82,11 +74,11 @@ class TestColorCorrection(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.ColorCorrection.members = {}
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
-    # Properties & Attributes ==================================================
+    # Properties & Attributes =================================================
 
     def testFileInReturn(self):
         """Tests that calling ColorCorrection.fileIn returns the file given"""
@@ -95,7 +87,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.file_in
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testFileInSetException(self):
         """Tests that exception raised when setting file_in after init"""
@@ -107,7 +99,7 @@ class TestColorCorrection(unittest.TestCase):
             testFileIn
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testFileOutSetException(self):
         """Tests that exception raised when attempting to set file_out direct"""
@@ -119,7 +111,7 @@ class TestColorCorrection(unittest.TestCase):
             testFileOut
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testIdReturn(self):
         """Tests that calling ColorCorrection.id returns the id"""
@@ -128,7 +120,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.id
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testIdNonUniqueIdOnInit(self):
         """Tests that exception raised when initializing a non-unique id."""
@@ -140,7 +132,7 @@ class TestColorCorrection(unittest.TestCase):
             'file'
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testIdNonUniqueIdOnSet(self):
         """Tests that exception raised when setting a non-unique id."""
@@ -155,7 +147,7 @@ class TestColorCorrection(unittest.TestCase):
             new
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testIdRenameDictionary(self):
         """Tests that dict entries are removed following a rename"""
@@ -176,7 +168,7 @@ class TestColorCorrection(unittest.TestCase):
             'betterishId' in cdl_convert.ColorCorrection.members.keys()
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetSetAndGet(self):
         """Tests setting and getting the offset"""
@@ -190,7 +182,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetBadLength(self):
         """Tests passing offset an incorrect length list"""
@@ -202,7 +194,7 @@ class TestColorCorrection(unittest.TestCase):
             setOffset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetSetStrings(self):
         """Tests that TypeError raised if given strings"""
@@ -214,7 +206,7 @@ class TestColorCorrection(unittest.TestCase):
             setOffset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetBadType(self):
         """Tests passing offset a correct length but bad type value"""
@@ -226,7 +218,7 @@ class TestColorCorrection(unittest.TestCase):
             setOffset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetBecomesTuple(self):
         """Tests offset is converted to tuple from list"""
@@ -240,7 +232,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerSetAndGet(self):
         """Tests setting and getting the power"""
@@ -254,7 +246,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.power
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerSetNegative(self):
         """Tests that ValueError raised if negative value"""
@@ -266,7 +258,7 @@ class TestColorCorrection(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerSetStrings(self):
         """Tests that TypeError raised if given strings"""
@@ -278,7 +270,7 @@ class TestColorCorrection(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerBadLength(self):
         """Tests passing power an incorrect length list"""
@@ -290,7 +282,7 @@ class TestColorCorrection(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerBadType(self):
         """Tests passing power a correct length but bad type value"""
@@ -302,7 +294,7 @@ class TestColorCorrection(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerBecomesTuple(self):
         """Tests power is converted to tuple from list"""
@@ -316,7 +308,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.power
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeSetAndGet(self):
         """Tests setting and getting the slope"""
@@ -330,7 +322,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeSetNegative(self):
         """Tests that ValueError raised if negative value"""
@@ -342,7 +334,7 @@ class TestColorCorrection(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeSetStrings(self):
         """Tests that TypeError raised if given strings"""
@@ -354,7 +346,7 @@ class TestColorCorrection(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeBadLength(self):
         """Tests passing slope an incorrect length list"""
@@ -366,7 +358,7 @@ class TestColorCorrection(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeBadType(self):
         """Tests passing slope a correct length but bad type value"""
@@ -378,7 +370,7 @@ class TestColorCorrection(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeBecomesTuple(self):
         """Tests slope is converted to tuple from list"""
@@ -392,7 +384,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSatSetAndGet(self):
         """Tests setting and getting saturation"""
@@ -406,7 +398,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.sat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSatSetNegative(self):
         """Tests that a ValueError is raised if sat is set to negative"""
@@ -417,7 +409,7 @@ class TestColorCorrection(unittest.TestCase):
             ValueError,
             setSat
         )
-    #===========================================================================
+    #==========================================================================
 
     def testSatSetString(self):
         """Tests that a TypeError is raised if sat is set to string"""
@@ -429,7 +421,7 @@ class TestColorCorrection(unittest.TestCase):
             setSat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSatBecomesFloat(self):
         """Tests that saturation is converted to float from int"""
@@ -442,7 +434,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.sat
         )
 
-    # determine_dest() ==========================================================
+    # determine_dest() ========================================================
 
     def testDetermineDest(self):
         """Tests that determine destination is calculated correctly"""
@@ -456,15 +448,15 @@ class TestColorCorrection(unittest.TestCase):
             self.cdl.file_out
         )
 
-# ColorNodeBase ================================================================
+# ColorNodeBase ===============================================================
 
 
 class TestColorNodeBase(unittest.TestCase):
     """Tests the very simple base class ColorNodeBase"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.node = cdl_convert.ColorNodeBase()
@@ -474,9 +466,9 @@ class TestColorNodeBase(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.ColorCorrection.members = {}
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testInit(self):
         """Tests that on init desc is created and empty"""
@@ -486,7 +478,7 @@ class TestColorNodeBase(unittest.TestCase):
             self.node.desc
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testFirstSet(self):
         """Tests setting desc to a string appends it to the list"""
@@ -498,7 +490,7 @@ class TestColorNodeBase(unittest.TestCase):
             self.node.desc
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testAppendAdditional(self):
         """Tests that setting desc more than once appends to list"""
@@ -517,7 +509,7 @@ class TestColorNodeBase(unittest.TestCase):
             self.node.desc
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testExtendWithList(self):
         """Tests extending the desc with another list"""
@@ -532,7 +524,7 @@ class TestColorNodeBase(unittest.TestCase):
             self.node.desc
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testExtendWithTuple(self):
         """Tests extending the desc with another tuple"""
@@ -548,22 +540,22 @@ class TestColorNodeBase(unittest.TestCase):
         )
 
 
-# SatNode ======================================================================
+# SatNode =====================================================================
 
 
 class TestSatNode(unittest.TestCase):
     """Tests all aspects of SatNode"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.node = cdl_convert.SatNode(self)
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testParent(self):
         """Tests that parent was attached to us correctly"""
@@ -572,7 +564,7 @@ class TestSatNode(unittest.TestCase):
             self.node.parent
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetParent(self):
         """Tests that we can't set the parent property after init"""
@@ -584,7 +576,7 @@ class TestSatNode(unittest.TestCase):
             setParent
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testDefault(self):
         """Tests that saturation starts off with a default value of 1.0"""
@@ -593,7 +585,7 @@ class TestSatNode(unittest.TestCase):
             self.node.sat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testGetSat(self):
         """Tests that we can get the saturation value"""
@@ -605,7 +597,7 @@ class TestSatNode(unittest.TestCase):
             self.node.sat,
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetWithString(self):
         """Tests that we can set sat with a single string"""
@@ -616,7 +608,7 @@ class TestSatNode(unittest.TestCase):
             self.node.sat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetWithBadString(self):
         """Tests that we can't set sat with a single bad string"""
@@ -628,7 +620,7 @@ class TestSatNode(unittest.TestCase):
             setSat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetWithNegativeString(self):
         """Tests that we can't set sat with a single negative string"""
@@ -640,7 +632,7 @@ class TestSatNode(unittest.TestCase):
             setSat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetWithFloat(self):
         """Tests that we can set sat with a single float"""
@@ -651,7 +643,7 @@ class TestSatNode(unittest.TestCase):
             self.node.sat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetWithNegativeFloat(self):
         """Tests that we can't set sat with a single negative float"""
@@ -663,7 +655,7 @@ class TestSatNode(unittest.TestCase):
             setSat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetWithInt(self):
         """Tests that we can set sat with a single int"""
@@ -674,7 +666,7 @@ class TestSatNode(unittest.TestCase):
             self.node.sat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetWithNegativeInt(self):
         """Tests that we can't set sat with a single negative float"""
@@ -686,7 +678,7 @@ class TestSatNode(unittest.TestCase):
             setSat
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetWithListFails(self):
         """Tests that we can't set sat with a list"""
@@ -698,22 +690,22 @@ class TestSatNode(unittest.TestCase):
             setSat
         )
 
-# SopNode ======================================================================
+# SopNode =====================================================================
 
 
 class TestSopNode(unittest.TestCase):
     """Tests all aspects of SopNode"""
 
-    #===========================================================================
+    #==========================================================================
     # SETUP & TEARDOWN
-    #===========================================================================
+    #==========================================================================
 
     def setUp(self):
         self.node = cdl_convert.SopNode(self)
 
-    #===========================================================================
+    #==========================================================================
     # TESTS
-    #===========================================================================
+    #==========================================================================
 
     def testParent(self):
         """Tests that parent was attached to us correctly"""
@@ -722,7 +714,7 @@ class TestSopNode(unittest.TestCase):
             self.node.parent
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetParent(self):
         """Tests that we can't set the parent property after init"""
@@ -734,7 +726,7 @@ class TestSopNode(unittest.TestCase):
             setParent
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeDefault(self):
         """Tests that slope starts off with a default value of 1.0"""
@@ -743,7 +735,7 @@ class TestSopNode(unittest.TestCase):
             self.node.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testGetSlope(self):
         """Tests that we can get the slope value"""
@@ -755,7 +747,7 @@ class TestSopNode(unittest.TestCase):
             self.node.slope,
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetSlopeWithString(self):
         """Tests that we can set slope with a single string"""
@@ -766,7 +758,7 @@ class TestSopNode(unittest.TestCase):
             self.node.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetSlopeWithBadString(self):
         """Tests that we can't set slope with a single bad string"""
@@ -778,7 +770,7 @@ class TestSopNode(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetSlopeWithNegativeString(self):
         """Tests that we can't set slope with a single negative string"""
@@ -790,7 +782,7 @@ class TestSopNode(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetSlopeWithFloat(self):
         """Tests that we can set slope with a single float"""
@@ -801,7 +793,7 @@ class TestSopNode(unittest.TestCase):
             self.node.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetSlopeWithNegativeFloat(self):
         """Tests that we can't set slope with a single negative float"""
@@ -813,7 +805,7 @@ class TestSopNode(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetSlopeWithInt(self):
         """Tests that we can set slope with a single int"""
@@ -824,7 +816,7 @@ class TestSopNode(unittest.TestCase):
             self.node.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetSlopeWithNegativeInt(self):
         """Tests that we can't set slope with a single negative float"""
@@ -836,7 +828,7 @@ class TestSopNode(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeSetNegative(self):
         """Tests that ValueError raised if negative value"""
@@ -848,7 +840,7 @@ class TestSopNode(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeSetStrings(self):
         """Tests that TypeError raised if given strings"""
@@ -860,7 +852,7 @@ class TestSopNode(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeFromDict(self):
         """Tests that TypeError raised if given dict"""
@@ -872,7 +864,7 @@ class TestSopNode(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeBadLength(self):
         """Tests passing slope an incorrect length list"""
@@ -884,7 +876,7 @@ class TestSopNode(unittest.TestCase):
             setSlope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSlopeBecomesTuple(self):
         """Tests slope is converted to tuple from list"""
@@ -898,7 +890,7 @@ class TestSopNode(unittest.TestCase):
             self.node.slope
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetDefault(self):
         """Tests that offset starts off with a default value of 1.0"""
@@ -907,7 +899,7 @@ class TestSopNode(unittest.TestCase):
             self.node.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testGetOffset(self):
         """Tests that we can get the offset value"""
@@ -919,7 +911,7 @@ class TestSopNode(unittest.TestCase):
             self.node.offset,
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetOffsetWithString(self):
         """Tests that we can set offset with a single string"""
@@ -930,7 +922,7 @@ class TestSopNode(unittest.TestCase):
             self.node.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetOffsetWithBadString(self):
         """Tests that we can't set offset with a single bad string"""
@@ -942,7 +934,7 @@ class TestSopNode(unittest.TestCase):
             setOffset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetOffsetWithNegativeString(self):
         """Tests that we can set offset with a single negative string"""
@@ -953,7 +945,7 @@ class TestSopNode(unittest.TestCase):
             self.node.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetOffsetWithFloat(self):
         """Tests that we can set offset with a single float"""
@@ -964,7 +956,7 @@ class TestSopNode(unittest.TestCase):
             self.node.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetOffsetWithNegativeFloat(self):
         """Tests that we can set offset with a single negative float"""
@@ -975,7 +967,7 @@ class TestSopNode(unittest.TestCase):
             self.node.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetOffsetWithInt(self):
         """Tests that we can set offset with a single int"""
@@ -986,7 +978,7 @@ class TestSopNode(unittest.TestCase):
             self.node.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetOffsetWithNegativeInt(self):
         """Tests that we can set offset with a single negative int"""
@@ -997,7 +989,7 @@ class TestSopNode(unittest.TestCase):
             self.node.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetSetNegative(self):
         """Tests that offset can be set to negative value"""
@@ -1008,7 +1000,7 @@ class TestSopNode(unittest.TestCase):
             self.node.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetSetStrings(self):
         """Tests that TypeError raised if given strings"""
@@ -1020,7 +1012,7 @@ class TestSopNode(unittest.TestCase):
             setOffset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetFromDict(self):
         """Tests that TypeError raised if given dict"""
@@ -1032,7 +1024,7 @@ class TestSopNode(unittest.TestCase):
             setOffset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetBadLength(self):
         """Tests passing offset an incorrect length list"""
@@ -1044,7 +1036,7 @@ class TestSopNode(unittest.TestCase):
             setOffset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testOffsetBecomesTuple(self):
         """Tests offset is converted to tuple from list"""
@@ -1058,7 +1050,7 @@ class TestSopNode(unittest.TestCase):
             self.node.offset
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerDefault(self):
         """Tests that power starts off with a default value of 1.0"""
@@ -1067,7 +1059,7 @@ class TestSopNode(unittest.TestCase):
             self.node.power
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testGetPower(self):
         """Tests that we can get the power value"""
@@ -1079,7 +1071,7 @@ class TestSopNode(unittest.TestCase):
             self.node.power,
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetPowerWithString(self):
         """Tests that we can set power with a single string"""
@@ -1090,7 +1082,7 @@ class TestSopNode(unittest.TestCase):
             self.node.power
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetPowerWithBadString(self):
         """Tests that we can't set power with a single bad string"""
@@ -1102,7 +1094,7 @@ class TestSopNode(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetPowerWithNegativeString(self):
         """Tests that we can't set power with a single negative string"""
@@ -1114,7 +1106,7 @@ class TestSopNode(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetPowerWithFloat(self):
         """Tests that we can set power with a single float"""
@@ -1125,7 +1117,7 @@ class TestSopNode(unittest.TestCase):
             self.node.power
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetPowerWithNegativeFloat(self):
         """Tests that we can't set power with a single negative float"""
@@ -1137,7 +1129,7 @@ class TestSopNode(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetPowerWithInt(self):
         """Tests that we can set power with a single int"""
@@ -1148,7 +1140,7 @@ class TestSopNode(unittest.TestCase):
             self.node.power
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testSetPowerWithNegativeInt(self):
         """Tests that we can't set power with a single negative float"""
@@ -1160,7 +1152,7 @@ class TestSopNode(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerSetNegative(self):
         """Tests that ValueError raised if negative value"""
@@ -1172,7 +1164,7 @@ class TestSopNode(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerSetStrings(self):
         """Tests that TypeError raised if given strings"""
@@ -1184,7 +1176,7 @@ class TestSopNode(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerFromDict(self):
         """Tests that TypeError raised if given dict"""
@@ -1196,7 +1188,7 @@ class TestSopNode(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerBadLength(self):
         """Tests passing power an incorrect length list"""
@@ -1208,7 +1200,7 @@ class TestSopNode(unittest.TestCase):
             setPower
         )
 
-    #===========================================================================
+    #==========================================================================
 
     def testPowerBecomesTuple(self):
         """Tests power is converted to tuple from list"""
@@ -1222,8 +1214,8 @@ class TestSopNode(unittest.TestCase):
             self.node.power
         )
 
-#===============================================================================
+#==============================================================================
 # RUNNER
-#===============================================================================
+#==============================================================================
 if __name__ == '__main__':
     unittest.main()
