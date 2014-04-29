@@ -143,9 +143,9 @@ class TestParseFLExBasic(unittest.TestCase):
         # The system should clean these up automatically,
         # but we'll be neat.
         os.remove(self.filename)
-        # We need to clear the AscCdl member dictionary so we don't have to
-        # worry about non-unique ids.
-        cdl_convert.AscCdl.members = {}
+        # We need to clear the ColorCorrection member dictionary so we don't
+        # have to worry about non-unique ids.
+        cdl_convert.ColorCorrection.members = {}
 
     #===========================================================================
     # TESTS
@@ -532,7 +532,9 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
         self.cdls = self.raw_cdls[:]
         self.cdl1 = self.cdls[0]
         self.cdl2 = self.cdls[1]
-        self.cdl3 = cdl_convert.AscCdl('bb94_x105_line3', self.filename)
+        self.cdl3 = cdl_convert.ColorCorrection(
+            'bb94_x105_line3', self.filename
+        )
         self.cdl3.metadata['desc'] = self.title
         self.cdls.append(self.cdl3)
 

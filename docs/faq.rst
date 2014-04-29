@@ -27,18 +27,18 @@ CDL Format Support
 Project Structure
 =================
 
-- Why are all the parsers and writers functions, instead of methods on the :class:`AscCdl` class? to
+- Why are all the parsers and writers functions, instead of methods on the :class:`ColorCorrection` class? to
     This seemed the best approach for it's place in the script converter
     that forms a backbone of this project. As support for the more complicated
     formats grows, It's very like that export formats that write out a single
-    file per CDL will live as methods of :class:`AscCdl` , and export formats
-    that write out multiple CDLs will live as methods of the yet unwritten
+    file per CDL will live as methods of :class:`ColorCorrection` , and export
+    formats that write out multiple CDLs will live as methods of the yet unwritten
     container class.
 
     It's extremely unlikely that the parser functions will ever move to be
-    methods of a class (either :class:`AscCdl` or the container) as it wouldn't
-    make logical sense to instantiate the class, call a parse method of that
-    class, then create more copies of itself.
+    methods of a class (either :class:`ColorCorrection` or the container) as
+    it wouldn't make logical sense to instantiate the class, call a parse
+    method of that class, then create more copies of itself.
 
     At some point it may be desirable to create a class representing the input
     file, and at that point that class would definitely contain parse methods.

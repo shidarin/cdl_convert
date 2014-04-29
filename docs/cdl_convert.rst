@@ -17,28 +17,29 @@ the format, and therefore it behooves the project to mimic their structure.
 However, where similar elements exist as entirely separate entities in the XML
 schema, they might have been combined here.
 
-AscCdl
-------
+ColorCorrection
+---------------
 
-The :class:`AscCdl` class is the backbone of cdl_convert, as it represents the
-basic level of the color decision list concept- the color decision list itself.
-All the parse functions exist to extract the CDL metadata and populate this
-class, and all the write functions exist to write files out from this class.
+The :class:`ColorCorrection` class is the backbone of cdl_convert, as it
+represents the basic level of the color decision list concept- the color
+decision list itself. All the parse functions exist to extract the CDL metadata
+and populate this class, and all the write functions exist to write files out
+from this class.
 
-Parser --> :class:`AscCdl` --> Writer
+Parser --> :class:`ColorCorrection` --> Writer
 
-:class:`AscCdl` can of course be instantiated and used without a parse function,
-see :doc:`usage` for a walkthrough.
+:class:`ColorCorrection` can of course be instantiated and used without a parse
+function, see :doc:`usage` for a walkthrough.
 
 .. warning::
     Currently ``cc_id`` does no checking to ensure that it's id is unique among
-    all the :class:`AscCdl` that currently exist. At some point this will likely
-    be added.
+    all the :class:`ColorCorrection` that currently exist. At some point this
+    will likely be added.
 
 .. warning::
     ``cdl_file`` is likely to not be a required attribute in the future.
 
-.. autoclass:: cdl_convert.AscCdl
+.. autoclass:: cdl_convert.ColorCorrection
 
 ColorNodeBase
 -------------
@@ -84,9 +85,9 @@ SopNode
 Parse Functions
 ===============
 
-These functions create and return one of more :class:`AscCdl`, always returning
-their results in the form of a list, even if the file type can only produce
-a single cdl.
+These functions create and return one of more :class:`ColorCorrection`, always
+returning their results in the form of a list, even if the file type can only
+produce a single cdl.
 
 Parse ale
 ---------
@@ -111,9 +112,9 @@ Parse flex
 Write Functions
 ===============
 
-Each of these functions takes an :class:`AscCdl` as an arg, then places as many
-attributes of the :class:`AscCdl` that the format supports into a properly
-formatted string or XML Tree, then writes that file.
+Each of these functions takes an :class:`ColorCorrection` as an arg, then places
+as many attributes of the :class:`ColorCorrection` that the format supports
+into a properly   formatted string or XML Tree, then writes that file.
 
 Write cc
 --------

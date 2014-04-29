@@ -4,7 +4,7 @@
 CDL Convert
 ==========
 
-Converts between common ASC CDL (http://en.wikipedia.org/wiki/AscCdl)
+Converts between common ASC CDL (http://en.wikipedia.org/wiki/ASC_CDL)
 formats. The American Society of Cinematographers Color Decision List (ASC CDL,
 or CDL for short) is a schema to simplify the process of interchanging color
 data between various programs and facilities.
@@ -56,7 +56,7 @@ SOFTWARE.
 Classes
 -------
 
-AscCdl
+ColorCorrection
     The base class for the ASC CDL, containing attributes for all ten of the
     color conversion numbers needed to fully describe an ASC CDL.
 
@@ -129,7 +129,7 @@ else:  # pragma: no cover
 # ==============================================================================
 
 __all__ = [
-    'AscCdl',
+    'ColorCorrection',
     'ColorNodeBase',
     'SatNode',
     'SopNode',
@@ -146,7 +146,7 @@ __all__ = [
 # ==============================================================================
 
 
-class AscCdl(object):  # pylint: disable=R0902
+class ColorCorrection(object):  # pylint: disable=R0902
     """The basic class for the ASC CDL
 
     Description
@@ -168,9 +168,9 @@ class AscCdl(object):  # pylint: disable=R0902
     **Class Attributes:**
 
         members : {str}
-            All instanced :class:`AscCdl` are added to this member dictionary,
-            with their unique id being the key and the :class:`AscCdl` being
-            the value.
+            All instanced :class:`ColorCorrection` are added to this member
+            dictionary, with their unique id being the key and the
+            :class:`ColorCorrection` being the value.
 
     **Attributes:**
 
@@ -220,18 +220,18 @@ class AscCdl(object):  # pylint: disable=R0902
     members = {}
 
     def __init__(self, cc_id, cdl_file):
-        """Inits an instance of an ASC CDL"""
+        """Inits an instance of a ColorCorrection"""
 
-        # Non-ASC attributes
+        # File Attributes
         self._files = {
             'file_in': os.path.abspath(cdl_file),
             'file_out': None
         }
 
-        # The cc_id is really the only required part of an ASC CDL.
+        # The cc_id is really the only required part of a ColorCorrection node
         # Each ID should be unique
         cc_id = _sanitize(cc_id)
-        if cc_id in AscCdl.members.keys():
+        if cc_id in ColorCorrection.members.keys():
             raise ValueError(
                 'Error initiating cc_id to "{cc_id}". This id is already a'
                 'registered id.'.format(
@@ -241,7 +241,7 @@ class AscCdl(object):  # pylint: disable=R0902
         self._cc_id = cc_id
 
         # Register with member dictionary
-        AscCdl.members[self._cc_id] = self
+        ColorCorrection.members[self._cc_id] = self
 
         # ASC_SAT attribute
         self.sat_node = None
@@ -277,6 +277,7 @@ class AscCdl(object):  # pylint: disable=R0902
 
     @cc_id.setter
     def cc_id(self, value):
+        """Before setting make sure new id is unique"""
         self._set_id(value)
 
     @property
@@ -341,7 +342,7 @@ class AscCdl(object):  # pylint: disable=R0902
         """Changes the id field if the new id is unique"""
         cc_id = _sanitize(new_id)
         # Check if this id is already registered
-        if cc_id in AscCdl.members.keys():
+        if cc_id in ColorCorrection.members.keys():
             raise ValueError(
                 'Error setting the cc_id to "{cc_id}". This id is already a '
                 'registered id.'.format(
@@ -350,10 +351,10 @@ class AscCdl(object):  # pylint: disable=R0902
             )
         else:
             # Clear the current id from the dictionary
-            AscCdl.members.pop(self._cc_id)
+            ColorCorrection.members.pop(self._cc_id)
             self._cc_id = cc_id
             # Register the new id with the dictionary
-            AscCdl.members[self._cc_id] = self
+            ColorCorrection.members[self._cc_id] = self
 
     # methods =================================================================
 
@@ -414,8 +415,9 @@ class SatNode(ColorNodeBase):
 
     **Attributes:**
 
-        parent : ( :class:`AscCdl` )
-            The parent :class:`AscCdl` instance that created this instance.
+        parent : ( :class:`ColorCorrection` )
+            The parent :class:`ColorCorrection` instance that created this
+            instance.
 
         sat : (float)
             The saturation value (to be applied with Rec 709 coefficients) is
@@ -437,7 +439,7 @@ class SatNode(ColorNodeBase):
 
     @property
     def parent(self):
-        """Returns which :class:`AscCdl` created this SatNode"""
+        """Returns which :class:`ColorCorrection` created this SatNode"""
         return self._parent
 
     @property
@@ -499,8 +501,9 @@ class SopNode(ColorNodeBase):
 
     **Attributes:**
 
-        parent : ( :class:`AscCdl` )
-            The parent :class:`AscCdl` instance that created this instance.
+        parent : ( :class:`ColorCorrection` )
+            The parent :class:`ColorCorrection` instance that created this
+            instance.
 
         slope : (float, float, float)
             An rgb tuple representing the slope, which changes the slope of the
@@ -546,7 +549,7 @@ class SopNode(ColorNodeBase):
 
     @property
     def parent(self):
-        """Returns which :class:`AscCdl` created this SopNode"""
+        """Returns which :class:`ColorCorrection` created this SopNode"""
         return self._parent
 
     @property
@@ -802,7 +805,7 @@ def parse_ale(edl_file):
             The filepath to the ALE EDL
 
     **Returns:**
-        [:class:`AscCdl`]
+        [:class:`ColorCorrection`]
             A list of CDL objects retrieved from the ALE
 
     **Raises:**
@@ -862,7 +865,7 @@ def parse_ale(edl_file):
                     'power': literal_eval(sop[2])
                 }
 
-                cdl = AscCdl(cc_id, edl_file)
+                cdl = ColorCorrection(cc_id, edl_file)
 
                 cdl.sat = sat
                 cdl.slope = sop_values['slope']
@@ -884,7 +887,7 @@ def parse_cc(cdl_file):
             The filepath to the CC
 
     **Returns:**
-        [:class:`AscCdl`]
+        [:class:`ColorCorrection`]
             A list of CDL objects retrieved from the CC
 
     **Raises:**
@@ -908,8 +911,8 @@ def parse_cc(cdl_file):
             </SatNode>
         </ColorCorrection>
 
-    We'll check to see if each of these elements exist, and override the AscCdl
-    defaults if we find them.
+    We'll check to see if each of these elements exist, and override the
+    ColorCorrection defaults if we find them.
 
     """
     root = ElementTree.parse(cdl_file).getroot()
@@ -925,7 +928,7 @@ def parse_cc(cdl_file):
     except KeyError:
         raise ValueError('No id found on ColorCorrection')
 
-    cdl = AscCdl(cc_id, cdl_file)
+    cdl = ColorCorrection(cc_id, cdl_file)
     # Neither the SOP nor the Sat node actually HAVE to exist, it literally
     # could just be an id and that's it.
     sop = root.find('SOPNode')
@@ -968,7 +971,7 @@ def parse_cdl(cdl_file):
             The filepath to the CDL
 
     **Returns:**
-        [:class:`AscCdl`]
+        [:class:`ColorCorrection`]
             A list with only the single CDL object retrieved from the SS CDL
 
     **Raises:**
@@ -1002,7 +1005,7 @@ def parse_cdl(cdl_file):
 
         sat = line[9]
 
-        cdl = AscCdl(filename, cdl_file)
+        cdl = ColorCorrection(filename, cdl_file)
 
         cdl.slope = slope
         cdl.offset = offset
@@ -1024,7 +1027,7 @@ def parse_flex(edl_file):
             The filepath to the FLEx EDL
 
     **Returns:**
-        [:class:`AscCdl`]
+        [:class:`ColorCorrection`]
             A list of CDL objects retrieved from the FLEx
 
     **Raises:**
@@ -1084,7 +1087,7 @@ def parse_flex(edl_file):
 
         def build_cdl(line_id, edl_path, sop_dict, sat_value, title_line):
             """Builds and returns a cdl if sop/sat values found"""
-            cdl = AscCdl(line_id, edl_path)
+            cdl = ColorCorrection(line_id, edl_path)
             if title_line:
                 cdl.metadata['desc'] = title_line
             if sop_dict:
@@ -1165,7 +1168,7 @@ def parse_flex(edl_file):
 
 
 def write_cc(cdl):
-    """Writes the AscCdl to a .cc file"""
+    """Writes the ColorCorrection to a .cc file"""
 
     xml = CC_XML.format(
         id=cdl.cc_id,
@@ -1188,7 +1191,7 @@ def write_cc(cdl):
 
 
 def write_cdl(cdl):
-    """Writes the AscCdl to a space separated .cdl file"""
+    """Writes the ColorCorrection to a space separated .cdl file"""
 
     values = list(cdl.slope)
     values.extend(cdl.offset)

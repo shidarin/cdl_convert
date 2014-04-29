@@ -28,9 +28,9 @@ input file format. This can be done with the ``-i`` flag.
     You should not normally need to do this, but it is possible especially since
     there are multiple formats sharing the same file extension. In this case,
     ``.cdl`` could have indicated either a space separated cdl, or an XML
-    cdl. ``cdl_convert`` does it's best to try and guess which one the file is, but
-    if you're running into trouble, it might help to indicate to ``cdl_convert``
-    what the input file type is.
+    cdl. ``cdl_convert`` does it's best to try and guess which one the file is,
+    but if you're running into trouble, it might help to indicate to
+    ``cdl_convert`` what the input file type is.
 
 Full help is available using the standard ``--help`` command:
 ::
@@ -61,8 +61,8 @@ other python module.
     >>> import cdl_convert as cdl
 
 
-Creating an :class:`AscCdl`
----------------------------
+Creating an :class:`ColorCorrection`
+------------------------------------
 
 Once imported, you have two choices. You can either instantiate a new, blank
 cdl directly, or you can parse a file on disk.
@@ -70,15 +70,16 @@ cdl directly, or you can parse a file on disk.
 Direct Creation
 ^^^^^^^^^^^^^^^
 
-If you want to create a new instance of :class:`AscCdl`, you have to provide a
-``cc_id``, for the unique cdl identifier and a source filename to ``cdl_file``.
+If you want to create a new instance of :class:`ColorCorrection`, you have to
+provide a ``cc_id``, for the unique cdl identifier and a source filename to
+``cdl_file``.
 
-    >>> cc = cdl.AscCdl(cc_id='cc1', cdl_file='./myfirstcdl.cc')
+    >>> cc = cdl.ColorCorrection(cc_id='cc1', cdl_file='./myfirstcdl.cc')
 
 .. warning::
     Currently ``cc_id`` does no checking to ensure that it's id is unique among
-    all the :class:`AscCdl` that currently exist. At some point this will likely
-    be added.
+    all the :class:`ColorCorrection` that currently exist. At some point this
+    will likely be added.
 
 .. warning::
     It's not possible to change ``cc_id`` or the ``file_in`` attribute once they
@@ -87,8 +88,9 @@ If you want to create a new instance of :class:`AscCdl`, you have to provide a
 .. warning::
     ``cdl_file`` is likely to not be a required attribute in the future.
 
-An :class:`AscCdl` is created with the 10 required values (RGB values for slope,
-offset and power, and a single float for saturation) set to their defaults.
+An :class:`ColorCorrection` is created with the 10 required values (RGB values
+for slope, offset and power, and a single float for saturation) set to their
+defaults.
 
     >>> cc.slope
     (1.0, 1.0, 1.0)
@@ -101,9 +103,9 @@ offset and power, and a single float for saturation) set to their defaults.
 
 .. note::
     ``slope``, ``offset``, ``power`` and ``sat`` are convenience properties that
-    actually reference two child objects of :class:`AscCdl` , a :class:`SopNode`
-    and a :class:`SatNode` . Calling them via ``cc.power`` is the same as
-    calling ``cc.sop_node.power``.
+    actually reference two child objects of :class:`ColorCorrection` , a
+    :class:`SopNode` and a :class:`SatNode` . Calling them via ``cc.power``
+    is the same as calling ``cc.sop_node.power``.
 
 Other, optional parameters are set to None, and accessible as a dictionary under
 the metadata attribute.
@@ -131,25 +133,26 @@ Parsing a CDL file
 ^^^^^^^^^^^^^^^^^^
 
 Instead of creating a blank CDL object, you can parse a file from disk, and it
-will return a list of :class:`AscCdl` found in the file. For some formats like
-``cc``, this list will be one member long. For others like ``flex`` or ``ale``,
-this list could contain hundreds of cdls.
+will return a list of :class:`ColorCorrection` found in the file. For some
+formats like ``cc``, this list will be one member long. For others like
+``flex`` or ``ale``, this list could contain hundreds of cdls.
 
     >>> cdl.parse_cc('./myfirstcdl.cc')
-    [<cdl_convert.AscCdl object at 0x1004a5590>]
+    [<cdl_convert.ColorCorrection object at 0x1004a5590>]
     >>> cdl.parse_ale('/myfirstedl.ale')
     [
-        <cdl_convert.AscCdl object at 0x100633b90>,
-        <cdl_convert.AscCdl object at 0x100633c50>,
-        <cdl_convert.AscCdl object at 0x100633cd0>,
-        <cdl_convert.AscCdl object at 0x100633b50>,
-        <cdl_convert.AscCdl object at 0x100633d90>,
-        <cdl_convert.AscCdl object at 0x100633b10>,
-        <cdl_convert.AscCdl object at 0x100633ad0>,
+        <cdl_convert.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.ColorCorrection object at 0x100633b50>,
+        <cdl_convert.ColorCorrection object at 0x100633d90>,
+        <cdl_convert.ColorCorrection object at 0x100633b10>,
+        <cdl_convert.ColorCorrection object at 0x100633ad0>,
     ]
 
-Once you have an :class:`AscCdl` from a parser, you'll find that whatever values
-it found on the file now exist on the instance of :class:`AscCdl`.
+Once you have an :class:`ColorCorrection` from a parser, you'll find that
+whatever values it found on the file now exist on the instance of
+:class:`ColorCorrection`.
 
     >>> cc = cdl.parse_cc('./xf/015.cc')[0]
     >>> cc.slope
@@ -171,11 +174,11 @@ it found on the file now exist on the instance of :class:`AscCdl`.
     explicitly tagged ``id`` field that is always used. Other formats, like
     ``flex``, have no such field and the parser tries to grab any scene/take
     metadata it can find to construct one. The last fallback is always the
-    filename. For formats that can export multiple :class:`AscCdl` , the ``cc_id``
+    filename. For formats that can export multiple :class:`ColorCorrection` , the ``cc_id``
     has a created instance number after it.
 
-Working with :class:`AscCdl`
-----------------------------
+Working with :class:`ColorCorrection`
+-------------------------------------
 
 Slope, Offset and Power
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -246,9 +249,10 @@ The metadata dictionary is set like any other dictionary.
 Id and Files
 ^^^^^^^^^^^^
 
-At the current time, id and filepaths cannot be changed after :class:`AscCdl`
-instantiation. ``file_out`` is determined by using the class method ``determine_dest``,
-which takes the ``file_in`` directory, the cc_id and figures out the output path.
+At the current time, id and filepaths cannot be changed after
+:class:`ColorCorrection` instantiation. ``file_out`` is determined by using
+the class method ``determine_dest``, which takes the ``file_in`` directory,
+the cc_id and figures out the output path.
 
     >>> cc.file_in
     '/Users/sean/cdls/xf/015.cc'
@@ -262,12 +266,13 @@ which takes the ``file_in`` directory, the cc_id and figures out the output path
 Writing CDLs
 ------------
 
-When you're done tinkering with the :class:`AscCdl` instance, you might want to
-write it out to a file. Currently the output file is written the same directory
-as the input file. We need to give :class:`AscCdl` the file extension we plan
-to write to, then call a ``write`` function with our :class:`AscCdl` instance,
-which will actually convert the values on the :class:`AscCdl` into the format
-desired, then write that format to disk.
+When you're done tinkering with the :class:`ColorCorrection` instance, you
+might want to write it out to a file. Currently the output file is written the
+same directory as the input file. We need to give :class:`ColorCorrection` the
+file extension we plan to write to, then call a ``write`` function with our
+:class:`ColorCorrection` instance, which will actually convert the values on
+the :class:`ColorCorrection` into the format desired, then write that format
+to disk.
 
     >>> cc.determine_dest('cdl')
     >>> cc.file_out
@@ -276,5 +281,5 @@ desired, then write that format to disk.
 
 .. warning::
     It is highly likely that in the future, these will be methods on the
-    :class:`AscCdl` class itself, and that instead of writing the file directly,
-    they will instead return a string formatted for writing.
+    :class:`ColorCorrection` class itself, and that instead of writing the
+    file directly, they will instead return a string formatted for writing.

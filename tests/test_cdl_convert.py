@@ -252,7 +252,7 @@ class TestMain(unittest.TestCase):
 
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
-        self.cdl = cdl_convert.AscCdl(
+        self.cdl = cdl_convert.ColorCorrection(
             cc_id='uniqueId', cdl_file='../testcdl.flex'
         )
         self.inputFormats = cdl_convert.INPUT_FORMATS
@@ -268,9 +268,9 @@ class TestMain(unittest.TestCase):
         cdl_convert.OUTPUT_FORMATS = self.outputFormats
         sys.argv = self.sysargv
         sys.stdout = self.stdout
-        # We need to clear the AscCdl member dictionary so we don't have to
-        # worry about non-unique ids.
-        cdl_convert.AscCdl.members = {}
+        # We need to clear the ColorCorrection member dictionary so we don't
+        # have to worry about non-unique ids.
+        cdl_convert.ColorCorrection.members = {}
 
     #===========================================================================
     # TESTS

@@ -55,15 +55,15 @@ else:
 # TEST CLASSES
 #===============================================================================
 
-# AscCdl =======================================================================
+# ColorCorrection ==============================================================
 
 
-class TestAscCdl(unittest.TestCase):
-    """Tests all aspects of the AscCdl class.
+class TestColorCorrection(unittest.TestCase):
+    """Tests all aspects of the ColorCorrection class.
 
     Many of the tests involving Sop and Sat values are obsolete, since those
     values have been moved into their own class. However, the tests will remain
-    as they're still an attribute of AscCdl
+    as they're still an attribute of ColorCorrection
 
     """
 
@@ -73,12 +73,14 @@ class TestAscCdl(unittest.TestCase):
 
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
-        self.cdl = cdl_convert.AscCdl(cc_id='uniqueId', cdl_file='../testcdl.cc')
+        self.cdl = cdl_convert.ColorCorrection(
+            cc_id='uniqueId', cdl_file='../testcdl.cc'
+        )
 
     def tearDown(self):
-        # We need to clear the AscCdl member dictionary so we don't have to
-        # worry about non-unique ids.
-        cdl_convert.AscCdl.members = {}
+        # We need to clear the ColorCorrection member dictionary so we don't
+        # have to worry about non-unique ids.
+        cdl_convert.ColorCorrection.members = {}
 
     #===========================================================================
     # TESTS
@@ -87,7 +89,7 @@ class TestAscCdl(unittest.TestCase):
     # Properties & Attributes ==================================================
 
     def testFileInReturn(self):
-        """Tests that calling AscCdl.fileIn returns the file given"""
+        """Tests that calling ColorCorrection.fileIn returns the file given"""
         self.assertEqual(
             os.path.abspath('../testcdl.cc'),
             self.cdl.file_in
@@ -120,7 +122,7 @@ class TestAscCdl(unittest.TestCase):
     #===========================================================================
 
     def testIdReturn(self):
-        """Tests that calling AscCdl.cc_id returns the id"""
+        """Tests that calling ColorCorrection.cc_id returns the id"""
         self.assertEqual(
             'uniqueId',
             self.cdl.cc_id
@@ -133,7 +135,7 @@ class TestAscCdl(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            cdl_convert.AscCdl,
+            cdl_convert.ColorCorrection,
             'uniqueId',
             'file'
         )
@@ -145,7 +147,7 @@ class TestAscCdl(unittest.TestCase):
         def setId(cdl):
             cdl.cc_id = 'uniqueId'
 
-        new = cdl_convert.AscCdl('betterId', 'file')
+        new = cdl_convert.ColorCorrection('betterId', 'file')
 
         self.assertRaises(
             ValueError,
@@ -158,20 +160,20 @@ class TestAscCdl(unittest.TestCase):
     def testIdRenameDictionary(self):
         """Tests that dict entries are removed following a rename"""
 
-        new = cdl_convert.AscCdl('betterId', 'file')
+        new = cdl_convert.ColorCorrection('betterId', 'file')
 
         self.assertTrue(
-            'betterId' in cdl_convert.AscCdl.members.keys()
+            'betterId' in cdl_convert.ColorCorrection.members.keys()
         )
 
         new.cc_id = 'betterishId'
 
         self.assertFalse(
-            'betterId' in cdl_convert.AscCdl.members.keys()
+            'betterId' in cdl_convert.ColorCorrection.members.keys()
         )
 
         self.assertTrue(
-            'betterishId' in cdl_convert.AscCdl.members.keys()
+            'betterishId' in cdl_convert.ColorCorrection.members.keys()
         )
 
     #===========================================================================
@@ -468,9 +470,9 @@ class TestColorNodeBase(unittest.TestCase):
         self.node = cdl_convert.ColorNodeBase()
 
     def tearDown(self):
-        # We need to clear the AscCdl member dictionary so we don't have to
-        # worry about non-unique ids.
-        cdl_convert.AscCdl.members = {}
+        # We need to clear the ColorCorrection member dictionary so we don't
+        # have to worry about non-unique ids.
+        cdl_convert.ColorCorrection.members = {}
 
     #===========================================================================
     # TESTS

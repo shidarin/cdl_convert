@@ -107,9 +107,9 @@ class TestParseCDLBasic(unittest.TestCase):
         # The system should clean these up automatically,
         # but we'll be neat.
         os.remove(self.filename)
-        # We need to clear the AscCdl member dictionary so we don't have to
-        # worry about non-unique ids.
-        cdl_convert.AscCdl.members = {}
+        # We need to clear the ColorCorrection member dictionary so we don't
+        # have to worry about non-unique ids.
+        cdl_convert.ColorCorrection.members = {}
 
     #===========================================================================
     # TESTS
@@ -199,7 +199,7 @@ class TestWriteCDLBasic(unittest.TestCase):
         self.power = [.993, .998, 1.0113]
         self.sat = 1.01
 
-        self.cdl = cdl_convert.AscCdl('uniqueId', '../theVeryBestFile.ale')
+        self.cdl = cdl_convert.ColorCorrection('uniqueId', '../theVeryBestFile.ale')
 
         self.cdl.determine_dest('cdl')
         self.cdl.slope = self.slope
@@ -215,9 +215,9 @@ class TestWriteCDLBasic(unittest.TestCase):
             cdl_convert.write_cdl(self.cdl)
 
     def tearDown(self):
-        # We need to clear the AscCdl member dictionary so we don't have to
-        # worry about non-unique ids.
-        cdl_convert.AscCdl.members = {}
+        # We need to clear the ColorCorrection member dictionary so we don't
+        # have to worry about non-unique ids.
+        cdl_convert.ColorCorrection.members = {}
 
     #===========================================================================
     # TESTS
@@ -251,7 +251,9 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
         self.power = [3271893.993, .0000998, 0.0000000000000000113]
         self.sat = 1798787.01
 
-        self.cdl = cdl_convert.AscCdl('uniqueId', '../theVeryBestFile.ale')
+        self.cdl = cdl_convert.ColorCorrection(
+            'uniqueId', '../theVeryBestFile.ale'
+        )
 
         self.cdl.determine_dest('cdl')
         self.cdl.slope = self.slope

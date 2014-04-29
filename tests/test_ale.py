@@ -145,9 +145,9 @@ class TestParseALEBasic(unittest.TestCase):
         # The system should clean these up automatically,
         # but we'll be neat.
         os.remove(self.filename)
-        # We need to clear the AscCdl member dictionary so we don't have to
-        # worry about non-unique ids.
-        cdl_convert.AscCdl.members = {}
+        # We need to clear the ColorCorrection member dictionary so we don't
+        # have to worry about non-unique ids.
+        cdl_convert.ColorCorrection.members = {}
 
     #===========================================================================
     # TESTS
