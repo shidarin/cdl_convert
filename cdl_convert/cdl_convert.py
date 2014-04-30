@@ -147,6 +147,38 @@ __all__ = [
 # ==============================================================================
 
 
+class AscColorSpaceBase(object):  # pylint: disable=R0903
+    """Base class for Asc XML type nodes that deal with colorspace
+
+    This class is meant to be inherited by any node type that used viewing and
+    input colorspace descriptions.
+
+    This class doesn't do a lot right now, as we don't have any specific
+    controls on how to set or retrieve these fields. In the future however,
+    we'll parse incoming descriptions to try and resolve input colorspace and
+    viewing colorspace.
+
+    **Attributes:**
+
+        input_desc : (str)
+            Description of the color space, format and properties of the input
+            images. Individual :class:`ColorCorrections` can override this.
+
+        viewing_desc : (str)
+            Viewing device, settings and environment. Individual
+            :class:`ColorCorrections` can override this.
+
+    """
+    def __init__(self):
+        # For multiple inheritance support.
+        super(AscColorSpaceBase, self).__init__()
+
+        self.input_desc = None
+        self.viewing_desc = None
+
+# ==============================================================================
+
+
 class AscDescBase(object):  # pylint: disable=R0903
     """Base class for most Asc XML type nodes, allows for infinite desc
 
@@ -167,6 +199,7 @@ class AscDescBase(object):  # pylint: disable=R0903
 
     """
     def __init__(self):
+        super(AscDescBase, self).__init__()
         self._desc = []
 
     # Properties ==============================================================
@@ -184,14 +217,18 @@ class AscDescBase(object):  # pylint: disable=R0903
         else:
             self._desc.append(value)
 
+# ==============================================================================
 
-class ColorCollectionBase(AscDescBase):  # pylint: disable=R0903
+
+class ColorCollectionBase(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0903
     """Base class for ColorDecisionList and ColorCorrectionCollection.
 
     Collections need to store children and have access to descriptions,
     input descriptions, and viewing descriptions.
 
     Inherits desc attribute and setters from :class:`AscDescBase`
+
+    Inherits input_desc and viewing_desc from :class:`AscColorSpaceBase`
 
     **Attributes:**
 
@@ -207,13 +244,10 @@ class ColorCollectionBase(AscDescBase):  # pylint: disable=R0903
     def __init__(self):
         super(ColorCollectionBase, self).__init__()
 
-        self.input_desc = None
-        self.viewing_desc = None
-
 # ==============================================================================
 
 
-class ColorCorrection(AscDescBase):  # pylint: disable=R0902
+class ColorCorrection(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0902
     """The basic class for the ASC CDL
 
     Description
@@ -233,6 +267,8 @@ class ColorCorrection(AscDescBase):  # pylint: disable=R0902
     Order of operations is Slope, Offset, Power, then Saturation.
 
     Inherits desc attribute and setters from :class:`AscDescBase`
+
+    Inherits input_desc and viewing_desc from :class:`AscColorSpaceBase`
 
     **Class Attributes:**
 
@@ -257,26 +293,6 @@ class ColorCorrection(AscDescBase):  # pylint: disable=R0902
             new id and the id is changed.
 
             Note that this shadows the builtin id.
-
-        metadata : {str}
-            metadata is a dictionary of the various descriptions that a CDL
-            might have. Included are the 5 default:
-
-                cc_ref:
-                    This is a reference to another CDL's unique id.
-
-                desc: [(str)]
-                    Comments and notes on the correction.
-
-                input_desc:
-                    Description of the color space, format and
-                    properties of the input images.
-
-                media_ref:
-                    A reference link to an image or an image sequence.
-
-                viewing_desc:
-                    Viewing device, settings and environment.
 
         sat_node : ( :class:`SatNode` )
             Contains a reference to a single instance of :class:`SatNode` ,
@@ -320,10 +336,6 @@ class ColorCorrection(AscDescBase):  # pylint: disable=R0902
 
         # ASC_SOP attributes
         self.sop_node = None
-
-        # Metadata
-        self.viewing_desc = None
-        self.input_desc = None
 
     # Properties ==============================================================
 

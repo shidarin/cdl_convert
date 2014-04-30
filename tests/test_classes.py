@@ -47,6 +47,63 @@ else:
 # TEST CLASSES
 #==============================================================================
 
+# AscColorSpaceBase ===========================================================
+
+
+class TestAscColorSpaceBase(unittest.TestCase):
+    """Tests the very simple base class which has colorspace attributes"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.node = cdl_convert.AscColorSpaceBase()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testInputDesc(self):
+        """Tests that input_desc exists and defaults to none"""
+
+        self.assertTrue(
+            hasattr(self.node, 'input_desc')
+        )
+
+        self.assertEqual(
+            None,
+            self.node.input_desc
+        )
+
+        self.node.input_desc = 'Sunset with an Eizo'
+
+        self.assertEqual(
+            'Sunset with an Eizo',
+            self.node.input_desc
+        )
+
+    #==========================================================================
+
+    def testViewingDesc(self):
+        """Tests that viewing_desc exists and defaults to none"""
+
+        self.assertTrue(
+            hasattr(self.node, 'viewing_desc')
+        )
+
+        self.assertEqual(
+            None,
+            self.node.viewing_desc
+        )
+
+        self.node.viewing_desc = 'Darker with a tinge of blah'
+
+        self.assertEqual(
+            'Darker with a tinge of blah',
+            self.node.viewing_desc
+        )
+
 # AscDescBase =================================================================
 
 
@@ -151,7 +208,7 @@ class TestColorCollectionBase(unittest.TestCase):
     #==========================================================================
 
     def testInputDesc(self):
-        """Tests that input_desc exists and defaults to none"""
+        """Tests that input_desc inherited"""
 
         self.assertTrue(
             hasattr(self.node, 'input_desc')
@@ -162,17 +219,10 @@ class TestColorCollectionBase(unittest.TestCase):
             self.node.input_desc
         )
 
-        self.node.input_desc = 'Sunset with an Eizo'
-
-        self.assertEqual(
-            'Sunset with an Eizo',
-            self.node.input_desc
-        )
-
     #==========================================================================
 
     def testViewingDesc(self):
-        """Tests that viewing_desc exists and defaults to none"""
+        """Tests that viewing_desc inherited"""
 
         self.assertTrue(
             hasattr(self.node, 'viewing_desc')
@@ -183,11 +233,18 @@ class TestColorCollectionBase(unittest.TestCase):
             self.node.viewing_desc
         )
 
-        self.node.viewing_desc = 'Darker with a tinge of blah'
+    #==========================================================================
+
+    def testDesc(self):
+        """Tests that desc inherited"""
+
+        self.assertTrue(
+            hasattr(self.node, 'desc')
+        )
 
         self.assertEqual(
-            'Darker with a tinge of blah',
-            self.node.viewing_desc
+            (),
+            self.node.desc
         )
 
 # ColorCorrection =============================================================
@@ -222,6 +279,49 @@ class TestColorCorrection(unittest.TestCase):
     #==========================================================================
 
     # Properties & Attributes =================================================
+
+    def testInputDesc(self):
+        """Tests that input_desc inherited"""
+
+        self.assertTrue(
+            hasattr(self.cdl, 'input_desc')
+        )
+
+        self.assertEqual(
+            None,
+            self.cdl.input_desc
+        )
+
+    #==========================================================================
+
+    def testViewingDesc(self):
+        """Tests that viewing_desc inherited"""
+
+        self.assertTrue(
+            hasattr(self.cdl, 'viewing_desc')
+        )
+
+        self.assertEqual(
+            None,
+            self.cdl.viewing_desc
+        )
+
+    #==========================================================================
+
+    def testDesc(self):
+        """Tests that desc inherited"""
+
+        self.assertTrue(
+            hasattr(self.cdl, 'desc')
+        )
+
+        self.assertEqual(
+            (),
+            self.cdl.desc
+        )
+
+    #==========================================================================
+
 
     def testFileInReturn(self):
         """Tests that calling ColorCorrection.fileIn returns the file given"""
@@ -608,8 +708,17 @@ class TestColorNodeBase(unittest.TestCase):
     # TESTS
     #==========================================================================
 
-    # No tests remain after moving desc tests out. Should probably move tests
-    # for the _check_single_value in.
+    def testDesc(self):
+        """Tests that desc inherited"""
+
+        self.assertTrue(
+            hasattr(self.node, 'desc')
+        )
+
+        self.assertEqual(
+            (),
+            self.node.desc
+        )
 
 
 # SatNode =====================================================================
@@ -627,6 +736,20 @@ class TestSatNode(unittest.TestCase):
 
     #==========================================================================
     # TESTS
+    #==========================================================================
+
+    def testDesc(self):
+        """Tests that desc inherited"""
+
+        self.assertTrue(
+            hasattr(self.node, 'desc')
+        )
+
+        self.assertEqual(
+            (),
+            self.node.desc
+        )
+
     #==========================================================================
 
     def testParent(self):
@@ -777,6 +900,20 @@ class TestSopNode(unittest.TestCase):
 
     #==========================================================================
     # TESTS
+    #==========================================================================
+
+    def testDesc(self):
+        """Tests that desc inherited"""
+
+        self.assertTrue(
+            hasattr(self.node, 'desc')
+        )
+
+        self.assertEqual(
+            (),
+            self.node.desc
+        )
+
     #==========================================================================
 
     def testParent(self):
