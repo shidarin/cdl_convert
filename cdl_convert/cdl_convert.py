@@ -147,7 +147,7 @@ __all__ = [
 # ==============================================================================
 
 
-class AscBase(object):  # pylint: disable=R0903
+class AscDescBase(object):  # pylint: disable=R0903
     """Base class for most Asc XML type nodes, allows for infinite desc
 
     This class is meant to be inherited by any node type that uses description
@@ -185,13 +185,13 @@ class AscBase(object):  # pylint: disable=R0903
             self._desc.append(value)
 
 
-class ColorCollectionBase(AscBase):  # pylint: disable=R0903
+class ColorCollectionBase(AscDescBase):  # pylint: disable=R0903
     """Base class for ColorDecisionList and ColorCorrectionCollection.
 
     Collections need to store children and have access to descriptions,
     input descriptions, and viewing descriptions.
 
-    Inherits desc attribute and setters from :class:`AscBase`
+    Inherits desc attribute and setters from :class:`AscDescBase`
 
     **Attributes:**
 
@@ -213,7 +213,7 @@ class ColorCollectionBase(AscBase):  # pylint: disable=R0903
 # ==============================================================================
 
 
-class ColorCorrection(AscBase):  # pylint: disable=R0902
+class ColorCorrection(AscDescBase):  # pylint: disable=R0902
     """The basic class for the ASC CDL
 
     Description
@@ -232,7 +232,7 @@ class ColorCorrection(AscBase):  # pylint: disable=R0902
 
     Order of operations is Slope, Offset, Power, then Saturation.
 
-    Inherits desc attribute and setters from :class:`AscBase`
+    Inherits desc attribute and setters from :class:`AscDescBase`
 
     **Class Attributes:**
 
@@ -437,10 +437,10 @@ class ColorCorrection(AscBase):  # pylint: disable=R0902
 # ==============================================================================
 
 
-class ColorNodeBase(AscBase):  # pylint: disable=R0903
+class ColorNodeBase(AscDescBase):  # pylint: disable=R0903
     """Base class for SOP and SAT nodes.
 
-    Inherits desc from :class:`AscBase`
+    Inherits desc from :class:`AscDescBase`
 
     """
     def __init__(self):
