@@ -34,22 +34,144 @@ import cdl_convert.cdl_convert as cdl_convert
 # GLOBALS
 #==============================================================================
 
-# We'll build what we know if a valid XML tree by hand, so we can test that our
-# fancy etree code is working correctly
+# We'll save out different and broken XMLs by hand.
 
-CC_OPEN = """<?xml version="1.0" encoding="UTF-8"?>
-<ColorCorrection{idAttrib}>
+# Valid XMLs ==================================================================
+
+CC_FULL = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="014_xf_seqGrade_v01">
+    <Description>CC description 1</Description>
+    <InputDescription>Input Desc Text</InputDescription>
+    <Description>CC description 2</Description>
+    <SOPNode>
+        <Description>Sop description 1</Description>
+        <Description>Sop description 2</Description>
+        <Slope>1.014 1.0104 0.62</Slope>
+        <Offset>-0.00315 -0.00124 0.3103</Offset>
+        <Power>1.0 0.9983 1.0</Power>
+        <Description>Sop description 3</Description>
+    </SOPNode>
+    <Description>CC description 3</Description>
+    <SATNode>
+        <Description>Sat description 1</Description>
+        <Saturation>1.09</Saturation>
+        <Description>Sat description 2</Description>
+    </SATNode>
+    <Description>CC description 4</Description>
+    <ViewingDescription>Viewing Desc Text</ViewingDescription>
+    <Description>CC description 5</Description>
+</ColorCorrection>
 """
-CC_SOP_OPEN = "    <SOPNode>\n"
-CC_DESC = "        <Description>{desc}</Description>\n"
-CC_SLOPE = "        <Slope>{slopeR} {slopeG} {slopeB}</Slope>\n"
-CC_OFFSET = "        <Offset>{offsetR} {offsetG} {offsetB}</Offset>\n"
-CC_POWER = "        <Power>{powerR} {powerG} {powerB}</Power>\n"
-CC_SOP_CLOSE = "    </SOPNode>\n"
-CC_SAT_OPEN = "    <SatNode>\n"
-CC_SAT = "        <Saturation>{sat}</Saturation>\n"
-CC_SAT_CLOSE = "    </SatNode>\n"
-CC_CLOSE = "</ColorCorrection>\n"
+
+CC_BASIC = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="f51.200">
+    <SopNode>
+        <Slope>0.2331 0.678669 1.0758</Slope>
+        <Offset>0.031 0.128 -0.096</Offset>
+        <Power>1.8 0.97 0.961</Power>
+    </SopNode>
+    <SatNode>
+        <Saturation>1.01</Saturation>
+    </SatNode>
+</ColorCorrection>
+"""
+
+CC_BASIC_ODD = r"""<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="f55.100">
+    <Description>Raised saturation a little!?! ag... \/Offset</Description>
+    <Description>Raised saturation a little!?! ag... \/Offset</Description>
+    <InputDescription>METAL VIEWER!!! \/\/</InputDescription>
+    <ViewingDescription>WOOD VIEWER!? \\\\////</ViewingDescription>
+    <SopNode>
+        <Description>Raised saturation a little!?! ag... \/Offset</Description>
+        <Slope>137829.329 4327890.9833 3489031.003</Slope>
+        <Offset>-3424.011 -342789423.013 -4238923.11</Offset>
+        <Power>3271893.993 .0000998 0.0000000000000000113</Power>
+    </SopNode>
+    <SatNode>
+        <Saturation>1798787.01</Saturation>
+    </SatNode>
+</ColorCorrection>
+"""
+
+CC_BASIC_ORDER = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="f54.112">
+    <ASC_SAT>
+        <Saturation>1.01</Saturation>
+    </ASC_SATe>
+    <ASC_SOP>
+        <Slope>0.2331 0.678669 1.0758</Slope>
+        <Offset>0.031 0.128 -0.096</Offset>
+        <Power>1.8 0.97 0.961</Power>
+    </ASC_SOP>
+</ColorCorrection>
+"""
+
+CC_BLANK_METADATA = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="burp_100.x12">
+    <ViewingDescription></ViewingDescription>
+    <Description></Description>
+    <SOPNode>
+        <Description></Description>
+        <Slope>1.014 1.0104 0.62</Slope>
+        <Offset>-0.00315 -0.00124 0.3103</Offset>
+        <Power>1.0 0.9983 1.0</Power>
+    </SOPNode>
+    <Description></Description>
+    <InputDescription></InputDescription>
+    <SatNode>
+        <Saturation>1.09</Saturation>
+        <Description></Description>
+    </SatNode>
+    <Description></Description>
+</ColorCorrection>
+"""
+
+# Bad XMLs ====================================================================
+
+CC_NO_ID = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection>
+    <SopNode>
+        <Slope>0.2331 0.678669 1.0758</Slope>
+        <Offset>0.031 0.128 -0.096</Offset>
+        <Power>1.8 0.97 0.961</Power>
+    </SopNode>
+    <SatNode>
+        <Saturation>1.01</Saturation>
+    </SatNode>
+</ColorCorrection>
+"""
+
+CC_BLANK_ID = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="">
+    <SopNode>
+        <Slope>0.2331 0.678669 1.0758</Slope>
+        <Offset>0.031 0.128 -0.096</Offset>
+        <Power>1.8 0.97 0.961</Power>
+    </SopNode>
+    <SatNode>
+        <Saturation>1.01</Saturation>
+    </SatNode>
+</ColorCorrection>
+"""
+
+CC_NO_SOP = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="burp_200.x15">
+    <SatNode>
+        <Saturation>1.01</Saturation>
+    </SatNode>
+</ColorCorrection>
+"""
+
+CC_NO_SAT = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="burp_300.x35">
+    <SopNode>
+        <Slope>0.2331 0.678669 1.0758</Slope>
+        <Offset>0.031 0.128 -0.096</Offset>
+        <Power>1.8 0.97 0.961</Power>
+    </SopNode>
+</ColorCorrection>
+"""
 
 # misc ========================================================================
 
@@ -505,47 +627,6 @@ class TestParseCCExceptions(unittest.TestCase):
 #==============================================================================
 # FUNCTIONS
 #==============================================================================
-
-
-def buildCC(id=None, desc=None, slope=None, offset=None, power=None, sat=None,
-            emptySop=False, emptySat=False):
-    """Builds a valid CC XML the hard way, to test against
-
-    Proving emptySop or emptySat will cause the SOPNode and SatNode to open,
-    but with no sat values placed inside
-
-    """
-    if id:
-        id = ' id="{id}"'.format(id=id)
-    else:
-        id = ''
-
-    cc = CC_OPEN.format(idAttrib=id)
-    if desc or slope or offset or power or emptySop:
-        cc += CC_SOP_OPEN
-        if desc:
-            cc += CC_DESC.format(desc=desc)
-        if slope:
-            cc += CC_SLOPE.format(
-                slopeR=slope[0], slopeG=slope[1], slopeB=slope[2]
-            )
-        if offset:
-            cc += CC_OFFSET.format(
-                offsetR=offset[0], offsetG=offset[1], offsetB=offset[2]
-            )
-        if power:
-            cc += CC_POWER.format(
-                powerR=power[0], powerG=power[1], powerB=power[2]
-            )
-        cc += CC_SOP_CLOSE
-    if sat or emptySat:
-        cc += CC_SAT_OPEN
-        if sat:
-            cc += CC_SAT.format(sat=sat)
-        cc += CC_SAT_CLOSE
-    cc += CC_CLOSE
-
-    return cc
 
 
 #==============================================================================
