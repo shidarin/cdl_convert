@@ -147,36 +147,27 @@ __all__ = [
 # ==============================================================================
 
 
-class ColorCollectionBase(object):  # pylint: disable=R0903
-    """Base class for ColorDecisionList and ColorCorrectionCollection.
+class AscBase(object):  # pylint: disable=R0903
+    """Base class for most Asc XML type nodes, allows for infinite desc
 
-    Collections need to store children and have access to descriptions,
-    input descriptions, and viewing descriptions.
+    This class is meant to be inherited by any node type that uses description
+    fields.
 
     **Attributes:**
 
         desc : [str]
-            Since both SAT and SOP nodes can contain an infinite number of
-            descriptions, the desc attribute is a list, allowing us to store
-            every single description found during parsing.
+            Since all Asc nodes which can contain a single description, can
+            actually contain an infinite number of descriptions, the desc
+            attribute is a list, allowing us to store every single description
+            found during parsing.
 
             Setting desc directly will cause the value given to append to the
             end of the list, but desc can also be extended by passing it a list
             or tuple.
 
-        input_desc : (str)
-            Description of the color space, format and properties of the input
-            images. Individual :class:`ColorCorrections` can override this.
-
-        viewing_desc : (str)
-            Viewing device, settings and environment. Individual
-            :class:`ColorCorrections` can override this.
-
     """
     def __init__(self):
         self._desc = []
-        self.input_desc = None
-        self.viewing_desc = None
 
     # Properties ==============================================================
 
@@ -193,10 +184,36 @@ class ColorCollectionBase(object):  # pylint: disable=R0903
         else:
             self._desc.append(value)
 
+
+class ColorCollectionBase(AscBase):  # pylint: disable=R0903
+    """Base class for ColorDecisionList and ColorCorrectionCollection.
+
+    Collections need to store children and have access to descriptions,
+    input descriptions, and viewing descriptions.
+
+    Inherits desc attribute and setters from :class:`AscBase`
+
+    **Attributes:**
+
+        input_desc : (str)
+            Description of the color space, format and properties of the input
+            images. Individual :class:`ColorCorrections` can override this.
+
+        viewing_desc : (str)
+            Viewing device, settings and environment. Individual
+            :class:`ColorCorrections` can override this.
+
+    """
+    def __init__(self):
+        super(ColorCollectionBase, self).__init__()
+
+        self.input_desc = None
+        self.viewing_desc = None
+
 # ==============================================================================
 
 
-class ColorCorrection(object):  # pylint: disable=R0902
+class ColorCorrection(AscBase):  # pylint: disable=R0902
     """The basic class for the ASC CDL
 
     Description
@@ -214,6 +231,8 @@ class ColorCorrection(object):  # pylint: disable=R0902
     asc-cdl at theasc dot com
 
     Order of operations is Slope, Offset, Power, then Saturation.
+
+    Inherits desc attribute and setters from :class:`AscBase`
 
     **Class Attributes:**
 
@@ -273,6 +292,7 @@ class ColorCorrection(object):  # pylint: disable=R0902
 
     def __init__(self, id, cdl_file):  # pylint: disable=W0622
         """Inits an instance of a ColorCorrection"""
+        super(ColorCorrection, self).__init__()
 
         # File Attributes
         self._files = {
@@ -302,13 +322,8 @@ class ColorCorrection(object):  # pylint: disable=R0902
         self.sop_node = None
 
         # Metadata
-        self.metadata = {
-            'cc_ref': None,
-            'desc': [],
-            'input_desc': None,
-            'media_ref': None,
-            'viewing_desc': None
-        }
+        self.viewing_desc = None
+        self.input_desc = None
 
     # Properties ==============================================================
 
@@ -422,38 +437,14 @@ class ColorCorrection(object):  # pylint: disable=R0902
 # ==============================================================================
 
 
-class ColorNodeBase(object):  # pylint: disable=R0903
-    """Base class for SOP and SAT nodes
+class ColorNodeBase(AscBase):  # pylint: disable=R0903
+    """Base class for SOP and SAT nodes.
 
-    **Attributes:**
-
-        desc : [str]
-            Since both SAT and SOP nodes can contain an infinite number of
-            descriptions, the desc attribute is a list, allowing us to store
-            every single description found during parsing.
-
-            Setting desc directly will cause the value given to append to the
-            end of the list, but desc can also be extended by passing it a list
-            or tuple.
+    Inherits desc from :class:`AscBase`
 
     """
     def __init__(self):
-        self._desc = []
-
-    # Properties ==============================================================
-
-    @property
-    def desc(self):
-        """Returns the list of descriptions"""
-        return tuple(self._desc)
-
-    @desc.setter
-    def desc(self, value):
-        """Adds an entry to the descriptions"""
-        if type(value) in [list, tuple]:
-            self._desc.extend(value)
-        else:
-            self._desc.append(value)
+        super(ColorNodeBase, self).__init__()
 
     # Private Methods =========================================================
 
@@ -972,7 +963,7 @@ def parse_cc(cdl_file):
         power = sop.find('Power')
 
         if desc is not None:
-            cdl.metadata['desc'] = desc.text
+            cdl.desc = desc.text
         if slope is not None:
             cdl.slope = slope.text.split()
         if offset is not None:
@@ -1118,7 +1109,7 @@ def parse_flex(edl_file):
             """Builds and returns a cc if sop/sat values found"""
             col_cor = ColorCorrection(line_id, edl_path)
             if title_line:
-                col_cor.metadata['desc'] = title_line
+                col_cor.desc = title_line
             if sop_dict:
                 # If it finds the 701 line, it will have all three
                 col_cor.slope = sop_dict['slope']

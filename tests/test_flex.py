@@ -256,8 +256,8 @@ class TestParseFLExBasic(unittest.TestCase):
 
         for i in range(3):
             self.assertEqual(
-                self.title,
-                self.cdls[i].metadata['desc']
+                (self.title, ),
+                self.cdls[i].desc
             )
 
 
@@ -482,8 +482,8 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
 
         for i in range(3):
             self.assertEqual(
-                [],
-                self.cdls[i].metadata['desc']
+                (),
+                self.cdls[i].desc
             )
 
 
@@ -535,7 +535,7 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
         self.cdl3 = cdl_convert.ColorCorrection(
             'bb94_x105_line3', self.filename
         )
-        self.cdl3.metadata['desc'] = self.title
+        self.cdl3.desc = self.title
         self.cdls.append(self.cdl3)
 
     #==========================================================================

@@ -122,8 +122,8 @@ class TestParseCCBasic(unittest.TestCase):
     def testDesc(self):
         """Tests that desc was set to desc element"""
         self.assertEqual(
-            self.desc,
-            self.cdl.metadata['desc']
+            (self.desc, ),
+            self.cdl.desc
         )
 
     #==========================================================================
