@@ -129,6 +129,8 @@ else:  # pragma: no cover
 # ==============================================================================
 
 __all__ = [
+    'AscColorSpaceBase',
+    'AscDescBase',
     'ColorCollectionBase',
     'ColorCorrection',
     'ColorNodeBase',
