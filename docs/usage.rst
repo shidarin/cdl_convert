@@ -107,27 +107,13 @@ defaults.
     :class:`SopNode` and a :class:`SatNode` . Calling them via ``cc.power``
     is the same as calling ``cc.sop_node.power``.
 
-Other, optional parameters are set to None, and accessible as a dictionary under
-the metadata attribute.
-
-    >>> cc.metadata
-    {
-        'viewing_desc': None,
-        'cc_ref': None,
-        'media_ref': None,
-        'input_desc': None,
-        'desc': None
-    }
-
-.. note::
-    All of these values should be a single string with the exception of the
-    ``desc``, because XML formats can contain an infinite number of ``desc``
-    elements. Desc should be a list, with each entry from the CDL level being
-    it's own string in that list.
-
-.. warning::
-    ``desc`` might move back into it's own protected attribute with a setter
-    that enforces the behavior described above.
+The :class:`ColorCorrection` class inherits from both the
+:class:`AscColorSpaceBase` class, and the :class:`AscDescBase` class, giving it
+the additional attributes of ``input_desc`` (to describe the colorspace entering
+the correction, ``viewing_desc`` (to describe the colorspace conversions that
+must occur for viewing, and what type of monitor was used), and ``desc`` (which
+can be an infinitely long list of shot descriptions, gripes, notes and
+ramblings).
 
 Parsing a CDL file
 ^^^^^^^^^^^^^^^^^^
@@ -237,19 +223,56 @@ that we do on SOP values happen for saturation as well.
         raise ValueError("Saturation must be a positive value")
     ValueError: Saturation must be a positive value
 
-Metadata
-^^^^^^^^
+Description
+^^^^^^^^^^^
 
-The metadata dictionary is set like any other dictionary.
+Certain formats of the cdl will contain multiple description entries. Each
+description entry is added to the ``desc`` attribute, which returns a list of
+the entries.
 
-    >>> cc.metadata['viewing_desc'] = "DCIrgb through Christie 4k"
-    >>> cc.metadata['viewing_desc']
-    "DCIrgb through Christie 4k"
+    >>> cc.desc
+    ['John enters the room', '5.6 ISO 800', 'bad take']
+
+You can append to list by setting the description field like normal.
+
+    >>> cc.desc = 'final cc'
+    >>> cc.desc
+    ['John enters the room', '5.6 ISO 800', 'bad take', 'final cc]
+
+Setting the value to a new list or tuple will replace the list.
+
+    >>> cc.desc
+    ['John enters the room', '5.6 ISO 800', 'bad take', 'final cc]
+    >>> cc.desc = ['first comment', 'second comment']
+    >>> cc.desc
+    ['first comment', 'second comment']
 
 Id and Files
 ^^^^^^^^^^^^
 
-At the current time, id and filepaths cannot be changed after
+When creating a :class:`ColorCorrection`, the ``id`` field is checked against a
+global list of :class:`ColorCorrection` ids, and creation fails if the ``id``
+is not unique.
+
+You can change the id after creation, but it will perform the same check.
+
+    >>> cc = cdl.ColorCorrection(id='cc1', cdl_file='./myfirstcdl.cc')
+    >>> cc2 = cdl.ColorCorrection(id='cc2', cdl_file='./mysecondcdl.cc')
+    >>> cc.id
+    Out[6]: 'cc1'
+    >>> cc2.id
+    Out[7]: 'cc2'
+    >>> cc2.id = 'cc1'
+    Traceback (most recent call last):
+      File "<ipython-input-8-b2b5487dbc63>", line 1, in <module>
+        cc2.id = 'cc1'
+      File "cdl_convert/cdl_convert.py", line 362, in id
+        self._set_id(value)
+      File "cdl_convert/cdl_convert.py", line 430, in _set_id
+        cc_id=cc_id
+    ValueError: Error setting the id to "cc1". This id is already a registered id.
+
+At the current time, filepaths cannot be changed after
 :class:`ColorCorrection` instantiation. ``file_out`` is determined by using
 the class method ``determine_dest``, which takes the ``file_in`` directory,
 the ``id`` and figures out the output path.

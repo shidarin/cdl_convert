@@ -17,6 +17,29 @@ the format, and therefore it behooves the project to mimic their structure.
 However, where similar elements exist as entirely separate entities in the XML
 schema, they might have been combined here.
 
+AscColorSpaceBase
+-----------------
+
+Classes that deal with input and viewer colorspace can subclass from this class
+to get the ``input_desc`` and ``viewing_desc`` attributes.
+
+.. note::
+    This class is a stub for now. In the future it will have colorspace related
+    functionality.
+
+.. autoclass:: cdl_convert.AscColorSpaceBase
+
+AscDescBase
+-----------
+
+Classes that are allowed to have a description field subclass from this from
+this class to get the ``desc`` attribute. The ``desc`` attribute can be set
+with a single string, which will append to the list of strings already present
+in ``desc``. If set to a list or tuple, ``desc`` will become a list of those
+values. If set to ``None``, ``desc`` will become an empty list.
+
+.. autoclass:: cdl_convert.AscDescBase
+
 ColorCollectionBase
 -------------------
 
@@ -53,18 +76,8 @@ function, see :doc:`usage` for a walkthrough.
 ColorNodeBase
 -------------
 
-The base node for the SAT and SOP values is a little different than the base
-nodes for the ColorCorrect classes, as SAT and SOP nodes cannot contain any
-fields except ``description``. Like the other nodes however, they can contain
-an infinite amount of descriptions.
-
 This class only exists to be subclassed by :class:`SatNode` and :class:`SopNode`
-and thus should never be used directly.
-
-.. warning::
-    Node that setting the ``desc`` attribute directly using a traditional method
-    of ``cnb.desc = 'Bob walked into the room'`` will result it that string
-    being appended into the list returned when calling ``desc``.
+and should not be used directly.
 
 .. autoclass:: cdl_convert.ColorNodeBase
 
