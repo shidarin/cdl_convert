@@ -70,7 +70,7 @@ else:
 # TEST CLASSES
 #==============================================================================
 
-
+'''
 class TestParseCCBasic(unittest.TestCase):
     """Tests parsing a cc xml"""
 
@@ -501,7 +501,7 @@ class TestParseCCExceptions(unittest.TestCase):
             cdl_convert.parse_cc,
             self.file
         )
-
+'''
 #==============================================================================
 # FUNCTIONS
 #==============================================================================

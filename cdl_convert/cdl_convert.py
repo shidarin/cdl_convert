@@ -543,7 +543,7 @@ class SatNode(ColorNodeBase):
     """
 
     # XML Fields for SopNodes can be one of these names:
-    element_names = ['ASC_SAT', 'SATNode']
+    element_names = ['ASC_SAT', 'SATNode', 'SatNode']
 
     def __init__(self, parent):
         super(SatNode, self).__init__()
@@ -638,7 +638,7 @@ class SopNode(ColorNodeBase):
     """
 
     # XML Fields for SopNodes can be one of these names:
-    element_names = ['ASC_SOP', 'SOPNode']
+    element_names = ['ASC_SOP', 'SOPNode', 'SopNode']
 
     def __init__(self, parent):
         super(SopNode, self).__init__()
@@ -947,8 +947,9 @@ def parse_cc(cdl_file):
             </SatNode>
         </ColorCorrection>
 
-    We'll check to see if each of these elements exist, and override the
-    ColorCorrection defaults if we find them.
+    Additional elements can include multiple descriptions at every level,
+    a description of the input colorspace, and a description of the viewing
+    colorspace and equipment.
 
     """
     root = ElementTree.parse(cdl_file).getroot()
@@ -965,32 +966,78 @@ def parse_cc(cdl_file):
         raise ValueError('No id found on ColorCorrection')
 
     cdl = ColorCorrection(cc_id, cdl_file)
-    # Neither the SOP nor the Sat node actually HAVE to exist, it literally
-    # could just be an id and that's it.
-    sop = root.find('SOPNode')
-    sat = root.find('SatNode')
 
-    # We make a specific comparison against None, because etree creates errors
-    # otherwise (future behavior is changing)
-    if sop is not None:
-        desc = sop.find('Description')
-        slope = sop.find('Slope')
-        offset = sop.find('Offset')
-        power = sop.find('Power')
+    # Grab our descriptions and add them to the cdl
+    for desc_entry in root.findall('Description'):
+        cdl.desc.append(desc_entry.text)
+    # See if we have a viewing description
+    try:
+        cdl.viewing_desc = root.find('ViewingDescription').text
+    except AttributeError:
+        pass
+    # See if we have an input description
+    try:
+        cdl.input_desc = root.find('InputDescription').text
+    except AttributeError:
+        pass
 
-        if desc is not None:
-            cdl.desc = desc.text
-        if slope is not None:
-            cdl.slope = slope.text.split()
-        if offset is not None:
-            cdl.offset = offset.text.split()
-        if power is not None:
-            cdl.power = power.text.split()
-    if sat is not None:
-        sat_value = sat.find('Saturation')
+    # Both sop and sat must exist
 
-        if sat_value is not None:
-            cdl.sat = sat_value.text
+    def find_required(elem, names):
+        """Finds the required element and returns the found value.
+
+        Args:
+            root : <ElementTree.Element>
+                The element to search in.
+
+            names : [str]
+                A list of names the element might be under.
+
+        Raises:
+            ValueError:
+                If element does not contain the required name.
+
+        Returns:
+            <ElementTree.Element>
+
+        """
+        found_element = None
+
+        for possibility in names:
+            found_element = elem.find(possibility)
+            if found_element is not None:
+                break
+
+        # element might never have been triggered.
+        if found_element is None:
+            raise ValueError(
+                'The ColorCorrection element could not be parsed because the '
+                'XML is missing required elements: {elems}'.format(
+                    elems=str(names)
+                )
+            )
+        else:
+            return found_element
+
+    sop_xml = find_required(root, SopNode.element_names)
+    sat_xml = find_required(root, SatNode.element_names)
+
+    cdl.slope = find_required(sop_xml, ['Slope']).text.split()
+    cdl.offset = find_required(sop_xml, ['Offset']).text.split()
+    cdl.power = find_required(sop_xml, ['Power']).text.split()
+
+    # Calling the slope, offset and power attributes on the cdl will have
+    # created an instance of SopNode on cdl.sop_node, so we can populate those
+    # descriptions.
+    for desc_entry in sop_xml.findall('Description'):
+        cdl.sop_node.desc.append(desc_entry.text)
+
+    cdl.sat = find_required(sat_xml, ['Saturation']).text
+
+    # In the same manor of sop, we can call the sat node now to set the desc
+    # descriptions.
+    for desc_entry in sat_xml.findall('Description'):
+        cdl.sat_node.desc.append(desc_entry.text)
 
     cdls.append(cdl)
 
