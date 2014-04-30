@@ -256,7 +256,7 @@ class TestParseFLExBasic(unittest.TestCase):
 
         for i in range(3):
             self.assertEqual(
-                (self.title, ),
+                [self.title, ],
                 self.cdls[i].desc
             )
 
@@ -482,7 +482,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
 
         for i in range(3):
             self.assertEqual(
-                (),
+                [],
                 self.cdls[i].desc
             )
 

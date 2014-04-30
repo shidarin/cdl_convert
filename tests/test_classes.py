@@ -125,7 +125,7 @@ class TestAscDescBase(unittest.TestCase):
         """Tests that on init desc is created and empty"""
 
         self.assertEqual(
-            (),
+            [],
             self.node.desc
         )
 
@@ -137,7 +137,7 @@ class TestAscDescBase(unittest.TestCase):
         self.node.desc = 'first description'
 
         self.assertEqual(
-            ('first description', ),
+            ['first description', ],
             self.node.desc
         )
 
@@ -149,20 +149,20 @@ class TestAscDescBase(unittest.TestCase):
         self.node.desc = 'first description'
 
         self.assertEqual(
-            ('first description', ),
+            ['first description', ],
             self.node.desc
         )
 
         self.node.desc = 'second description'
 
         self.assertEqual(
-            ('first description', 'second description'),
+            ['first description', 'second description'],
             self.node.desc
         )
 
     #==========================================================================
 
-    def testExtendWithList(self):
+    def testReplaceWithList(self):
         """Tests extending the desc with another list"""
 
         # Bypass setter
@@ -171,7 +171,7 @@ class TestAscDescBase(unittest.TestCase):
         self.node.desc = ['second description', 'third description']
 
         self.assertEqual(
-            ('first description', 'second description', 'third description'),
+            ['second description', 'third description'],
             self.node.desc
         )
 
@@ -186,7 +186,76 @@ class TestAscDescBase(unittest.TestCase):
         self.node.desc = ('second description', 'third description')
 
         self.assertEqual(
-            ('first description', 'second description', 'third description'),
+            ['second description', 'third description'],
+            self.node.desc
+        )
+
+    #==========================================================================
+
+    def testClearWithNone(self):
+        """Tests that passing desc None will result in a blank list"""
+
+        # Bypass setter
+        self.node._desc = ['first description']
+
+        self.node.desc = None
+
+        self.assertEqual(
+            [],
+            self.node.desc
+        )
+
+    #==========================================================================
+
+    def testReplaceWithList(self):
+        """Tests replacing desc with a new list"""
+
+        # Bypass setter
+        self.node._desc = [
+            'first description',
+            'second description',
+            'third description'
+        ]
+
+        self.node.desc = [
+            'forth description',
+            'fifth description',
+            'sixth description'
+        ]
+
+        self.assertEqual(
+            [
+                'forth description',
+                'fifth description',
+                'sixth description'
+            ],
+            self.node.desc
+        )
+
+    #==========================================================================
+
+    def testReplaceWithTuple(self):
+        """Tests replacing desc with a new tuple"""
+
+        # Bypass setter
+        self.node._desc = [
+            'first description',
+            'second description',
+            'third description'
+        ]
+
+        self.node.desc = (
+            'forth description',
+            'fifth description',
+            'sixth description'
+        )
+
+        self.assertEqual(
+            [
+                'forth description',
+                'fifth description',
+                'sixth description'
+            ],
             self.node.desc
         )
 
@@ -243,7 +312,7 @@ class TestColorCollectionBase(unittest.TestCase):
         )
 
         self.assertEqual(
-            (),
+            [],
             self.node.desc
         )
 
@@ -316,7 +385,7 @@ class TestColorCorrection(unittest.TestCase):
         )
 
         self.assertEqual(
-            (),
+            [],
             self.cdl.desc
         )
 
@@ -716,7 +785,7 @@ class TestColorNodeBase(unittest.TestCase):
         )
 
         self.assertEqual(
-            (),
+            [],
             self.node.desc
         )
 
@@ -746,7 +815,7 @@ class TestSatNode(unittest.TestCase):
         )
 
         self.assertEqual(
-            (),
+            [],
             self.node.desc
         )
 
@@ -910,7 +979,7 @@ class TestSopNode(unittest.TestCase):
         )
 
         self.assertEqual(
-            (),
+            [],
             self.node.desc
         )
 

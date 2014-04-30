@@ -194,8 +194,8 @@ class AscDescBase(object):  # pylint: disable=R0903
             found during parsing.
 
             Setting desc directly will cause the value given to append to the
-            end of the list, but desc can also be extended by passing it a list
-            or tuple.
+            end of the list, but desc can also be replaced by passing it a list
+            or tuple. Desc can be emptied by passing it None, [] or ().
 
     """
     def __init__(self):
@@ -207,13 +207,15 @@ class AscDescBase(object):  # pylint: disable=R0903
     @property
     def desc(self):
         """Returns the list of descriptions"""
-        return tuple(self._desc)
+        return self._desc
 
     @desc.setter
     def desc(self, value):
         """Adds an entry to the descriptions"""
-        if type(value) in [list, tuple]:
-            self._desc.extend(value)
+        if value is None:
+            self._desc = []
+        elif type(value) in [list, tuple]:
+            self._desc = list(value)
         else:
             self._desc.append(value)
 
