@@ -47,18 +47,18 @@ else:
 # TEST CLASSES
 #==============================================================================
 
-# ColorNodeBase ===============================================================
+# AscDescBase =================================================================
 
 
-class TestColorCollectionBase(unittest.TestCase):
-    """Tests the very simple base class ColorCollectionBase"""
+class TestAscDescBase(unittest.TestCase):
+    """Tests the very simple base class which has desc attributes"""
 
     #==========================================================================
     # SETUP & TEARDOWN
     #==========================================================================
 
     def setUp(self):
-        self.node = cdl_convert.ColorCollectionBase()
+        self.node = cdl_convert.AscDescBase()
 
     #==========================================================================
     # TESTS
@@ -133,6 +133,21 @@ class TestColorCollectionBase(unittest.TestCase):
             self.node.desc
         )
 
+# ColorNodeBase ===============================================================
+
+
+class TestColorCollectionBase(unittest.TestCase):
+    """Tests the very simple base class ColorCollectionBase"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.node = cdl_convert.ColorCollectionBase()
+
+    #==========================================================================
+    # TESTS
     #==========================================================================
 
     def testInputDesc(self):
@@ -593,74 +608,8 @@ class TestColorNodeBase(unittest.TestCase):
     # TESTS
     #==========================================================================
 
-    def testInit(self):
-        """Tests that on init desc is created and empty"""
-
-        self.assertEqual(
-            (),
-            self.node.desc
-        )
-
-    #==========================================================================
-
-    def testFirstSet(self):
-        """Tests setting desc to a string appends it to the list"""
-
-        self.node.desc = 'first description'
-
-        self.assertEqual(
-            ('first description', ),
-            self.node.desc
-        )
-
-    #==========================================================================
-
-    def testAppendAdditional(self):
-        """Tests that setting desc more than once appends to list"""
-
-        self.node.desc = 'first description'
-
-        self.assertEqual(
-            ('first description', ),
-            self.node.desc
-        )
-
-        self.node.desc = 'second description'
-
-        self.assertEqual(
-            ('first description', 'second description'),
-            self.node.desc
-        )
-
-    #==========================================================================
-
-    def testExtendWithList(self):
-        """Tests extending the desc with another list"""
-
-        # Bypass setter
-        self.node._desc = ['first description']
-
-        self.node.desc = ['second description', 'third description']
-
-        self.assertEqual(
-            ('first description', 'second description', 'third description'),
-            self.node.desc
-        )
-
-    #==========================================================================
-
-    def testExtendWithTuple(self):
-        """Tests extending the desc with another tuple"""
-
-        # Bypass setter
-        self.node._desc = ['first description']
-
-        self.node.desc = ('second description', 'third description')
-
-        self.assertEqual(
-            ('first description', 'second description', 'third description'),
-            self.node.desc
-        )
+    # No tests remain after moving desc tests out. Should probably move tests
+    # for the _check_single_value in.
 
 
 # SatNode =====================================================================
