@@ -332,7 +332,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0902
         id = _sanitize(id)
         if id in ColorCorrection.members.keys():
             raise ValueError(
-                'Error initiating id to "{id}". This id is already a'
+                'Error initiating id to "{id}". This id is already a '
                 'registered id.'.format(
                     id=id
                 )
@@ -1050,13 +1050,13 @@ def parse_cc(cdl_file):
     except ValueError:
         sat_xml = None
 
-    if not sop_xml and not sat_xml:
+    if sop_xml is None and sat_xml is None:
         raise ValueError(
             'The ColorCorrection element requires either a Sop node or a Sat '
             'node, and it is missing both.'
         )
 
-    if sop_xml:
+    if sop_xml is not None:
         cdl.slope = find_required(sop_xml, ['Slope']).text.split()
         cdl.offset = find_required(sop_xml, ['Offset']).text.split()
         cdl.power = find_required(sop_xml, ['Power']).text.split()
@@ -1068,7 +1068,7 @@ def parse_cc(cdl_file):
             if desc_entry.text:
                 cdl.sop_node.desc.append(desc_entry.text)
 
-    if sat_xml:
+    if sat_xml is not None:
         cdl.sat = find_required(sat_xml, ['Saturation']).text
     
         # In the same manor of sop, we can call the sat node now to set the

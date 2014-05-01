@@ -76,12 +76,13 @@ CC_BASIC = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrection>
 """
 
-CC_BASIC_ODD = r"""<?xml version="1.0" encoding="UTF-8"?>
-<ColorCorrection id="f55.100">
+# The following characters don't seem to be allowed in id fields:
+CC_ODD = r"""<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="f55.100\\\\\//////">
     <Description>Raised saturation a little!?! ag... \/Offset</Description>
     <Description>Raised saturation a little!?! ag... \/Offset</Description>
     <InputDescription>METAL VIEWER!!! \/\/</InputDescription>
-    <ViewingDescription>WOOD VIEWER!? \\\\////</ViewingDescription>
+    <ViewingDescription>WOOD VIEWER!? ////</ViewingDescription>
     <SopNode>
         <Description>Raised saturation a little!?! ag... \/Offset</Description>
         <Slope>137829.329 4327890.9833 3489031.003</Slope>
@@ -98,7 +99,7 @@ CC_BASIC_ORDER = """<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrection id="f54.112">
     <ASC_SAT>
         <Saturation>1.01</Saturation>
-    </ASC_SATe>
+    </ASC_SAT>
     <ASC_SOP>
         <Slope>0.2331 0.678669 1.0758</Slope>
         <Offset>0.031 0.128 -0.096</Offset>
@@ -130,6 +131,7 @@ CC_BLANK_METADATA = """<?xml version="1.0" encoding="UTF-8"?>
 CC_NO_SOP = """<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrection id="burp_200.x15">
     <SatNode>
+        <Description>I am a lovely sat node</Description>
         <Saturation>1.01</Saturation>
     </SatNode>
 </ColorCorrection>
@@ -173,6 +175,19 @@ CC_BLANK_ID = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrection>
 """
 
+CC_NEGATIVE_SLOPE = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="dsds">
+    <SopNode>
+        <Slope>-0.2331 0.678669 1.0758</Slope>
+        <Offset>0.031 0.128 -0.096</Offset>
+        <Power>1.8 0.97 0.961</Power>
+    </SopNode>
+    <SatNode>
+        <Saturation>1.01</Saturation>
+    </SatNode>
+</ColorCorrection>
+"""
+
 # misc ========================================================================
 
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -192,7 +207,7 @@ else:
 # TEST CLASSES
 #==============================================================================
 
-'''
+
 class TestParseCCBasic(unittest.TestCase):
     """Tests parsing a cc xml"""
 
@@ -201,19 +216,28 @@ class TestParseCCBasic(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        self.slope = (1.329, 0.9833, 1.003)
-        self.offset = (0.011, 0.013, 0.11)
-        self.power = (.993, .998, 1.0113)
-        self.sat = 1.01
-        self.id = 'cc23678'
-        self.desc = "Raised saturation a little, adjusted gamma"
+        self.id = "014_xf_seqGrade_v01"
+        self.desc = [
+            'CC description 1', 'CC description 2', 'CC description 3',
+            'CC description 4', 'CC description 5'
+        ]
+        self.input_desc = 'Input Desc Text'
+        self.viewing_desc = 'Viewing Desc Text'
 
-        self.file = buildCC(self.id, self.desc, self.slope, self.offset,
-                            self.power, self.sat)
+        self.sop_node_desc = [
+            'Sop description 1', 'Sop description 2', 'Sop description 3'
+        ]
+        self.slope = (1.014, 1.0104, 0.62)
+        self.offset = (-0.00315, -0.00124, 0.3103)
+        self.power = (1.0, 0.9983, 1.0)
+        self.sat_node_desc = [
+            'Sat description 1', 'Sat description 2'
+        ]
+        self.sat = 1.09
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(enc(CC_FULL))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
@@ -244,8 +268,44 @@ class TestParseCCBasic(unittest.TestCase):
     def testDesc(self):
         """Tests that desc was set to desc element"""
         self.assertEqual(
-            [self.desc, ],
+            self.desc,
             self.cdl.desc
+        )
+
+    #==========================================================================
+
+    def testInputDesc(self):
+        """Tests that input description was set"""
+        self.assertEqual(
+            self.input_desc,
+            self.cdl.input_desc
+        )
+
+    #==========================================================================
+
+    def testViewingDesc(self):
+        """Tests that viewing description was set"""
+        self.assertEqual(
+            self.viewing_desc,
+            self.cdl.viewing_desc
+        )
+
+    #==========================================================================
+
+    def testSopDesc(self):
+        """Tests that desc was set to sop node's desc element"""
+        self.assertEqual(
+            self.sop_node_desc,
+            self.cdl.sop_node.desc
+        )
+
+    #==========================================================================
+
+    def testSatDesc(self):
+        """Tests that desc was set to sat node's desc element"""
+        self.assertEqual(
+            self.sat_node_desc,
+            self.cdl.sat_node.desc
         )
 
     #==========================================================================
@@ -284,6 +344,8 @@ class TestParseCCBasic(unittest.TestCase):
             self.cdl.sat
         )
 
+#==============================================================================
+
 
 class TestParseCCOdd(TestParseCCBasic):
     """Tests parsing a cc xml with odd values"""
@@ -293,283 +355,185 @@ class TestParseCCOdd(TestParseCCBasic):
     #==========================================================================
 
     def setUp(self):
-        # Note that there are limits to the floating point precision here.
-        # Python will not parse numbers exactly with numbers with more
-        # significant whole and decimal digits
+        self.id = "f55.100"  # This will have been _sanitized()
+        self.desc = [
+            'Raised saturation a little!?! ag... \/Offset',
+            'Raised saturation a little!?! ag... \/Offset',
+        ]
+        self.input_desc = 'METAL VIEWER!!! \/\/'
+        self.viewing_desc = 'WOOD VIEWER!? ////'
+
+        self.sop_node_desc = [
+            'Raised saturation a little!?! ag... \/Offset'
+        ]
         self.slope = (137829.329, 4327890.9833, 3489031.003)
         self.offset = (-3424.011, -342789423.013, -4238923.11)
         self.power = (3271893.993, .0000998, 0.0000000000000000113)
+        self.sat_node_desc = []
         self.sat = 1798787.01
-        self.id = 'cc23678_who_what_where.period_are__cool__so_is_youz66867868'
-        # Note that including < in desc WILL break XML parsing. We should
-        # probably have a function that sanitizes those type of fields
-        # when we write to XML
-        self.desc = r"Raised saturation a little!?! adjusted gamma... \/Offset"
-
-        self.file = buildCC(self.id, self.desc, self.slope, self.offset,
-                            self.power, self.sat)
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(enc(CC_ODD))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
+#==============================================================================
 
-class TestParseCCJustSat(TestParseCCBasic):
-    """Tests parsing a cc xml with no SOP values"""
+
+class TestParseCCBasic(TestParseCCBasic):
+    """Tests parsing a cc xml with minimal values"""
 
     #==========================================================================
     # SETUP & TEARDOWN
     #==========================================================================
 
     def setUp(self):
+        self.id = "f51.200"
+        self.desc = []
+        self.input_desc = None
+        self.viewing_desc = None
+
+        self.sop_node_desc = []
+        self.slope = (0.2331, 0.678669, 1.0758)
+        self.offset = (0.031, 0.128, -0.096)
+        self.power = (1.8, 0.97, 0.961)
+        self.sat_node_desc = []
         self.sat = 1.01
-        self.id = 'cc23678'
-        self.desc = "Raised saturation a little, adjusted gamma"
-
-        self.file = buildCC(self.id, self.desc, sat=self.sat)
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(enc(CC_BASIC))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #==========================================================================
-    # TESTS
-    #==========================================================================
-
-    def testSlope(self):
-        """Tests that slope is still at defaults"""
-        self.assertEqual(
-            (1.0, 1.0, 1.0),
-            self.cdl.slope
-        )
-
-    #==========================================================================
-
-    def testOffset(self):
-        """Tests that offset is still at defaults"""
-        self.assertEqual(
-            (0.0, 0.0, 0.0),
-            self.cdl.offset
-        )
-
-    #==========================================================================
-
-    def testPower(self):
-        """Tests that power is still at defaults"""
-        self.assertEqual(
-            (1.0, 1.0, 1.0),
-            self.cdl.power
-        )
+#==============================================================================
 
 
-class TestParseCCJustSOP(TestParseCCBasic):
-    """Tests parsing a cc xml with no sat value"""
+class TestParseCCBasicOrder(TestParseCCBasic):
+    """Tests parsing a cc xml with minimal, but out of order values"""
 
     #==========================================================================
     # SETUP & TEARDOWN
     #==========================================================================
 
     def setUp(self):
-        self.slope = (1.329, 0.9833, 1.003)
-        self.offset = (0.011, 0.013, 0.11)
-        self.power = (.993, .998, 1.0113)
-        self.id = 'cc23678'
-        self.desc = "Raised saturation a little, adjusted gamma"
+        self.id = "f54.112"
+        self.desc = []
+        self.input_desc = None
+        self.viewing_desc = None
 
-        self.file = buildCC(self.id, self.desc, self.slope, self.offset,
-                            self.power)
+        self.sop_node_desc = []
+        self.slope = (0.2331, 0.678669, 1.0758)
+        self.offset = (0.031, 0.128, -0.096)
+        self.power = (1.8, 0.97, 0.961)
+        self.sat_node_desc = []
+        self.sat = 1.01
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(enc(CC_BASIC_ORDER))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #==========================================================================
-    # TESTS
-    #==========================================================================
-
-    def testSat(self):
-        """Tests that sat was set correctly"""
-        self.assertEqual(
-            1.0,
-            self.cdl.sat
-        )
+#==============================================================================
 
 
-class TestParseCCNoSlope(TestParseCCBasic):
-    """Tests parsing a cc xml with no slope value"""
+class TestParseCCBlankMetadata(TestParseCCBasic):
+    """Tests parsing a cc xml with blank metadata fields"""
 
     #==========================================================================
     # SETUP & TEARDOWN
     #==========================================================================
 
     def setUp(self):
-        self.offset = (0.011, 0.013, 0.11)
-        self.power = (.993, .998, 1.0113)
-        self.sat = 1.23
-        self.id = 'cc23678'
-        self.desc = "Raised saturation a little, adjusted gamma"
+        self.id = "burp_100.x12"
+        self.desc = []
+        self.input_desc = None
+        self.viewing_desc = None
 
-        self.file = buildCC(self.id, self.desc, offset=self.offset,
-                            power=self.power, sat=self.sat)
+        self.sop_node_desc = []
+        self.slope = (1.014, 1.0104, 0.62)
+        self.offset = (-0.00315, -0.00124, 0.3103)
+        self.power = (1.0, 0.9983, 1.0)
+        self.sat_node_desc = []
+        self.sat = 1.09
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(enc(CC_BLANK_METADATA))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #==========================================================================
-    # TESTS
-    #==========================================================================
-
-    def testSlope(self):
-        """Tests that slope is still at default"""
-        self.assertEqual(
-            (1.0, 1.0, 1.0),
-            self.cdl.slope
-        )
+#==============================================================================
 
 
-class TestParseCCNoOffset(TestParseCCBasic):
-    """Tests parsing a cc xml with no offset value"""
+class TestParseCCNoSop(TestParseCCBasic):
+    """Tests parsing a cc xml with no SOP data"""
 
     #==========================================================================
     # SETUP & TEARDOWN
     #==========================================================================
 
     def setUp(self):
-        self.slope = (0.011, 0.013, 0.11)
-        self.power = (.993, .998, 1.0113)
-        self.sat = 1.23
-        self.id = 'cc23678'
-        self.desc = "Raised saturation a little, adjusted gamma"
+        self.id = "burp_200.x15"
+        self.desc = []
+        self.input_desc = None
+        self.viewing_desc = None
 
-        self.file = buildCC(self.id, self.desc, slope=self.slope,
-                            power=self.power, sat=self.sat)
+        self.sop_node_desc = []
+        self.slope = (1.0, 1.0, 1.0)
+        self.offset = (0.0, 0.0, 0.0)
+        self.power = (1.0, 1.0, 1.0)
+        self.sat_node_desc = ['I am a lovely sat node']
+        self.sat = 1.01
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(enc(CC_NO_SOP))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #==========================================================================
-    # TESTS
-    #==========================================================================
+        # We need to call a SOP value to initialize the SOP subnode
+        self.cdl.slope
 
-    def testOffset(self):
-        """Tests that offset is still at default"""
-        self.assertEqual(
-            (0.0, 0.0, 0.0),
-            self.cdl.offset
-        )
+#==============================================================================
 
 
-class TestParseCCNoPower(TestParseCCBasic):
-    """Tests parsing a cc xml with no power value"""
+class TestParseCCNoSat(TestParseCCBasic):
+    """Tests parsing a cc xml with no sat data"""
 
     #==========================================================================
     # SETUP & TEARDOWN
     #==========================================================================
 
     def setUp(self):
-        self.slope = (.993, .998, 1.0113)
-        self.offset = (0.011, 0.013, 0.11)
-        self.sat = 1.23
-        self.id = 'cc23678'
-        self.desc = "Raised saturation a little, adjusted gamma"
+        self.id = "burp_300.x35"
+        self.desc = []
+        self.input_desc = None
+        self.viewing_desc = None
 
-        self.file = buildCC(self.id, self.desc, offset=self.offset,
-                            slope=self.slope, sat=self.sat)
+        self.sop_node_desc = []
+        self.slope = (0.2331, 0.678669, 1.0758)
+        self.offset = (0.031, 0.128, -0.096)
+        self.power = (1.8, 0.97, 0.961)
+        self.sat_node_desc = []
+        self.sat = 1.0
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(enc(CC_NO_SAT))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)[0]
 
-    #==========================================================================
-    # TESTS
-    #==========================================================================
-
-    def testPower(self):
-        """Tests that power is still at defaults"""
-        self.assertEqual(
-            (1.0, 1.0, 1.0),
-            self.cdl.power
-        )
-
-
-class TestParseCCEmptyElems(TestParseCCBasic):
-    """Tests parsing a cc xml with empty SOP and Sat nodes"""
-
-    #==========================================================================
-    # SETUP & TEARDOWN
-    #==========================================================================
-
-    def setUp(self):
-        self.id = 'cc23678'
-        self.desc = "Raised saturation a little, adjusted gamma"
-
-        self.file = buildCC(self.id, self.desc, emptySop=True, emptySat=True)
-
-        # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
-            self.filename = f.name
-
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
-
-    #==========================================================================
-    # TESTS
-    #==========================================================================
-
-    def testSlope(self):
-        """Tests that slope is still at defaults"""
-        self.assertEqual(
-            (1.0, 1.0, 1.0),
-            self.cdl.slope
-        )
-
-    #==========================================================================
-
-    def testOffset(self):
-        """Tests that offset is still at defaults"""
-        self.assertEqual(
-            (0.0, 0.0, 0.0),
-            self.cdl.offset
-        )
-
-    #==========================================================================
-
-    def testPower(self):
-        """Tests that power is still at defaults"""
-        self.assertEqual(
-            (1.0, 1.0, 1.0),
-            self.cdl.power
-        )
-
-    #==========================================================================
-
-    def testSat(self):
-        """Tests that sat was set correctly"""
-        self.assertEqual(
-            1.0,
-            self.cdl.sat
-        )
-
+        # We need to call a SAT value to initialize the SAT subnode
+        self.cdl.sat
 
 class TestParseCCExceptions(unittest.TestCase):
     """Tests parse_cc's response to some bad xml files"""
@@ -584,6 +548,7 @@ class TestParseCCExceptions(unittest.TestCase):
     #==========================================================================
 
     def tearDown(self):
+        cdl_convert.ColorCorrection.members = {}
         if self.file:
             os.remove(self.file)
 
@@ -593,11 +558,10 @@ class TestParseCCExceptions(unittest.TestCase):
 
     def testNoId(self):
         """Tests that not finding an id attrib raises ValueError"""
-        xml = buildCC(emptySop=True, emptySat=True)
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(xml))
+            f.write(enc(CC_NO_ID))
             self.file = f.name
 
         self.assertRaises(
@@ -608,7 +572,7 @@ class TestParseCCExceptions(unittest.TestCase):
 
     #==========================================================================
 
-    def testBadXML(self):
+    def testNotColorCorrection(self):
         """Tests that an XML with a root tag that's not ColorCorrection"""
         xml = "<ColorBlurection>\n</ColorBlurection>\n"
 
@@ -623,7 +587,79 @@ class TestParseCCExceptions(unittest.TestCase):
             cdl_convert.parse_cc,
             self.file
         )
-'''
+
+    #==========================================================================
+
+    def testEmptyColorCorrection(self):
+        """Tests that an empty XML raises ValueError"""
+        xml = '<ColorCorrection id="hdjshd">\n</ColorCorrection>\n'
+
+        # Build our cc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(xml))
+            self.file = f.name
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parse_cc,
+            self.file
+        )
+
+    #==========================================================================
+
+    def testBlankId(self):
+        """Tests that a blank id field ValueError"""
+
+        # Build our cc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(CC_BLANK_ID))
+            self.file = f.name
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parse_cc,
+            self.file
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        cdl = cdl_convert.parse_cc(self.file)[0]
+
+        self.assertEqual(
+            '001',
+            cdl.id
+        )
+
+    #==========================================================================
+
+    def testNegativeSlope(self):
+        """Tests that a negative slope raises a ValueError"""
+
+        # Build our cc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(CC_NEGATIVE_SLOPE))
+            self.file = f.name
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parse_cc,
+            self.file
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.ColorCorrection.members = {}
+
+        cdl = cdl_convert.parse_cc(self.file)[0]
+
+        self.assertEqual(
+            (0.0, 0.678669, 1.0758),
+            cdl.slope,
+        )
+
 #==============================================================================
 # FUNCTIONS
 #==============================================================================
