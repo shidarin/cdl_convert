@@ -124,6 +124,8 @@ if sys.version_info[0] >= 3:  # pragma: no cover
 else:  # pragma: no cover
     enc = lambda x: x  # pylint: disable=C0103
 
+HALT_ON_ERROR = False
+
 # ==============================================================================
 # EXPORTS
 # ==============================================================================
@@ -505,13 +507,16 @@ class ColorNodeBase(AscDescBase):  # pylint: disable=R0903
         # If given as a single number, that number must be positive
         if type(value) in [float, int] and not negative_allow:
             if value < 0:
-                raise ValueError(
-                    'Error setting {name} with value: "{value}". '
-                    'Values must not be negative'.format(
-                        name=name,
-                        value=value
+                if HALT_ON_ERROR:
+                    raise ValueError(
+                        'Error setting {name} with value: "{value}". '
+                        'Values must not be negative'.format(
+                            name=name,
+                            value=value
+                        )
                     )
-                )
+                else:
+                    value = 0
 
         return float(value)
 
