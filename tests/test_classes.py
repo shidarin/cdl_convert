@@ -565,9 +565,20 @@ class TestColorCorrection(unittest.TestCase):
         def setPower():
             self.cdl.power = [-1.3782, 278.32, 0.738378233782]
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setPower
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setPower()
+
+        self.assertEqual(
+            (0.0, 278.32, 0.738378233782),
+            self.cdl.power
         )
 
     #==========================================================================
@@ -641,9 +652,20 @@ class TestColorCorrection(unittest.TestCase):
         def setSlope():
             self.cdl.slope = [-1.3782, 278.32, 0.738378233782]
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setSlope
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setSlope()
+
+        self.assertEqual(
+            (0.0, 278.32, 0.738378233782),
+            self.cdl.slope
         )
 
     #==========================================================================
@@ -717,9 +739,20 @@ class TestColorCorrection(unittest.TestCase):
         def setSat():
             self.cdl.sat = -376.23
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setSat
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setSat()
+
+        self.assertEqual(
+            0.0,
+            self.cdl.sat
         )
     #==========================================================================
 
@@ -891,9 +924,20 @@ class TestSatNode(unittest.TestCase):
         def setSat():
             self.node.sat = '-20'
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setSat
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setSat()
+
+        self.assertEqual(
+            0.0,
+            self.node.sat
         )
 
     #==========================================================================
@@ -914,9 +958,20 @@ class TestSatNode(unittest.TestCase):
         def setSat():
             self.node.sat = -20.1
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setSat
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setSat()
+
+        self.assertEqual(
+            0.0,
+            self.node.sat
         )
 
     #==========================================================================
@@ -937,9 +992,20 @@ class TestSatNode(unittest.TestCase):
         def setSat():
             self.node.sat = -20
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setSat
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setSat()
+
+        self.assertEqual(
+            0.0,
+            self.node.sat
         )
 
     #==========================================================================
@@ -1055,9 +1121,20 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = '-20'
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setSlope
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setSlope()
+
+        self.assertEqual(
+            (0.0, 0.0, 0.0),
+            self.node.slope
         )
 
     #==========================================================================
@@ -1078,9 +1155,20 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = -20.1
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setSlope
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setSlope()
+
+        self.assertEqual(
+            (0.0, 0.0, 0.0),
+            self.node.slope
         )
 
     #==========================================================================
@@ -1101,9 +1189,20 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = -20
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setSlope
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setSlope()
+
+        self.assertEqual(
+            (0.0, 0.0, 0.0),
+            self.node.slope
         )
 
     #==========================================================================
@@ -1113,9 +1212,20 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = [-1.3782, 278.32, 0.738378233782]
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setSlope
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setSlope()
+
+        self.assertEqual(
+            (0.0, 278.32, 0.738378233782),
+            self.node.slope
         )
 
     #==========================================================================
@@ -1379,9 +1489,20 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = '-20'
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setPower
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setPower()
+
+        self.assertEqual(
+            (0.0, 0.0, 0.0),
+            self.node.power
         )
 
     #==========================================================================
@@ -1402,9 +1523,20 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = -20.1
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setPower
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setPower()
+
+        self.assertEqual(
+            (0.0, 0.0, 0.0),
+            self.node.power
         )
 
     #==========================================================================
@@ -1425,9 +1557,20 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = -20
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setPower
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setPower()
+
+        self.assertEqual(
+            (0.0, 0.0, 0.0),
+            self.node.power
         )
 
     #==========================================================================
@@ -1437,9 +1580,20 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = [-1.3782, 278.32, 0.738378233782]
 
+        cdl_convert.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             setPower
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        setPower()
+
+        self.assertEqual(
+            (0.0, 278.32, 0.738378233782),
+            self.node.power
         )
 
     #==========================================================================
