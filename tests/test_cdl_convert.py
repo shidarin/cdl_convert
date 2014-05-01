@@ -114,6 +114,17 @@ class TestSanitize(unittest.TestCase):
             result
         )
 
+    #==========================================================================
+
+    def testEmptyString(self):
+        """Tests that sanitize will return and not choke on empty string"""
+        result = cdl_convert._sanitize('')
+
+        self.assertEqual(
+            '',
+            result
+        )
+
 # parse_args() ================================================================
 
 

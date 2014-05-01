@@ -819,6 +819,10 @@ class SopNode(ColorNodeBase):
 
 def _sanitize(name):
     """Removes any characters in string name that aren't alnum or in '_.'"""
+    if not name:
+        # If not name, it's probably an empty string, but let's throw back
+        # exactly what we got.
+        return name
     import re
     # Replace any spaces with underscores
     name = name.replace(' ', '_')
