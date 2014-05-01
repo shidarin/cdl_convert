@@ -932,7 +932,9 @@ def parse_cc(cdl_file):
             A list of CDL objects retrieved from the CC
 
     **Raises:**
-        N/A
+        ValueError:
+            Bad XML formatting can raise ValueError is missing required
+            elements.
 
     A CC file is really only a single element of a larger CDL or CCC XML file,
     but this element has become a popular way of passing around single shot
@@ -974,8 +976,11 @@ def parse_cc(cdl_file):
 
     # Grab our descriptions and add them to the cdl
     for desc_entry in root.findall('Description'):
-        cdl.desc.append(desc_entry.text)
-    # See if we have a viewing description
+        if desc_entry.text:  # Don't append if text returns None
+            cdl.desc.append(desc_entry.text)
+    # See if we have a viewing description.
+    # If the text field is empty, this will return None, which is the default
+    # value of viewing_desc and input_desc anyway.
     try:
         cdl.viewing_desc = root.find('ViewingDescription').text
     except AttributeError:
@@ -985,8 +990,6 @@ def parse_cc(cdl_file):
         cdl.input_desc = root.find('InputDescription').text
     except AttributeError:
         pass
-
-    # Both sop and sat must exist
 
     def find_required(elem, names):
         """Finds the required element and returns the found value.
@@ -1024,25 +1027,41 @@ def parse_cc(cdl_file):
         else:
             return found_element
 
-    sop_xml = find_required(root, SopNode.element_names)
-    sat_xml = find_required(root, SatNode.element_names)
+    try:
+        sop_xml = find_required(root, SopNode.element_names)
+    except ValueError:
+        sop_xml = None
+    try:
+        sat_xml = find_required(root, SatNode.element_names)
+    except ValueError:
+        sat_xml = None
 
-    cdl.slope = find_required(sop_xml, ['Slope']).text.split()
-    cdl.offset = find_required(sop_xml, ['Offset']).text.split()
-    cdl.power = find_required(sop_xml, ['Power']).text.split()
+    if not sop_xml and not sat_xml:
+        raise ValueError(
+            'The ColorCorrection element requires either a Sop node or a Sat '
+            'node, and it is missing both.'
+        )
 
-    # Calling the slope, offset and power attributes on the cdl will have
-    # created an instance of SopNode on cdl.sop_node, so we can populate those
-    # descriptions.
-    for desc_entry in sop_xml.findall('Description'):
-        cdl.sop_node.desc.append(desc_entry.text)
+    if sop_xml:
+        cdl.slope = find_required(sop_xml, ['Slope']).text.split()
+        cdl.offset = find_required(sop_xml, ['Offset']).text.split()
+        cdl.power = find_required(sop_xml, ['Power']).text.split()
 
-    cdl.sat = find_required(sat_xml, ['Saturation']).text
+        # Calling the slope, offset and power attributes on the cdl will have
+        # created an instance of SopNode on cdl.sop_node, so we can populate
+        # those descriptions.
+        for desc_entry in sop_xml.findall('Description'):
+            if desc_entry.text:
+                cdl.sop_node.desc.append(desc_entry.text)
 
-    # In the same manor of sop, we can call the sat node now to set the desc
-    # descriptions.
-    for desc_entry in sat_xml.findall('Description'):
-        cdl.sat_node.desc.append(desc_entry.text)
+    if sat_xml:
+        cdl.sat = find_required(sat_xml, ['Saturation']).text
+    
+        # In the same manor of sop, we can call the sat node now to set the
+        # desc descriptions.
+        for desc_entry in sat_xml.findall('Description'):
+            if desc_entry.text:
+                cdl.sat_node.desc.append(desc_entry.text)
 
     cdls.append(cdl)
 
