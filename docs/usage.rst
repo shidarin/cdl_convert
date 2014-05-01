@@ -171,8 +171,7 @@ Slope, Offset and Power
 
 Setting the CDL slope, offset and power (SOP) values is as easy as passing them
 any list or tuple with three values. Integers and strings will be automatically
-converted to floats, while slope and power will also be checked to make sure the
-number is positive.
+converted to floats, while slope and power will also truncate at zero.
 
     >>> cc.slope = ('1.234', 5, 273891.37823)
     >>> cc.slope
@@ -181,11 +180,8 @@ number is positive.
     >>> cc.offset
     (-0.0013, 0.097, 0.001)
     >>> cc.power = (-0.01, 1.0, 1.0)
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-      File "cdl_convert/cdl_convert.py", line 352, in power
-        raise ValueError("Power values must not be negative")
-    ValueError: Power values must not be negative
+    >>> cc.power
+    (0.0, 1.0, 1.0)
     >>> cc.power = (1.01, 1.007)
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
@@ -217,11 +213,22 @@ that we do on SOP values happen for saturation as well.
     >>> cc.sat
     1.0
     >>> cc.sat = -0.1
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-      File "cdl_convert/cdl_convert.py", line 403, in sat
-        raise ValueError("Saturation must be a positive value")
-    ValueError: Saturation must be a positive value
+    >>> cc.sat
+    0.0
+
+.. warning::
+    If it's desired to have negative values raise an exception instead of
+    truncating to zero, set the global module variable ``HALT_ON_ERROR`` to be
+    ``True``.
+    ::
+        >>> cdl.HALT_ON_ERROR = True
+        >>> cc.power = (-0.01, 1.0, 1.0)
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "cdl_convert/cdl_convert.py", line 352, in power
+            raise ValueError("Power values must not be negative")
+        ValueError: Power values must not be negative
+
 
 Description
 ^^^^^^^^^^^

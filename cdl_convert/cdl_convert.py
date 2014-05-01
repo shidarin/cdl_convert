@@ -124,6 +124,11 @@ if sys.version_info[0] >= 3:  # pragma: no cover
 else:  # pragma: no cover
     enc = lambda x: x  # pylint: disable=C0103
 
+# HALT_ON_ERROR is the exception handling variable for exceptions that can
+# be handled.
+# Used in the following places:
+#   Slope, power and sat values can't be negative and will truncate to 0.0
+#
 HALT_ON_ERROR = False
 
 # ==============================================================================
