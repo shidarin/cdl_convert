@@ -68,6 +68,11 @@ function, see :doc:`usage` for a walkthrough.
     ``members`` to ensure that no two :class:`ColorCorrection` share the same
     ``id`` , as this is required by the specification.
 
+    If the ``id`` given is a blank string and ``HALT_ON_ERROR`` is set to
+    ``False``, ``id`` will be set to the total number of :class:`ColorCorrection`
+    in the file, including the one currently being created. This behavior is not
+    accepted when changing the ``id`` after creation.
+
 .. warning::
     ``cdl_file`` is likely to not be a required attribute in the future.
 

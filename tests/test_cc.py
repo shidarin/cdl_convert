@@ -127,6 +127,24 @@ CC_BLANK_METADATA = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrection>
 """
 
+CC_NO_SOP = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="burp_200.x15">
+    <SatNode>
+        <Saturation>1.01</Saturation>
+    </SatNode>
+</ColorCorrection>
+"""
+
+CC_NO_SAT = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="burp_300.x35">
+    <SopNode>
+        <Slope>0.2331 0.678669 1.0758</Slope>
+        <Offset>0.031 0.128 -0.096</Offset>
+        <Power>1.8 0.97 0.961</Power>
+    </SopNode>
+</ColorCorrection>
+"""
+
 # Bad XMLs ====================================================================
 
 CC_NO_ID = """<?xml version="1.0" encoding="UTF-8"?>
@@ -152,24 +170,6 @@ CC_BLANK_ID = """<?xml version="1.0" encoding="UTF-8"?>
     <SatNode>
         <Saturation>1.01</Saturation>
     </SatNode>
-</ColorCorrection>
-"""
-
-CC_NO_SOP = """<?xml version="1.0" encoding="UTF-8"?>
-<ColorCorrection id="burp_200.x15">
-    <SatNode>
-        <Saturation>1.01</Saturation>
-    </SatNode>
-</ColorCorrection>
-"""
-
-CC_NO_SAT = """<?xml version="1.0" encoding="UTF-8"?>
-<ColorCorrection id="burp_300.x35">
-    <SopNode>
-        <Slope>0.2331 0.678669 1.0758</Slope>
-        <Offset>0.031 0.128 -0.096</Offset>
-        <Power>1.8 0.97 0.961</Power>
-    </SopNode>
 </ColorCorrection>
 """
 
