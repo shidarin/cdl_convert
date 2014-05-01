@@ -461,6 +461,37 @@ class TestColorCorrection(unittest.TestCase):
 
     #==========================================================================
 
+    def testBlankId(self):
+        """Tests what happens when a blank id is given to CC"""
+        cdl_convert.ColorCorrection.members = {}
+
+        cdl1 = cdl_convert.ColorCorrection('', 'file')
+
+        self.assertEqual(
+            '001',
+            cdl1.id
+        )
+
+        cdl2 = cdl_convert.ColorCorrection('', 'file')
+
+        self.assertEqual(
+            '002',
+            cdl2.id
+        )
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.ColorCorrection,
+            '',
+            'file'
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+    #==========================================================================
+
     def testIdRenameDictionary(self):
         """Tests that dict entries are removed following a rename"""
 

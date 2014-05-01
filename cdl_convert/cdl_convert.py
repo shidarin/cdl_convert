@@ -128,7 +128,7 @@ else:  # pragma: no cover
 # be handled.
 # Used in the following places:
 #   Slope, power and sat values can't be negative and will truncate to 0.0
-#
+#   If id given to ColorCorrection is blank, will set to number of CCs
 HALT_ON_ERROR = False
 
 # ==============================================================================
@@ -337,6 +337,11 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0902
                     id=id
                 )
             )
+        elif not id:
+            if HALT_ON_ERROR:
+                raise ValueError('Blank id given to ColorCorrection.')
+            else:
+                id = str(len(ColorCorrection.members) + 1).rjust(3, '0')
         self._id = id
 
         # Register with member dictionary
