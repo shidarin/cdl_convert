@@ -203,7 +203,8 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
                 found, set our ``input_desc``
 
         **Returns:**
-            None
+            (bool)
+                True if found InputDescription Fields (even if blank)
 
         **Raises:**
             None
@@ -213,9 +214,10 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
         # default value of viewing_desc and input_desc anyway.
         try:
             self.input_desc = xml_element.find('InputDescription').text
+            return True
         except AttributeError:
             # We don't have an InputDescription and that's ok.
-            pass
+            return False
 
     # =========================================================================
 
@@ -228,7 +230,8 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
                 found, set our ``viewing_desc``
 
         **Returns:**
-            None
+            (bool)
+                True if found InputDescription Fields (even if blank)
 
         **Raises:**
             None
@@ -238,9 +241,10 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
         # default value of viewing_desc and input_desc anyway.
         try:
             self.viewing_desc = xml_element.find('ViewingDescription').text
+            return True
         except AttributeError:
             # We don't have a ViewingDescription and that's ok.
-            pass
+            return False
 
 # ==============================================================================
 
