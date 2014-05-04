@@ -33,7 +33,9 @@ the Film and TV industries.
 
 The MIT License (MIT)
 
+cdl_convert
 Copyright (c) 2014 Sean Wallitsch
+http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -96,7 +98,7 @@ __author__ = "Sean Wallitsch"
 __copyright__ = "Copyright 2014, Sean Wallitsch"
 __credits__ = ["Sean Wallitsch", ]
 __license__ = "MIT"
-__version__ = "0.5.post2"
+__version__ = "0.6"
 __maintainer__ = "Sean Wallitsch"
 __email__ = "shidarin@alphamatte.com"
 __status__ = "Development"
