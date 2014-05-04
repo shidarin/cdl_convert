@@ -90,19 +90,18 @@ Changelog
 * Adds ``HALT_ON_ERROR`` module variable which determines certain exception
     handling behavior. Exceptions that can normally be handled with default
     behavior (such as negative Slope or Power values) will be dealt with
-    silently instead of stopping the program. Negative Slope and Power
-    values, for example, will clip to 0.0.
+    silently instead of stopping the program. Negative Slope and Power values,
+    for example, will clip to 0.0.
 * ``ColorCorrection`` (formally ``AscCdl``) class changes:
     * Renames ``AscCdl`` to ``ColorCorrection`` .
     * Adds class level member dictionary, which allows lookup of a
         ``ColorCorrection`` instance by the unique ID.
-    * ``ColorCorrection`` objects now require a unique ID to be
-        instantiated.
+    * ``ColorCorrection`` objects now require a unique ID to be instantiated.
     * Removes ``metadata`` attribute of ``ColorCorrection`` .
-    * Moves SOP and SAT operations out of ``ColorCorrection`` into their
-        own classes, which are based on ``ColorNodeBase`` . The
-        ``SatNode`` and ``SopNode`` classes are still meant to be
-        children of ``ColorCorrection``.
+    * Moves SOP and SAT operations out of ``ColorCorrection`` into their own
+        classes, which are based on ``ColorNodeBase`` . The ``SatNode`` and
+        ``SopNode`` classes are still meant to be children of
+        ``ColorCorrection``.
     * Added ``sop_node`` and ``sat_node`` attributes to access the child
         ``SatNode`` and ``SopNode`` .
     * Removed ``metadata`` attribute, splitting it into the inherited
