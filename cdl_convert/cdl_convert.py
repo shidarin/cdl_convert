@@ -209,15 +209,15 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
             None
 
         """
-        # If the text field is empty, this will return None, which is the default
-        # value of viewing_desc and input_desc anyway.
+        # If the text field is empty, this will return None, which is the
+        # default value of viewing_desc and input_desc anyway.
         try:
             self.input_desc = xml_element.find('InputDescription').text
         except AttributeError:
+            # We don't have an InputDescription and that's ok.
             pass
 
     # =========================================================================
-
 
     def parse_xml_viewing_desc(self, xml_element):
         """Parses an ElementTree element to find & add a viewing description
@@ -234,11 +234,12 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
             None
 
         """
-        # If the text field is empty, this will return None, which is the default
-        # value of viewing_desc and input_desc anyway.
+        # If the text field is empty, this will return None, which is the
+        # default value of viewing_desc and input_desc anyway.
         try:
             self.viewing_desc = xml_element.find('ViewingDescription').text
         except AttributeError:
+            # We don't have a ViewingDescription and that's ok.
             pass
 
 # ==============================================================================
@@ -827,8 +828,8 @@ class MediaRef(object):
             old_ref = self.ref
             self._protocol = value
             self._change_membership(old_ref=old_ref)
-            # We probably don't need to reset the cached properties, but we will
-            # just to be safe.
+            # We probably don't need to reset the cached properties, but we
+            # will just to be safe.
             self._reset_cached_properties()
         else:
             raise TypeError(
@@ -1109,13 +1110,12 @@ class SopNode(ColorNodeBase):
             default: (0.0, 0.0, 0.0)
 
         power : (float, float, float)
-            An rgb tuple representing the power, which is the only function that
-            changes the response curve of the function. Note that this has the
-            opposite response to adjustments than a traditional gamma operator.
-            These values must be positive. If you set this attribute with a
-            single value, it will be copied over all 3 colors. Any single value
-            given can be a float, int or numeric string.
-
+            An rgb tuple representing the power, which is the only function
+            that changes the response curve of the function. Note that this has
+            the opposite response to adjustments than a traditional gamma
+            operator. These values must be positive. If you set this attribute
+            with a single value, it will be copied over all 3 colors. Any
+            single value given can be a float, int or numeric string.
 
             default: (1.0, 1.0, 1.0)
 
@@ -1276,8 +1276,8 @@ class SopNode(ColorNodeBase):
                 set_value = value
         else:
             raise TypeError(
-                '{name} cannot be set directly with objects of type: "{type}". '
-                'Value given: "{value}".'.format(
+                '{name} cannot be set directly with objects of type: "{type}".'
+                ' Value given: "{value}".'.format(
                     name=name.title(),
                     type=type(value),
                     value=value,
