@@ -4,13 +4,15 @@ python:
   - "2.7"
   - "3.2"
   - "3.3"
+  - "3.4"
+  - "pypy"
 # command to install dependencies
 install:
   - pip install argparse
   - pip install mock
   - pip install coveralls
 # command to run tests, e.g. python setup.py test
-script: coverage run --source=cdl_convert/cdl_convert.py tests/test_cdl_convert.py
+script: coverage run --source=cdl_convert/cdl_convert.py tests/__init__.py
 # command to run after tests have completed
 after_success:
   coveralls
