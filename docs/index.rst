@@ -120,6 +120,7 @@ Table of Contents
 
    usage
    installation
+   changelog
    support
    faq
    contributing
