@@ -190,6 +190,55 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
         self.input_desc = None
         self.viewing_desc = None
 
+    # Public Methods ==========================================================
+
+    def parse_xml_input_desc(self, xml_element):
+        """Parses an ElementTree element to find & add an input description
+
+        **Args:**
+            xml_element : (``xml.etree.ElementTree.Element``)
+                The element to parse for an Input Description element. If
+                found, set our ``input_desc``
+
+        **Returns:**
+            None
+
+        **Raises:**
+            None
+
+        """
+        # If the text field is empty, this will return None, which is the default
+        # value of viewing_desc and input_desc anyway.
+        try:
+            self.input_desc = xml_element.find('InputDescription').text
+        except AttributeError:
+            pass
+
+    # =========================================================================
+
+
+    def parse_xml_viewing_desc(self, xml_element):
+        """Parses an ElementTree element to find & add a viewing description
+
+        **Args:**
+            xml_element : (``xml.etree.ElementTree.Element``)
+                The element to parse for a Viewing Description element. If
+                found, set our ``viewing_desc``
+
+        **Returns:**
+            None
+
+        **Raises:**
+            None
+
+        """
+        # If the text field is empty, this will return None, which is the default
+        # value of viewing_desc and input_desc anyway.
+        try:
+            self.viewing_desc = xml_element.find('ViewingDescription').text
+        except AttributeError:
+            pass
+
 # ==============================================================================
 
 
@@ -1408,17 +1457,9 @@ def parse_cc(cdl_file):
     # Grab our descriptions and add them to the cdl
     cdl.parse_xml_descs(root)
     # See if we have a viewing description.
-    # If the text field is empty, this will return None, which is the default
-    # value of viewing_desc and input_desc anyway.
-    try:
-        cdl.viewing_desc = root.find('ViewingDescription').text
-    except AttributeError:
-        pass
+    cdl.parse_xml_viewing_desc(root)
     # See if we have an input description
-    try:
-        cdl.input_desc = root.find('InputDescription').text
-    except AttributeError:
-        pass
+    cdl.parse_xml_input_desc(root)
 
     def find_required(elem, names):
         """Finds the required element and returns the found value.
