@@ -86,6 +86,27 @@ and should not be used directly.
 
 .. autoclass:: cdl_convert.ColorNodeBase
 
+MediaRef
+--------
+
+Media Ref's are normally found only inside of :class:`ColorDecision`, which
+itself is found only inside of the :class:`ColorDecisionList` collection. This
+isn't a restriction that ``cdl_convert`` explicitly enforces, but the parse
+and write functions will only be creating and writing found :class:`MediaRef`
+objects following the rules.
+
+Where possible when writing filetypes that don't support :class:`MediaRef`,
+the information kept in :class:`MediaRef` will be converted into description
+field metadata and preserved in that way.
+
+:class:`MediaRef` is meant to provide a convenient interface for managing
+and interpreting data stored in CDLs. You can change a broken absolute link
+directory to a relative link without touching the filename, or retrieve a full
+list of image sequences contained within a referenced directory.
+
+.. autoclass:: cdl_convert.MediaRef
+
+
 SatNode
 -------
 
