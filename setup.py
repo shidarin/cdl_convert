@@ -113,7 +113,6 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Multimedia :: Graphics',
         'Topic :: Multimedia :: Video',
-        'Topic :: Multimedia :: Video :: Conversion',
         'Topic :: Multimedia :: Video :: Display',
         'Topic :: Multimedia :: Video :: Non-Linear Editor',
         'Topic :: Software Development :: Libraries :: Python Modules',
@@ -130,6 +129,9 @@ setup(
         'Programming Language :: Python :: 3.1',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
 
         # OS
         'Operating System :: OS Independent',

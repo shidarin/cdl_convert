@@ -11,7 +11,7 @@ CDL Convert
 - **Docs:** http://cdl-convert.readthedocs.org/
 - **GitHub:** https://github.com/shidarin/cdl_convert
 - **PyPI:** https://pypi.python.org/pypi/cdl_convert
-- **Python Versions:** 2.6-3.4
+- **Python Versions:** 2.6-3.4, PyPy
 
 Introduction
 ------------
@@ -101,8 +101,8 @@ Frequently Asked Questions
 --------------------------
 
 - What versions of Python does ``cdl_convert`` support?
-    ``cdl_convert`` works in Python 2.6 through 3.4, with a full test suite
-    running continuous integration through `Travis-ci.org`_, coverage through
+    ``cdl_convert`` works in Python 2.6 through 3.4 and PyPy. A full test suite
+    runs continuous integration through `Travis-ci.org`_, coverage through
     `coveralls.io`_, and code quality checked with `landscape.io`_. **Code is**
     `PEP-8`_ **compliant**, with docstrings following `google code`_ docstring
     standards.
