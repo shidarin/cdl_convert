@@ -7,9 +7,9 @@ Software
 
 The MIT License (MIT)
 
-cdl_convert
-Copyright (c) 2014 Sean Wallitsch
-http://github.com/shidarin/cdl_convert/
+| cdl_convert
+| Copyright (c) 2014 Sean Wallitsch
+| http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -37,9 +37,9 @@ cdl_convert
 
 The MIT License (MIT)
 
-cdl_convert
-Copyright (c) 2014 Sean Wallitsch
-http://github.com/shidarin/cdl_convert/
+| cdl_convert
+| Copyright (c) 2014 Sean Wallitsch
+| http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
