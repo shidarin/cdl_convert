@@ -75,10 +75,11 @@ from __future__ import print_function
 
 from argparse import ArgumentParser
 from ast import literal_eval
+from xml.dom import minidom
 import os
 import re
 import sys
-import xml.etree.ElementTree as ElementTree
+from xml.etree import ElementTree
 
 # Python 3 compatibility
 try:
@@ -313,6 +314,58 @@ class AscDescBase(object):  # pylint: disable=R0903
 # ==============================================================================
 
 
+class AscXMLBase(object):
+    """Base class for nodes which can be converted to XML Elements
+
+    This class contains several convenience attributes which can be used
+    to retrieve ElementTree Elements, or nicely formatted strings.
+
+    **Attributes:**
+
+        element : (<xml.etree.ElementTree.Element>)
+            etree style Element representing the node.
+
+        xml : (str)
+            A nicely formatted XML string representing the node.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line.
+
+    """
+    def __init__(self):
+        super(AscXMLBase, self).__init__()
+
+    # Properties ==============================================================
+
+    @property
+    def element(self):
+        return self.build_element()
+
+    @property
+    def xml(self):
+        # We'll take the xml_root attrib, which is ready to write, and just
+        # remove the first line, which is the xml version and encoding.
+        dom_string = self.xml_root.split('\n')
+        return '\n'.join(dom_string[1:])
+
+    @property
+    def xml_root(self):
+        xml_string = ElementTree.tostring(self.element, 'UTF-8')
+        dom_xml = minidom.parseString(xml_string)
+        dom_string = dom_xml.toprettyxml(indent="    ", encoding='UTF-8')
+        return dom_string
+
+    # Public Methods ==========================================================
+
+    def build_element(self):
+        """Placeholder for reference by attributes. Will return None"""
+        return None
+
+# ==============================================================================
+
+
 class ColorCollectionBase(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0903
     """Base class for ColorDecisionList and ColorCorrectionCollection.
 
@@ -340,7 +393,7 @@ class ColorCollectionBase(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0
 # ==============================================================================
 
 
-class ColorCorrection(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0902
+class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0902
     """The basic class for the ASC CDL
 
     Description
@@ -359,9 +412,12 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0902
 
     Order of operations is Slope, Offset, Power, then Saturation.
 
-    Inherits desc attribute and setters from :class:`AscDescBase`
+    Inherits ``desc`` attribute and setters from :class:`AscDescBase`
 
-    Inherits input_desc and viewing_desc from :class:`AscColorSpaceBase`
+    Inherits ``input_desc`` and ``viewing_desc`` from
+    :class:`AscColorSpaceBase`
+
+    Inherits ``element``, ``xml`` and ``xml_root`` from :class:`AscXMLBase`
 
     **Class Attributes:**
 
@@ -533,7 +589,27 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0902
             # Register the new id with the dictionary
             ColorCorrection.members[self._id] = self
 
-    # Methods =================================================================
+    # Public Methods ==========================================================
+
+    def build_element(self):
+        """Builds an ElementTree XML element representing this CC"""
+        cc = ElementTree.Element('ColorCorrection')
+        cc.attrib = {'id': self.id}
+        if self.input_desc:
+            input_desc = ElementTree.SubElement(cc, 'InputDescription')
+            input_desc.text = self.input_desc
+        if self.viewing_desc:
+            viewing_desc = ElementTree.SubElement(cc, 'ViewingDescription')
+            viewing_desc.text = self.viewing_desc
+        for description in self.desc:
+            desc = ElementTree.SubElement(cc, 'Description')
+            desc.text = description
+        if self.sop_node:
+            cc.append(self.sop_node.element)
+        if self.sat_node:
+            cc.append(self.sat_node.element)
+
+        return cc
 
     def determine_dest(self, output):
         """Determines the destination file and sets it on the cdl"""
@@ -556,10 +632,12 @@ class ColorDecision(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0903
 # ==============================================================================
 
 
-class ColorNodeBase(AscDescBase):  # pylint: disable=R0903
+class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
     """Base class for SOP and SAT nodes.
 
-    Inherits desc from :class:`AscDescBase`
+    Inherits ``desc`` from :class:`AscDescBase`
+
+    Inherits ``element``, ``xml`` and ``xml_root`` from :class:`AscXMLBase`
 
     """
     def __init__(self):
@@ -1072,6 +1150,18 @@ class SatNode(ColorNodeBase):
                 )
             )
 
+    # Public Methods ==========================================================
+
+    def build_element(self):
+        """Builds an ElementTree XML Element representing this SatNode"""
+        sat = ElementTree.Element('SATNode')
+        for description in self.desc:
+            desc = ElementTree.SubElement(sat, 'Description')
+            desc.text = description
+        op_node = ElementTree.SubElement(sat, 'Saturation')
+        op_node.text = str(self.sat)
+        return sat
+
 # ==============================================================================
 
 
@@ -1289,6 +1379,24 @@ class SopNode(ColorNodeBase):
             )
 
         return set_value
+
+    # Public Methods ==========================================================
+
+    def build_element(self):
+        """Builds an ElementTree XML Element representing this SopNode"""
+        sop = ElementTree.Element('SOPNode')
+        fields = ['Slope', 'Offset', 'Power']
+        for description in self.desc:
+            desc = ElementTree.SubElement(sop, 'Description')
+            desc.text = description
+        for i, op in enumerate([self.slope, self.offset, self.power]):
+            op_node = ElementTree.SubElement(sop, fields[i])
+            op_node.text = '{valueR} {valueG} {valueB}'.format(
+                valueR=str(op[0]),
+                valueG=str(op[1]),
+                valueB=str(op[2])
+            )
+        return sop
 
 # ==============================================================================
 # PRIVATE FUNCTIONS
