@@ -12,6 +12,10 @@ mock
 #==============================================================================
 
 # Standard Imports
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import os
 import sys
 import unittest
@@ -853,6 +857,891 @@ class TestColorNodeBase(unittest.TestCase):
             self.node.desc
         )
 
+# MediaRef ====================================================================
+
+
+class TestMediaRefProperties(unittest.TestCase):
+    """Tests all aspects of the MediaRef class"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.MediaRef.members = {}
+        self.directory = 'heeba/jeeba/race'
+        self.filename = 'car.jpg'
+        self.protocol = 'ftp'
+        self.path = 'heeba/jeeba/race/car.jpg'
+        self.ref = 'ftp://heeba/jeeba/race/car.jpg'
+        self.parent = cdl_convert.ColorDecision()
+        self.mr = cdl_convert.MediaRef(
+            ref_uri='ftp://heeba/jeeba/race/car.jpg',
+            parent=self.parent
+        )
+
+    #==========================================================================
+
+    def tearDown(self):
+        cdl_convert.MediaRef.members = {}
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testParent(self):
+        """Tests that parent gets set correctly"""
+        self.assertEqual(
+            self.parent,
+            self.mr.parent
+        )
+
+    #==========================================================================
+
+    def testSeqDefaults(self):
+        """Tests that seq attributes start at None"""
+        self.assertEqual(
+            None,
+            self.mr._is_seq
+        )
+
+        self.assertEqual(
+            None,
+            self.mr._sequences
+        )
+
+    #==========================================================================
+
+    def testMembership(self):
+        """Tests that we were added to the member dictionary"""
+        self.assertEqual(
+            {self.ref: [self.mr]},
+            cdl_convert.MediaRef.members
+        )
+
+    #==========================================================================
+
+    def testDirectoryReturn(self):
+        """Tests that directory returns correctly"""
+        self.assertEqual(
+            self.directory,
+            self.mr.directory
+        )
+
+        self.mr._dir = 'burp'
+
+        self.assertEqual(
+            'burp',
+            self.mr.directory
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._reset_cached_properties')
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._change_membership')
+    def testDirectorySetString(self, mock_cm, mock_rcp):
+        """Tests that directory sets with a string correctly"""
+        self.assertEqual(
+            self.directory,
+            self.mr.directory
+        )
+
+        old_ref = self.mr.ref
+        new_directory = 'dhsjkd/hahkad'
+        self.mr.directory = new_directory
+
+        self.assertEqual(
+            new_directory,
+            self.mr.directory
+        )
+
+        protocol = self.protocol + '://' if self.protocol else ''
+        new_ref = protocol + os.path.join(new_directory, self.filename)
+
+        self.assertEqual(
+            new_ref,
+            self.mr.ref
+        )
+
+        mock_cm.assert_called_once_with(
+            old_ref=old_ref
+        )
+        mock_rcp.assert_called_once_with()
+
+    #==========================================================================
+
+    def testDirectorySetBadType(self):
+        """Tests that directory doesn't set with a bad type"""
+        def setDirectory():
+            self.mr.directory = 12345
+
+        self.assertRaises(
+            TypeError,
+            setDirectory
+        )
+
+    #==========================================================================
+
+    @mock.patch('os.path.exists')
+    def testExists(self, mock_exists):
+        """Tests that exists returns correct information"""
+        mock_exists.return_value = True
+
+        self.assertTrue(
+            self.mr.exists
+        )
+
+        mock_exists.assert_called_once_with(
+            os.path.join(self.directory, self.filename)
+        )
+
+        mock_exists.return_value = False
+
+        self.assertFalse(
+            self.mr.exists
+        )
+
+    #==========================================================================
+
+    def testFilenameReturn(self):
+        """Tests that filename returns correctly"""
+        self.assertEqual(
+            self.filename,
+            self.mr.filename
+        )
+
+        self.mr._filename = 'burp'
+
+        self.assertEqual(
+            'burp',
+            self.mr.filename
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._reset_cached_properties')
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._change_membership')
+    def testFilenameSetString(self, mock_cm, mock_rcp):
+        """Tests that filename sets with a string correctly"""
+        self.assertEqual(
+            self.filename,
+            self.mr.filename
+        )
+
+        old_ref = self.mr.ref
+        new_filename = 'bus.exr'
+        self.mr.filename = new_filename
+
+        self.assertEqual(
+            new_filename,
+            self.mr.filename
+        )
+
+        protocol = self.protocol + '://' if self.protocol else ''
+        new_ref = protocol + os.path.join(self.directory, new_filename)
+
+        self.assertEqual(
+            new_ref,
+            self.mr.ref
+        )
+
+        mock_cm.assert_called_once_with(
+            old_ref=old_ref
+        )
+        mock_rcp.assert_called_once_with()
+
+    #==========================================================================
+
+    def testFilenameSetBadType(self):
+        """Tests that filename doesn't set with a bad type"""
+        def setFilename():
+            self.mr.filename = 12345
+
+        self.assertRaises(
+            TypeError,
+            setFilename
+        )
+
+    #==========================================================================
+
+    @mock.patch('os.path.abspath')
+    def testIsAbs(self, mock_abs):
+        """Tests the is_abs property"""
+        mock_abs.return_value = True
+
+        self.assertTrue(
+            self.mr.is_abs
+        )
+
+        mock_abs.assert_called_once_with(
+            os.path.join(self.directory, self.filename)
+        )
+
+        mock_abs.return_value = False
+
+        self.assertFalse(
+            self.mr.is_abs
+        )
+
+    #==========================================================================
+
+    @mock.patch('os.path.isdir')
+    def testIsDir(self, mock_dir):
+        """Tests the is_dir property"""
+        mock_dir.return_value = True
+
+        self.assertTrue(
+            self.mr.is_dir
+        )
+
+        mock_dir.assert_called_once_with(
+            os.path.join(self.directory, self.filename)
+        )
+
+        mock_dir.return_value = False
+
+        self.assertFalse(
+            self.mr.is_dir
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._get_sequences')
+    def testIsSeq(self, mock_seq):
+        """Tests the is_seq property returns is_seq and calls _get_sequences"""
+        self.mr._is_seq = 'bob'
+
+        self.assertEqual(
+            'bob',
+            self.mr.is_seq
+        )
+
+        self.assertFalse(
+            mock_seq.called
+        )
+
+        self.mr._is_seq = None
+
+        self.assertEqual(
+            None,
+            self.mr.is_seq
+        )
+
+        mock_seq.assert_called_once_with()
+
+    #==========================================================================
+
+    @mock.patch('os.path.join')
+    def testPathMock(self, mock_path):
+        """Tests that path is called correctly"""
+        mock_path.return_value = 'ed'
+        self.assertEqual(
+            'ed',
+            self.mr.path
+        )
+
+        mock_path.assert_called_once_with(self.directory, self.filename)
+
+    #==========================================================================
+
+    def testPathNoMock(self):
+        """Tests that path is joined correctly without mock"""
+        self.assertEqual(
+            os.path.join(self.directory, self.filename),
+            self.mr.path
+        )
+
+    #==========================================================================
+
+    def testProtocolReturn(self):
+        """Tests that protocol returns correctly"""
+        self.assertEqual(
+            self.protocol,
+            self.mr.protocol
+        )
+
+        self.mr._protocol = 'burp'
+
+        self.assertEqual(
+            'burp',
+            self.mr.protocol
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._reset_cached_properties')
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._change_membership')
+    def testProtocolSetString(self, mock_cm, mock_rcp):
+        """Tests that protocol sets with a string correctly"""
+        self.assertEqual(
+            self.protocol,
+            self.mr.protocol
+        )
+
+        old_ref = self.mr.ref
+        new_protocol = 'edward'
+        self.mr.protocol = new_protocol
+
+        self.assertEqual(
+            new_protocol,
+            self.mr.protocol
+        )
+
+        protocol = new_protocol + '://'
+        new_ref = protocol + os.path.join(self.directory, self.filename)
+
+        self.assertEqual(
+            new_ref,
+            self.mr.ref
+        )
+
+        mock_cm.assert_called_once_with(
+            old_ref=old_ref
+        )
+        mock_rcp.assert_called_once_with()
+
+    #==========================================================================
+
+    def testProtocolSetBadType(self):
+        """Tests that protocol doesn't set with a bad type"""
+        def setProtocol():
+            self.mr.protocol = 12345
+
+        self.assertRaises(
+            TypeError,
+            setProtocol
+        )
+
+    #==========================================================================
+
+    def testProtocolTruncate(self):
+        """Tests that protocol truncates the ://"""
+        self.assertEqual(
+            self.protocol,
+            self.mr.protocol
+        )
+
+        self.mr.protocol = 'aladdin://'
+
+        self.assertEqual(
+            'aladdin',
+            self.mr.protocol
+        )
+
+    #==========================================================================
+
+    def testRef(self):
+        """Tests that ref returns correctly"""
+        self.assertEqual(
+            self.ref,
+            self.mr.ref
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._reset_cached_properties')
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._change_membership')
+    def testSetRefWithProtocol(self, mock_cm, mock_rcp):
+        """Tests that ref sets with a string correctly"""
+        self.assertEqual(
+            self.ref,
+            self.mr.ref
+        )
+
+        new_ref = 'edward://loves/to/eat/snow/in/the/winter.#####.ned'
+        self.mr.ref = new_ref
+
+        self.assertEqual(
+            new_ref,
+            self.mr.ref
+        )
+
+        self.assertEqual(
+            'edward',
+            self.mr.protocol
+        )
+
+        self.assertEqual(
+            'loves/to/eat/snow/in/the',
+            self.mr.directory
+        )
+
+        self.assertEqual(
+            'winter.#####.ned',
+            self.mr.filename
+        )
+
+        mock_cm.assert_called_once_with(
+            old_ref=self.ref
+        )
+        mock_rcp.assert_called_once_with()
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._reset_cached_properties')
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._change_membership')
+    def testSetRefNoProtocol(self, mock_cm, mock_rcp):
+        """Tests that ref sets with a string correctly"""
+        self.assertEqual(
+            self.ref,
+            self.mr.ref
+        )
+
+        new_ref = '/loves/to/eat/snow/in/the/winter.#####.ned'
+        self.mr.ref = new_ref
+
+        self.assertEqual(
+            new_ref,
+            self.mr.ref
+        )
+
+        self.assertEqual(
+            '',
+            self.mr.protocol
+        )
+
+        self.assertEqual(
+            '/loves/to/eat/snow/in/the',
+            self.mr.directory
+        )
+
+        self.assertEqual(
+            'winter.#####.ned',
+            self.mr.filename
+        )
+
+        mock_cm.assert_called_once_with(
+            old_ref=self.ref
+        )
+        mock_rcp.assert_called_once_with()
+
+    #==========================================================================
+
+    def testSetRefBadType(self):
+        def setRef():
+            self.mr.ref = 12345
+
+        self.assertRaises(
+            TypeError,
+            setRef
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._get_sequences')
+    def testSeq(self, mock_gs):
+        """Tests the seq attribute makes the correct calls"""
+        self.mr._sequences = ['apple', 'banana']
+
+        self.assertEqual(
+            'apple',
+            self.mr.seq
+        )
+
+        mock_gs.assert_called_once_with()
+        mock_gs.reset_mock()
+
+        self.mr._is_seq = False
+
+        self.assertEqual(
+            None,
+            self.mr.seq
+        )
+
+        # Test that we pulled from the cache
+        self.assertFalse(
+            mock_gs.called
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.MediaRef._get_sequences')
+    def testSeqs(self, mock_gs):
+        """Tests the seqs attribute makes the correct calls"""
+        self.mr._sequences = ['apple', 'banana']
+
+        self.assertEqual(
+            ['apple', 'banana'],
+            self.mr.seqs
+        )
+
+        mock_gs.assert_called_once_with()
+        mock_gs.reset_mock()
+
+        self.mr._is_seq = False
+
+        self.assertEqual(
+            [],
+            self.mr.seqs
+        )
+
+        # Test that we pulled from the cache
+        self.assertFalse(
+            mock_gs.called
+        )
+
+
+class TestMediaRefPropertiesOdd(TestMediaRefProperties):
+    """Tests all aspects of the MediaRef class"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.MediaRef.members = {}
+        self.directory = '/bicycle24/myHat/race_condition14'
+        self.filename = '17438.hds356_######.exr'
+        self.protocol = ''
+        self.path = '/bicycle24/myHat/race_condition14/17438.hds356_######.exr'
+        self.ref = self.path
+        self.parent = cdl_convert.ColorDecision()
+        self.mr = cdl_convert.MediaRef(
+            ref_uri=self.ref,
+            parent=self.parent
+        )
+
+
+class TestMediaRefChangeMembership(unittest.TestCase):
+    """Tests the private method _change_membership"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.MediaRef.members = {}
+        self.mr = cdl_convert.MediaRef('hello')
+
+    def tearDown(self):
+        cdl_convert.MediaRef.members = {}
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testNormalOperation(self):
+        """Tests that in normal circumstances, change membership works"""
+        self.assertEqual(
+            {'hello': [self.mr]},
+            cdl_convert.MediaRef.members
+        )
+
+        self.mr._filename = 'goodbye'
+        self.mr._change_membership(old_ref='hello')
+
+        self.assertEqual(
+            {'goodbye': [self.mr]},
+            cdl_convert.MediaRef.members
+        )
+
+    #==========================================================================
+
+    def testMultipleNewRefs(self):
+        """Tests appended to a list that already has a member"""
+        self.mr2 = cdl_convert.MediaRef('goodbye')
+
+        self.assertEqual(
+            {'hello': [self.mr], 'goodbye': [self.mr2]},
+            cdl_convert.MediaRef.members
+        )
+
+        self.mr._filename = 'goodbye'
+        self.mr._change_membership(old_ref='hello')
+
+        self.assertEqual(
+            {'goodbye': [self.mr2, self.mr]},
+            cdl_convert.MediaRef.members
+        )
+
+    #==========================================================================
+
+    def testMultipleOldRefs(self):
+        """Tests removing from a list that still has a member"""
+        self.mr2 = cdl_convert.MediaRef('hello')
+
+        self.assertEqual(
+            {'hello': [self.mr, self.mr2]},
+            cdl_convert.MediaRef.members
+        )
+
+        self.mr._filename = 'goodbye'
+        self.mr._change_membership(old_ref='hello')
+
+        self.assertEqual(
+            {'hello': [self.mr2],'goodbye': [self.mr]},
+            cdl_convert.MediaRef.members
+        )
+
+    #==========================================================================
+
+    def testBrokenDict(self):
+        """Tests that we don't fail just because we're not in the dict"""
+        cdl_convert.MediaRef.members = {}
+
+        self.mr._filename = 'goodbye'
+        self.mr._change_membership(old_ref='hello')
+
+        self.assertEqual(
+            {'goodbye': [self.mr]},
+            cdl_convert.MediaRef.members
+        )
+
+
+class TestMediaRefGetSequences(unittest.TestCase):
+    """Tests the functionality of getting sequences"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.mr = cdl_convert.MediaRef('hello')
+        self.file = 'TCM1L001_20140330.0830710.ari'
+        self.seq = 'TCM1L001_20140330.#######.ari'
+        self.files = [
+            '.aliases',
+            'pepperjack_corn.jpg',
+            'TCM1L001_20140330.0830710.ari',
+            'TCM1L001_20140330.0830711.ari',
+            'TCM1L001_20140330.0830712.ari',
+            'TCM1L001_20140330.0830713.ari',
+            'TCM1L001_20140330.0830714.ari',
+            'TCM1L014_20140330.0863186.ari',
+            'TCM1L014_20140330.0863516.ari',
+            'TCM1L014_20140330.0863916.ari',
+            'TCM1L014_20140330.0864516.ari',
+            'TCM1L014_20140330.0899516.ari',
+            'TCM1L014_20140330.1863516.ari',
+            'TCM1L014_20140330.2863516.ari',
+            'TCM1L028_20140330.0926197.ari',
+            'The best file of my life..ari',
+        ]
+        self.seqs = [
+            'TCM1L001_20140330.#######.ari',
+            'TCM1L014_20140330.#######.ari',
+            'TCM1L028_20140330.#######.ari',
+        ]
+
+        self.is_seq = True
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    @mock.patch('os.path.isdir')
+    def testSingleFile(self, mock_dir):
+        """Tests a single file for being a sequence"""
+        mock_dir.return_value = False
+
+        self.mr._filename = self.file
+
+        self.assertEqual(
+            self.is_seq,
+            self.mr.is_seq
+        )
+
+        self.assertEqual(
+            self.seq,
+            self.mr.seq
+        )
+
+        if self.seq:
+            self.assertEqual(
+                [self.seq],
+                self.mr.seqs
+            )
+        else:
+            self.assertEqual(
+                [],
+                self.mr.seqs
+            )
+
+    #==========================================================================
+
+    @mock.patch('os.listdir')
+    @mock.patch('os.path.exists')
+    @mock.patch('os.path.isdir')
+    def testDirExists(self, mock_dir, mock_exists, mock_listdir):
+        """Tests parsing a directory for files"""
+        mock_dir.return_value = True
+        mock_exists.return_value = True
+        mock_listdir.return_value = self.files
+
+        self.assertEqual(
+            self.is_seq,
+            self.mr.is_seq
+        )
+
+        if len(self.seqs) > 0:
+            self.assertEqual(
+                self.seqs[0],
+                self.mr.seq
+            )
+        else:
+            self.assertEqual(
+                None,
+                self.mr.seq
+            )
+
+        self.assertEqual(
+            self.seqs,
+            self.mr.seqs
+        )
+
+        mock_listdir.assert_called_once_with(self.mr.path)
+
+    #==========================================================================
+
+    @mock.patch('os.path.exists')
+    @mock.patch('os.path.isdir')
+    def testDirDoesNotExist(self, mock_dir, mock_exists):
+        """Tests what happens when directory doesn't exist"""
+        mock_dir.return_value = True
+        mock_exists.return_value = False
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            self.mr._get_sequences
+        )
+
+        cdl_convert.HALT_ON_ERROR = False
+
+        self.assertEqual(
+            False,
+            self.mr.is_seq
+        )
+
+        self.assertEqual(
+            [],
+            self.mr.seqs
+        )
+
+        self.assertEqual(
+            None,
+            self.mr.seq
+        )
+
+
+class TestMediaRefGetSequencesNoSeqs(TestMediaRefGetSequences):
+    """Tests the functionality of getting sequences"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.mr = cdl_convert.MediaRef('hello')
+        self.file = 'TCM1L00120140.ari'
+        self.seq = None
+        self.files = [
+            '.aliases',
+            'pepperjack_corn.jpg',
+            'TCM1L001_20140330.08307k10.ari',
+            'The best file of my life..ari',
+        ]
+        self.seqs = []
+
+        self.is_seq = False
+
+
+class TestMediaRefGetSequencesCrazySeqs(TestMediaRefGetSequences):
+    """Tests the functionality of getting sequences with odd names"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.mr = cdl_convert.MediaRef('hello')
+        self.file = 'B002_C001_01101G_004.R3D'
+        self.seq = 'B002_C001_01101G_###.R3D'
+        self.files = [
+            'B002_C001_01101G_001.R3D',
+            'B002_C001_01101G_002.R3D',
+            'B002_C001_01101G_003.R3D',
+            'B002_C001_01101G_004.R3D',
+            'TakeThis SequenceandShoveitupyour.8.exr',
+            'A001C008_R402.ari',  # While these are technically an image seq
+            'A001C008_R902.ari',  # we don't support them.
+            'BB50A-05_A039.14278002315672351753261757362236126723618.ari'
+        ]
+        self.seqs = [
+            'B002_C001_01101G_###.R3D',
+            'TakeThis SequenceandShoveitupyour.#.exr',
+            'BB50A-05_A039.#########################################.ari'
+        ]
+
+        self.is_seq = True
+
+
+class TestMediaRefGetSequencesPercentDigit(TestMediaRefGetSequences):
+    """Tests the functionality of getting seq match with %0d return"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.mr = cdl_convert.MediaRef('hello')
+        self.file = 'B002 C001-01101G_%327864d.R3D'
+        self.seq = 'B002 C001-01101G_%327864d.R3D'
+        self.files = [
+            'B002_C001_01101G_001.R3D',
+            'B002_C001_01101G_002.R3D',
+            'B002_C001_01101G_003.R3D',
+            'B002_C001_01101G_004.R3D',
+            'TakeThis SequenceandShoveitupyour.8.exr',
+            'A001C008_R402.ari',  # While these are technically an image seq
+            'A001C008_R902.ari',  # we don't support them.
+            'BB50A-05_A039.14278002315672351753261757362236126723618.ari'
+        ]
+        self.seqs = [
+            'B002_C001_01101G_###.R3D',
+            'TakeThis SequenceandShoveitupyour.#.exr',
+            'BB50A-05_A039.#########################################.ari'
+        ]
+
+        self.is_seq = True
+
+class TestMediaRefGetSequencesPercentDigitUnderscore(TestMediaRefGetSequences):
+    """Tests the functionality of getting seq match with %0d return"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.mr = cdl_convert.MediaRef('hello')
+        self.file = 'TCM1L001_20140330.%05d.ari'
+        self.seq = 'TCM1L001_20140330.%05d.ari'
+        self.files = [
+            '.aliases',
+            'pepperjack_corn.jpg',
+            'TCM1L001_20140330.0830710.ari',
+            'TCM1L001_20140330.0830711.ari',
+            'TCM1L001_20140330.0830712.ari',
+            'TCM1L001_20140330.0830713.ari',
+            'TCM1L001_20140330.0830714.ari',
+            'TCM1L014_20140330.0863186.ari',
+            'TCM1L014_20140330.0863516.ari',
+            'TCM1L014_20140330.0863916.ari',
+            'TCM1L014_20140330.0864516.ari',
+            'TCM1L014_20140330.0899516.ari',
+            'TCM1L014_20140330.1863516.ari',
+            'TCM1L014_20140330.2863516.ari',
+            'TCM1L028_20140330.0926197.ari',
+            'The best file of my life..ari',
+        ]
+        self.seqs = [
+            'TCM1L001_20140330.#######.ari',
+            'TCM1L014_20140330.#######.ari',
+            'TCM1L028_20140330.#######.ari',
+        ]
+
+        self.is_seq = True
 
 # SatNode =====================================================================
 

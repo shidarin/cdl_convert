@@ -74,6 +74,7 @@ from __future__ import print_function
 from argparse import ArgumentParser
 from ast import literal_eval
 import os
+import re
 import sys
 import xml.etree.ElementTree as ElementTree
 
@@ -125,10 +126,12 @@ else:  # pragma: no cover
     enc = lambda x: x  # pylint: disable=C0103
 
 # HALT_ON_ERROR is the exception handling variable for exceptions that can
-# be handled.
+# be handled silently.
 # Used in the following places:
 #   Slope, power and sat values can't be negative and will truncate to 0.0
 #   If id given to ColorCorrection is blank, will set to number of CCs
+#   When determining if a non-existent directory referenced by MediaRef
+#       contains an image sequence, will just return False.
 HALT_ON_ERROR = False
 
 # ==============================================================================
@@ -140,7 +143,9 @@ __all__ = [
     'AscDescBase',
     'ColorCollectionBase',
     'ColorCorrection',
+    'ColorDecision',
     'ColorNodeBase',
+    'MediaRef',
     'SatNode',
     'SopNode',
     'parse_ale',
@@ -283,7 +288,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0902
 
     **Class Attributes:**
 
-        members : {str}
+        members : {str: :class`ColorCorrection`}
             All instanced :class:`ColorCorrection` are added to this member
             dictionary, with their unique id being the key and the
             :class:`ColorCorrection` being the value.
@@ -465,6 +470,15 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0902
 # ==============================================================================
 
 
+class ColorDecision(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0903
+    """Contains a media ref and a ColorCorrection or reference to CC"""
+    def __init__(self):
+        """Inits an instance of ColorDecision"""
+        super(ColorDecision, self).__init__()
+
+# ==============================================================================
+
+
 class ColorNodeBase(AscDescBase):  # pylint: disable=R0903
     """Base class for SOP and SAT nodes.
 
@@ -529,6 +543,389 @@ class ColorNodeBase(AscDescBase):  # pylint: disable=R0903
                     value = 0
 
         return float(value)
+
+# ==============================================================================
+
+
+class MediaRef(object):
+    """A directory of files or a single file used for grade reference
+
+    Description
+    ~~~~~~~~~~~
+
+    :class:`MediaRef` is a container for an image path that should be
+    referenced in regards to the color correction being performed. What that
+    reference means must be further clarified, either through communication or
+    Description fields.
+
+    Requires a ``ref_uri`` and an optional ``parent`` to instantiate.
+
+    An XML URI is usually a filepath to a directory or file, sometimes
+    proceeded by a protocol (such as ``http://``). **Note that many of the**
+    **functions and methods described below do not function properly when**
+    **given a URI with a protocol in front.**
+
+    The parent of a :class:`MediaRef` should typically be a
+    :class:`ColorDecision` , and in fact the CDL specification states that
+    no other container is allowed to contain a :class:`MediaRef`. That
+    restriction is not enforced here, but writers for ``.ccc`` and ``.cc`` will
+    only pass through :class:`MediaRef` as Description entries.
+
+    **Class Attributes:**
+
+        members : {str: [:class:`MediaRef`]}
+            All instances of :class:`MediaRef` are added to this class level
+            members dictionary, with the key being the full reference URI.
+            Since it's possible that multiple :class:`MediaRef` point to the
+            same reference URI, the value returned is a list of
+            :class:`MediaRef` that all have a value of that same URI.
+
+            When you change a single :class:`MediaRef` ref attribute, it
+            removes itself from the old key's list, and adds itself to the
+            new key's list. The old key is removed from the dictionary if this
+            :class:`MediaRef` was the last member.
+
+    **Attributes:**
+
+        directory : (str)
+            The directory portion of the URI, without the protocol or filename.
+
+        exists : (bool)
+            True if the path is present in the file system.
+
+        filename : (str)
+            The filename portion of the URI, without any protocol or directory.
+
+        is_abs : (bool)
+            True if ``directory`` is an absolute reference.
+
+        is_dir : (bool)
+            True if ``path`` points to a directory with no filename portion.
+
+        is_seq : (bool)
+            True if ``path`` points to an image sequence or a directory of
+            image sequences. Image sequences are determined by files ending
+            in a dot or underscore, followed by an integer, followed by the
+            file extension. If the filename reference given already has pound
+            padding or %d indication padding, this will also return true.
+
+            Valid image sequences:
+                TCM100X_20140215.0001.exr
+                BobsBig_Score_2.jpg
+                2383_279873.67267_32t7634.63278623781638218763.exr
+                104fl.x034.######.dpx
+                104fl.x034_%06d.dpx
+
+        parent : (:class:`ColorDecision`)
+            The parent that contains this :class:`MediaRef` object. This should
+            normally be a :class:`ColorDecision` , but that is not enforced.
+
+        path : (str)
+            The directory joined with the filename via os.path.join(), if
+            there is no filename, path is identical to ``directory``. If there
+            is no protocol, ``path`` is identicial to ``ref``.
+
+        protocol : (str)
+            The URI protocol section of the URI, if any. This is the section
+            that proceeds the '://' of any URI. If there is no '://' in the
+            given URI, this is empty.
+
+        ref : (str)
+            The full URI reference which includes the protocol, directory and
+            filename. If there is no protocol and no filename, ``ref`` is
+            identical to ``directory``.
+
+        seq : (str)
+            If ``is_seq`` finds that the filename or directory refers to one or
+            more image sequences, ``seq`` will return the first found sequence
+            in  the form of filename.####.ext (or filename_####.ext if the
+            sequence has an ``_`` in front of the frame numbers).
+            *Note that there may be more than one image sequence if* ``ref``
+            *points to a directory*. To get a list of all image sequences
+            found, use ``seqs``.
+
+            Only if a reference was given to us already in the form of ``%d``
+            padding will ``seq`` and ``seqs`` return a sequence filename with
+            ``%d`` padding.
+
+        seqs : [str]
+            Returns all found sequences in a list. If ``ref`` points to a
+            filename, this list will only contain one sequence. If ``ref``
+            points to a directory, all sequences found in that directory will
+            be in this list.
+
+    """
+
+    members = {}
+
+    def __init__(self, ref_uri, parent=None):
+        self._protocol, self._dir, self._filename = self._split_uri(ref_uri)
+        self.parent = parent
+
+        # If we're a directory, we can contain one or more sequences, but we
+        # won't do the work to figure that out until is_seq, seq, and seqs are
+        # called for.
+        self._is_seq = None
+        self._sequences = None
+
+        # Add this instance to the member dictionary.
+        self._change_membership()
+
+    # Properties ==============================================================
+
+    @property
+    def directory(self):
+        """Returns the directory the uri points to"""
+        return self._dir
+
+    @directory.setter
+    def directory(self, value):
+        """Checks directory for type and resets cached properties"""
+        if type(value) is str:
+            old_ref = self.ref
+            self._dir = value
+            self._change_membership(old_ref=old_ref)
+            self._reset_cached_properties()
+        else:
+            raise TypeError(
+                'Directory must be set with a string, not {type}'.format(
+                    type=type(value)
+                )
+            )
+
+    @property
+    def exists(self):
+        """Convenience property for os.path.exists"""
+        return os.path.exists(self.path)
+
+    @property
+    def filename(self):
+        """Returns the filename the uri points to, if any"""
+        return self._filename
+
+    @filename.setter
+    def filename(self, value):
+        """Checks filename for type and resets cached properties"""
+        if type(value) is str:
+            old_ref = self.ref
+            self._filename = value
+            self._change_membership(old_ref=old_ref)
+            self._reset_cached_properties()
+        else:
+            raise TypeError(
+                'Filename must be set with a string, not {type}'.format(
+                    type=type(value)
+                )
+            )
+
+    @property
+    def is_abs(self):
+        """Returns True if path is an absolute path"""
+        return os.path.abspath(self.path)
+
+    @property
+    def is_dir(self):
+        """Returns True if path points to a directory"""
+        return os.path.isdir(self.path)
+
+    @property
+    def is_seq(self):
+        """Returns True if path is to an image sequence"""
+        if self._is_seq is None:
+            self._get_sequences()
+        return self._is_seq
+
+    @property
+    def path(self):
+        """Returns the path without any uri protocol"""
+        return os.path.join(self._dir, self._filename)
+
+    @property
+    def protocol(self):
+        """Returns the protocol of the uri, if any"""
+        return self._protocol
+
+    @protocol.setter
+    def protocol(self, value):
+        """Checks protocol for type and resets cached properties"""
+        if type(value) is str:
+            # If :// was appended we'll remove it.
+            if value.endswith('://'):
+                value = value[:-3]
+            old_ref = self.ref
+            self._protocol = value
+            self._change_membership(old_ref=old_ref)
+            # We probably don't need to reset the cached properties, but we will
+            # just to be safe.
+            self._reset_cached_properties()
+        else:
+            raise TypeError(
+                'Protocol must be set with a string, not {type}'.format(
+                    type=type(value)
+                )
+            )
+
+    @property
+    def ref(self):
+        """Returns the reference uri"""
+        if self._protocol:
+            prefix = "{proto}://".format(proto=self._protocol)
+        else:
+            prefix = ''
+        return prefix + self.path
+
+    @ref.setter
+    def ref(self, uri):
+        """Sets the reference uri and resets all cached properties"""
+        if type(uri) is str:
+            old_ref = self.ref
+            self._protocol, self._dir, self._filename = self._split_uri(uri)
+            self._change_membership(old_ref=old_ref)
+            self._reset_cached_properties()
+        else:
+            raise TypeError(
+                'URI must be set with a string, not {type}'.format(
+                    type=type(uri)
+                )
+            )
+
+    @property
+    def seq(self):
+        """Returns first found sequence with frames as # padding"""
+        if self._is_seq is None:
+            self._get_sequences()
+        elif not self._is_seq:
+            return None
+
+        return self._sequences[0]
+
+    @property
+    def seqs(self):
+        """Returns all found sequences with frames as # padding"""
+        if self._is_seq is None:
+            self._get_sequences()
+        elif not self._is_seq:
+            return []
+
+        return self._sequences
+
+    # Private Methods =========================================================
+
+    def _change_membership(self, old_ref=None):
+        """Change which ref uri this instance is under in the class dict.
+
+        We remove ourselves from the list returned by the key of old_ref
+        in the member dictionary, then append ourselves to the list of the
+        new ref key. If the ref isn't already in the dictionary, we'll be
+        creating a new list with ourselves as the only member.
+
+        **Args:**
+
+            old_ref=None : (str)
+                The previous uri reference of the instance. We'll look in the
+                class level member dictionary for this uri as a key, then
+                remove ourselves. If old_ref isn't a key, or we're not in the
+                list it returns, we'll just move on.
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        if old_ref:
+            try:
+                MediaRef.members[old_ref].remove(self)
+            except (KeyError, ValueError):
+                # Either the key doesn't exist or we're not in the list.
+                # Either way, it doesn't matter to us.
+                pass
+            else:
+                # Now that we're removed, we need to see if the list is empty,
+                # and if so, delete the key ref.
+                if not MediaRef.members[old_ref]:
+                    del MediaRef.members[old_ref]
+        try:
+            MediaRef.members[self.ref].append(self)
+        except KeyError:
+            MediaRef.members[self.ref] = [self]
+
+    # =========================================================================
+
+    def _get_sequences(self):
+        """Determines if the media ref is pointing to an image sequence"""
+        re_exp = r'(^[ \w_.-]+[_.])([0-9]+)(\.[a-zA-Z0-9]{3}$)'
+        re_exp_percent = r'(^[ \w_.-]+[_.])(%[0-9]+d)(\.[a-zA-Z0-9]{3}$)'
+        match = re.compile(re_exp)
+
+        if self.is_dir and not self.exists:
+            # It doesn't exist, so we can't tell if it's a sequence
+            if HALT_ON_ERROR:
+                raise ValueError(
+                    'Cannot determine if non-existent directory {dir} '
+                    'contains an image sequence.'.format(
+                        dir=self.path,
+                    )
+                )
+            else:
+                self._is_seq = False
+                self._sequences = []
+        elif self.is_dir and self.exists:
+            file_list = os.listdir(self.path)
+            files = [f for f in file_list if match.search(f)]
+            if not files:
+                self._is_seq = False
+                self._sequences = []
+            else:
+                seqs = []
+                for image in files:
+                    found = match.search(image)
+                    padding = '#' * len(found.group(2))
+                    filename = found.group(1) + padding + found.group(3)
+                    if filename not in seqs:
+                        seqs.append(filename)
+                self._is_seq = True
+                self._sequences = seqs
+        else:
+            found = match.search(self.filename)
+            if found:
+                padding = '#' * len(found.group(2))
+                self._is_seq = True
+                self._sequences = [found.group(1) + padding + found.group(3)]
+            else:
+                # We'll finally check for %d style padding
+                match = re.compile(re_exp_percent)
+                found = match.search(self.filename)
+                if found:
+                    self._is_seq = True
+                    self._sequences = [self.filename]
+                else:
+                    self._is_seq = False
+                    self._sequences = []
+
+    # =========================================================================
+
+    def _reset_cached_properties(self):
+        """Resets cached attributes back to init values"""
+        self._is_seq = None
+        self._sequences = None
+
+    # =========================================================================
+
+    @staticmethod
+    def _split_uri(uri):
+        """Splits uri into protocol, base and filename"""
+        if ':' in uri:
+            protocol = uri.split('://')[0]
+            uri = uri.split('://')[1]
+        else:
+            protocol = ''
+
+        directory = os.path.split(uri)[0]
+        ref_file = os.path.split(uri)[1]
+
+        return protocol, directory, ref_file
 
 # ==============================================================================
 
@@ -828,7 +1225,6 @@ def _sanitize(name):
         # If not name, it's probably an empty string, but let's throw back
         # exactly what we got.
         return name
-    import re
     # Replace any spaces with underscores
     name = name.replace(' ', '_')
     # If we start our string with an underscore or period, remove it
@@ -1070,7 +1466,7 @@ def parse_cc(cdl_file):
 
     if sat_xml is not None:
         cdl.sat = find_required(sat_xml, ['Saturation']).text
-    
+
         # In the same manor of sop, we can call the sat node now to set the
         # desc descriptions.
         for desc_entry in sat_xml.findall('Description'):
