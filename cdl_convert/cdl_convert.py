@@ -233,6 +233,27 @@ class AscDescBase(object):  # pylint: disable=R0903
         else:
             self._desc.append(value)
 
+    # Public Methods ==========================================================
+
+    def parse_xml_descs(self, xml_element):
+        """Parses an ElementTree element to find & add any descriptions
+
+        **Args:**
+            xml_element : (``xml.etree.ElementTree.Element``)
+                The element to parse for Description elements. Any found
+                will be appended to the end of ``desc``
+
+        **Returns:**
+            None
+
+        **Raises:**
+            None
+
+        """
+        for desc_entry in xml_element.findall('Description'):
+            if desc_entry.text:  # Don't attend if text returns none
+                self.desc.append(desc_entry.text)
+
 # ==============================================================================
 
 
@@ -1385,9 +1406,7 @@ def parse_cc(cdl_file):
     cdl = ColorCorrection(cc_id, cdl_file)
 
     # Grab our descriptions and add them to the cdl
-    for desc_entry in root.findall('Description'):
-        if desc_entry.text:  # Don't append if text returns None
-            cdl.desc.append(desc_entry.text)
+    cdl.parse_xml_descs(root)
     # See if we have a viewing description.
     # If the text field is empty, this will return None, which is the default
     # value of viewing_desc and input_desc anyway.
@@ -1460,18 +1479,14 @@ def parse_cc(cdl_file):
         # Calling the slope, offset and power attributes on the cdl will have
         # created an instance of SopNode on cdl.sop_node, so we can populate
         # those descriptions.
-        for desc_entry in sop_xml.findall('Description'):
-            if desc_entry.text:
-                cdl.sop_node.desc.append(desc_entry.text)
+        cdl.sop_node.parse_xml_descs(sop_xml)
 
     if sat_xml is not None:
         cdl.sat = find_required(sat_xml, ['Saturation']).text
 
         # In the same manor of sop, we can call the sat node now to set the
         # desc descriptions.
-        for desc_entry in sat_xml.findall('Description'):
-            if desc_entry.text:
-                cdl.sat_node.desc.append(desc_entry.text)
+        cdl.sat_node.parse_xml_descs(sat_xml)
 
     cdls.append(cdl)
 
