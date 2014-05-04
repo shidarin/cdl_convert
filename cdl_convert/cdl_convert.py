@@ -610,11 +610,11 @@ class MediaRef(object):
             padding or %d indication padding, this will also return true.
 
             Valid image sequences:
-                TCM100X_20140215.0001.exr
-                BobsBig_Score_2.jpg
-                2383_279873.67267_32t7634.63278623781638218763.exr
-                104fl.x034.######.dpx
-                104fl.x034_%06d.dpx
+                - TCM100X_20140215.0001.exr
+                - Bobs Big_Score_2.jpg
+                - 2383-279873.67267_32t7634.63278623781638218763.exr
+                - 104fl.x034.######.dpx
+                - 104fl.x034_%06d.dpx
 
         parent : (:class:`ColorDecision`)
             The parent that contains this :class:`MediaRef` object. This should
