@@ -144,6 +144,7 @@ HALT_ON_ERROR = False
 __all__ = [
     'AscColorSpaceBase',
     'AscDescBase',
+    'AscXMLBase',
     'ColorCollectionBase',
     'ColorCorrection',
     'ColorDecision',
@@ -167,6 +168,9 @@ __all__ = [
 class AscColorSpaceBase(object):  # pylint: disable=R0903
     """Base class for Asc XML type nodes that deal with colorspace
 
+    Description
+    ~~~~~~~~~~~
+
     This class is meant to be inherited by any node type that used viewing and
     input colorspace descriptions.
 
@@ -184,6 +188,16 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
         viewing_desc : (str)
             Viewing device, settings and environment. Individual
             :class:`ColorCorrections` can override this.
+
+    **Public Methods:**
+
+        parse_xml_input_desc()
+            Parses an ElementTree Element to find & add an InputDescription.
+            If none is found, ``input_desc`` will remain set to ``None``.
+
+        parse_xml_viewing_desc()
+            Parses an ElementTree Element to find & add a ViewingDescription.
+            If none is found, ``viewing_desc`` will remain set to ``None``.
 
     """
     def __init__(self):
@@ -253,6 +267,9 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
 class AscDescBase(object):  # pylint: disable=R0903
     """Base class for most Asc XML type nodes, allows for infinite desc
 
+    Description
+    ~~~~~~~~~~~
+
     This class is meant to be inherited by any node type that uses description
     fields.
 
@@ -267,6 +284,12 @@ class AscDescBase(object):  # pylint: disable=R0903
             Setting desc directly will cause the value given to append to the
             end of the list, but desc can also be replaced by passing it a list
             or tuple. Desc can be emptied by passing it None, [] or ().
+
+    **Public Methods:**
+
+        parse_xml_descs()
+            Parses an ElementTree Element for any Description tags and appends
+            any text they contain to the ``desc``.
 
     """
     def __init__(self):
@@ -317,6 +340,9 @@ class AscDescBase(object):  # pylint: disable=R0903
 class AscXMLBase(object):
     """Base class for nodes which can be converted to XML Elements
 
+    Description
+    ~~~~~~~~~~~
+
     This class contains several convenience attributes which can be used
     to retrieve ElementTree Elements, or nicely formatted strings.
 
@@ -332,6 +358,12 @@ class AscXMLBase(object):
             A nicely formatted XML, ready to write to file string representing
             the node. Formatted as an XML root, it includes the xml version and
             encoding tags on the first line.
+
+    **Public Methods:**
+
+        build_element()
+            A placeholder method to be overriden by inheriting classes, calling
+            it will always return None.
 
     """
     def __init__(self):
@@ -354,7 +386,7 @@ class AscXMLBase(object):
 
     @property
     def xml_root(self):
-        """A nicely formatted XML string with a root <> ready to write"""
+        """A nicely formatted XML string with a root element ready to write"""
         xml_string = ElementTree.tostring(self.element, 'UTF-8')
         dom_xml = minidom.parseString(xml_string)
         dom_string = dom_xml.toprettyxml(indent="    ", encoding='UTF-8')
@@ -374,8 +406,11 @@ class AscXMLBase(object):
 # ==============================================================================
 
 
-class ColorCollectionBase(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0903
+class ColorCollectionBase(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0903
     """Base class for ColorDecisionList and ColorCorrectionCollection.
+
+    Description
+    ~~~~~~~~~~~
 
     Collections need to store children and have access to descriptions,
     input descriptions, and viewing descriptions.
@@ -386,13 +421,63 @@ class ColorCollectionBase(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0
 
     **Attributes:**
 
+        desc : [str]
+            Since all Asc nodes which can contain a single description, can
+            actually contain an infinite number of descriptions, the desc
+            attribute is a list, allowing us to store every single description
+            found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list, but desc can also be replaced by passing it a list
+            or tuple. Desc can be emptied by passing it None, [] or ().
+
+            Inherited from :class:`AscDescBase` .
+
+        element : (<xml.etree.ElementTree.Element>)
+            etree style Element representing the node. Inherited from
+            :class:`AscXMLBase` .
+
         input_desc : (str)
             Description of the color space, format and properties of the input
-            images. Individual :class:`ColorCorrections` can override this.
+            images. Inherited from :class:`AscColorSpaceBase` .
 
         viewing_desc : (str)
-            Viewing device, settings and environment. Individual
-            :class:`ColorCorrections` can override this.
+            Viewing device, settings and environment. Inherited from
+            :class:`AscColorSpaceBase` .
+
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+    **Public Methods:**
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
+        parse_xml_descs()
+            Parses an ElementTree Element for any Description tags and appends
+            any text they contain to the ``desc``. Inherited from
+            :class:`AscDescBase`
+
+        parse_xml_input_desc()
+            Parses an ElementTree Element to find & add an InputDescription.
+            If none is found, ``input_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
+
+        parse_xml_viewing_desc()
+            Parses an ElementTree Element to find & add a ViewingDescription.
+            If none is found, ``viewing_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
 
     """
     def __init__(self):
@@ -420,13 +505,6 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     Order of operations is Slope, Offset, Power, then Saturation.
 
-    Inherits ``desc`` attribute and setters from :class:`AscDescBase`
-
-    Inherits ``input_desc`` and ``viewing_desc`` from
-    :class:`AscColorSpaceBase`
-
-    Inherits ``element``, ``xml`` and ``xml_root`` from :class:`AscXMLBase`
-
     **Class Attributes:**
 
         members : {str: :class`ColorCorrection`}
@@ -435,6 +513,22 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             :class:`ColorCorrection` being the value.
 
     **Attributes:**
+
+        desc : [str]
+            Since all Asc nodes which can contain a single description, can
+            actually contain an infinite number of descriptions, the desc
+            attribute is a list, allowing us to store every single description
+            found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list, but desc can also be replaced by passing it a list
+            or tuple. Desc can be emptied by passing it None, [] or ().
+
+            Inherited from :class:`AscDescBase` .
+
+        element : (<xml.etree.ElementTree.Element>)
+            etree style Element representing the node. Inherited from
+            :class:`AscXMLBase` .
 
         file_in : (str)
             Filepath used to create this CDL.
@@ -451,6 +545,10 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
             Note that this shadows the builtin id.
 
+        input_desc : (str)
+            Description of the color space, format and properties of the input
+            images. Inherited from :class:`AscColorSpaceBase` .
+
         sat_node : ( :class:`SatNode` )
             Contains a reference to a single instance of :class:`SatNode` ,
             which contains the saturation value and descriptions.
@@ -458,6 +556,48 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         sop_node : ( :class:`SopNode` )
             Contains a reference to a single instance of :class:`SopNode` ,
             which contains the slope, offset, power values and descriptions.
+
+        viewing_desc : (str)
+            Viewing device, settings and environment. Inherited from
+            :class:`AscColorSpaceBase` .
+
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+    **Public Methods:**
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
+        determine_dest()
+            When provided an output extension, determines the destination
+            filename to be written to based on ``file_in`` & ``id``.
+
+        parse_xml_descs()
+            Parses an ElementTree Element for any Description tags and appends
+            any text they contain to the ``desc``. Inherited from
+            :class:`AscDescBase`
+
+        parse_xml_input_desc()
+            Parses an ElementTree Element to find & add an InputDescription.
+            If none is found, ``input_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
+
+        parse_xml_viewing_desc()
+            Parses an ElementTree Element to find & add a ViewingDescription.
+            If none is found, ``viewing_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
 
     """
 
@@ -619,6 +759,8 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return cc_xml
 
+    # =========================================================================
+
     def determine_dest(self, output):
         """Determines the destination file and sets it on the cdl"""
 
@@ -631,8 +773,40 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 # ==============================================================================
 
 
-class ColorDecision(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0903
-    """Contains a media ref and a ColorCorrection or reference to CC"""
+class ColorDecision(AscXMLBase):  # pylint: disable=R0903
+    """Contains a media ref and a ColorCorrection or reference to CC.
+
+    Description
+    ~~~~~~~~~~~
+
+    This class is a stub for now, with no functionality.
+
+    **Attributes:**
+
+        element : (<xml.etree.ElementTree.Element>)
+            etree style Element representing the node. Inherited from
+            :class:`AscXMLBase` .
+
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+    **Public Methods:**
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
+    """
     def __init__(self):
         """Inits an instance of ColorDecision"""
         super(ColorDecision, self).__init__()
@@ -643,9 +817,59 @@ class ColorDecision(AscDescBase, AscColorSpaceBase):  # pylint: disable=R0903
 class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
     """Base class for SOP and SAT nodes.
 
-    Inherits ``desc`` from :class:`AscDescBase`
+    Description
+    ~~~~~~~~~~~
 
-    Inherits ``element``, ``xml`` and ``xml_root`` from :class:`AscXMLBase`
+    This class is meant only to be inherited by :class:`SopNode` and
+    :class:`SatNode` and should not be used outside of those classes.
+
+    It inherits from both :class:`AscDescBase` and :class:`AscXMLBase` giving
+    the child classes both ``desc`` and ``xml`` related functionality.
+
+    This class is also home to a private function which helps :class:`SopNode`
+    and :class:`SatNode` perform type and value checks on incoming values.
+
+    **Attributes:**
+
+        desc : [str]
+            Since all Asc nodes which can contain a single description, can
+            actually contain an infinite number of descriptions, the desc
+            attribute is a list, allowing us to store every single description
+            found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list, but desc can also be replaced by passing it a list
+            or tuple. Desc can be emptied by passing it None, [] or ().
+
+            Inherited from :class:`AscDescBase` .
+
+        element : (<xml.etree.ElementTree.Element>)
+            etree style Element representing the node. Inherited from
+            :class:`AscXMLBase` .
+
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+    **Public Methods:**
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
+        parse_xml_descs()
+            Parses an ElementTree Element for any Description tags and appends
+            any text they contain to the ``desc``. Inherited from
+            :class:`AscDescBase`
 
     """
     def __init__(self):
@@ -710,7 +934,7 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
 # ==============================================================================
 
 
-class MediaRef(object):
+class MediaRef(AscXMLBase):
     """A directory of files or a single file used for grade reference
 
     Description
@@ -752,6 +976,10 @@ class MediaRef(object):
 
         directory : (str)
             The directory portion of the URI, without the protocol or filename.
+
+        element : (<xml.etree.ElementTree.Element>)
+            etree style Element representing the node. Inherited from
+            :class:`AscXMLBase` .
 
         exists : (bool)
             True if the path is present in the file system.
@@ -817,11 +1045,31 @@ class MediaRef(object):
             points to a directory, all sequences found in that directory will
             be in this list.
 
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+    **Public Methods:**
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
     """
 
     members = {}
 
     def __init__(self, ref_uri, parent=None):
+        super(MediaRef, self).__init__()
         self._protocol, self._dir, self._filename = self._split_uri(ref_uri)
         self.parent = parent
 
@@ -1104,6 +1352,22 @@ class SatNode(ColorNodeBase):
 
     **Attributes:**
 
+        desc : [str]
+            Since all Asc nodes which can contain a single description, can
+            actually contain an infinite number of descriptions, the desc
+            attribute is a list, allowing us to store every single description
+            found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list, but desc can also be replaced by passing it a list
+            or tuple. Desc can be emptied by passing it None, [] or ().
+
+            Inherited from :class:`AscDescBase` .
+
+        element : (<xml.etree.ElementTree.Element>)
+            etree style Element representing the node. Inherited from
+            :class:`AscXMLBase` .
+
         parent : ( :class:`ColorCorrection` )
             The parent :class:`ColorCorrection` instance that created this
             instance.
@@ -1114,6 +1378,30 @@ class SatNode(ColorNodeBase):
             applying a CDL.
 
             sat can be set with a float, int or numeric string.
+
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+    **Public Methods:**
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
+        parse_xml_descs()
+            Parses an ElementTree Element for any Description tags and appends
+            any text they contain to the ``desc``. Inherited from
+            :class:`AscDescBase`
 
     """
 
@@ -1176,7 +1464,10 @@ class SatNode(ColorNodeBase):
 class SopNode(ColorNodeBase):
     """Color node that contains slope, offset and power data.
 
-    slope, offset and saturation are stored internally as lists, but always
+    Description
+    ~~~~~~~~~~~
+
+    Slope, offset and saturation are stored internally as lists, but always
     returned as tuples to prevent index assignment from being successful. This
     protects the user from inadvertently setting a single value in the list
     to be a non-valid value, which might result in values not being floats or
@@ -1189,6 +1480,22 @@ class SopNode(ColorNodeBase):
             in parsing XML files.
 
     **Attributes:**
+
+        desc : [str]
+            Since all Asc nodes which can contain a single description, can
+            actually contain an infinite number of descriptions, the desc
+            attribute is a list, allowing us to store every single description
+            found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list, but desc can also be replaced by passing it a list
+            or tuple. Desc can be emptied by passing it None, [] or ().
+
+            Inherited from :class:`AscDescBase` .
+
+        element : (<xml.etree.ElementTree.Element>)
+            etree style Element representing the node. Inherited from
+            :class:`AscXMLBase` .
 
         parent : ( :class:`ColorCorrection` )
             The parent :class:`ColorCorrection` instance that created this
@@ -1220,6 +1527,30 @@ class SopNode(ColorNodeBase):
             single value given can be a float, int or numeric string.
 
             default: (1.0, 1.0, 1.0)
+
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+    **Public Methods:**
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
+        parse_xml_descs()
+            Parses an ElementTree Element for any Description tags and appends
+            any text they contain to the ``desc``. Inherited from
+            :class:`AscDescBase`
 
     """
 
