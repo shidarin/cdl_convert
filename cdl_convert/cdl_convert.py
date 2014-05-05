@@ -1403,6 +1403,36 @@ class SopNode(ColorNodeBase):
 # ==============================================================================
 
 
+def _de_exponent(notation):
+    """Translates scientific notation into float strings"""
+    notation = str(notation)
+    if 'e' not in notation:
+        return notation
+
+    notation = notation.split('e')
+    # Grab the exponent value
+    digits = int(notation[-1])
+    # Grab the value we'll be adding 0s to
+    value = notation[0]
+
+    if value.startswith('-'):
+        negative = '-'
+        value = value[1:]
+    else:
+        negative = ''
+
+    value = value.replace('.', '')
+
+    if digits < 0:
+        new_value = negative + '0.0' + '0' * (abs(digits) - 2) + value
+    else:
+        zeros = len(value)
+        new_value = negative + value + '0' * (abs(digits) - zeros) + '0.0'
+    return new_value
+
+# ==============================================================================
+
+
 def _sanitize(name):
     """Removes any characters in string name that aren't alnum or in '_.'"""
     if not name:
