@@ -341,25 +341,33 @@ class AscXMLBase(object):
 
     @property
     def element(self):
+        """etree style Element representing the node."""
         return self.build_element()
 
     @property
     def xml(self):
+        """A nicely formatted XML string representing the node"""
         # We'll take the xml_root attrib, which is ready to write, and just
         # remove the first line, which is the xml version and encoding.
-        dom_string = self.xml_root.split('\n')
-        return '\n'.join(dom_string[1:])
+        dom_string = self.xml_root.split(enc('\n'))
+        return enc('\n').join(dom_string[1:])
 
     @property
     def xml_root(self):
+        """A nicely formatted XML string with a root <> ready to write"""
         xml_string = ElementTree.tostring(self.element, 'UTF-8')
         dom_xml = minidom.parseString(xml_string)
         dom_string = dom_xml.toprettyxml(indent="    ", encoding='UTF-8')
+        # Fix for ugly dom formatting prior to 2.7, taken from:
+        # http://stackoverflow.com/questions/749796/pretty-printing-xml-in-python
+        if sys.version_info[0] < 3 and sys.version_info[1] < 7:  # pragma: no cover pylint: disable=E0012
+            text_re = re.compile(r'>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)
+            dom_string = text_re.sub(r'>\g<1></', dom_string)
         return dom_string
 
     # Public Methods ==========================================================
 
-    def build_element(self):
+    def build_element(self):  # pragma: no cover pylint: disable=R0201
         """Placeholder for reference by attributes. Will return None"""
         return None
 
@@ -593,23 +601,23 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     def build_element(self):
         """Builds an ElementTree XML element representing this CC"""
-        cc = ElementTree.Element('ColorCorrection')
-        cc.attrib = {'id': self.id}
+        cc_xml = ElementTree.Element('ColorCorrection')
+        cc_xml.attrib = {'id': self.id}
         if self.input_desc:
-            input_desc = ElementTree.SubElement(cc, 'InputDescription')
+            input_desc = ElementTree.SubElement(cc_xml, 'InputDescription')
             input_desc.text = self.input_desc
         if self.viewing_desc:
-            viewing_desc = ElementTree.SubElement(cc, 'ViewingDescription')
+            viewing_desc = ElementTree.SubElement(cc_xml, 'ViewingDescription')
             viewing_desc.text = self.viewing_desc
         for description in self.desc:
-            desc = ElementTree.SubElement(cc, 'Description')
+            desc = ElementTree.SubElement(cc_xml, 'Description')
             desc.text = description
         if self.sop_node:
-            cc.append(self.sop_node.element)
+            cc_xml.append(self.sop_node.element)
         if self.sat_node:
-            cc.append(self.sat_node.element)
+            cc_xml.append(self.sat_node.element)
 
-        return cc
+        return cc_xml
 
     def determine_dest(self, output):
         """Determines the destination file and sets it on the cdl"""
@@ -1159,7 +1167,7 @@ class SatNode(ColorNodeBase):
             desc = ElementTree.SubElement(sat, 'Description')
             desc.text = description
         op_node = ElementTree.SubElement(sat, 'Saturation')
-        op_node.text = str(self.sat)
+        op_node.text = _de_exponent(self.sat)
         return sat
 
 # ==============================================================================
@@ -1389,12 +1397,12 @@ class SopNode(ColorNodeBase):
         for description in self.desc:
             desc = ElementTree.SubElement(sop, 'Description')
             desc.text = description
-        for i, op in enumerate([self.slope, self.offset, self.power]):
+        for i, grade in enumerate([self.slope, self.offset, self.power]):
             op_node = ElementTree.SubElement(sop, fields[i])
             op_node.text = '{valueR} {valueG} {valueB}'.format(
-                valueR=str(op[0]),
-                valueG=str(op[1]),
-                valueB=str(op[2])
+                valueR=_de_exponent(grade[0]),
+                valueG=_de_exponent(grade[1]),
+                valueB=_de_exponent(grade[2])
             )
         return sop
 
@@ -1954,16 +1962,16 @@ def parse_args():
         "-i",
         "--input",
         help="specify the filetype to convert from. Use when CDLConvert "
-             "cannot determine the filetype automatically. Supported input "
-             "formats are: "
-             "{inputs}".format(inputs=str(INPUT_FORMATS.keys()))
+             "cannot determine the filetype automatically. Supported input "  # pylint: disable=C0330
+             "formats are: "  # pylint: disable=C0330
+             "{inputs}".format(inputs=str(INPUT_FORMATS.keys()))  # pylint: disable=C0330
     )
     parser.add_argument(
         "-o",
         "--output",
         help="specify the filetype to convert to, comma separated lists are "
-             "accepted. Defaults to a .cc XML. Supported output formats are: "
-             "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))
+             "accepted. Defaults to a .cc XML. Supported output formats are: "  # pylint: disable=C0330
+             "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))  # pylint: disable=C0330
     )
 
     args = parser.parse_args()
