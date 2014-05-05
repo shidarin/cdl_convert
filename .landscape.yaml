@@ -1,7 +1,7 @@
 doc-warnings: yes
 test-warnings: no
 strictness: veryhigh
-max-line-length: 80
+max-line-length: 120
 ignore-paths:
     - setup.py
     - cdl_convert/__init__.py
