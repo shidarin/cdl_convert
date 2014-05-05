@@ -12,6 +12,10 @@ mock
 #==============================================================================
 
 # Standard Imports
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import os
 import sys
 import tempfile
@@ -799,6 +803,19 @@ class TestWriteCCFull(unittest.TestCase):
             ElementTree.Element,
             self.cdl.element.__class__
         )
+
+    def test_write(self):
+        """Tests writing the cc itself"""
+        mockOpen = mock.mock_open()
+
+        self.cdl._files['file_out'] = 'bobs_big_file.cc'
+
+        with mock.patch(builtins + '.open', mockOpen, create=True):
+            cdl_convert.write_cc(self.cdl)
+
+        mockOpen.assert_called_once_with('bobs_big_file.cc', 'wb')
+
+        mockOpen().write.assert_called_once_with(enc(self.target_xml_root))
 
 
 class TestWriteCCOdd(TestWriteCCFull):
