@@ -43,6 +43,81 @@ import cdl_convert.cdl_convert as cdl_convert
 # TEST CLASSES
 #==============================================================================
 
+# _de_exponent() ==============================================================
+
+
+class TestDeExponent(unittest.TestCase):
+    """Throws a bunch of scientific notation at de_exponent"""
+
+    def testNegativeExp(self):
+        """Tests a basic negative value"""
+        value = 0.0000000000000000113
+        value_string = '0.0000000000000000113'
+
+        self.assertEqual(
+            value_string,
+            cdl_convert._de_exponent(value)
+        )
+
+    #==========================================================================
+
+    def testNegativeExp2(self):
+        """Tests a basic negative value"""
+        value = .0000998
+        value_string = '0.0000998'
+
+        self.assertEqual(
+            value_string,
+            cdl_convert._de_exponent(value)
+        )
+
+    #==========================================================================
+
+    def testNegativeExp3(self):
+        """Tests a basic negative value"""
+        value = -0.0000000003037892378
+        value_string = '-0.0000000003037892378'
+
+        self.assertEqual(
+            value_string,
+            cdl_convert._de_exponent(value)
+        )
+
+    #==========================================================================
+
+    def testPositiveExp(self):
+        """Tests a basic positive value"""
+        value = 76283728313300000000000000000.0
+        value_string = '76283728313300000000000000000.0'
+
+        self.assertEqual(
+            value_string,
+            cdl_convert._de_exponent(value)
+        )
+
+    #==========================================================================
+
+    def testPositiveExp2(self):
+        """Tests a basic positive value"""
+        value = 3217892322310000000000000000000000.0
+        value_string = '3217892322310000000000000000000000.0'
+
+        self.assertEqual(
+            value_string,
+            cdl_convert._de_exponent(value)
+        )
+
+    #==========================================================================
+
+    def testPositiveExp3(self):
+        """Tests a basic positive value"""
+        value = -1628721600000.0
+        value_string = '-1628721600000.0'
+
+        self.assertEqual(
+            value_string,
+            cdl_convert._de_exponent(value)
+        )
 
 # _sanitize() =================================================================
 

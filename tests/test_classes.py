@@ -108,6 +108,102 @@ class TestAscColorSpaceBase(unittest.TestCase):
             self.node.viewing_desc
         )
 
+    #==========================================================================
+
+    @mock.patch('xml.etree.ElementTree.Element')
+    def test_parse_xml_input_desc(self, mock_elem):
+        """Tests the input_desc method, which parses an ElementTree element"""
+
+        mock_elem.find.return_value.text = 'Bob'
+
+        self.assertEqual(
+            None,
+            self.node.input_desc
+        )
+
+        self.assertTrue(
+            self.node.parse_xml_input_desc(mock_elem)
+        )
+
+        self.assertEqual(
+            'Bob',
+            self.node.input_desc
+        )
+
+        mock_elem.find.return_value.text = None
+
+        self.assertTrue(
+            self.node.parse_xml_input_desc(mock_elem)
+        )
+
+        self.assertEqual(
+            None,
+            self.node.input_desc
+        )
+
+        # Now we'll make the Element.find raise an AttributeError,
+        # mocking that the element has no elem with that name.
+        mock_elem.find.side_effect = AttributeError('')
+
+        self.node.input_desc = 'Ralph'
+
+        self.assertFalse(
+            self.node.parse_xml_input_desc(mock_elem)
+        )
+
+        self.assertEqual(
+            'Ralph',
+            self.node.input_desc
+        )
+
+    #==========================================================================
+
+    @mock.patch('xml.etree.ElementTree.Element')
+    def test_parse_xml_viewing_desc(self, mock_elem):
+        """Tests the viewing_desc method, which parses an ElementTree element"""
+
+        mock_elem.find.return_value.text = 'Bob'
+
+        self.assertEqual(
+            None,
+            self.node.viewing_desc
+        )
+
+        self.assertTrue(
+            self.node.parse_xml_viewing_desc(mock_elem)
+        )
+
+        self.assertEqual(
+            'Bob',
+            self.node.viewing_desc
+        )
+
+        mock_elem.find.return_value.text = None
+
+        self.assertTrue(
+            self.node.parse_xml_viewing_desc(mock_elem)
+        )
+
+        self.assertEqual(
+            None,
+            self.node.viewing_desc
+        )
+
+        # Now we'll make the Element.find raise an AttributeError,
+        # mocking that the element has no elem with that name.
+        mock_elem.find.side_effect = AttributeError('')
+
+        self.node.viewing_desc = 'Ralph'
+
+        self.assertFalse(
+            self.node.parse_xml_viewing_desc(mock_elem)
+        )
+
+        self.assertEqual(
+            'Ralph',
+            self.node.viewing_desc
+        )
+
 # AscDescBase =================================================================
 
 

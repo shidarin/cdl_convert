@@ -23,10 +23,6 @@ AscColorSpaceBase
 Classes that deal with input and viewer colorspace can subclass from this class
 to get the ``input_desc`` and ``viewing_desc`` attributes.
 
-.. note::
-    This class is a stub for now. In the future it will have colorspace related
-    functionality.
-
 .. autoclass:: cdl_convert.AscColorSpaceBase
 
 AscDescBase
@@ -39,6 +35,11 @@ in ``desc``. If set to a list or tuple, ``desc`` will become a list of those
 values. If set to ``None``, ``desc`` will become an empty list.
 
 .. autoclass:: cdl_convert.AscDescBase
+
+AscXMLBase
+----------
+
+.. autoclass:: cdl_convert.AscXMLBase
 
 ColorCollectionBase
 -------------------
@@ -77,6 +78,13 @@ function, see :doc:`usage` for a walkthrough.
     ``cdl_file`` is likely to not be a required attribute in the future.
 
 .. autoclass:: cdl_convert.ColorCorrection
+
+ColorDecision
+-------------
+
+.. note:: This class is a stub and has no functionality yet.
+
+.. autoclass:: cdl_convert.ColorDecision
 
 ColorNodeBase
 -------------
@@ -162,7 +170,7 @@ Write Functions
 
 Each of these functions takes an :class:`ColorCorrection` as an arg, then places
 as many attributes of the :class:`ColorCorrection` that the format supports
-into a properly   formatted string or XML Tree, then writes that file.
+into a properly formatted string or XML Tree, then writes that file.
 
 Write cc
 --------

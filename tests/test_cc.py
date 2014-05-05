@@ -12,10 +12,15 @@ mock
 #==============================================================================
 
 # Standard Imports
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import os
 import sys
 import tempfile
 import unittest
+from xml.etree import ElementTree
 
 # Grab our test's path and append the cdL_convert root directory
 
@@ -35,6 +40,8 @@ import cdl_convert.cdl_convert as cdl_convert
 #==============================================================================
 
 # We'll save out different and broken XMLs by hand.
+
+# Parse XMLs ==================================================================
 
 # Valid XMLs ==================================================================
 
@@ -188,6 +195,71 @@ CC_NEGATIVE_SLOPE = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrection>
 """
 
+# Write XMLs ==================================================================
+
+CC_FULL_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="014_xf_seqGrade_v01">
+    <InputDescription>Input Desc Text</InputDescription>
+    <ViewingDescription>Viewing Desc Text</ViewingDescription>
+    <Description>CC description 1</Description>
+    <Description>CC description 2</Description>
+    <Description>CC description 3</Description>
+    <Description>CC description 4</Description>
+    <Description>CC description 5</Description>
+    <SOPNode>
+        <Description>Sop description 1</Description>
+        <Description>Sop description 2</Description>
+        <Description>Sop description 3</Description>
+        <Slope>1.014 1.0104 0.62</Slope>
+        <Offset>-0.00315 -0.00124 0.3103</Offset>
+        <Power>1.0 0.9983 1.0</Power>
+    </SOPNode>
+    <SATNode>
+        <Description>Sat description 1</Description>
+        <Description>Sat description 2</Description>
+        <Saturation>1.09</Saturation>
+    </SATNode>
+</ColorCorrection>
+"""
+
+# The following characters don't seem to be allowed in id fields:
+CC_ODD_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="f55.100">
+    <InputDescription>METAL VIEWER!!! \/\/</InputDescription>
+    <ViewingDescription>WOOD VIEWER!? ////</ViewingDescription>
+    <Description>Raised saturation1 a little!?! ag... \/Offset</Description>
+    <Description>Raised saturation2 a little!?! ag... \/Offset</Description>
+    <SOPNode>
+        <Description>Raised saturation a little!?! ag... \/Offset</Description>
+        <Slope>137829.329 4327890.9833 3489031.003</Slope>
+        <Offset>-3424.011 -342789423.013 -4238923.11</Offset>
+        <Power>3271893.993 0.0000998 0.0000000000000000113</Power>
+    </SOPNode>
+    <SATNode>
+        <Saturation>1798787.01</Saturation>
+    </SATNode>
+</ColorCorrection>
+"""
+
+CC_NO_SOP_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="burp_200.x15">
+    <SATNode>
+        <Description>I am a lovely sat node</Description>
+        <Saturation>1.0128109381</Saturation>
+    </SATNode>
+</ColorCorrection>
+"""
+
+CC_NO_SAT_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrection id="burp_300.x35">
+    <SOPNode>
+        <Slope>1.233321 0.678669 1.0758</Slope>
+        <Offset>0.031 0.128 -0.096</Offset>
+        <Power>1.8 0.97 0.961</Power>
+    </SOPNode>
+</ColorCorrection>
+"""
+
 # misc ========================================================================
 
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -206,6 +278,8 @@ else:
 #==============================================================================
 # TEST CLASSES
 #==============================================================================
+
+# parse_cc ====================================================================
 
 
 class TestParseCCBasic(unittest.TestCase):
@@ -535,6 +609,9 @@ class TestParseCCNoSat(TestParseCCBasic):
         # We need to call a SAT value to initialize the SAT subnode
         self.cdl.sat
 
+#==============================================================================
+
+
 class TestParseCCExceptions(unittest.TestCase):
     """Tests parse_cc's response to some bad xml files"""
 
@@ -659,6 +736,154 @@ class TestParseCCExceptions(unittest.TestCase):
             (0.0, 0.678669, 1.0758),
             cdl.slope,
         )
+
+# write_cc ====================================================================
+
+
+class TestWriteCCFull(unittest.TestCase):
+    """Tests full writing of CC XML"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.ColorCorrection.members = {}
+        self.cdl = cdl_convert.ColorCorrection("014_xf_seqGrade_v01", '')
+        self.cdl.desc = [
+            'CC description 1', 'CC description 2', 'CC description 3',
+            'CC description 4', 'CC description 5'
+        ]
+        self.cdl.input_desc = 'Input Desc Text'
+        self.cdl.viewing_desc = 'Viewing Desc Text'
+
+        self.cdl.slope = (1.014, 1.0104, 0.62)
+        self.cdl.offset = (-0.00315, -0.00124, 0.3103)
+        self.cdl.power = (1.0, 0.9983, 1.0)
+        self.cdl.sop_node.desc = [
+            'Sop description 1', 'Sop description 2', 'Sop description 3'
+        ]
+
+        self.cdl.sat = 1.09
+        self.cdl.sat_node.desc = [
+            'Sat description 1', 'Sat description 2'
+        ]
+
+        self.target_xml_root = enc(CC_FULL_WRITE)
+        self.target_xml = enc('\n'.join(CC_FULL_WRITE.split('\n')[1:]))
+
+    #==========================================================================
+
+    def tearDown(self):
+        cdl_convert.ColorCorrection.members = {}
+
+    #==========================================================================
+
+    def test_root_xml(self):
+        """Tests that root_xml returns the full XML as expected"""
+        self.assertEqual(
+            self.target_xml_root,
+            self.cdl.xml_root
+        )
+
+    #==========================================================================
+
+    def test_base_xml(self):
+        """Tests that the xml atrib returns the XML minus root as expected"""
+        self.assertEqual(
+            self.target_xml,
+            self.cdl.xml
+        )
+
+    #==========================================================================
+
+    def test_element(self):
+        """Tests that the element returned is an etree type"""
+        self.assertEqual(
+            'ColorCorrection',
+            self.cdl.element.tag
+        )
+
+    def test_write(self):
+        """Tests writing the cc itself"""
+        mockOpen = mock.mock_open()
+
+        self.cdl._files['file_out'] = 'bobs_big_file.cc'
+
+        with mock.patch(builtins + '.open', mockOpen, create=True):
+            cdl_convert.write_cc(self.cdl)
+
+        mockOpen.assert_called_once_with('bobs_big_file.cc', 'wb')
+
+        mockOpen().write.assert_called_once_with(self.target_xml_root)
+
+
+class TestWriteCCOdd(TestWriteCCFull):
+    """Tests odd writing of CC XML"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.ColorCorrection.members = {}
+        self.cdl = cdl_convert.ColorCorrection("f55.100", '')
+        self.cdl.desc = [
+            'Raised saturation1 a little!?! ag... \/Offset',
+            'Raised saturation2 a little!?! ag... \/Offset',
+        ]
+        self.cdl.input_desc = 'METAL VIEWER!!! \/\/'
+        self.cdl.viewing_desc = 'WOOD VIEWER!? ////'
+
+        self.cdl.slope = (137829.329, 4327890.9833, 3489031.003)
+        self.cdl.offset = (-3424.011, -342789423.013, -4238923.11)
+        self.cdl.power = (3271893.993, .0000998, 0.0000000000000000113)
+        self.cdl.sop_node.desc = [
+            'Raised saturation a little!?! ag... \/Offset'
+        ]
+
+        self.cdl.sat = 1798787.01
+        self.cdl.sat_node.desc = []
+
+        self.target_xml_root = enc(CC_ODD_WRITE)
+        self.target_xml = enc('\n'.join(CC_ODD_WRITE.split('\n')[1:]))
+
+
+class TestWriteCCNoSop(TestWriteCCFull):
+    """Tests writing a CC XML with no SOP node"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.ColorCorrection.members = {}
+        self.cdl = cdl_convert.ColorCorrection("burp_200.x15", '')
+
+        self.cdl.sat = 1.0128109381
+        self.cdl.sat_node.desc = ['I am a lovely sat node']
+
+        self.target_xml_root = enc(CC_NO_SOP_WRITE)
+        self.target_xml = enc('\n'.join(CC_NO_SOP_WRITE.split('\n')[1:]))
+
+
+class TestWriteCCNoSat(TestWriteCCFull):
+    """Tests writing a CC XML with no SAT node"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.ColorCorrection.members = {}
+        self.cdl = cdl_convert.ColorCorrection("burp_300.x35", '')
+
+        self.cdl.slope = (1.233321, 0.678669, 1.0758)
+        self.cdl.offset = (0.031, 0.128, -0.096)
+        self.cdl.power = (1.8, 0.97, 0.961)
+
+        self.target_xml_root = enc(CC_NO_SAT_WRITE)
+        self.target_xml = enc('\n'.join(CC_NO_SAT_WRITE.split('\n')[1:]))
 
 #==============================================================================
 # FUNCTIONS

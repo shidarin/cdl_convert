@@ -77,6 +77,15 @@ what the input file type is.
 Changelog
 ---------
 
+*New in version 0.6.1:*
+
+- Added ``AscXMLBase`` class for nodes that can be represented by XML to inherit.
+- Suppressed scientific notation from being written out when writing files. Should now write out as close as Python accuracy allows, and the same number of digits.
+- ``write_cc`` now writes out 100% correct XML using ElementTree.
+- Added tests for ``write_cc``, which **brings our coverage to 100%**
+
+*New in version 0.6:*
+
 - Adds much greater ASC CDL XML compliance with the addition of many classes that represent node concepts in the CDL XML schema.
 - Moves ``viewing_desc`` and ``input_desc`` attributes and methods into the base class ``AscColorSpaceBase``.
 - Moved ``desc`` attribute and methods into the base class ``AscDescBase``.

@@ -186,8 +186,8 @@ single-line-if-stmt=no
 no-space-check=trailing-comma,dict-separator
 
 # Maximum number of lines in a module
-# Upped from 1000 to 2000.
-max-module-lines=2000
+# Upped from 1000 to 3000.
+max-module-lines=3000
 
 # String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
 # tab).
