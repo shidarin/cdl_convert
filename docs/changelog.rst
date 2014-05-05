@@ -2,6 +2,14 @@
 Changelog
 #########
 
+Version 0.6.1
+=============
+
+- Added :class:`AscXMLBase` class for nodes that can be represented by XML to inherit.
+- Suppressed scientific notation from being written out when writing files. Should now write out as close as Python accuracy allows, and the same number of digits.
+- ``write_cc`` now writes out 100% correct XML using ElementTree.
+- Added tests for ``write_cc``, which **brings our coverage to 100%**
+
 Version 0.6
 ===========
 

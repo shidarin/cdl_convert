@@ -23,10 +23,6 @@ AscColorSpaceBase
 Classes that deal with input and viewer colorspace can subclass from this class
 to get the ``input_desc`` and ``viewing_desc`` attributes.
 
-.. note::
-    This class is a stub for now. In the future it will have colorspace related
-    functionality.
-
 .. autoclass:: cdl_convert.AscColorSpaceBase
 
 AscDescBase

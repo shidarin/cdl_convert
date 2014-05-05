@@ -55,16 +55,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Classes
--------
-
-ColorCorrection
-    The base class for the ASC CDL, containing attributes for all ten of the
-    color conversion numbers needed to fully describe an ASC CDL.
-
-Functions
----------
-
 """
 
 # ==============================================================================
@@ -99,7 +89,7 @@ __author__ = "Sean Wallitsch"
 __copyright__ = "Copyright 2014, Sean Wallitsch"
 __credits__ = ["Sean Wallitsch", ]
 __license__ = "MIT"
-__version__ = "0.6"
+__version__ = "0.6.1"
 __maintainer__ = "Sean Wallitsch"
 __email__ = "shidarin@alphamatte.com"
 __status__ = "Development"
@@ -107,21 +97,6 @@ __status__ = "Development"
 # INPUT_FORMATS and OUTPUT_FORMATS are globals but located in the MAIN section
 # of the file, as they are dispatcher dictionaries that require the functions
 # to be parsed by python before the dictionary can be built.
-
-# Because it's getting late and I'm too tired to dive into writing XML today
-CC_XML = """<?xml version="1.0" encoding="UTF-8"?>
-<ColorCorrection id="{id}">
-    <SOPNode>
-        <Description></Description>
-        <Slope>{slopeR} {slopeG} {slopeB}</Slope>
-        <Offset>{offsetR} {offsetG} {offsetB}</Offset>
-        <Power>{powerR} {powerG} {powerB}</Power>
-    </SOPNode>
-    <SatNode>
-        <Saturation>{sat}</Saturation>
-    </SatNode>
-</ColorCorrection>
-"""
 
 if sys.version_info[0] >= 3:  # pragma: no cover
     enc = lambda x: bytes(x, 'UTF-8')  # pylint: disable=C0103
