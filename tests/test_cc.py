@@ -800,8 +800,8 @@ class TestWriteCCFull(unittest.TestCase):
     def test_element(self):
         """Tests that the element returned is an etree type"""
         self.assertEqual(
-            ElementTree.Element,
-            self.cdl.element.__class__
+            'ColorCorrection',
+            self.cdl.element.tag
         )
 
     def test_write(self):
@@ -815,7 +815,7 @@ class TestWriteCCFull(unittest.TestCase):
 
         mockOpen.assert_called_once_with('bobs_big_file.cc', 'wb')
 
-        mockOpen().write.assert_called_once_with(enc(self.target_xml_root))
+        mockOpen().write.assert_called_once_with(self.target_xml_root)
 
 
 class TestWriteCCOdd(TestWriteCCFull):

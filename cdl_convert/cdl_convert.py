@@ -1895,7 +1895,7 @@ def parse_flex(edl_file):
 def write_cc(cdl):
     """Writes the ColorCorrection to a .cc file"""
     with open(cdl.file_out, 'wb') as cdl_f:
-        cdl_f.write(enc(cdl.xml_root))
+        cdl_f.write(cdl.xml_root)
 
 # ==============================================================================
 
