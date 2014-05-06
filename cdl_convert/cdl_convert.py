@@ -839,7 +839,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def determine_dest(self, output):
         """Determines the destination file and sets it on the cdl"""
 
-        directory = os.path.dirname(self.file_in)
+        file_in = self.file_in if self.file_in else os.getcwd()
+
+        directory = os.path.dirname(file_in)
 
         filename = "{id}.{ext}".format(id=self.id, ext=output)
 
