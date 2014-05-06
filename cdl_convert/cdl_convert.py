@@ -1875,11 +1875,11 @@ def _sanitize(name):
 # ==============================================================================
 
 
-def parse_ale(edl_file):
+def parse_ale(input_file):
     """Parses an Avid Log Exchange (ALE) file for CDLs
 
     **Args:**
-        file : (str)
+        input_file : (str)
             The filepath to the ALE EDL
 
     **Returns:**
@@ -1911,7 +1911,7 @@ def parse_ale(edl_file):
 
     cdls = []
 
-    with open(edl_file, 'r') as edl:
+    with open(input_file, 'r') as edl:
         lines = edl.readlines()
         for line in lines:
             if line.startswith('Column'):
@@ -1943,7 +1943,7 @@ def parse_ale(edl_file):
                     'power': literal_eval(sop[2])
                 }
 
-                cdl = ColorCorrection(cc_id, edl_file)
+                cdl = ColorCorrection(cc_id, input_file)
 
                 cdl.sat = sat
                 cdl.slope = sop_values['slope']
@@ -1961,7 +1961,7 @@ def parse_cc(input_file):
     """Parses a .cc file for ASC CDL information
 
     **Args:**
-        cdl_file : (str|<ElementTree.Element>)
+        input_file : (str|<ElementTree.Element>)
             The filepath to the CC or the ``ElementTree.Element`` object.
 
     **Returns:**
@@ -2001,6 +2001,7 @@ def parse_cc(input_file):
         file_in = input_file
     else:
         root = input_file
+        file_in = None
 
     if not root.tag == 'ColorCorrection':
         # This is not a CC file...
@@ -2012,6 +2013,8 @@ def parse_cc(input_file):
         raise ValueError('No id found on ColorCorrection')
 
     cdl = ColorCorrection(cc_id)
+    if file_in:
+        cdl.file_in = file_in
 
     # Grab our descriptions and add them to the cdl.
     cdl.parse_xml_descs(root)
@@ -2128,7 +2131,7 @@ def parse_cdl(input_file):
     """Parses a space separated .cdl file for ASC CDL information.
 
     **Args:**
-        file : (str)
+        input_file : (str)
             The filepath to the CDL
 
     **Returns:**
@@ -2176,11 +2179,11 @@ def parse_cdl(input_file):
 # ==============================================================================
 
 
-def parse_flex(edl_file):
+def parse_flex(input_file):
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
 
     **Args:**
-        file : (str)
+        input_file : (str)
             The filepath to the FLEx EDL
 
     **Returns:**
@@ -2229,10 +2232,10 @@ def parse_flex(edl_file):
 
     cdls = []
 
-    with open(edl_file, 'r') as edl:
+    with open(input_file, 'r') as edl:
         lines = edl.readlines()
 
-        filename = os.path.basename(edl_file).split('.')[0]
+        filename = os.path.basename(input_file).split('.')[0]
 
         title = None
         # Metadata will store, in order, the various scene, take, reel fields
@@ -2272,7 +2275,7 @@ def parse_flex(edl_file):
 
                 # If we already have values:
                 if sop or sat:
-                    cdl = build_cc(cc_id, edl_file, sop, sat, title)
+                    cdl = build_cc(cc_id, input_file, sop, sat, title)
                     cdls.append(cdl)
 
                 metadata = []
@@ -2316,7 +2319,7 @@ def parse_flex(edl_file):
 
     # If we found values at all:
     if sop or sat:
-        cdl = build_cc(cc_id, edl_file, sop, sat, title)
+        cdl = build_cc(cc_id, input_file, sop, sat, title)
         cdls.append(cdl)
 
     return cdls
