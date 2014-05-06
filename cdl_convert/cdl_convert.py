@@ -464,11 +464,11 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             If none is found, ``viewing_desc`` will remain set to ``None``.
             Inherited from :class:`AscColorSpaceBase`
 
-        switch_to_ccc()
+        set_to_ccc()
             Switches the ``type`` of this collection to export a ``ccc`` style
             xml collection by default.
 
-        switch_to_cdl()
+        set_to_cdl()
             Switches the ``type`` of this collection to export a ``cdl`` style
             xml collection by default.
 
@@ -543,11 +543,11 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return True
 
-    def switch_to_ccc(self):
+    def set_to_ccc(self):
         """Switches the type of the ColorCollection to export .ccc style xml"""
         self._type = 'ccc'
 
-    def switch_to_cdl(self):
+    def set_to_cdl(self):
         """Switches the type of the ColorCollection to export .cdl style xml"""
         self._type = 'cdl'
 
@@ -2100,7 +2100,32 @@ def parse_cc(input_file):
 
 
 def parse_ccc(input_file):
-    """Parses a .ccc file into a :class:`ColorCorrectionCollection`"""
+    """Parses a .ccc file into a :class:`ColorCorrectionCollection`
+
+    **Args:**
+        input_file : (str)
+            The filepath to the CCC.
+
+    **Returns:**
+        (:class:`ColorCollection`)
+            A collection of all the found :class:`ColorCorrection` as well
+            as any metadata within the XML
+
+    **Raises:**
+        ValueError:
+            Bad XML formatting can raise ValueError is missing required
+            elements.
+
+    A ColorCorrectionCollection is just that- a collection of ColorCorrection
+    elements. It does not contain any ColorDecision or MediaRef elements,
+    but is free to contain as many Description elements as someone adds in.
+
+    It should also contain an InputDescription element, describing the color
+    space and other properties of the incoming image, as well as a
+    ViewingDescription which describes the viewing environment as well
+    as any relevant hardware devices used to view or grade.
+
+    """
 
     root = ElementTree.parse(input_file).getroot()
 
@@ -2109,6 +2134,7 @@ def parse_ccc(input_file):
         raise ValueError('CCC parsed but no ColorCorrectionCollection found')
 
     ccc = ColorCollection()
+    ccc.set_to_ccc()
     ccc.file_in = input_file
 
     # Grab our descriptions and add them to the ccc.

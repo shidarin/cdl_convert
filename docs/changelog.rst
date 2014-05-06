@@ -9,6 +9,7 @@ Version 0.7
 - Added ``parent`` attribute to :class:`ColorCorrection` .
 - Calling ``sop_node`` or ``sat_node`` on a :class:`ColorCorrection` before attempting to set a SOP or Sat power now works.
 - :class:`ColorCorrection` ``cdl_file`` init argument renamed to ``input_file``, which is now optional and able to be set after init.
+- :class:`ColorCorrection` ``determine_dest`` will now use current directory if no ``file_in`` specified.
 - ``parse_cc`` ``cdl_file`` arg renamed to ``input_file`` and now accepts a either a raw string or an ``ElementTree`` ``Element`` as ``input_file``.
 - ``parse_cdl`` ``cdl_file`` arg renamed to ``input_file``.
 - ``parse_ale`` ``edl_file`` arg renamed to ``input_file``.
