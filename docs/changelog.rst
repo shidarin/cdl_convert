@@ -5,11 +5,15 @@ Changelog
 Version 0.7
 ===========
 
-- Renames :class:`ColorCollectionBase` to :class:`ColorCollection` , since it will be used directly by both ``CCC`` and ``CDL``
-- ``parse_cc`` and ``parse_cdl`` now only yield a single :class:`ColorCorrection` , not a single member list.
+- Renames :class:`ColorCollectionBase` to :class:`ColorCollection` , since it will be used directly by both ``CCC`` and ``CDL``.
+- Added ``parent`` attribute to :class:`ColorCorrection` .
+- Calling ``sop_node`` or ``sat_node`` on a :class:`ColorCorrection` before attempting to set a SOP or Sat power now works.
+- :class:`ColorCorrection` ``cdl_file`` init argument renamed to ``input_file``, which is now optional and able to be set after init.
 - ``parse_cc`` ``cdl_file`` arg renamed to ``input_file`` and now accepts a either a raw string or an ``ElementTree`` ``Element`` as ``input_file``.
 - ``parse_cdl`` ``cdl_file`` arg renamed to ``input_file``.
-- :class:`ColorCorrection` ``cdl_file`` init argument renamed to ``input_file``, which is now optional and able to be set after init.
+- ``parse_ale`` ``edl_file`` arg renamed to ``input_file``.
+- ``parse_flex`` ``edl_file`` arg renamed to ``input_file``.
+- ``parse_cc`` and ``parse_cdl`` now only yield a single :class:`ColorCorrection` , not a single member list.
 
 Version 0.6.1
 =============

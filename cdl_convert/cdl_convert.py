@@ -538,6 +538,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         for cc_node in xml_element.findall('ColorCorrection'):
             cdl = parse_cc(cc_node)
+            cdl.parent = self
             self.color_corrections.append(cdl)
 
         return True
@@ -616,6 +617,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             Description of the color space, format and properties of the input
             images. Inherited from :class:`AscColorSpaceBase` .
 
+        parent : (:class:`ColorCollection`)
+            The parent node that contains this node.
+
         sat_node : ( :class:`SatNode` )
             Contains a reference to a single instance of :class:`SatNode` ,
             which contains the saturation value and descriptions.
@@ -675,12 +679,11 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         super(ColorCorrection, self).__init__()
 
         # File Attributes
-        self._files = {
-            'file_in': input_file,
-            'file_out': None
-        }
         self._file_in = os.path.abspath(input_file) if input_file else None
         self._file_out = None
+
+        # If we're under a ColorCorrectionCollection or ColorDecision node:
+        self.parent = None
 
         # The id is really the only required part of a ColorCorrection node
         # Each ID should be unique
@@ -703,10 +706,10 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         ColorCorrection.members[self._id] = self
 
         # ASC_SAT attribute
-        self.sat_node = None
+        self._sat_node = None
 
         # ASC_SOP attributes
-        self.sop_node = None
+        self._sop_node = None
 
     # Properties ==============================================================
 
@@ -738,57 +741,53 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def offset(self):
         """Returns list of RGB offset values"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         return self.sop_node.offset
 
     @offset.setter
     def offset(self, offset_rgb):
         """Runs tests and converts offset rgb values before setting"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         self.sop_node.offset = offset_rgb
 
     @property
     def power(self):
         """Returns list of RGB power values"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         return self.sop_node.power
 
     @power.setter
     def power(self, power_rgb):
         """Runs tests and converts power rgb values before setting"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         self.sop_node.power = power_rgb
+
+    @property
+    def sat_node(self):
+        if not self._sat_node:
+            self._sat_node = SatNode(self)
+        return self._sat_node
 
     @property
     def slope(self):
         """Returns list of RGB slope values"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         return self.sop_node.slope
 
     @slope.setter
     def slope(self, slope_rgb):
         """Runs tests and converts slope rgb values before setting"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         self.sop_node.slope = slope_rgb
+
+    @property
+    def sop_node(self):
+        if not self._sop_node:
+            self._sop_node = SopNode(self)
+        return self._sop_node
 
     @property
     def sat(self):
         """Returns float value for saturation"""
-        if not self.sat_node:
-            self.sat_node = SatNode(self)
         return self.sat_node.sat
 
     @sat.setter
     def sat(self, sat_value):
         """Makes sure provided sat value is a positive float"""
-        if not self.sat_node:
-            self.sat_node = SatNode(self)
         self.sat_node.sat = sat_value
 
     # Private Methods =========================================================
@@ -826,9 +825,11 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         for description in self.desc:
             desc = ElementTree.SubElement(cc_xml, 'Description')
             desc.text = description
-        if self.sop_node:
+        # We need to make sure we call the private attributes here, since
+        # we don't want to trigger a virgin sop or sat being initialized.
+        if self._sop_node:
             cc_xml.append(self.sop_node.element)
-        if self.sat_node:
+        if self._sat_node:
             cc_xml.append(self.sat_node.element)
 
         return cc_xml
@@ -2120,9 +2121,6 @@ def parse_ccc(input_file):
         raise ValueError('ColorCorrectionCollections require at least one '
                          'ColorCorrection node, but no ColorCorrection nodes '
                          'were found.')
-
-    for col_correct in ccc.color_corrections:
-        col_correct.file_in = input_file
 
 # ==============================================================================
 
