@@ -314,7 +314,7 @@ class TestParseCCBasic(unittest.TestCase):
             f.write(enc(CC_FULL))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
     #==========================================================================
 
@@ -451,7 +451,7 @@ class TestParseCCOdd(TestParseCCBasic):
             f.write(enc(CC_ODD))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -481,7 +481,7 @@ class TestParseCCBasic(TestParseCCBasic):
             f.write(enc(CC_BASIC))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -511,7 +511,7 @@ class TestParseCCBasicOrder(TestParseCCBasic):
             f.write(enc(CC_BASIC_ORDER))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -541,7 +541,7 @@ class TestParseCCBlankMetadata(TestParseCCBasic):
             f.write(enc(CC_BLANK_METADATA))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -571,7 +571,7 @@ class TestParseCCNoSop(TestParseCCBasic):
             f.write(enc(CC_NO_SOP))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
         # We need to call a SOP value to initialize the SOP subnode
         self.cdl.slope
@@ -604,7 +604,7 @@ class TestParseCCNoSat(TestParseCCBasic):
             f.write(enc(CC_NO_SAT))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
         # We need to call a SAT value to initialize the SAT subnode
         self.cdl.sat
@@ -702,7 +702,7 @@ class TestParseCCExceptions(unittest.TestCase):
 
         cdl_convert.HALT_ON_ERROR = False
 
-        cdl = cdl_convert.parse_cc(self.file)[0]
+        cdl = cdl_convert.parse_cc(self.file)
 
         self.assertEqual(
             '001',
@@ -730,7 +730,7 @@ class TestParseCCExceptions(unittest.TestCase):
         cdl_convert.HALT_ON_ERROR = False
         cdl_convert.ColorCorrection.members = {}
 
-        cdl = cdl_convert.parse_cc(self.file)[0]
+        cdl = cdl_convert.parse_cc(self.file)
 
         self.assertEqual(
             (0.0, 0.678669, 1.0758),

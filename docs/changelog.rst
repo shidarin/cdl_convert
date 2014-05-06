@@ -2,6 +2,11 @@
 Changelog
 #########
 
+Version 0.7
+===========
+
+- Renames :class:`ColorCollectionBase` to :class:`ColorCollection` , since it will be used directly by both ``CCC`` and ``CDL``
+
 Version 0.6.1
 =============
 

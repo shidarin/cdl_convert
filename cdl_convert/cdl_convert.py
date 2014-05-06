@@ -120,7 +120,7 @@ __all__ = [
     'AscColorSpaceBase',
     'AscDescBase',
     'AscXMLBase',
-    'ColorCollectionBase',
+    'ColorCollection',
     'ColorCorrection',
     'ColorDecision',
     'ColorNodeBase',
@@ -476,6 +476,9 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def __init__(self):
         super(ColorCollection, self).__init__()
 
+        self.color_corrections = []
+        self.color_decisions = []
+        self.file_in = None
         self._type = 'ccc'
         self._xmlns = "urn:ASC:CDL:v1.01"
 
@@ -1952,8 +1955,6 @@ def parse_cc(cdl_file):
     """
     root = ElementTree.parse(cdl_file).getroot()
 
-    cdls = []
-
     if not root.tag == 'ColorCorrection':
         # This is not a CC file...
         raise ValueError('CC parsed but no ColorCorrection found')
@@ -2040,9 +2041,33 @@ def parse_cc(cdl_file):
         # desc descriptions.
         cdl.sat_node.parse_xml_descs(sat_xml)
 
-    cdls.append(cdl)
+    return cdl
 
-    return cdls
+# ==============================================================================
+
+
+def parse_ccc(cdl_file):
+    """Parses a .ccc file into a :class:`ColorCorrectionCollection`"""
+
+    root = ElementTree.parse(cdl_file).getroot()
+
+    if not root.tag == 'ColorCorrectionCollection':
+        # This is not a CC file...
+        raise ValueError('CCC parsed but no ColorCorrectionCollection found')
+
+    ccc = ColorCollection()
+    ccc.file_in = cdl_file
+
+    # Grab our descriptions and add them to the ccc
+    ccc.parse_xml_descs(root)
+    # See if we have a viewing description.
+    ccc.parse_xml_viewing_desc(root)
+    # See if we have an input description
+    ccc.parse_xml_input_desc(root)
+
+    for cc_node in root.findall('ColorCorrection'):
+        cdl = parse_cc(cc_node)
+        ccc.color_corrections.append(cdl)
 
 # ==============================================================================
 

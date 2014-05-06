@@ -362,15 +362,15 @@ class TestAscDescBase(unittest.TestCase):
 # ColorNodeBase ===============================================================
 
 
-class TestColorCollectionBase(unittest.TestCase):
-    """Tests the very simple base class ColorCollectionBase"""
+class TestColorCollection(unittest.TestCase):
+    """Tests the very simple base class ColorCollection"""
 
     #==========================================================================
     # SETUP & TEARDOWN
     #==========================================================================
 
     def setUp(self):
-        self.node = cdl_convert.ColorCollectionBase()
+        self.node = cdl_convert.ColorCollection()
 
     #==========================================================================
     # TESTS
