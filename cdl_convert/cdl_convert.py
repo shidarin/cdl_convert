@@ -634,15 +634,17 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     members = {}
 
-    def __init__(self, id, cdl_file):  # pylint: disable=W0622
+    def __init__(self, id, input_file=None):  # pylint: disable=W0622
         """Inits an instance of a ColorCorrection"""
         super(ColorCorrection, self).__init__()
 
         # File Attributes
         self._files = {
-            'file_in': os.path.abspath(cdl_file),
+            'file_in': input_file,
             'file_out': None
         }
+        self._file_in = os.path.abspath(input_file) if input_file else None
+        self._file_out = None
 
         # The id is really the only required part of a ColorCorrection node
         # Each ID should be unique
@@ -675,12 +677,17 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def file_in(self):
         """Returns the absolute filepath to the input file"""
-        return self._files['file_in']
+        return self._file_in
+
+    @file_in.setter
+    def file_in(self, value):
+        """Sets the file_in to the absolute path of file"""
+        self._file_in = os.path.abspath(value)
 
     @property
     def file_out(self):
         """Returns a theoretical absolute filepath based on output ext"""
-        return self._files['file_out']
+        return self._file_out
 
     @property
     def id(self):  # pylint: disable=C0103
@@ -799,7 +806,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         filename = "{id}.{ext}".format(id=self.id, ext=output)
 
-        self._files['file_out'] = os.path.join(directory, filename)
+        self._file_out = os.path.join(directory, filename)
 
 # ==============================================================================
 
@@ -1914,12 +1921,12 @@ def parse_ale(edl_file):
 # ==============================================================================
 
 
-def parse_cc(cdl_file):
+def parse_cc(input_file):
     """Parses a .cc file for ASC CDL information
 
     **Args:**
-        file : (str)
-            The filepath to the CC
+        cdl_file : (str|<ElementTree.Element>)
+            The filepath to the CC or the ``ElementTree.Element`` object.
 
     **Returns:**
         [:class:`ColorCorrection`]
@@ -1953,7 +1960,11 @@ def parse_cc(cdl_file):
     colorspace and equipment.
 
     """
-    root = ElementTree.parse(cdl_file).getroot()
+    if type(input_file) is str:
+        root = ElementTree.parse(input_file).getroot()
+        file_in = input_file
+    else:
+        root = input_file
 
     if not root.tag == 'ColorCorrection':
         # This is not a CC file...
@@ -1964,13 +1975,13 @@ def parse_cc(cdl_file):
     except KeyError:
         raise ValueError('No id found on ColorCorrection')
 
-    cdl = ColorCorrection(cc_id, cdl_file)
+    cdl = ColorCorrection(cc_id)
 
-    # Grab our descriptions and add them to the cdl
+    # Grab our descriptions and add them to the cdl.
     cdl.parse_xml_descs(root)
     # See if we have a viewing description.
     cdl.parse_xml_viewing_desc(root)
-    # See if we have an input description
+    # See if we have an input description.
     cdl.parse_xml_input_desc(root)
 
     def find_required(elem, names):
@@ -2046,33 +2057,38 @@ def parse_cc(cdl_file):
 # ==============================================================================
 
 
-def parse_ccc(cdl_file):
+def parse_ccc(input_file):
     """Parses a .ccc file into a :class:`ColorCorrectionCollection`"""
 
-    root = ElementTree.parse(cdl_file).getroot()
+    root = ElementTree.parse(input_file).getroot()
 
     if not root.tag == 'ColorCorrectionCollection':
         # This is not a CC file...
         raise ValueError('CCC parsed but no ColorCorrectionCollection found')
 
     ccc = ColorCollection()
-    ccc.file_in = cdl_file
+    ccc.file_in = input_file
 
-    # Grab our descriptions and add them to the ccc
+    # Grab our descriptions and add them to the ccc.
     ccc.parse_xml_descs(root)
     # See if we have a viewing description.
     ccc.parse_xml_viewing_desc(root)
-    # See if we have an input description
+    # See if we have an input description.
     ccc.parse_xml_input_desc(root)
+    # Add all of our found color corrections. If the parse_xml returns False,
+    # (for no CCs found) we raise a value error.
+    if not ccc.parse_xml_color_corrections(root):
+        raise ValueError('ColorCorrectionCollections require at least one '
+                         'ColorCorrection node, but no ColorCorrection nodes '
+                         'were found.')
 
-    for cc_node in root.findall('ColorCorrection'):
-        cdl = parse_cc(cc_node)
-        ccc.color_corrections.append(cdl)
+    for col_correct in ccc.color_corrections:
+        col_correct.file_in = input_file
 
 # ==============================================================================
 
 
-def parse_cdl(cdl_file):
+def parse_cdl(input_file):
     """Parses a space separated .cdl file for ASC CDL information.
 
     **Args:**
@@ -2098,13 +2114,13 @@ def parse_cdl(cdl_file):
 
     """
 
-    with open(cdl_file, 'r') as cdl_f:
+    with open(input_file, 'r') as cdl_f:
         # We only need to read the first line
         line = cdl_f.readline()
         line = line.split()
 
         # The filename without extension will become the id
-        filename = os.path.basename(cdl_file).split('.')[0]
+        filename = os.path.basename(input_file).split('.')[0]
 
         slope = [line[0], line[1], line[2]]
         offset = [line[3], line[4], line[5]]
@@ -2112,7 +2128,7 @@ def parse_cdl(cdl_file):
 
         sat = line[9]
 
-        cdl = ColorCorrection(filename, cdl_file)
+        cdl = ColorCorrection(filename, input_file)
 
         cdl.slope = slope
         cdl.offset = offset
