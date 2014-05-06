@@ -339,7 +339,7 @@ class TestMain(unittest.TestCase):
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
         self.cdl = cdl_convert.ColorCorrection(
-            id='uniqueId', cdl_file='../testcdl.flex'
+            id='uniqueId', input_file='../testcdl.flex'
         )
         self.inputFormats = cdl_convert.INPUT_FORMATS
         self.outputFormats = cdl_convert.OUTPUT_FORMATS

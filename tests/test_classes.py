@@ -435,7 +435,7 @@ class TestColorCorrection(unittest.TestCase):
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
         self.cdl = cdl_convert.ColorCorrection(
-            id='uniqueId', cdl_file='../testcdl.cc'
+            id='uniqueId', input_file='../testcdl.cc'
         )
 
     def tearDown(self):
@@ -497,18 +497,6 @@ class TestColorCorrection(unittest.TestCase):
         self.assertEqual(
             os.path.abspath('../testcdl.cc'),
             self.cdl.file_in
-        )
-
-    #==========================================================================
-
-    def testFileInSetException(self):
-        """Tests that exception raised when setting file_in after init"""
-        def testFileIn():
-            self.cdl.file_in = '../NewFile.cc'
-
-        self.assertRaises(
-            AttributeError,
-            testFileIn
         )
 
     #==========================================================================

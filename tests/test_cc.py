@@ -808,7 +808,7 @@ class TestWriteCCFull(unittest.TestCase):
         """Tests writing the cc itself"""
         mockOpen = mock.mock_open()
 
-        self.cdl._files['file_out'] = 'bobs_big_file.cc'
+        self.cdl._file_out = 'bobs_big_file.cc'
 
         with mock.patch(builtins + '.open', mockOpen, create=True):
             cdl_convert.write_cc(self.cdl)

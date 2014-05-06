@@ -473,16 +473,26 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             xml collection by default.
 
     """
-    def __init__(self):
+    def __init__(self, input_file=None):
         super(ColorCollection, self).__init__()
 
         self.color_corrections = []
         self.color_decisions = []
-        self.file_in = None
+        self._file_in = os.path.abspath(input_file) if input_file else None
         self._type = 'ccc'
         self._xmlns = "urn:ASC:CDL:v1.01"
 
     # Properties ==============================================================
+
+    @property
+    def file_in(self):
+        """Returns the absolute filepath to the input file"""
+        return self._file_in
+
+    @file_in.setter
+    def file_in(self, value):
+        """Sets the file_in to the absolute path of file"""
+        self._file_in = os.path.abspath(value)
 
     @property
     def is_ccc(self):
@@ -505,6 +515,32 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return self._xmlns
 
     # Public Methods ==========================================================
+
+    def parse_xml_color_corrections(self, xml_element):
+        """Parses an ElementTree element to find & add all ColorCorrection.
+
+        **Args:**
+            xml_element : (``xml.etree.ElementTree.Element``)
+                The element to parse for multiple ColorCorrection elements. If
+                found, append to our ``color_corrections``.
+
+        **Returns:**
+            (bool)
+                True if found ColorCorrections.
+
+        **Raises:**
+            None
+
+        """
+        cc_nodes = xml_element.findall('ColorCorrection')
+        if not cc_nodes:
+            return False
+
+        for cc_node in xml_element.findall('ColorCorrection'):
+            cdl = parse_cc(cc_node)
+            self.color_corrections.append(cdl)
+
+        return True
 
     def switch_to_ccc(self):
         """Switches the type of the ColorCollection to export .ccc style xml"""
