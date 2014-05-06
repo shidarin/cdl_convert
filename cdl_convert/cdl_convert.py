@@ -2097,8 +2097,6 @@ def parse_cdl(cdl_file):
     ``SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat``
 
     """
-    # Although we only parse one cdl file, we still want to return a list
-    cdls = []
 
     with open(cdl_file, 'r') as cdl_f:
         # We only need to read the first line
@@ -2121,9 +2119,7 @@ def parse_cdl(cdl_file):
         cdl.power = power
         cdl.sat = sat
 
-        cdls.append(cdl)
-
-    return cdls
+    return cdl
 
 # ==============================================================================
 

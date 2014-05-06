@@ -6,7 +6,7 @@ Version 0.7
 ===========
 
 - Renames :class:`ColorCollectionBase` to :class:`ColorCollection` , since it will be used directly by both ``CCC`` and ``CDL``
-
+- ``parse_cc`` and ``parse_cdl`` now only yield a single :class:`ColorCorrection` , not a single member list.
 Version 0.6.1
 =============
 

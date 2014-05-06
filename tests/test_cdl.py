@@ -95,7 +95,7 @@ class TestParseCDLBasic(unittest.TestCase):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cdl(self.filename)[0]
+        self.cdl = cdl_convert.parse_cdl(self.filename)
 
     #==========================================================================
 
@@ -179,7 +179,7 @@ class TestParseCDLOdd(TestParseCDLBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cdl(self.filename)[0]
+        self.cdl = cdl_convert.parse_cdl(self.filename)
 
 
 class TestWriteCDLBasic(unittest.TestCase):
