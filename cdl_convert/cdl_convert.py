@@ -129,6 +129,7 @@ __all__ = [
     'SopNode',
     'parse_ale',
     'parse_cc',
+    'parse_ccc',
     'parse_cdl',
     'parse_flex',
     'write_cc',
@@ -516,6 +517,35 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # Public Methods ==========================================================
 
+    def build_element(self):
+        """Builds an ElementTree XML element representing for ColorCollection"""
+        if self.is_ccc:
+            return self.build_element_ccc()
+        elif self.is_cdl:
+            return self.build_element_cdl()
+
+    def build_element_ccc(self):
+        """Builds a CCC XML element representing this ColorCollection"""
+        ccc_xml = ElementTree.Element('ColorCorrectionCollection')
+        ccc_xml.attrib = {'xmlns': self.xmlns}
+        if self.input_desc:
+            input_desc = ElementTree.SubElement(ccc_xml, 'InputDescription')
+            input_desc.text = self.input_desc
+        if self.viewing_desc:
+            viewing_desc = ElementTree.SubElement(ccc_xml, 'ViewingDescription')
+            viewing_desc.text = self.viewing_desc
+        for description in self.desc:
+            desc = ElementTree.SubElement(ccc_xml, 'Description')
+            desc.text = description
+        for color_correct in self.color_corrections:
+            ccc_xml.append(color_correct.element)
+
+        return ccc_xml
+
+    def build_element_cdl(self):
+        """Builds a CDL XML element representing this ColorCollection"""
+        return None
+
     def parse_xml_color_corrections(self, xml_element):
         """Parses an ElementTree element to find & add all ColorCorrection.
 
@@ -760,6 +790,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     @property
     def sat_node(self):
+        """Initializes a SatNode if one doesn't already exist"""
         if not self._sat_node:
             self._sat_node = SatNode(self)
         return self._sat_node
@@ -776,6 +807,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     @property
     def sop_node(self):
+        """Initializes a SopNode if one doesn't already exist"""
         if not self._sop_node:
             self._sop_node = SopNode(self)
         return self._sop_node
@@ -2149,6 +2181,8 @@ def parse_ccc(input_file):
         raise ValueError('ColorCorrectionCollections require at least one '
                          'ColorCorrection node, but no ColorCorrection nodes '
                          'were found.')
+
+    return ccc
 
 # ==============================================================================
 

@@ -6,6 +6,8 @@ Version 0.7
 ===========
 
 - Renames :class:`ColorCollectionBase` to :class:`ColorCollection` , since it will be used directly by both ``CCC`` and ``CDL``.
+- Adds ``parse_ccc`` which returns a :class:`ColorCollection` .
+- :class:`ColorCollection` is now a fully functional container class, with many attributes and methods.
 - Added ``parent`` attribute to :class:`ColorCorrection` .
 - Calling ``sop_node`` or ``sat_node`` on a :class:`ColorCorrection` before attempting to set a SOP or Sat power now works.
 - :class:`ColorCorrection` ``cdl_file`` init argument renamed to ``input_file``, which is now optional and able to be set after init.
