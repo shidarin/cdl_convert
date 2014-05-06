@@ -450,6 +450,18 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             ``element`` attribute. Overrides inherited placeholder method
             from :class:`AscXMLBase` .
 
+            Here on :class:`ColorCollection` , this is a pointer to
+            ``build_element_ccc()`` or ``build_element_cdl()`` depending on
+            which type the :class:`ColorCollection` is currently set to.
+
+        build_element_ccc()
+            Works through the calling instance of :class:`ColorCollection` and
+            builds a CCC style XML element.
+
+        build_element_cdl()
+            Works through the calling instance of :class:`ColorCollection` and
+            builds a CDL style XML element.
+
         parse_xml_descs()
             Parses an ElementTree Element for any Description tags and appends
             any text they contain to the ``desc``. Inherited from
