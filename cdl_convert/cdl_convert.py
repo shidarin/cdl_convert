@@ -381,18 +381,14 @@ class AscXMLBase(object):
 # ==============================================================================
 
 
-class ColorCollectionBase(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0903
-    """Base class for ColorDecisionList and ColorCorrectionCollection.
+class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0903
+    """Container class for ColorDecisionLists and ColorCorrectionCollections.
 
     Description
     ~~~~~~~~~~~
 
     Collections need to store children and have access to descriptions,
     input descriptions, and viewing descriptions.
-
-    Inherits desc attribute and setters from :class:`AscDescBase`
-
-    Inherits input_desc and viewing_desc from :class:`AscColorSpaceBase`
 
     **Attributes:**
 
@@ -416,6 +412,16 @@ class ColorCollectionBase(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint
             Description of the color space, format and properties of the input
             images. Inherited from :class:`AscColorSpaceBase` .
 
+        is_ccc : (bool)
+            True if this collection currently represents ``.ccc``.
+
+        is_cdl : (bool)
+            True if this collection currently represents ``.cdl``.
+
+        type : (str)
+            Either ``.ccc`` or ``.cdl``, represents the type of collection
+            this class currently will export by default.
+
         viewing_desc : (str)
             Viewing device, settings and environment. Inherited from
             :class:`AscColorSpaceBase` .
@@ -429,6 +435,10 @@ class ColorCollectionBase(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint
             the node. Formatted as an XML root, it includes the xml version and
             encoding tags on the first line. Inherited from
             :class:`AscXMLBase`.
+
+        xmlns : (str)
+            Describes the version of the ASC XML Schema that cdl_convert writes
+            out to files following the full schema (``.ccc`` and ``.cdl``)
 
     **Public Methods:**
 
@@ -454,9 +464,52 @@ class ColorCollectionBase(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint
             If none is found, ``viewing_desc`` will remain set to ``None``.
             Inherited from :class:`AscColorSpaceBase`
 
+        switch_to_ccc()
+            Switches the ``type`` of this collection to export a ``ccc`` style
+            xml collection by default.
+
+        switch_to_cdl()
+            Switches the ``type`` of this collection to export a ``cdl`` style
+            xml collection by default.
+
     """
     def __init__(self):
-        super(ColorCollectionBase, self).__init__()
+        super(ColorCollection, self).__init__()
+
+        self._type = 'ccc'
+        self._xmlns = "urn:ASC:CDL:v1.01"
+
+    # Properties ==============================================================
+
+    @property
+    def is_ccc(self):
+        """True if this collection currently represents .ccc"""
+        return self.type is 'ccc'
+
+    @property
+    def is_cdl(self):
+        """True if this collection currently represents .cdl"""
+        return self.type is 'cdl'
+
+    @property
+    def type(self):
+        """Describes the type of ColorCollection this class will export"""
+        return self._type
+
+    @property
+    def xmlns(self):
+        """Describes the version of the XML schema written by cdl_convert"""
+        return self._xmlns
+
+    # Public Methods ==========================================================
+
+    def switch_to_ccc(self):
+        """Switches the type of the ColorCollection to export .ccc style xml"""
+        self._type = 'ccc'
+
+    def switch_to_cdl(self):
+        """Switches the type of the ColorCollection to export .cdl style xml"""
+        self._type = 'cdl'
 
 # ==============================================================================
 
