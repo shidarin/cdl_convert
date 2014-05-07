@@ -2407,6 +2407,15 @@ def write_cc(cdl):
 # ==============================================================================
 
 
+def write_ccc(cdl):
+    """Writes the ColorCollection to a .ccc file"""
+    cdl.switch_to_ccc()
+    with open(cdl.file_out, 'wb') as cdl_f:
+        cdl_f.write(cdl.xml_root)
+
+# ==============================================================================
+
+
 def write_cdl(cdl):
     """Writes the ColorCorrection to a space separated .cdl file"""
 
@@ -2438,6 +2447,7 @@ INPUT_FORMATS = {
 
 OUTPUT_FORMATS = {
     'cc': write_cc,
+    'ccc': write_ccc,
     'cdl': write_cdl,
 }
 
