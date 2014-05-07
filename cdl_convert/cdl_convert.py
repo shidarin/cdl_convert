@@ -409,6 +409,12 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             etree style Element representing the node. Inherited from
             :class:`AscXMLBase` .
 
+        file_in : (str)
+            Filepath used to create this :class:`ColorCollection` .
+
+        file_out : (str)
+            Filepath this :class:`ColorCollection` will be written to.
+
         input_desc : (str)
             Description of the color space, format and properties of the input
             images. Inherited from :class:`AscColorSpaceBase` .
@@ -492,6 +498,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         self.color_corrections = []
         self.color_decisions = []
         self._file_in = os.path.abspath(input_file) if input_file else None
+        self._file_out = None
         self._type = 'ccc'
         self._xmlns = "urn:ASC:CDL:v1.01"
 
@@ -506,6 +513,11 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def file_in(self, value):
         """Sets the file_in to the absolute path of file"""
         self._file_in = os.path.abspath(value)
+
+    @property
+    def file_out(self):
+        """Returns a theoretical absolute filepath based on output ext"""
+        return self._file_out
 
     @property
     def is_ccc(self):
@@ -641,10 +653,10 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             :class:`AscXMLBase` .
 
         file_in : (str)
-            Filepath used to create this CDL.
+            Filepath used to create this :class:`ColorCorrection` .
 
         file_out : (str)
-            Filepath this CDL will be written to.
+            Filepath this :class:`ColorCorrection` will be written to.
 
         id : (str)
             Unique XML URI to identify this CDL. Often a shot or sequence name.
@@ -2416,7 +2428,7 @@ def write_cc(cdl):
 
 def write_ccc(cdl):
     """Writes the ColorCollection to a .ccc file"""
-    cdl.switch_to_ccc()
+    cdl.set_to_ccc()
     with open(cdl.file_out, 'wb') as cdl_f:
         cdl_f.write(cdl.xml_root)
 
