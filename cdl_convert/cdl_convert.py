@@ -2170,10 +2170,17 @@ def parse_ccc(input_file):
     as any relevant hardware devices used to view or grade.
 
     """
+    # We're going to open the file as a string ans remove the xmlns, as
+    # it doesn't do a lot for us when working with CDLs, and in fact
+    # just clutters everything the hell up.
+    with open(input_file, 'r') as f:
+        xml_string = f.read()
 
-    root = ElementTree.parse(input_file).getroot()
+    xml_string = re.sub(' xmlns="[^"]+"', '', xml_string, count=1)
 
-    if not root.tag == 'ColorCorrectionCollection':
+    root = ElementTree.fromstring(xml_string)
+
+    if root.tag != 'ColorCorrectionCollection':
         # This is not a CC file...
         raise ValueError('CCC parsed but no ColorCorrectionCollection found')
 

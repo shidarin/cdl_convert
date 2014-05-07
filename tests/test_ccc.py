@@ -42,7 +42,7 @@ import cdl_convert.cdl_convert as cdl_convert
 # parse_ccc ===================================================================
 
 CCC_FULL = """<?xml version="1.0" encoding="UTF-8"?>
-<ColorCorrectionCollection>
+<ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
     <Description>CCC description 1</Description>
     <InputDescription>CCC Input Desc Text</InputDescription>
     <Description>CCC description 2</Description>
@@ -188,6 +188,136 @@ CCC_ODD = """<?xml version="1.0" encoding="UTF-8"?>
 
 # write_ccc ===================================================================
 
+CCC_FULL_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
+    <InputDescription>CCC Input Desc Text</InputDescription>
+    <ViewingDescription>CCC Viewing Desc Text</ViewingDescription>
+    <Description>CC description 1</Description>
+    <Description>CC description 2</Description>
+    <Description>CCC description 3</Description>
+    <Description>CCC description 4</Description>
+    <ColorCorrection id="014_xf_seqGrade_v01">
+        <InputDescription>Input Desc Text</InputDescription>
+        <ViewingDescription>Viewing Desc Text</ViewingDescription>
+        <Description>CC description 1</Description>
+        <Description>CC description 2</Description>
+        <Description>CC description 3</Description>
+        <Description>CC description 4</Description>
+        <Description>CC description 5</Description>
+        <SOPNode>
+            <Description>Sop description 1</Description>
+            <Description>Sop description 2</Description>
+            <Description>Sop description 3</Description>
+            <Slope>1.014 1.0104 0.62</Slope>
+            <Offset>-0.00315 -0.00124 0.3103</Offset>
+            <Power>1.0 0.9983 1.0</Power>
+        </SOPNode>
+        <SATNode>
+            <Description>Sat description 1</Description>
+            <Description>Sat description 2</Description>
+            <Saturation>1.09</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="f51.200">
+        <SOPNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SOPNode>
+        <SATNode>
+            <Saturation>1.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="f55.100">
+        <InputDescription>METAL VIEWER!!! \/\/</InputDescription>
+        <ViewingDescription>WOOD VIEWER!? ////</ViewingDescription>
+        <Description>Raised saturation a little!?! ag... \/Offset</Description>
+        <Description>Raised saturation a little!?! ag... \/Offset</Description>
+        <SOPNode>
+            <Description>Raised saturation a little!?! ag... \/Offset</Description>
+            <Slope>137829.329 4327890.9833 3489031.003</Slope>
+            <Offset>-3424.011 -342789423.013 -4238923.11</Offset>
+            <Power>3271893.993 0.0000998 0.0000000000000000113</Power>
+        </SOPNode>
+        <SATNode>
+            <Saturation>1798787.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="f54.112">
+        <SOPNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SOPNode>
+        <SATNode>
+            <Saturation>1.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="burp_100.x12">
+        <SOPNode>
+            <Slope>1.014 1.0104 0.62</Slope>
+            <Offset>-0.00315 -0.00124 0.3103</Offset>
+            <Power>1.0 0.9983 1.0</Power>
+        </SOPNode>
+        <SATNode>
+            <Saturation>1.09</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="burp_200.x15">
+        <SATNode>
+            <Description>I am a lovely sat node</Description>
+            <Saturation>1.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="burp_300.x35">
+        <SOPNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SOPNode>
+    </ColorCorrection>
+</ColorCorrectionCollection>
+"""
+
+CCC_ODD_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
+    <Description>CCC description 1</Description>
+    <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
+    <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
+    <ColorCorrection id="014_xf_seqGrade_v01">
+        <SOPNode>
+            <Description>Sop description 1</Description>
+            <Description>Sop description 2</Description>
+            <Description>Sop description 3</Description>
+            <Slope>1.014 1.0104 0.62</Slope>
+            <Offset>-0.00315 -0.00124 0.3103</Offset>
+            <Power>1.0 0.9983 1.0</Power>
+        </SOPNode>
+    </ColorCorrection>
+    <ColorCorrection id="f51.200">
+        <SOPNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SOPNode>
+    </ColorCorrection>
+    <ColorCorrection id="f55.100">
+        <SATNode>
+            <Saturation>1798787.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="f54.112">
+        <SATNode>
+            <Saturation>1.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="burp_200.x15">
+        <SATNode>
+            <Description>I am a lovely sat node</Description>
+            <Saturation>1.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+</ColorCorrectionCollection>"""
 
 # misc ========================================================================
 
