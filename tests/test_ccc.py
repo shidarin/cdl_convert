@@ -39,6 +39,8 @@ import cdl_convert.cdl_convert as cdl_convert
 # GLOBALS
 #==============================================================================
 
+# parse_ccc ===================================================================
+
 CCC_FULL = """<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrectionCollection>
     <Description>CCC description 1</Description>
@@ -137,6 +139,56 @@ CCC_FULL = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrectionCollection>
 """
 
+CCC_ODD = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrectionCollection>
+    <Description></Description>
+    <InputDescription></InputDescription>
+    <Description>CCC description 1</Description>
+    <Description></Description>
+    <Description></Description>
+    <Description></Description>
+    <ColorCorrection id="014_xf_seqGrade_v01">
+        <SOPNode>
+            <Description>Sop description 1</Description>
+            <Description>Sop description 2</Description>
+            <Slope>1.014 1.0104 0.62</Slope>
+            <Offset>-0.00315 -0.00124 0.3103</Offset>
+            <Power>1.0 0.9983 1.0</Power>
+            <Description>Sop description 3</Description>
+        </SOPNode>
+    </ColorCorrection>
+    <ColorCorrection id="f51.200">
+        <SopNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SopNode>
+    </ColorCorrection>
+    <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
+    <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
+    <ColorCorrection id="f55.100">
+        <SatNode>
+            <Saturation>1798787.01</Saturation>
+        </SatNode>
+    </ColorCorrection>
+    <ColorCorrection id="f54.112">
+        <ASC_SAT>
+            <Saturation>1.01</Saturation>
+        </ASC_SAT>
+    </ColorCorrection>
+    <ViewingDescription></ViewingDescription>
+    <ColorCorrection id="burp_200.x15">
+        <SatNode>
+            <Description>I am a lovely sat node</Description>
+            <Saturation>1.01</Saturation>
+        </SatNode>
+    </ColorCorrection>
+</ColorCorrectionCollection>
+"""
+
+# write_ccc ===================================================================
+
+
 # misc ========================================================================
 
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -155,6 +207,138 @@ else:
 #==============================================================================
 # TEST CLASSES
 #==============================================================================
+
+
+class TestParseCCCFull(unittest.TestCase):
+    """Tests a full CCC parse"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.desc = [
+            'CCC description 1',
+            'CCC description 2',
+            'CCC description 3',
+            'CCC description 4'
+        ]
+        self.input_desc = 'CCC Input Desc Text'
+        self.viewing_desc = 'CCC Viewing Desc Text'
+        self.color_correction_ids = [
+            '014_xf_seqGrade_v01',
+            'f51.200',
+            'f55.100',
+            'f54.112',
+            'burp_100.x12',
+            'burp_200.x15',
+            'burp_300.x35'
+        ]
+
+        # Build our ccc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(CCC_FULL))
+            self.filename = f.name
+
+        self.node = cdl_convert.parse_ccc(self.filename)
+
+    #==========================================================================
+
+    def tearDown(self):
+        # The system should clean these up automatically,
+        # but we'll be neat.
+        os.remove(self.filename)
+        # We need to clear the ColorCorrection member dictionary so we don't
+        # have to worry about non-unique ids.
+        cdl_convert.ColorCorrection.members = {}
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def test_file_in(self):
+        """Tests that the input_file has been set to the file in value"""
+        self.assertEqual(
+            self.filename,
+            self.node.file_in
+        )
+
+    #==========================================================================
+
+    def test_type(self):
+        """Makes sure type is still set to ccc"""
+        self.assertEqual(
+            'ccc',
+            self.node.type
+        )
+
+    #==========================================================================
+
+    def test_descs(self):
+        """Tests that the desc fields have been set correctly"""
+        self.assertEqual(
+            self.desc,
+            self.node.desc
+        )
+
+    #==========================================================================
+
+    def test_viewing_desc(self):
+        """Tests that the viewing desc has been set correctly"""
+        self.assertEqual(
+            self.viewing_desc,
+            self.node.viewing_desc
+        )
+
+    #==========================================================================
+
+    def test_input_desc(self):
+        """Tests that the input desc has been set correctly"""
+        self.assertEqual(
+            self.input_desc,
+            self.node.input_desc
+        )
+
+    #==========================================================================
+
+    def test_parse_results(self):
+        """Tests that the parser picked up all the cc's"""
+        id_list = [i.id for i in self.node.color_corrections]
+        self.assertEqual(
+            self.color_correction_ids,
+            id_list
+        )
+
+
+class TestParseCCCOdd(unittest.TestCase):
+    """Tests an odd CCC parse"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.desc = [
+            'CCC description 1',
+            'Raised1 saturation a little!?! ag... \/Offset',
+            'Raised2 saturation a little!?! ag... \/Offset',
+        ]
+        self.input_desc = None
+        self.viewing_desc = None
+        self.color_correction_ids = [
+            '014_xf_seqGrade_v01',
+            'f51.200',
+            'f55.100',
+            'f54.112',
+            'burp_200.x15',
+        ]
+
+        # Build our ccc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(CCC_ODD))
+            self.filename = f.name
+
+        self.node = cdl_convert.parse_ccc(self.filename)
 
 #==============================================================================
 # RUNNER
