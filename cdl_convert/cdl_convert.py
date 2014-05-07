@@ -2430,6 +2430,7 @@ def write_cdl(cdl):
 
 INPUT_FORMATS = {
     'ale': parse_ale,
+    'ccc': parse_ccc,
     'cc': parse_cc,
     'cdl': parse_cdl,
     'flex': parse_flex,
@@ -2439,6 +2440,9 @@ OUTPUT_FORMATS = {
     'cc': write_cc,
     'cdl': write_cdl,
 }
+
+COLLECTION_FORMATS = ['ale', 'ccc', 'flex']
+SINGLE_FORMATS = ['cc', 'cdl']
 
 # ==============================================================================
 
@@ -2516,19 +2520,29 @@ def main():
     else:
         filetype_in = args.input
 
-    cdls = INPUT_FORMATS[filetype_in](filepath)
+    color_decisions = INPUT_FORMATS[filetype_in](filepath)
 
-    if cdls:
-        for cdl in cdls:
-            for ext in args.output:
-                cdl.determine_dest(ext)
-                print(
-                    "Writing cdl {id} to {path}".format(
-                        id=cdl.id,
-                        path=cdl.file_out
-                    )
-                )
-                OUTPUT_FORMATS[ext](cdl)
+    def write_single_file(cdl, ext):
+        cdl.determine_dest(ext)
+        print(
+            "Writing cdl {id} to {path}".format(
+                id=cdl.id,
+                path=cdl.file_out
+            )
+        )
+        OUTPUT_FORMATS[ext](cdl)
+
+    if color_decisions:
+        for ext in args.output:
+            if ext in SINGLE_FORMATS:
+                if filetype_in in COLLECTION_FORMATS:
+                    for color_correct in color_decisions.color_corrections:
+                        write_single_file(color_correct, ext)
+                else:
+                    write_single_file(color_decisions, ext)
+            else:
+                # TODO: Write to collection formats
+                raise Exception('Unsupported output format.')
 
 if __name__ == '__main__':  # pragma: no cover
     try:

@@ -362,28 +362,28 @@ class TestMain(unittest.TestCase):
     # TESTS
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_cc')
     @mock.patch('os.path.abspath')
     def testGettingAbsolutePath(self, abspath, mockParse):
         """Tests that we make sure to get the absolute path"""
 
-        abspath.return_value = 'file.flex'
+        abspath.return_value = 'file.cc'
         mockParse.return_value = None
-        sys.argv = ['scriptname', 'file.flex']
+        sys.argv = ['scriptname', 'file.cc']
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['flex'] = mockParse
+        mockInputs['cc'] = mockParse
         cdl_convert.INPUT_FORMATS = mockInputs
 
         cdl_convert.main()
 
-        abspath.assert_called_once_with('file.flex')
+        abspath.assert_called_once_with('file.cc')
 
     #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
-    def testDerivingInputType(self, abspath, mockParse):
+    def testDerivingInputTypeFlex(self, abspath, mockParse):
         """Tests that input type will be derived from file extension"""
 
         abspath.return_value = 'file.flex'
@@ -398,6 +398,82 @@ class TestMain(unittest.TestCase):
 
         mockParse.assert_called_once_with('file.flex')
 
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_ale')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeAle(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.ale'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.ale']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['ale'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.ale')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_ccc')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeCCC(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.ccc'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.ccc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['ccc'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.ccc')
+        
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_cc')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeCC(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.cc'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.cc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cc'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.cc')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_cdl')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeCDL(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.cdl'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.cdl']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cdl'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.cdl')
+        
     #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
@@ -440,18 +516,18 @@ class TestMain(unittest.TestCase):
 
     @mock.patch('os.path.dirname')
     @mock.patch('cdl_convert.cdl_convert.write_cc')
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_cdl')
     @mock.patch('os.path.abspath')
     def testDetermineDestCalled(self, abspath, mockParse, mockWrite, dirname):
         """Tests that we try and write a converted file"""
 
-        abspath.return_value = 'file.flex'
+        abspath.return_value = 'file.cdl'
         dirname.return_value = ''  # determine_dest method calls to get dirname
-        mockParse.return_value = [self.cdl, ]
-        sys.argv = ['scriptname', 'file.flex', '-o', 'cc']
+        mockParse.return_value = self.cdl
+        sys.argv = ['scriptname', 'file.cdl', '-o', 'cc']
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['flex'] = mockParse
+        mockInputs['cdl'] = mockParse
         cdl_convert.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
@@ -465,21 +541,20 @@ class TestMain(unittest.TestCase):
             self.cdl.file_out
         )
 
-
     #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.write_cc')
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_cdl')
     @mock.patch('os.path.abspath')
     def testWriteCalled(self, abspath, mockParse, mockWrite):
         """Tests that we try and write a converted file"""
 
-        abspath.return_value = 'file.flex'
-        mockParse.return_value = [self.cdl, ]
-        sys.argv = ['scriptname', 'file.flex', '-o', 'cc']
+        abspath.return_value = 'file.cdl'
+        mockParse.return_value = self.cdl
+        sys.argv = ['scriptname', 'file.cdl', '-o', 'cc']
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['flex'] = mockParse
+        mockInputs['cdl'] = mockParse
         cdl_convert.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
@@ -495,18 +570,18 @@ class TestMain(unittest.TestCase):
 
     @mock.patch('cdl_convert.cdl_convert.write_cdl')
     @mock.patch('cdl_convert.cdl_convert.write_cc')
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.parse_ccc')
     @mock.patch('os.path.abspath')
-    def testMultipleWritesCalled(self, abspath, mockParse, mockWriteCC,
-                                 mockWriteCDL):
+    def testMultipleOutputWritesCalled(self, abspath, mockParse, mockWriteCC,
+                                       mockWriteCDL):
         """Tests that we try and write a converted file"""
 
-        abspath.return_value = 'file.flex'
-        mockParse.return_value = [self.cdl, ]
-        sys.argv = ['scriptname', 'file.flex', '-o', 'cc,cdl']
+        abspath.return_value = 'file.ccc'
+        mockParse.return_value.color_corrections = [self.cdl, ]
+        sys.argv = ['scriptname', 'file.ccc', '-o', 'cc,cdl']
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['flex'] = mockParse
+        mockInputs['ccc'] = mockParse
         cdl_convert.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
@@ -518,6 +593,36 @@ class TestMain(unittest.TestCase):
 
         mockWriteCC.assert_called_once_with(self.cdl)
         mockWriteCDL.assert_called_once_with(self.cdl)
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_ccc')
+    @mock.patch('os.path.abspath')
+    def testMultipleWritesFromCollectionCalled(
+            self, abspath, mockParse, mockWriteCC
+    ):
+        """Tests that we try and write a converted file"""
+
+        abspath.return_value = 'file.ccc'
+        mockParse.return_value.color_corrections = [
+            self.cdl, self.cdl, self.cdl
+        ]
+        sys.argv = ['scriptname', 'file.ccc', '-o', 'cc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['ccc'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWriteCC
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        mockWriteCC.assert_has_calls(
+            [mock.call(self.cdl), mock.call(self.cdl), mock.call(self.cdl)]
+        )
 
 # Test Classes ================================================================
 
