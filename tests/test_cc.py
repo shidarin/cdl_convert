@@ -778,6 +778,8 @@ class TestWriteCCFull(unittest.TestCase):
         cdl_convert.ColorCorrection.members = {}
 
     #==========================================================================
+    # TESTS
+    #==========================================================================
 
     def test_root_xml(self):
         """Tests that root_xml returns the full XML as expected"""
@@ -803,6 +805,8 @@ class TestWriteCCFull(unittest.TestCase):
             'ColorCorrection',
             self.cdl.element.tag
         )
+
+    #==========================================================================
 
     def test_write(self):
         """Tests writing the cc itself"""
