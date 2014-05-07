@@ -59,6 +59,30 @@ Version 0.6
 Version 0.5
 ===========
 
-* Initial Release
-* Project Reorganization
-* :pep:`8` compliance
+- Project is now structured according to Python packaging guidelines with ``setup.py`` etc.
+- Some :class:`AscCdl` attributes have been moved into dictionaries (Note that this was later reversed in release 0.6)
+- Refactors some parse functions to be less complex
+- Makes ``write_cdl`` much simpler and more pythonic.
+
+Version 0.4.2
+=============
+
+- Hotfix to fix ``from __future__`` imports
+
+Version 0.4.1
+=============
+
+- :pep:`8` conversion
+- landscape.io support
+- Uses ``from __future__`` for print
+
+Version 0.4
+===========
+
+- Python 3 compatible
+- More unit testing bug fixes and enhancements.
+- Adds better type and exception handling for :class:`AscCdl` setters.
+- Now sanitizes id fields of any characters they shouldn't contain.
+- Test suite runs on windows now
+- Adds Travis-ci for continuous integration testing
+- ``parse_cc`` now uses ``ElementTree`` for XML parsing

@@ -1135,11 +1135,11 @@ class TestMediaRefProperties(unittest.TestCase):
         self.directory = 'heeba/jeeba/race'
         self.filename = 'car.jpg'
         self.protocol = 'ftp'
-        self.path = 'heeba/jeeba/race/car.jpg'
-        self.ref = 'ftp://heeba/jeeba/race/car.jpg'
+        self.path = os.path.join(self.directory, self.filename)
+        self.ref = self.protocol + '://' + self.path
         self.parent = cdl_convert.ColorDecision()
         self.mr = cdl_convert.MediaRef(
-            ref_uri='ftp://heeba/jeeba/race/car.jpg',
+            ref_uri=self.ref,
             parent=self.parent
         )
 
@@ -1511,7 +1511,10 @@ class TestMediaRefProperties(unittest.TestCase):
             self.mr.ref
         )
 
-        new_ref = 'edward://loves/to/eat/snow/in/the/winter.#####.ned'
+        new_ref = 'edward://' + os.path.join(
+            'loves/to/eat/snow/in/the',
+            'winter.#####.ned'
+        )
         self.mr.ref = new_ref
 
         self.assertEqual(
@@ -1550,7 +1553,7 @@ class TestMediaRefProperties(unittest.TestCase):
             self.mr.ref
         )
 
-        new_ref = '/loves/to/eat/snow/in/the/winter.#####.ned'
+        new_ref = os.path.join('/loves/to/eat/snow/in/the', 'winter.#####.ned')
         self.mr.ref = new_ref
 
         self.assertEqual(
@@ -1656,7 +1659,7 @@ class TestMediaRefPropertiesOdd(TestMediaRefProperties):
         self.directory = '/bicycle24/myHat/race_condition14'
         self.filename = '17438.hds356_######.exr'
         self.protocol = ''
-        self.path = '/bicycle24/myHat/race_condition14/17438.hds356_######.exr'
+        self.path = os.path.join(self.directory, self.filename)
         self.ref = self.path
         self.parent = cdl_convert.ColorDecision()
         self.mr = cdl_convert.MediaRef(
@@ -1968,6 +1971,7 @@ class TestMediaRefGetSequencesPercentDigit(TestMediaRefGetSequences):
         ]
 
         self.is_seq = True
+
 
 class TestMediaRefGetSequencesPercentDigitUnderscore(TestMediaRefGetSequences):
     """Tests the functionality of getting seq match with %0d return"""
