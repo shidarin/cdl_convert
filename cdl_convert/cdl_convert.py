@@ -545,7 +545,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         """Builds an ElementTree XML element representing for ColorCollection"""
         if self.is_ccc:
             return self.build_element_ccc()
-        elif self.is_cdl:
+        elif self.is_cdl:  # pragma: no cover
             return self.build_element_cdl()
 
     def build_element_ccc(self):
@@ -566,7 +566,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return ccc_xml
 
-    def build_element_cdl(self):
+    def build_element_cdl(self):  # pragma: no cover
         """Builds a CDL XML element representing this ColorCollection"""
         return None
 
@@ -2569,7 +2569,7 @@ def main():
                         write_single_file(color_correct, ext)
                 else:
                     write_single_file(color_decisions, ext)
-            else:
+            else:  # pragma: no cover
                 # TODO: Write to collection formats
                 raise Exception('Unsupported output format.')
 

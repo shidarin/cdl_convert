@@ -320,6 +320,47 @@ CCC_ODD_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrectionCollection>
 """
 
+CCC_BAD_TAG = """<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrectionBollection xmlns="urn:ASC:CDL:v1.01">
+    <Description>CCC description 1</Description>
+    <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
+    <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
+    <ColorCorrection id="014_xf_seqGrade_v01">
+        <SOPNode>
+            <Description>Sop description 1</Description>
+            <Description>Sop description 2</Description>
+            <Description>Sop description 3</Description>
+            <Slope>1.014 1.0104 0.62</Slope>
+            <Offset>-0.00315 -0.00124 0.3103</Offset>
+            <Power>1.0 0.9983 1.0</Power>
+        </SOPNode>
+    </ColorCorrection>
+    <ColorCorrection id="f51.200">
+        <SOPNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SOPNode>
+    </ColorCorrection>
+    <ColorCorrection id="f55.100">
+        <SATNode>
+            <Saturation>1798787.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="f54.112">
+        <SATNode>
+            <Saturation>1.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="burp_200.x15">
+        <SATNode>
+            <Description>I am a lovely sat node</Description>
+            <Saturation>1.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+</ColorCorrectionBollection>
+"""
+
 # misc ========================================================================
 
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -471,6 +512,59 @@ class TestParseCCCOdd(TestParseCCCFull):
 
         self.node = cdl_convert.parse_ccc(self.filename)
 
+
+class TestParseCCCExceptions(unittest.TestCase):
+    """Tests that we run into the correct exceptions with bad XMLs"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.filename = None
+
+    def tearDown(self):
+        if self.filename:
+            os.remove(self.filename)
+        cdl_convert.ColorCorrection.members = {}
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testBadTag(self):
+        """Tests that a bad root tag raises a ValueError"""
+
+        # Build our ccc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(CCC_BAD_TAG))
+            self.filename = f.name
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parse_ccc,
+            self.filename,
+        )
+
+    #==========================================================================
+
+    def testEmptyCCC(self):
+        """Tests that an empty CCC file raises a ValueError"""
+
+        emptyCCC = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+                    '<ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">\n'
+                    '</ColorCorrectionCollection>')
+
+        # Build our ccc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(emptyCCC))
+            self.filename = f.name
+
+        self.assertRaises(
+            ValueError,
+            cdl_convert.parse_ccc,
+            self.filename,
+        )
 
 class TestWriteCCCFull(unittest.TestCase):
     """Tests a full write of the CCC file
