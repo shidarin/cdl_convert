@@ -510,12 +510,12 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def is_ccc(self):
         """True if this collection currently represents .ccc"""
-        return self.type is 'ccc'
+        return self.type == 'ccc'
 
     @property
     def is_cdl(self):
         """True if this collection currently represents .cdl"""
-        return self.type is 'cdl'
+        return self.type == 'cdl'
 
     @property
     def type(self):
