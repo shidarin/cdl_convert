@@ -192,8 +192,8 @@ CCC_FULL_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
     <InputDescription>CCC Input Desc Text</InputDescription>
     <ViewingDescription>CCC Viewing Desc Text</ViewingDescription>
-    <Description>CC description 1</Description>
-    <Description>CC description 2</Description>
+    <Description>CCC description 1</Description>
+    <Description>CCC description 2</Description>
     <Description>CCC description 3</Description>
     <Description>CCC description 4</Description>
     <ColorCorrection id="014_xf_seqGrade_v01">
@@ -317,7 +317,8 @@ CCC_ODD_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
             <Saturation>1.01</Saturation>
         </SATNode>
     </ColorCorrection>
-</ColorCorrectionCollection>"""
+</ColorCorrectionCollection>
+"""
 
 # misc ========================================================================
 
@@ -440,7 +441,7 @@ class TestParseCCCFull(unittest.TestCase):
         )
 
 
-class TestParseCCCOdd(unittest.TestCase):
+class TestParseCCCOdd(TestParseCCCFull):
     """Tests an odd CCC parse"""
 
     #==========================================================================
@@ -469,6 +470,106 @@ class TestParseCCCOdd(unittest.TestCase):
             self.filename = f.name
 
         self.node = cdl_convert.parse_ccc(self.filename)
+
+
+class TestWriteCCCFull(unittest.TestCase):
+    """Tests a full write of the CCC file
+
+    This is an integration style test. If parse_ccc stops working, this stops
+    working.
+
+    """
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.ColorCorrection.members = {}
+
+        # Build our ccc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(CCC_FULL))
+            self.filename = f.name
+
+        self.ccc = cdl_convert.parse_ccc(self.filename)
+
+        self.target_xml_root = enc(CCC_FULL_WRITE)
+        self.target_xml = enc('\n'.join(CCC_FULL_WRITE.split('\n')[1:]))
+
+    #==========================================================================
+
+    def tearDown(self):
+        os.remove(self.filename)
+        cdl_convert.ColorCorrection.members = {}
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def test_root_xml(self):
+        """Tests that root_xml returns the full XML as expected"""
+        self.assertEqual(
+            self.target_xml_root,
+            self.ccc.xml_root
+        )
+
+    #==========================================================================
+
+    def test_base_xml(self):
+        """Tests that the xml atrib returns the XML minus root as expected"""
+        self.assertEqual(
+            self.target_xml,
+            self.ccc.xml
+        )
+
+    #==========================================================================
+
+    def test_element(self):
+        """Tests that the element returned is an etree type"""
+        self.assertEqual(
+            'ColorCorrectionCollection',
+            self.ccc.element.tag
+        )
+
+    #==========================================================================
+
+    def test_write(self):
+        """Tests writing the ccc itself"""
+        mockOpen = mock.mock_open()
+
+        self.ccc._file_out = 'bobs_big_file.ccc'
+
+        with mock.patch(builtins + '.open', mockOpen, create=True):
+            cdl_convert.write_ccc(self.ccc)
+
+        mockOpen.assert_called_once_with('bobs_big_file.ccc', 'wb')
+
+        mockOpen().write.assert_called_once_with(self.target_xml_root)
+
+
+class TestWriteCCCOdd(TestWriteCCCFull):
+    """Tests an odd write of the CCC file
+
+    This is an integration style test. If parse_ccc stops working, this stops
+    working.
+
+    """
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.ColorCorrection.members = {}
+
+        # Build our ccc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(CCC_ODD))
+            self.filename = f.name
+
+        self.ccc = cdl_convert.parse_ccc(self.filename)
+
+        self.target_xml_root = enc(CCC_ODD_WRITE)
+        self.target_xml = enc('\n'.join(CCC_ODD_WRITE.split('\n')[1:]))
 
 #==============================================================================
 # RUNNER

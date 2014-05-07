@@ -549,6 +549,18 @@ class TestColorCollection(unittest.TestCase):
 
     #==========================================================================
 
+    def testFileOutSetException(self):
+        """Tests that exception raised when attempting to set file_out direct"""
+        def testFileOut():
+            self.node.file_out = '../NewFile.ccc'
+
+        self.assertRaises(
+            AttributeError,
+            testFileOut
+        )
+
+    #==========================================================================
+
     @mock.patch('cdl_convert.cdl_convert.parse_cc')
     def testParseXMLColorCorrectionsMultiFound(self, mock_parse):
         """Tests that the method returns True when CCs are found"""
