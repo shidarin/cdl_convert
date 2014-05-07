@@ -455,12 +455,12 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             which type the :class:`ColorCollection` is currently set to.
 
         build_element_ccc()
-            Works through the calling instance of :class:`ColorCollection` and
-            builds a CCC style XML element.
+            Builds a CCC style XML tree representing this
+            :class:`ColorCollection` instance.
 
         build_element_cdl()
-            Works through the calling instance of :class:`ColorCollection` and
-            builds a CDL style XML element.
+            Builds a CDL style XML tree representing this
+            :class:`ColorCollection` instance.
 
         parse_xml_descs()
             Parses an ElementTree Element for any Description tags and appends

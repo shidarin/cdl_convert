@@ -359,7 +359,7 @@ class TestAscDescBase(unittest.TestCase):
             self.node.desc
         )
 
-# ColorNodeBase ===============================================================
+# ColorCollection==============================================================
 
 
 class TestColorCollection(unittest.TestCase):
@@ -414,6 +414,185 @@ class TestColorCollection(unittest.TestCase):
         self.assertEqual(
             [],
             self.node.desc
+        )
+
+    #==========================================================================
+
+    def testIsCCC(self):
+        """Tests that is_ccc works correctly"""
+        self.assertTrue(
+            self.node.is_ccc
+        )
+
+        self.node._type = 'cdl'
+
+        self.assertFalse(
+            self.node.is_ccc
+        )
+
+    #==========================================================================
+
+    def testIsCDL(self):
+        """Tests that is_cdl works correctly"""
+        self.assertFalse(
+            self.node.is_cdl
+        )
+
+        self.node._type = 'cdl'
+
+        self.assertTrue(
+            self.node.is_cdl
+        )
+
+    #==========================================================================
+
+    def testType(self):
+        """Tests that type protects and accesses the _type attribute"""
+        def setType():
+            self.node.type = 'banana'
+
+        self.assertRaises(
+            AttributeError,
+            setType
+        )
+
+        self.assertEqual(
+            'ccc',
+            self.node.type
+        )
+
+        self.node._type = 'cdl'
+
+        self.assertEqual(
+            'cdl',
+            self.node.type
+        )
+
+    #==========================================================================
+
+    def testXmlns(self):
+        """Tests the XML specificiation attribute"""
+        def setXML():
+            self.node.xmlns = 'banana'
+
+        self.assertRaises(
+            AttributeError,
+            setXML
+        )
+
+        self.assertEqual(
+            "urn:ASC:CDL:v1.01",
+            self.node.xmlns
+        )
+
+    #==========================================================================
+
+    def testSetToCCC(self):
+        """Tests the set to CCC method"""
+        self.node._type = 'cdl'
+
+        self.node.set_to_ccc()
+
+        self.assertEqual(
+            'ccc',
+            self.node._type
+        )
+
+    #==========================================================================
+
+    def testSetToCDL(self):
+        """Tests the set to CDL method"""
+        self.node._type = 'ccc'
+
+        self.node.set_to_cdl()
+
+        self.assertEqual(
+            'cdl',
+            self.node._type
+        )
+
+    #==========================================================================
+
+    @mock.patch('os.path.abspath')
+    def testFileInRead(self, mockPath):
+        """Tests that file in returns what's passed through"""
+        mockPath.return_value = 'bananaphone.ccc'
+        self.node = cdl_convert.ColorCollection(input_file='mybestfile.ccc')
+
+        mockPath.assert_called_once_with('mybestfile.ccc')
+
+        self.assertEqual(
+            'bananaphone.ccc',
+            self.node.file_in
+        )
+
+    #==========================================================================
+
+    @mock.patch('os.path.abspath')
+    def testFileInRead(self, mockPath):
+        """Tests that file in returns what's passed through"""
+        mockPath.return_value = 'bananaphone.ccc'
+
+        self.assertEqual(
+            None,
+            self.node.file_in
+        )
+
+        self.node.file_in = 'mybestfile.ccc'
+
+        mockPath.assert_called_once_with('mybestfile.ccc')
+
+        self.assertEqual(
+            'bananaphone.ccc',
+            self.node.file_in
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_cc')
+    def testParseXMLColorCorrectionsMultiFound(self, mock_parse):
+        """Tests that the method returns True when CCs are found"""
+
+        xml_element = mock.MagicMock()
+        xml_element.findall.return_value = ['banana', 'apple', 'egg']
+
+        mock_cdl = mock.MagicMock()
+        mock_parse.return_value = mock_cdl
+
+        self.assertTrue(
+            self.node.parse_xml_color_corrections(xml_element)
+        )
+
+        mock_parse.assert_has_calls(
+            [
+                mock.call('banana'),
+                mock.call('apple'),
+                mock.call('egg')
+            ]
+        )
+
+        self.assertEqual(
+            self.node,
+            mock_cdl.parent
+        )
+
+        # Tests that the returned mock_cdls were added to the color_corrections
+        # list.
+        self.assertEqual(
+            [mock_cdl, mock_cdl, mock_cdl],
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testParseXMLColorCorrectionsNoneFound(self):
+        """Tests that the method returns True when CCs are found"""
+
+        xml_element = mock.MagicMock()
+        xml_element.findall.return_value = []
+
+        self.assertFalse(
+            self.node.parse_xml_color_corrections(xml_element)
         )
 
 # ColorCorrection =============================================================
