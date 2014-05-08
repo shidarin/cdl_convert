@@ -534,6 +534,15 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         """Describes the type of ColorCollection this class will export"""
         return self._type
 
+    @type.setter
+    def type(self, value):
+        """Checks if type is either cdl or ccc"""
+        if value.lower() not in ['ccc', 'cdl']:
+            raise ValueError('ColorCollection type must be set to either '
+                             'ccc or cdl.')
+        else:
+            self._type = value.lower()
+
     @property
     def xmlns(self):
         """Describes the version of the XML schema written by cdl_convert"""

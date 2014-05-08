@@ -452,7 +452,7 @@ class TestColorCollection(unittest.TestCase):
             self.node.type = 'banana'
 
         self.assertRaises(
-            AttributeError,
+            ValueError,
             setType
         )
 
@@ -465,6 +465,13 @@ class TestColorCollection(unittest.TestCase):
 
         self.assertEqual(
             'cdl',
+            self.node.type
+        )
+
+        self.node.type = 'ccc'
+
+        self.assertEqual(
+            'ccc',
             self.node.type
         )
 
