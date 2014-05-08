@@ -10,7 +10,7 @@ Classes
 =======
 
 The class structure of ``cdl_convert`` mirrors the element structure of the
-defined XML schema for ``ccc``, ``cdl`` and ``cc`` files as defined by the
+ XML schema for ``ccc``, ``cdl`` and ``cc`` files as defined by the
 ASC. The XML schema's represent the most complicated and structured variant of
 the format, and therefore it behooves the project to mimic their structure.
 
@@ -41,13 +41,36 @@ AscXMLBase
 
 .. autoclass:: cdl_convert.AscXMLBase
 
-ColorCollectionBase
+ColorCollection
 -------------------
 
-:class:`ColorDecisionList` and :class:`ColorCollection` use this class as a
-a base class, since they both are collections of other more specific classes.
+.. warning::
+    Functionality described below relating to ``cdl`` type collections
+    is not currently implemented. If you're reading this, you're reading
+    ``develop`` branch documentation.
 
-.. autoclass:: cdl_convert.ColorCollectionBase
+This class functions as both a ColorDecisionList and a
+ColorCorrectionCollection. It's children can be either ColorDecisions,
+ColorCorrections, or a combination of the two. Despite being able to
+have either type of child, the :class:`ColorCollection` still needs to know
+which type of collection you want it to represent.
+
+Setting the ``type`` of the :class:`ColorCollection` to either ``ccc`` or
+``cdl`` causes children of the opposite type to be converted into the
+appropriate type when exporting the class.
+
+If ``parse_ale`` is used to parse an ``ale`` edl file, the ``ale`` will be
+read into a :class:`ColorCollection` set to ``cdl`` and the children the
+``ale`` creates will actually be :class:`ColorDecision` , as that allows
+for the easy inclusion of :class:`MediaRef` objects. If you then use
+``write_ccc`` to write a ``ccc`` file, all the children :class:`ColorDecision`
+will create XML elements for their :class:`ColorCorrection` children,
+adding in any :class:`MediaRef` that were found as ``Description`` elements.
+Finally the :class:`ColorCollection` ``type`` is set to ``ccc`` and the
+``xml_root`` field is called, which knows to return a ``ccc`` style XML
+element to ``write_ccc``.
+
+.. autoclass:: cdl_convert.ColorCollection
 
 ColorCorrection
 ---------------
