@@ -135,6 +135,7 @@ __all__ = [
     'parse_cc',
     'parse_cdl',
     'parse_flex',
+    'sanity_check',
     'write_cc',
     'write_cdl',
 ]
