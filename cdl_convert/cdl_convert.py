@@ -2223,11 +2223,11 @@ def parse_flex(edl_file):
 # ==============================================================================
 
 
-def sanity_check(cdl):
+def sanity_check(colcor):
     """Checks values on :class:`ColorCorrection` for sanity.
 
     **Args:**
-        cdl : (:class:`ColorCorrection`)
+        colcor : (:class:`ColorCorrection`)
             The :class:`ColorCorrection` to check for sane values.
 
     **Returns:**
@@ -2259,7 +2259,7 @@ def sanity_check(cdl):
             print(
                 'The ColorCorrection "{id}" was given a {type} value of '
                 '"{value}", which might be incorrect.'.format(
-                    id=cdl.id,
+                    id=colcor.id,
                     type=value_type,
                     value=value
                 )
@@ -2268,16 +2268,16 @@ def sanity_check(cdl):
         else:
             return True
 
-    if cdl.has_sop:
+    if colcor.has_sop:
         for i in xrange(3):
-            slope = _check_value(cdl.slope[i], (0.1, 3.0), 'Slope')
-            offset = _check_value(cdl.offset[i], (-1.0, 1.0), 'Offset')
-            power = _check_value(cdl.power[i], (0.1, 3.0), 'Power')
+            slope = _check_value(colcor.slope[i], (0.1, 3.0), 'Slope')
+            offset = _check_value(colcor.offset[i], (-1.0, 1.0), 'Offset')
+            power = _check_value(colcor.power[i], (0.1, 3.0), 'Power')
             if not slope or not offset or not power:
                 sane_values = False
 
-    if cdl.has_sat:
-        if not _check_value(cdl.sat, (0.1, 3.0), 'Saturation'):
+    if colcor.has_sat:
+        if not _check_value(colcor.sat, (0.1, 3.0), 'Saturation'):
             sane_values = False
 
     return sane_values

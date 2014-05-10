@@ -138,6 +138,14 @@ SopNode
 
 .. autoclass:: cdl_convert.SopNode
 
+General Functions
+===============
+
+Sanity Check
+------------
+
+.. autofunction:: cdl_convert.sanity_check
+
 Parse Functions
 ===============
 
