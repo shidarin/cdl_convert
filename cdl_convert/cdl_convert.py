@@ -2264,6 +2264,16 @@ def parse_args():
              "accepted. Defaults to a .cc XML. Supported output formats are: "  # pylint: disable=C0330
              "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))  # pylint: disable=C0330
     )
+    parser.add_argument(
+        "--halt",
+        action='store_true',
+        help="turns off exception handling default behavior. Turn this on if "
+             "you want the conversion process to fail and not continue,"
+             "rather than relying on default behavior for bad values. Examples "
+             "are clipping negative values to 0.0 for Slope, Power and "
+             "Saturation, and automatically generating a new id for a "
+             "ColorCorrect if no or a bad id is given."
+    )
 
     args = parser.parse_args()
 
@@ -2298,6 +2308,10 @@ def parse_args():
         args.output = output_types
     else:
         args.output = ['cc', ]
+
+    if args.halt:
+        global HALT_ON_ERROR
+        HALT_ON_ERROR = True
 
     return args
 
