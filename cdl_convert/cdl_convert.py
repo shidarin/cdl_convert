@@ -2482,9 +2482,9 @@ def sanity_check(colcor):
     """
     sane_values = True
 
-    def _check_value(value, range, value_type):
+    def _check_value(value, minmax, value_type):
         """Checks if a value falls outside of min or max"""
-        if value <= range[0] or value >= range[1]:
+        if value <= minmax[0] or value >= minmax[1]:
             print(
                 'The ColorCorrection "{id}" was given a {type} value of '
                 '"{value}", which might be incorrect.'.format(
