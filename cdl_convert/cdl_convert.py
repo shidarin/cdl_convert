@@ -2332,6 +2332,24 @@ OUTPUT_FORMATS = {
 
 def parse_args():
     """Uses argparse to parse command line arguments"""
+
+    def list_type(argument):
+        """Converts a comma seperated entry into a list"""
+        argument_values = argument.split(',')
+        return [arg_value.lower() for arg_value in argument_values]
+
+    def valid_arg(argument, valid_args, arg_name):
+        """Checks if a supplied argument is a valid argument"""
+        if argument not in valid_args:
+            raise ValueError(
+                "'{argument}' is not an allowed value for {arg_name}. "
+                "Allowed values are: {valid_args}".format(
+                    argument=argument,
+                    arg_name=arg_name,
+                    valid_args=valid_args,
+                )
+            )
+
     parser = ArgumentParser()
     parser.add_argument(
         "input_file",
@@ -2348,6 +2366,7 @@ def parse_args():
     parser.add_argument(
         "-o",
         "--output",
+        type=list_type,
         help="specify the filetype to convert to, comma separated lists are "
              "accepted. Defaults to a .cc XML. Supported output formats are: "  # pylint: disable=C0330
              "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))  # pylint: disable=C0330
@@ -2382,36 +2401,14 @@ def parse_args():
     args = parser.parse_args()
 
     if args.input:
-        if args.input.lower() not in INPUT_FORMATS:
-            raise ValueError(
-                "The input format: {input} is not supported".format(
-                    input=args.input
-                )
-            )
-        else:
-            args.input = args.input.lower()
+        args.input = args.input.lower()
+        valid_arg(args.input, INPUT_FORMATS, 'input')
 
     if args.output:
-        # This might be a string separated list of output types.
-        # We'll split it, check each against the supported types, convert
-        # them to lowercase if not already, and place the resulting list back
-        # into args.output
-        #
-        # TODO: Define and add a new argparse type as described in:
-        # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
-        output_types = args.output.split(',')
-        for i in xrange(len(output_types)):
-            if output_types[i].lower() not in OUTPUT_FORMATS.keys():
-                raise ValueError(
-                    "The output format: {output} is not supported".format(
-                        output=output_types[i]
-                    )
-                )
-            else:
-                output_types[i] = output_types[i].lower()
-        args.output = output_types
+        for arg in args.output:
+            valid_arg(arg, OUTPUT_FORMATS, 'output')
     else:
-        args.output = ['cc', ]
+        args.output = ['cc']
 
     if args.halt:
         global HALT_ON_ERROR  # pylint: disable=W0603
