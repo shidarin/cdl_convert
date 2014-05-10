@@ -105,6 +105,10 @@ else:  # pragma: no cover
 
 # HALT_ON_ERROR is the exception handling variable for exceptions that can
 # be handled silently.
+#
+# If we begin to get more config options, this will be moved into a singleton
+# config class.
+#
 # Used in the following places:
 #   Slope, power and sat values can't be negative and will truncate to 0.0
 #   If id given to ColorCorrection is blank, will set to number of CCs
@@ -2268,18 +2272,18 @@ def parse_args():
         "--halt",
         action='store_true',
         help="turns off exception handling default behavior. Turn this on if "
-             "you want the conversion process to fail and not continue,"
-             "rather than relying on default behavior for bad values. Examples "
-             "are clipping negative values to 0.0 for Slope, Power and "
-             "Saturation, and automatically generating a new id for a "
-             "ColorCorrect if no or a bad id is given."
+             "you want the conversion process to fail and not continue,"  # pylint: disable=C0330
+             "rather than relying on default behavior for bad values. Examples "  # pylint: disable=C0330
+             "are clipping negative values to 0.0 for Slope, Power and "  # pylint: disable=C0330
+             "Saturation, and automatically generating a new id for a "  # pylint: disable=C0330
+             "ColorCorrect if no or a bad id is given."  # pylint: disable=C0330
     )
     parser.add_argument(
         "--no-output",
         action='store_true',
         help="parses all incoming files but no files will be written. Use this "
-             "in conjunction with '--halt' and '--sanity-check to try and "
-             "track down any oddities observed in the CDLs."
+             "in conjunction with '--halt' and '--sanity-check to try and "  # pylint: disable=C0330
+             "track down any oddities observed in the CDLs."  # pylint: disable=C0330
     )
 
     args = parser.parse_args()
@@ -2317,7 +2321,7 @@ def parse_args():
         args.output = ['cc', ]
 
     if args.halt:
-        global HALT_ON_ERROR
+        global HALT_ON_ERROR  # pylint: disable=W0603
         HALT_ON_ERROR = True
 
     return args
