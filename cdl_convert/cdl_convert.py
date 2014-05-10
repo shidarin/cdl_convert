@@ -2274,6 +2274,13 @@ def parse_args():
              "Saturation, and automatically generating a new id for a "
              "ColorCorrect if no or a bad id is given."
     )
+    parser.add_argument(
+        "--no-output",
+        action='store_true',
+        help="parses all incoming files but no files will be written. Use this "
+             "in conjunction with '--halt' and '--sanity-check to try and "
+             "track down any oddities observed in the CDLs."
+    )
 
     args = parser.parse_args()
 
@@ -2322,6 +2329,9 @@ def main():
     """Will figure out input and destination filetypes, then convert"""
     args = parse_args()
 
+    if args.no_output:
+        print("Dry run initiated, no files will be written.")
+
     filepath = os.path.abspath(args.input_file)
 
     if not args.input:
@@ -2341,7 +2351,8 @@ def main():
                         path=cdl.file_out
                     )
                 )
-                OUTPUT_FORMATS[ext](cdl)
+                if not args.no_output:
+                    OUTPUT_FORMATS[ext](cdl)
 
 if __name__ == '__main__':  # pragma: no cover
     try:

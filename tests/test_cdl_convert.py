@@ -344,6 +344,47 @@ class TestParseArgs(unittest.TestCase):
 
         cdl_convert.HALT_ON_ERROR = False
 
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testNoOutput(self, abspath, mockParse, mockWrite):
+        """Tests that we don't write a converted file"""
+
+        abspath.return_value = 'file.flex'
+        cdl = cdl_convert.ColorCorrection(
+            id='uniqueId', cdl_file='file.flex'
+        )
+
+        mockParse.return_value = [cdl, ]
+        sys.argv = ['scriptname', 'file.flex', '-o', 'cc', '--no-output']
+
+        inputFormats = cdl_convert.INPUT_FORMATS
+        outputFormats = cdl_convert.OUTPUT_FORMATS
+
+        mockInputs = dict(inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(outputFormats)
+        mockOutputs['cc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        mockParse.assert_called_once_with('file.flex')
+        # Determine dest should have set a file_out
+        self.assertEqual(
+            'uniqueId.cc',
+            cdl.file_out
+        )
+        # But the write should never have been called.
+        mockWrite.assert_has_calls([])
+
+        cdl_convert.INPUT_FORMATS = inputFormats
+        cdl_convert.OUTPUT_FORMATS = outputFormats
+
 # main() ======================================================================
 
 
