@@ -32,10 +32,28 @@ input file format. This can be done with the ``-i`` flag.
     but if you're running into trouble, it might help to indicate to
     ``cdl_convert`` what the input file type is.
 
+When converting large batches of color corrections, it can be helpful to know
+if there's anything odd about any of them. Using the ``--check`` flag will
+cause any potentially invalid numbers to be flagged and printed to the shell.
+
+For Slope, Power and Saturation, any values below ``0.1`` or above ``3.0`` will
+flag. For Offset, any values below ``-1.0`` or above ``1.0`` will flag.
+::
+    $ cdl_convert ./di_v001.flex
+    The ColorCorrection "a347.x700" was given a Slope value of "0.978", which
+    might be incorrect.
+    The ColorCorrection "a400.x050" was given a Saturation value of "3.1",
+    which might be incorrect.
+
+This is especially useful when combined with the ``--no-output`` flag, which
+will enable a dry run mode and allow you to spot odd values before running.
+
 Full help is available using the standard ``--help`` command:
 ::
     $ cdl_convert --help
-    usage: cdl_convert [-h] [-i INPUT] [-o OUTPUT] input_file
+    usage: cdl_convert.py [-h] [-i INPUT] [-o OUTPUT] [--halt] [--no-output]
+                          [--check]
+                          input_file
 
     positional arguments:
       input_file            the file to be converted
@@ -51,6 +69,22 @@ Full help is available using the standard ``--help`` command:
                             specify the filetype to convert to, comma separated
                             lists are accepted. Defaults to a .cc XML. Supported
                             output formats are: ['cc', 'cdl']
+      --halt                turns off exception handling default behavior. Turn
+                            this on if you want the conversion process to fail and
+                            not continue,rather than relying on default behavior
+                            for bad values. Examples are clipping negative values
+                            to 0.0 for Slope, Power and Saturation, and
+                            automatically generating a new id for a ColorCorrect
+                            if no or a bad id is given.
+      --no-output           parses all incoming files but no files will be
+                            written. Use this in conjunction with '--halt' and '--
+                            check to try and track down any oddities observed in
+                            the CDLs.
+      --check               checks all ColorCorrects that were parsed for odd
+                            values. Odd values are any values over 3 or under 0.1
+                            for Slope, Power and Saturation. For offset, any value
+                            over 1 and under -1 is flagged. Note that depending on
+                            the look, these still might be correct values.
 
 Python Usage
 ============

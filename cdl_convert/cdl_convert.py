@@ -105,6 +105,10 @@ else:  # pragma: no cover
 
 # HALT_ON_ERROR is the exception handling variable for exceptions that can
 # be handled silently.
+#
+# If we begin to get more config options, this will be moved into a singleton
+# config class.
+#
 # Used in the following places:
 #   Slope, power and sat values can't be negative and will truncate to 0.0
 #   If id given to ColorCorrection is blank, will set to number of CCs
@@ -667,6 +671,12 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         file_out : (str)
             Filepath this :class:`ColorCorrection` will be written to.
 
+        has_sat : (bool)
+            Returns True if SOP values are set
+
+        has_sop : (bool)
+            Returns True if SOP values are set
+
         id : (str)
             Unique XML URI to identify this CDL. Often a shot or sequence name.
 
@@ -790,6 +800,22 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def file_out(self):
         """Returns a theoretical absolute filepath based on output ext"""
         return self._file_out
+
+    @property
+    def has_sat(self):
+        """Returns True if SOP values are set"""
+        if self.sat_node:
+            return True
+        else:
+            return False
+
+    @property
+    def has_sop(self):
+        """Returns True if SOP values are set"""
+        if self.sop_node:
+            return True
+        else:
+            return False
 
     @property
     def id(self):  # pylint: disable=C0103
@@ -2423,6 +2449,67 @@ def parse_flex(input_file):
         cdls.append(cdl)
 
     return cdls
+# ==============================================================================
+
+
+def sanity_check(colcor):
+    """Checks values on :class:`ColorCorrection` for sanity.
+
+    **Args:**
+        colcor : (:class:`ColorCorrection`)
+            The :class:`ColorCorrection` to check for sane values.
+
+    **Returns:**
+        (bool)
+            Returns True if all values are sane.
+
+    **Raises:**
+        N/A
+
+    Will print a warning to stdout if any values exceed normal limits.
+    Normal limits are defined as:
+
+    For Slope, Power and Saturation:
+        Any value over 3 or under 0.1
+
+    For Offset:
+        Any value over 1 or under -1
+
+    Note that depending on the desired look for a shot or sequence, it's
+    possible that a single ColorCorrection element might have very odd
+    looking values and still achieve a correct look.
+
+    """
+    sane_values = True
+
+    def _check_value(value, range, value_type):
+        """Checks if a value falls outside of min or max"""
+        if value <= range[0] or value >= range[1]:
+            print(
+                'The ColorCorrection "{id}" was given a {type} value of '
+                '"{value}", which might be incorrect.'.format(
+                    id=colcor.id,
+                    type=value_type,
+                    value=value
+                )
+            )
+            return False
+        else:
+            return True
+
+    if colcor.has_sop:
+        for i in xrange(3):
+            slope = _check_value(colcor.slope[i], (0.1, 3.0), 'Slope')
+            offset = _check_value(colcor.offset[i], (-1.0, 1.0), 'Offset')
+            power = _check_value(colcor.power[i], (0.1, 3.0), 'Power')
+            if not slope or not offset or not power:
+                sane_values = False
+
+    if colcor.has_sat:
+        if not _check_value(colcor.sat, (0.1, 3.0), 'Saturation'):
+            sane_values = False
+
+    return sane_values
 
 # ==============================================================================
 
@@ -2507,6 +2594,32 @@ def parse_args():
              "accepted. Defaults to a .cc XML. Supported output formats are: "  # pylint: disable=C0330
              "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))  # pylint: disable=C0330
     )
+    parser.add_argument(
+        "--halt",
+        action='store_true',
+        help="turns off exception handling default behavior. Turn this on if "
+             "you want the conversion process to fail and not continue,"  # pylint: disable=C0330
+             "rather than relying on default behavior for bad values. Examples "  # pylint: disable=C0330
+             "are clipping negative values to 0.0 for Slope, Power and "  # pylint: disable=C0330
+             "Saturation, and automatically generating a new id for a "  # pylint: disable=C0330
+             "ColorCorrect if no or a bad id is given."  # pylint: disable=C0330
+    )
+    parser.add_argument(
+        "--no-output",
+        action='store_true',
+        help="parses all incoming files but no files will be written. Use this "
+             "in conjunction with '--halt' and '--check to try and "  # pylint: disable=C0330
+             "track down any oddities observed in the CDLs."  # pylint: disable=C0330
+    )
+    parser.add_argument(
+        "--check",
+        action='store_true',
+        help="checks all ColorCorrects that were parsed for odd values. Odd "
+             "values are any values over 3 or under 0.1 for Slope, Power "  # pylint: disable=C0330
+             "and Saturation. For offset, any value over 1 and under -1 is "  # pylint: disable=C0330
+             "flagged. Note that depending on the look, these still might "  # pylint: disable=C0330
+             "be correct values."  # pylint: disable=C0330
+    )
 
     args = parser.parse_args()
 
@@ -2542,6 +2655,10 @@ def parse_args():
     else:
         args.output = ['cc', ]
 
+    if args.halt:
+        global HALT_ON_ERROR  # pylint: disable=W0603
+        HALT_ON_ERROR = True
+
     return args
 
 # ==============================================================================
@@ -2550,6 +2667,9 @@ def parse_args():
 def main():
     """Will figure out input and destination filetypes, then convert"""
     args = parse_args()
+
+    if args.no_output:
+        print("Dry run initiated, no files will be written.")
 
     filepath = os.path.abspath(args.input_file)
 
@@ -2568,9 +2688,17 @@ def main():
                 path=cdl.file_out
             )
         )
-        OUTPUT_FORMATS[ext](cdl)
+        if not args.no_output:
+            OUTPUT_FORMATS[ext](cdl)
 
     if color_decisions:
+        # Sanity Check
+        if filetype_in in COLLECTION_FORMATS:
+            for color_correct in color_decisions.color_corrections:
+                sanity_check(color_correct)
+        else:
+            sanity_check(color_decisions)
+        # Writing
         for ext in args.output:
             if ext in SINGLE_FORMATS:
                 if filetype_in in COLLECTION_FORMATS:
