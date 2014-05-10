@@ -515,6 +515,12 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         file_out : (str)
             Filepath this CDL will be written to.
 
+        has_sat : (bool)
+            Returns True if SOP values are set
+
+        has_sop : (bool)
+            Returns True if SOP values are set
+
         id : (str)
             Unique XML URI to identify this CDL. Often a shot or sequence name.
 
@@ -629,6 +635,22 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def file_out(self):
         """Returns a theoretical absolute filepath based on output ext"""
         return self._files['file_out']
+
+    @property
+    def has_sat(self):
+        """Returns True if SOP values are set"""
+        if self.sat_node:
+            return True
+        else:
+            return False
+
+    @property
+    def has_sop(self):
+        """Returns True if SOP values are set"""
+        if self.sop_node:
+            return True
+        else:
+            return False
 
     @property
     def id(self):  # pylint: disable=C0103
@@ -2198,6 +2220,67 @@ def parse_flex(edl_file):
         cdls.append(cdl)
 
     return cdls
+# ==============================================================================
+
+
+def sanity_check(cdl):
+    """Checks values on :class:`ColorCorrection` for sanity.
+
+    **Args:**
+        cdl : (:class:`ColorCorrection`)
+            The :class:`ColorCorrection` to check for sane values.
+
+    **Returns:**
+        (bool)
+            Returns True if all values are sane.
+
+    **Raises:**
+        N/A
+
+    Will print a warning to stdout if any values exceed normal limits.
+    Normal limits are defined as:
+
+    For Slope, Power and Saturation:
+        Any value over 3 or under 0.1
+
+    For Offset:
+        Any value over 1 or under -1
+
+    Note that depending on the desired look for a shot or sequence, it's
+    possible that a single ColorCorrection element might have very odd
+    looking values and still achieve a correct look.
+
+    """
+    sane_values = True
+
+    def _check_value(value, range, value_type):
+        """Checks if a value falls outside of min or max"""
+        if value <= range[0] or value >= range[1]:
+            print(
+                'The ColorCorrection "{id}" was given a {type} value of '
+                '"{value}", which might be incorrect.'.format(
+                    id=cdl.id,
+                    type=value_type,
+                    value=value
+                )
+            )
+            return False
+        else:
+            return True
+
+    if cdl.has_sop:
+        for i in xrange(3):
+            slope = _check_value(cdl.slope[i], (0.1, 3.0), 'Slope')
+            offset = _check_value(cdl.offset[i], (-1.0, 1.0), 'Offset')
+            power = _check_value(cdl.power[i], (0.1, 3.0), 'Power')
+            if not slope or not offset or not power:
+                sane_values = False
+
+    if cdl.has_sat:
+        if not _check_value(cdl.sat, (0.1, 3.0), 'Saturation'):
+            sane_values = False
+
+    return sane_values
 
 # ==============================================================================
 
@@ -2282,8 +2365,17 @@ def parse_args():
         "--no-output",
         action='store_true',
         help="parses all incoming files but no files will be written. Use this "
-             "in conjunction with '--halt' and '--sanity-check to try and "  # pylint: disable=C0330
+             "in conjunction with '--halt' and '--check to try and "  # pylint: disable=C0330
              "track down any oddities observed in the CDLs."  # pylint: disable=C0330
+    )
+    parser.add_argument(
+        "--check",
+        action='store_true',
+        help="checks all ColorCorrects that were parsed for odd values. Odd "
+             "values are any values over 3 or under 0.1 for Slope, Power "  # pylint: disable=C0330
+             "and Saturation. For offset, any value over 1 and under -1 is "  # pylint: disable=C0330
+             "flagged. Note that depending on the look, these still might "  # pylint: disable=C0330
+             "be correct values."  # pylint: disable=C0330
     )
 
     args = parser.parse_args()
@@ -2347,6 +2439,9 @@ def main():
 
     if cdls:
         for cdl in cdls:
+            if args.check:
+                for cdl in cdls:
+                    sanity_check(cdl)
             for ext in args.output:
                 cdl.determine_dest(ext)
                 print(

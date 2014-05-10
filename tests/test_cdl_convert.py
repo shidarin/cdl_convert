@@ -200,6 +200,112 @@ class TestSanitize(unittest.TestCase):
             result
         )
 
+# sanity_check() ==============================================================
+
+
+class TestSanityCheck(unittest.TestCase):
+    """Tests the sanity check function"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.stdout = sys.stdout
+        sys.stdout = StringIO()
+        self.cdl = cdl_convert.ColorCorrection('uniqueId', 'banana.cc')
+
+    #==========================================================================
+
+    def tearDown(self):
+        sys.stdout = self.stdout
+        cdl_convert.ColorCorrection.members = {}
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testGoodRun(self):
+        """Tests that if no bad values were found, sanity_check returns True"""
+        self.cdl.slope = [1.2, 0.23, 2.487]
+        self.cdl.offset = [-0.87, 0.987, 0.0]
+        self.cdl.power = [2.97, 1.25, 1.0]
+        self.cdl.sat = 2.9999
+
+        self.assertTrue(
+            cdl_convert.sanity_check(self.cdl)
+        )
+
+    #==========================================================================
+
+    def testSlope(self):
+        """Tests that a bad slope value is reported"""
+        self.cdl.slope = [0.1, 3.1, 1.5]
+
+        self.assertFalse(
+            cdl_convert.sanity_check(self.cdl)
+        )
+
+        self.assertEqual(
+            'The ColorCorrection "uniqueId" was given a Slope value of '
+            '"0.1", which might be incorrect.\n'
+            'The ColorCorrection "uniqueId" was given a Slope value of '
+            '"3.1", which might be incorrect.\n',
+            sys.stdout.getvalue()
+        )
+
+    #==========================================================================
+
+    def testOffset(self):
+        """Tests that a bad slope value is reported"""
+        self.cdl.offset = [-1.01, 1.5, 0.157]
+
+        self.assertFalse(
+            cdl_convert.sanity_check(self.cdl)
+        )
+
+        self.assertEqual(
+            'The ColorCorrection "uniqueId" was given a Offset value of '
+            '"-1.01", which might be incorrect.\n'
+            'The ColorCorrection "uniqueId" was given a Offset value of '
+            '"1.5", which might be incorrect.\n',
+            sys.stdout.getvalue()
+        )
+
+    #==========================================================================
+
+    def testPower(self):
+        """Tests that a bad slope value is reported"""
+        self.cdl.power = [0.1, 3.1, 1.5]
+
+        self.assertFalse(
+            cdl_convert.sanity_check(self.cdl)
+        )
+
+        self.assertEqual(
+            'The ColorCorrection "uniqueId" was given a Power value of '
+            '"0.1", which might be incorrect.\n'
+            'The ColorCorrection "uniqueId" was given a Power value of '
+            '"3.1", which might be incorrect.\n',
+            sys.stdout.getvalue()
+        )
+
+    #==========================================================================
+
+    def testSaturation(self):
+        """Tests that a bad sat value is reported"""
+        self.cdl.sat = 3.01
+
+        self.assertFalse(
+            cdl_convert.sanity_check(self.cdl)
+        )
+
+        self.assertEqual(
+            'The ColorCorrection "uniqueId" was given a Saturation value of '
+            '"3.01", which might be incorrect.\n',
+            sys.stdout.getvalue()
+        )
+
 # parse_args() ================================================================
 
 
@@ -212,11 +318,15 @@ class TestParseArgs(unittest.TestCase):
 
     def setUp(self):
         self.sysargv = sys.argv
+        self.stdout = sys.stdout
+        sys.stdout = StringIO()
 
     #==========================================================================
 
     def tearDown(self):
+        sys.stdout = self.stdout
         sys.argv = self.sysargv
+        cdl_convert.ColorCorrection.members = {}
 
     #==========================================================================
     # TESTS
@@ -343,6 +453,19 @@ class TestParseArgs(unittest.TestCase):
         )
 
         cdl_convert.HALT_ON_ERROR = False
+
+    #==========================================================================
+
+    def testSanityCheck(self):
+        """Tests the sanity check --check flag to be set"""
+
+        sys.argv = ['scriptname', 'inputFile', '--check']
+
+        args = cdl_convert.parse_args()
+
+        self.assertTrue(
+            args.check
+        )
 
     #==========================================================================
 
@@ -524,6 +647,30 @@ class TestMain(unittest.TestCase):
             self.cdl.file_out
         )
 
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.sanity_check')
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testSanityCheckCalled(self, abspath, mockParse, mockWrite, mockSanity):
+        """Tests that we try and write a converted file"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = [self.cdl, ]
+        sys.argv = ['scriptname', 'file.flex', '--check']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        mockSanity.assert_called_once_with(self.cdl)
 
     #==========================================================================
 
