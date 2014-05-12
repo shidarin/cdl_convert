@@ -1,0 +1,2 @@
+# Used for running the test suite
+mock>=1.0.1
