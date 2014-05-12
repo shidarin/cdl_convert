@@ -192,7 +192,7 @@ Submitting Code
 
 Before generating a pull request, make sure to run the test suite:::
 
-    $ python setup.py tests
+    $ python setup.py test
 
 If the tests fail, note which tests are failing, how they would have been
 affected by your code. Always assume you broke something rather than that the
