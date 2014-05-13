@@ -589,7 +589,7 @@ class TestMain(unittest.TestCase):
         cdl_convert.main()
 
         mockParse.assert_called_once_with('file.ccc')
-        
+
     #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.parse_cc')
@@ -611,7 +611,7 @@ class TestMain(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.parse_cdl')
+    @mock.patch('cdl_convert.cdl_convert.parse_rnh_cdl')
     @mock.patch('os.path.abspath')
     def testDerivingInputTypeCDL(self, abspath, mockParse):
         """Tests that input type will be derived from file extension"""
@@ -627,7 +627,7 @@ class TestMain(unittest.TestCase):
         cdl_convert.main()
 
         mockParse.assert_called_once_with('file.cdl')
-        
+
     #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
@@ -670,7 +670,7 @@ class TestMain(unittest.TestCase):
 
     @mock.patch('os.path.dirname')
     @mock.patch('cdl_convert.cdl_convert.write_cc')
-    @mock.patch('cdl_convert.cdl_convert.parse_cdl')
+    @mock.patch('cdl_convert.cdl_convert.parse_rnh_cdl')
     @mock.patch('os.path.abspath')
     def testDetermineDestCalled(self, abspath, mockParse, mockWrite, dirname):
         """Tests that we try and write a converted file"""
@@ -752,7 +752,7 @@ class TestMain(unittest.TestCase):
     #==========================================================================
 
     @mock.patch('cdl_convert.cdl_convert.write_cc')
-    @mock.patch('cdl_convert.cdl_convert.parse_cdl')
+    @mock.patch('cdl_convert.cdl_convert.parse_rnh_cdl')
     @mock.patch('os.path.abspath')
     def testWriteCalled(self, abspath, mockParse, mockWrite):
         """Tests that we try and write a converted file"""
@@ -776,7 +776,7 @@ class TestMain(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.write_cdl')
+    @mock.patch('cdl_convert.cdl_convert.write_rnh_cdl')
     @mock.patch('cdl_convert.cdl_convert.write_cc')
     @mock.patch('cdl_convert.cdl_convert.parse_ccc')
     @mock.patch('os.path.abspath')

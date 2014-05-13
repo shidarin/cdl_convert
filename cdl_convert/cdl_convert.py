@@ -134,10 +134,10 @@ __all__ = [
     'parse_ale',
     'parse_cc',
     'parse_ccc',
-    'parse_cdl',
+    'parse_rnh_cdl',
     'parse_flex',
     'write_cc',
-    'write_cdl',
+    'write_rnh_cdl',
 ]
 
 # ==============================================================================
@@ -2253,7 +2253,7 @@ def parse_ccc(input_file):
 # ==============================================================================
 
 
-def parse_cdl(input_file):
+def parse_rnh_cdl(input_file):
     """Parses a space separated .cdl file for ASC CDL information.
 
     **Args:**
@@ -2531,7 +2531,7 @@ def write_ccc(cdl):
 # ==============================================================================
 
 
-def write_cdl(cdl):
+def write_rnh_cdl(cdl):
     """Writes the ColorCorrection to a space separated .cdl file"""
 
     values = list(cdl.slope)
@@ -2556,14 +2556,14 @@ INPUT_FORMATS = {
     'ale': parse_ale,
     'ccc': parse_ccc,
     'cc': parse_cc,
-    'cdl': parse_cdl,
+    'cdl': parse_rnh_cdl,
     'flex': parse_flex,
 }
 
 OUTPUT_FORMATS = {
     'cc': write_cc,
     'ccc': write_ccc,
-    'cdl': write_cdl,
+    'cdl': write_rnh_cdl,
 }
 
 COLLECTION_FORMATS = ['ale', 'ccc', 'flex']
