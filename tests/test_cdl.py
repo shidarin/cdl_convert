@@ -95,7 +95,7 @@ class TestParseCDLBasic(unittest.TestCase):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cdl(self.filename)
+        self.cdl = cdl_convert.parse_rnh_cdl(self.filename)
 
     #==========================================================================
 
@@ -179,7 +179,7 @@ class TestParseCDLOdd(TestParseCDLBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cdl(self.filename)
+        self.cdl = cdl_convert.parse_rnh_cdl(self.filename)
 
 
 class TestWriteCDLBasic(unittest.TestCase):
@@ -211,7 +211,7 @@ class TestWriteCDLBasic(unittest.TestCase):
         self.mockOpen = mock.mock_open()
 
         with mock.patch(builtins + '.open', self.mockOpen, create=True):
-            cdl_convert.write_cdl(self.cdl)
+            cdl_convert.write_rnh_cdl(self.cdl)
 
     def tearDown(self):
         # We need to clear the ColorCorrection member dictionary so we don't
@@ -229,7 +229,7 @@ class TestWriteCDLBasic(unittest.TestCase):
     #==========================================================================
 
     def testContent(self):
-        """Tests that write_cdl wrote the correct CDL"""
+        """Tests that write_rnh_cdl wrote the correct CDL"""
         handle = self.mockOpen()
         handle.write.assert_called_once_with(enc(self.file))
 
@@ -265,7 +265,7 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
         self.mockOpen = mock.mock_open()
 
         with mock.patch(builtins + '.open', self.mockOpen, create=True):
-            cdl_convert.write_cdl(self.cdl)
+            cdl_convert.write_rnh_cdl(self.cdl)
 
 #==============================================================================
 # FUNCTIONS
