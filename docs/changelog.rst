@@ -12,11 +12,13 @@ Version 0.7
 - Calling ``sop_node`` or ``sat_node`` on a :class:`ColorCorrection` before attempting to set a SOP or Sat power now works.
 - :class:`ColorCorrection` ``cdl_file`` init argument renamed to ``input_file``, which is now optional and able to be set after init.
 - :class:`ColorCorrection` ``determine_dest`` will now use current directory if no ``file_in`` specified.
+- ``parse_cdl`` and ``write_cdl`` renamed to ``parse_rnh_cdl`` and ``write_rnh_cdl`` respectively.
 - ``parse_cc`` ``cdl_file`` arg renamed to ``input_file`` and now accepts a either a raw string or an ``ElementTree`` ``Element`` as ``input_file``.
-- ``parse_cdl`` ``cdl_file`` arg renamed to ``input_file``.
+- ``parse_rnh_cdl`` ``cdl_file`` arg renamed to ``input_file``.
 - ``parse_ale`` ``edl_file`` arg renamed to ``input_file``.
 - ``parse_flex`` ``edl_file`` arg renamed to ``input_file``.
-- ``parse_cc`` and ``parse_cdl`` now only yield a single :class:`ColorCorrection` , not a single member list.
+- ``parse_cc`` and ``parse_rnh_cdl`` now only yield a single :class:`ColorCorrection` , not a single member list.
+- Added dev-requirements.txt (contains ``mock``)
 
 Version 0.6.1
 =============

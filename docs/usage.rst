@@ -223,7 +223,7 @@ converted to floats, while slope and power will also truncate at zero.
         raise ValueError("Power must be set with all three RGB values")
     ValueError: Power must be set with all three RGB values
 
-It's also possible to set the SOP values with a single value, and have it 
+It's also possible to set the SOP values with a single value, and have it
 copy itself across all three colors. Setting SOP values this way mimics how
 color corrections typically start out.
 
@@ -341,7 +341,7 @@ to disk.
     >>> cc.determine_dest('cdl')
     >>> cc.file_out
     '/Users/sean/cdls/xf/015_xf_seqGrade_v01.cdl'
-    >>> cdl.write_cdl(cc)
+    >>> cdl.write_rnh_cdl(cc)
 
 .. warning::
     It is highly likely that in the future, these will be methods on the

@@ -182,14 +182,18 @@ Parse ale
 .. autofunction:: cdl_convert.parse_ale
 
 Parse cc
----------
+--------
 
 .. autofunction:: cdl_convert.parse_cc
 
-Parse cdl
----------
+Parse Rhythm & Hues cdl
+-----------------------
 
-.. autofunction:: cdl_convert.parse_cdl
+Rhythm & Hues' implementation of the cdl format is based on a very early spec,
+and as such lacks the all metadata. It's extremely unlikely that you'll run
+into this format in the wild.
+
+.. autofunction:: cdl_convert.parse_rnh_cdl
 
 Parse flex
 ----------
@@ -208,7 +212,11 @@ Write cc
 
 .. autofunction:: cdl_convert.write_cc
 
-Write cdl
----------
+Write Rhythm & Hues cdl
+-----------------------
 
-.. autofunction:: cdl_convert.write_cdl
+This writes a very sparse cdl format that is based on a very early spec of the
+cdl implementation. It lacks all metadata. Unless you work at Rhythm & Hues,
+you probably don't want to write a cdl that uses this format.
+
+.. autofunction:: cdl_convert.write_rnh_cdl
