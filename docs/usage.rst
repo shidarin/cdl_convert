@@ -95,8 +95,11 @@ other python module.
     >>> import cdl_convert as cdl
 
 
-Creating an :class:`ColorCorrection`
-------------------------------------
+Working with :class:`ColorCorrection`
+-------------------------------------
+
+Creating a :class:`ColorCorrection`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once imported, you have two choices. You can either instantiate a new, blank
 cdl directly, or you can parse a file on disk.
@@ -152,14 +155,16 @@ ramblings).
 Parsing a CDL file
 ^^^^^^^^^^^^^^^^^^
 
-Instead of creating a blank CDL object, you can parse a file from disk, and it
-will return a list of :class:`ColorCorrection` found in the file. For some
-formats like ``cc``, this list will be one member long. For others like
-``flex`` or ``ale``, this list could contain hundreds of cdls.
+Instead of creating a blank CDL object, you can parse a ``cc`` file from disk,
+and it will return a single :class:`ColorCorrection` matching the correction
+found in the file. Formats that contain multiple corrections will return
+a :class:`ColorCollection` , which contains child :class:`ColorCorrection` .
 
     >>> cdl.parse_cc('./myfirstcdl.cc')
-    [<cdl_convert.ColorCorrection object at 0x1004a5590>]
-    >>> cdl.parse_ale('/myfirstedl.ale')
+    <cdl_convert.ColorCorrection object at 0x1004a5590>
+    >>> collection = cdl.parse_ccc('/myfirstedl.ccc')
+    <cdl_convert.ColorCollection object at 0x100633b40>,
+    >>> collection.color_corrections
     [
         <cdl_convert.ColorCorrection object at 0x100633b90>,
         <cdl_convert.ColorCorrection object at 0x100633c50>,
@@ -170,7 +175,7 @@ formats like ``cc``, this list will be one member long. For others like
         <cdl_convert.ColorCorrection object at 0x100633ad0>,
     ]
 
-Once you have an :class:`ColorCorrection` from a parser, you'll find that
+Once you have a :class:`ColorCorrection` from a parser, you'll find that
 whatever values it found on the file now exist on the instance of
 :class:`ColorCorrection`.
 
@@ -194,10 +199,10 @@ whatever values it found on the file now exist on the instance of
     explicitly tagged ``id`` field that is always used. Other formats, like
     ``flex``, have no such field and the parser tries to grab any scene/take
     metadata it can find to construct one. The last fallback is always the
-    filename. For formats that can export multiple :class:`ColorCorrection` ,
+    filename. For formats that can contain multiple :class:`ColorCorrection` ,
     the ``id`` has a created instance number after it.
 
-Working with :class:`ColorCorrection`
+Manipulating :class:`ColorCorrection`
 -------------------------------------
 
 Slope, Offset and Power
@@ -300,9 +305,9 @@ You can change the id after creation, but it will perform the same check.
     >>> cc = cdl.ColorCorrection(id='cc1', cdl_file='./myfirstcdl.cc')
     >>> cc2 = cdl.ColorCorrection(id='cc2', cdl_file='./mysecondcdl.cc')
     >>> cc.id
-    Out[6]: 'cc1'
+    'cc1'
     >>> cc2.id
-    Out[7]: 'cc2'
+    'cc2'
     >>> cc2.id = 'cc1'
     Traceback (most recent call last):
       File "<ipython-input-8-b2b5487dbc63>", line 1, in <module>
