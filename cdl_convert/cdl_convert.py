@@ -1940,6 +1940,21 @@ def _de_exponent(notation):
 # ==============================================================================
 
 
+def _remove_xmlns(input_file):
+    """Removes the xmlns attribute from XML files, then returns the element"""
+    # We're going to open the file as a string and remove the xmlns, as
+    # it doesn't do a lot for us when working with CDLs, and in fact
+    # just clutters everything the hell up.
+    with open(input_file, 'r') as f:
+        xml_string = f.read()
+
+    xml_string = re.sub(' xmlns="[^"]+"', '', xml_string, count=1)
+
+    return ElementTree.fromstring(xml_string)
+
+# ==============================================================================
+
+
 def _sanitize(name):
     """Removes any characters in string name that aren't alnum or in '_.'"""
     if not name:
@@ -2091,7 +2106,7 @@ def parse_cc(input_file):
 
     """
     if type(input_file) is str:
-        root = ElementTree.parse(input_file).getroot()
+        root = _remove_xmlns(input_file)
         file_in = input_file
     else:
         root = input_file
@@ -2217,15 +2232,7 @@ def parse_ccc(input_file):
     as any relevant hardware devices used to view or grade.
 
     """
-    # We're going to open the file as a string ans remove the xmlns, as
-    # it doesn't do a lot for us when working with CDLs, and in fact
-    # just clutters everything the hell up.
-    with open(input_file, 'r') as f:
-        xml_string = f.read()
-
-    xml_string = re.sub(' xmlns="[^"]+"', '', xml_string, count=1)
-
-    root = ElementTree.fromstring(xml_string)
+    root = _remove_xmlns(input_file)
 
     if root.tag != 'ColorCorrectionCollection':
         # This is not a CC file...
