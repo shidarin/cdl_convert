@@ -820,6 +820,17 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     **Public Methods:**
 
+        append_child()
+            Appends the given object, either a :class:`ColorCorrection` or a
+            :class:`ColorDecision` , to the respective attribute list, either
+            ``color_corrections`` or ``color_decision`` depending on the class
+            of the object passed in.
+
+        append_children()
+            Given a list, will iterate through and append each element of that
+            list to the correct child list, using the ``append_child()``
+            method.
+
         build_element()
             Builds an ElementTree XML Element for this node and all nodes it
             contains. ``element``, ``xml``, and ``xml_root`` attributes use
