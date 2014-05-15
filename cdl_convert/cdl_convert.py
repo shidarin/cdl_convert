@@ -386,272 +386,6 @@ class AscXMLBase(object):
 # ==============================================================================
 
 
-class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0903
-    """Container class for ColorDecisionLists and ColorCorrectionCollections.
-
-    Description
-    ~~~~~~~~~~~
-
-    Collections need to store children and have access to descriptions,
-    input descriptions, and viewing descriptions.
-
-    **Attributes:**
-
-        color_corrections : (:class:`ColorCorrection`)
-            All the :class:`ColorCorrection` children are listed here.
-
-        color_decisions : (:class:`ColorDecision`)
-            All the :class:`ColorDecision` children are listed here.
-
-        desc : [str]
-            Since all Asc nodes which can contain a single description, can
-            actually contain an infinite number of descriptions, the desc
-            attribute is a list, allowing us to store every single description
-            found during parsing.
-
-            Setting desc directly will cause the value given to append to the
-            end of the list, but desc can also be replaced by passing it a list
-            or tuple. Desc can be emptied by passing it None, [] or ().
-
-            Inherited from :class:`AscDescBase` .
-
-        element : (<xml.etree.ElementTree.Element>)
-            etree style Element representing the node. Inherited from
-            :class:`AscXMLBase` .
-
-        file_in : (str)
-            Filepath used to create this :class:`ColorCollection` .
-
-        file_out : (str)
-            Filepath this :class:`ColorCollection` will be written to.
-
-        input_desc : (str)
-            Description of the color space, format and properties of the input
-            images. Inherited from :class:`AscColorSpaceBase` .
-
-        is_ccc : (bool)
-            True if this collection currently represents ``.ccc``.
-
-        is_cdl : (bool)
-            True if this collection currently represents ``.cdl``.
-
-        type : (str)
-            Either ``.ccc`` or ``.cdl``, represents the type of collection
-            this class currently will export by default.
-
-        viewing_desc : (str)
-            Viewing device, settings and environment. Inherited from
-            :class:`AscColorSpaceBase` .
-
-        xml : (str)
-            A nicely formatted XML string representing the node. Inherited from
-            :class:`AscXMLBase`.
-
-        xml_root : (str)
-            A nicely formatted XML, ready to write to file string representing
-            the node. Formatted as an XML root, it includes the xml version and
-            encoding tags on the first line. Inherited from
-            :class:`AscXMLBase`.
-
-        xmlns : (str)
-            Describes the version of the ASC XML Schema that cdl_convert writes
-            out to files following the full schema (``.ccc`` and ``.cdl``)
-
-    **Public Methods:**
-
-        build_element()
-            Builds an ElementTree XML Element for this node and all nodes it
-            contains. ``element``, ``xml``, and ``xml_root`` attributes use
-            this to build the XML. This function is identical to calling the
-            ``element`` attribute. Overrides inherited placeholder method
-            from :class:`AscXMLBase` .
-
-            Here on :class:`ColorCollection` , this is a pointer to
-            ``build_element_ccc()`` or ``build_element_cdl()`` depending on
-            which type the :class:`ColorCollection` is currently set to.
-
-        build_element_ccc()
-            Builds a CCC style XML tree representing this
-            :class:`ColorCollection` instance.
-
-        build_element_cdl()
-            Builds a CDL style XML tree representing this
-            :class:`ColorCollection` instance.
-
-        parse_xml_descs()
-            Parses an ElementTree Element for any Description tags and appends
-            any text they contain to the ``desc``. Inherited from
-            :class:`AscDescBase`
-
-        parse_xml_input_desc()
-            Parses an ElementTree Element to find & add an InputDescription.
-            If none is found, ``input_desc`` will remain set to ``None``.
-            Inherited from :class:`AscColorSpaceBase`
-
-        parse_xml_viewing_desc()
-            Parses an ElementTree Element to find & add a ViewingDescription.
-            If none is found, ``viewing_desc`` will remain set to ``None``.
-            Inherited from :class:`AscColorSpaceBase`
-
-        set_to_ccc()
-            Switches the ``type`` of this collection to export a ``ccc`` style
-            xml collection by default.
-
-        set_to_cdl()
-            Switches the ``type`` of this collection to export a ``cdl`` style
-            xml collection by default.
-
-    """
-    def __init__(self, input_file=None):
-        super(ColorCollection, self).__init__()
-
-        self._color_corrections = []
-        self._color_decisions = []
-        self._file_in = os.path.abspath(input_file) if input_file else None
-        self._file_out = None
-        self._type = 'ccc'
-        self._xmlns = "urn:ASC:CDL:v1.01"
-
-    # Properties ==============================================================
-
-    @property
-    def color_corrections(self):
-        """Returns the list of child ColorCorrections"""
-        return tuple(self._color_corrections)
-
-    @property
-    def color_decisions(self):
-        """Returns the list of child ColorDecisions"""
-        return tuple(self._color_decisions)
-
-    @property
-    def file_in(self):
-        """Returns the absolute filepath to the input file"""
-        return self._file_in
-
-    @file_in.setter
-    def file_in(self, value):
-        """Sets the file_in to the absolute path of file"""
-        self._file_in = os.path.abspath(value)
-
-    @property
-    def file_out(self):
-        """Returns a theoretical absolute filepath based on output ext"""
-        return self._file_out
-
-    @property
-    def is_ccc(self):
-        """True if this collection currently represents .ccc"""
-        return self.type == 'ccc'
-
-    @property
-    def is_cdl(self):
-        """True if this collection currently represents .cdl"""
-        return self.type == 'cdl'
-
-    @property
-    def type(self):
-        """Describes the type of ColorCollection this class will export"""
-        return self._type
-
-    @type.setter
-    def type(self, value):
-        """Checks if type is either cdl or ccc"""
-        if value.lower() not in ['ccc', 'cdl']:
-            raise ValueError('ColorCollection type must be set to either '
-                             'ccc or cdl.')
-        else:
-            self._type = value.lower()
-
-    @property
-    def xmlns(self):
-        """Describes the version of the XML schema written by cdl_convert"""
-        return self._xmlns
-
-    # Public Methods ==========================================================
-
-    def append_child(self, child):
-        """Appends a given child to the correct list of children"""
-        if child.__class__ == ColorCorrection:
-            self._color_corrections.append(child)
-        elif child.__class__ == ColorDecision:
-            self._color_decisions.append(child)
-        else:
-            raise TypeError("Can only append ColorCorrection and "
-                            "ColorDecision objects.")
-
-    def append_children(self, children):
-        """Appends an entire list to the correctly list of children"""
-        for child in children:
-            self.append_child(child)
-
-    def build_element(self):
-        """Builds an ElementTree XML element representing for ColorCollection"""
-        if self.is_ccc:
-            return self.build_element_ccc()
-        elif self.is_cdl:  # pragma: no cover
-            return self.build_element_cdl()
-
-    def build_element_ccc(self):
-        """Builds a CCC XML element representing this ColorCollection"""
-        ccc_xml = ElementTree.Element('ColorCorrectionCollection')
-        ccc_xml.attrib = {'xmlns': self.xmlns}
-        if self.input_desc:
-            input_desc = ElementTree.SubElement(ccc_xml, 'InputDescription')
-            input_desc.text = self.input_desc
-        if self.viewing_desc:
-            viewing_desc = ElementTree.SubElement(ccc_xml, 'ViewingDescription')
-            viewing_desc.text = self.viewing_desc
-        for description in self.desc:
-            desc = ElementTree.SubElement(ccc_xml, 'Description')
-            desc.text = description
-        for color_correct in self.color_corrections:
-            ccc_xml.append(color_correct.element)
-
-        return ccc_xml
-
-    def build_element_cdl(self):  # pragma: no cover
-        """Builds a CDL XML element representing this ColorCollection"""
-        return None
-
-    def parse_xml_color_corrections(self, xml_element):
-        """Parses an ElementTree element to find & add all ColorCorrection.
-
-        **Args:**
-            xml_element : (``xml.etree.ElementTree.Element``)
-                The element to parse for multiple ColorCorrection elements. If
-                found, append to our ``color_corrections``.
-
-        **Returns:**
-            (bool)
-                True if found ColorCorrections.
-
-        **Raises:**
-            None
-
-        """
-        cc_nodes = xml_element.findall('ColorCorrection')
-        if not cc_nodes:
-            return False
-
-        for cc_node in xml_element.findall('ColorCorrection'):
-            cdl = parse_cc(cc_node)
-            cdl.parent = self
-            self._color_corrections.append(cdl)
-
-        return True
-
-    def set_to_ccc(self):
-        """Switches the type of the ColorCollection to export .ccc style xml"""
-        self._type = 'ccc'
-
-    def set_to_cdl(self):
-        """Switches the type of the ColorCollection to export .cdl style xml"""
-        self._type = 'cdl'
-
-# ==============================================================================
-
-
 class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0902
     """The basic class for the ASC CDL
 
@@ -1009,6 +743,272 @@ class ColorDecision(AscXMLBase):  # pylint: disable=R0903
     def __init__(self):
         """Inits an instance of ColorDecision"""
         super(ColorDecision, self).__init__()
+
+# ==============================================================================
+
+
+class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0903
+    """Container class for ColorDecisionLists and ColorCorrectionCollections.
+
+    Description
+    ~~~~~~~~~~~
+
+    Collections need to store children and have access to descriptions,
+    input descriptions, and viewing descriptions.
+
+    **Attributes:**
+
+        color_corrections : (:class:`ColorCorrection`)
+            All the :class:`ColorCorrection` children are listed here.
+
+        color_decisions : (:class:`ColorDecision`)
+            All the :class:`ColorDecision` children are listed here.
+
+        desc : [str]
+            Since all Asc nodes which can contain a single description, can
+            actually contain an infinite number of descriptions, the desc
+            attribute is a list, allowing us to store every single description
+            found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list, but desc can also be replaced by passing it a list
+            or tuple. Desc can be emptied by passing it None, [] or ().
+
+            Inherited from :class:`AscDescBase` .
+
+        element : (<xml.etree.ElementTree.Element>)
+            etree style Element representing the node. Inherited from
+            :class:`AscXMLBase` .
+
+        file_in : (str)
+            Filepath used to create this :class:`ColorCollection` .
+
+        file_out : (str)
+            Filepath this :class:`ColorCollection` will be written to.
+
+        input_desc : (str)
+            Description of the color space, format and properties of the input
+            images. Inherited from :class:`AscColorSpaceBase` .
+
+        is_ccc : (bool)
+            True if this collection currently represents ``.ccc``.
+
+        is_cdl : (bool)
+            True if this collection currently represents ``.cdl``.
+
+        type : (str)
+            Either ``.ccc`` or ``.cdl``, represents the type of collection
+            this class currently will export by default.
+
+        viewing_desc : (str)
+            Viewing device, settings and environment. Inherited from
+            :class:`AscColorSpaceBase` .
+
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+        xmlns : (str)
+            Describes the version of the ASC XML Schema that cdl_convert writes
+            out to files following the full schema (``.ccc`` and ``.cdl``)
+
+    **Public Methods:**
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
+            Here on :class:`ColorCollection` , this is a pointer to
+            ``build_element_ccc()`` or ``build_element_cdl()`` depending on
+            which type the :class:`ColorCollection` is currently set to.
+
+        build_element_ccc()
+            Builds a CCC style XML tree representing this
+            :class:`ColorCollection` instance.
+
+        build_element_cdl()
+            Builds a CDL style XML tree representing this
+            :class:`ColorCollection` instance.
+
+        parse_xml_descs()
+            Parses an ElementTree Element for any Description tags and appends
+            any text they contain to the ``desc``. Inherited from
+            :class:`AscDescBase`
+
+        parse_xml_input_desc()
+            Parses an ElementTree Element to find & add an InputDescription.
+            If none is found, ``input_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
+
+        parse_xml_viewing_desc()
+            Parses an ElementTree Element to find & add a ViewingDescription.
+            If none is found, ``viewing_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
+
+        set_to_ccc()
+            Switches the ``type`` of this collection to export a ``ccc`` style
+            xml collection by default.
+
+        set_to_cdl()
+            Switches the ``type`` of this collection to export a ``cdl`` style
+            xml collection by default.
+
+    """
+    def __init__(self, input_file=None):
+        super(ColorCollection, self).__init__()
+
+        self._color_corrections = []
+        self._color_decisions = []
+        self._file_in = os.path.abspath(input_file) if input_file else None
+        self._file_out = None
+        self._type = 'ccc'
+        self._xmlns = "urn:ASC:CDL:v1.01"
+
+    # Properties ==============================================================
+
+    @property
+    def color_corrections(self):
+        """Returns the list of child ColorCorrections"""
+        return tuple(self._color_corrections)
+
+    @property
+    def color_decisions(self):
+        """Returns the list of child ColorDecisions"""
+        return tuple(self._color_decisions)
+
+    @property
+    def file_in(self):
+        """Returns the absolute filepath to the input file"""
+        return self._file_in
+
+    @file_in.setter
+    def file_in(self, value):
+        """Sets the file_in to the absolute path of file"""
+        self._file_in = os.path.abspath(value)
+
+    @property
+    def file_out(self):
+        """Returns a theoretical absolute filepath based on output ext"""
+        return self._file_out
+
+    @property
+    def is_ccc(self):
+        """True if this collection currently represents .ccc"""
+        return self.type == 'ccc'
+
+    @property
+    def is_cdl(self):
+        """True if this collection currently represents .cdl"""
+        return self.type == 'cdl'
+
+    @property
+    def type(self):
+        """Describes the type of ColorCollection this class will export"""
+        return self._type
+
+    @type.setter
+    def type(self, value):
+        """Checks if type is either cdl or ccc"""
+        if value.lower() not in ['ccc', 'cdl']:
+            raise ValueError('ColorCollection type must be set to either '
+                             'ccc or cdl.')
+        else:
+            self._type = value.lower()
+
+    @property
+    def xmlns(self):
+        """Describes the version of the XML schema written by cdl_convert"""
+        return self._xmlns
+
+    # Public Methods ==========================================================
+
+    def append_child(self, child):
+        """Appends a given child to the correct list of children"""
+        if child.__class__ == ColorCorrection:
+            self._color_corrections.append(child)
+        elif child.__class__ == ColorDecision:
+            self._color_decisions.append(child)
+        else:
+            raise TypeError("Can only append ColorCorrection and "
+                            "ColorDecision objects.")
+
+    def append_children(self, children):
+        """Appends an entire list to the correctly list of children"""
+        for child in children:
+            self.append_child(child)
+
+    def build_element(self):
+        """Builds an ElementTree XML element representing for ColorCollection"""
+        if self.is_ccc:
+            return self.build_element_ccc()
+        elif self.is_cdl:  # pragma: no cover
+            return self.build_element_cdl()
+
+    def build_element_ccc(self):
+        """Builds a CCC XML element representing this ColorCollection"""
+        ccc_xml = ElementTree.Element('ColorCorrectionCollection')
+        ccc_xml.attrib = {'xmlns': self.xmlns}
+        if self.input_desc:
+            input_desc = ElementTree.SubElement(ccc_xml, 'InputDescription')
+            input_desc.text = self.input_desc
+        if self.viewing_desc:
+            viewing_desc = ElementTree.SubElement(ccc_xml, 'ViewingDescription')
+            viewing_desc.text = self.viewing_desc
+        for description in self.desc:
+            desc = ElementTree.SubElement(ccc_xml, 'Description')
+            desc.text = description
+        for color_correct in self.color_corrections:
+            ccc_xml.append(color_correct.element)
+
+        return ccc_xml
+
+    def build_element_cdl(self):  # pragma: no cover
+        """Builds a CDL XML element representing this ColorCollection"""
+        return None
+
+    def parse_xml_color_corrections(self, xml_element):
+        """Parses an ElementTree element to find & add all ColorCorrection.
+
+        **Args:**
+            xml_element : (``xml.etree.ElementTree.Element``)
+                The element to parse for multiple ColorCorrection elements. If
+                found, append to our ``color_corrections``.
+
+        **Returns:**
+            (bool)
+                True if found ColorCorrections.
+
+        **Raises:**
+            None
+
+        """
+        cc_nodes = xml_element.findall('ColorCorrection')
+        if not cc_nodes:
+            return False
+
+        for cc_node in xml_element.findall('ColorCorrection'):
+            cdl = parse_cc(cc_node)
+            cdl.parent = self
+            self._color_corrections.append(cdl)
+
+        return True
+
+    def set_to_ccc(self):
+        """Switches the type of the ColorCollection to export .ccc style xml"""
+        self._type = 'ccc'
+
+    def set_to_cdl(self):
+        """Switches the type of the ColorCollection to export .cdl style xml"""
+        self._type = 'cdl'
 
 # ==============================================================================
 
