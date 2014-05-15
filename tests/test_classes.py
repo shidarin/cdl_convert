@@ -598,7 +598,7 @@ class TestColorCollection(unittest.TestCase):
         # Tests that the returned mock_cdls were added to the color_corrections
         # list.
         self.assertEqual(
-            [mock_cdl, mock_cdl, mock_cdl],
+            (mock_cdl, mock_cdl, mock_cdl),
             self.node.color_corrections
         )
 
