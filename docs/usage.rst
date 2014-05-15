@@ -95,37 +95,13 @@ other python module.
     >>> import cdl_convert as cdl
 
 
-Working with :class:`ColorCorrection`
--------------------------------------
-
-Creating a :class:`ColorCorrection`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating :class:`ColorCorrection`
+---------------------------------
 
 Once imported, you have two choices. You can either instantiate a new, blank
 cdl directly, or you can parse a file on disk.
 
-Direct Creation
-^^^^^^^^^^^^^^^
-
-If you want to create a new instance of :class:`ColorCorrection`, you have to
-provide an ``id``, for the unique cdl identifier and a source filename to
-``cdl_file``.
-
-    >>> cc = cdl.ColorCorrection(id='cc1', cdl_file='./myfirstcdl.cc')
-
-.. warning::
-    When an instance of :class:`ColorCorrection` is first created, the ``id``
-    provided is checked against a class level dictionary variable named
-    ``members`` to ensure that no two :class:`ColorCorrection` share the same
-    ``id`` , as this is required by the specification.
-
-.. warning::
-    It's not possible to change the ``file_in`` attribute once it has been set.
-
-.. warning::
-    ``cdl_file`` is likely to not be a required attribute in the future.
-
-An :class:`ColorCorrection` is created with the 10 required values (RGB values
+A :class:`ColorCorrection` is created with the 10 required values (RGB values
 for slope, offset and power, and a single float for saturation) set to their
 defaults.
 
@@ -149,11 +125,31 @@ The :class:`ColorCorrection` class inherits from both the
 the additional attributes of ``input_desc`` (to describe the colorspace entering
 the correction, ``viewing_desc`` (to describe the colorspace conversions that
 must occur for viewing, and what type of monitor was used), and ``desc`` (which
-can be an infinitely long list of shot descriptions, gripes, notes and
-ramblings).
+can be an infinitely long list of shot descriptions)
 
-Parsing a CDL file
-^^^^^^^^^^^^^^^^^^
+Direct Creation
+^^^^^^^^^^^^^^^
+
+If you want to create a new instance of :class:`ColorCorrection`, you have to
+provide an ``id``, for the unique cdl identifier and a source filename to
+``cdl_file``.
+
+    >>> cc = cdl.ColorCorrection(id='cc1', cdl_file='./myfirstcdl.cc')
+
+.. warning::
+    When an instance of :class:`ColorCorrection` is first created, the ``id``
+    provided is checked against a class level dictionary variable named
+    ``members`` to ensure that no two :class:`ColorCorrection` share the same
+    ``id`` , as this is required by the specification.
+
+.. warning::
+    It's not possible to change the ``file_in`` attribute once it has been set.
+
+.. warning::
+    ``cdl_file`` is likely to not be a required attribute in the future.
+
+Parsing a single correction CDL file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Instead of creating a blank CDL object, you can parse a ``cc`` file from disk,
 and it will return a single :class:`ColorCorrection` matching the correction
@@ -202,8 +198,8 @@ whatever values it found on the file now exist on the instance of
     filename. For formats that can contain multiple :class:`ColorCorrection` ,
     the ``id`` has a created instance number after it.
 
-Manipulating :class:`ColorCorrection`
--------------------------------------
+Using :class:`ColorCorrection`
+------------------------------
 
 Slope, Offset and Power
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -332,8 +328,8 @@ the ``id`` and figures out the output path.
     >>> cc.file_out
     '/Users/sean/cdls/xf/015_xf_seqGrade_v01.cdl'
 
-Writing CDLs
-------------
+Writing :class:`ColorCorrection`
+--------------------------------
 
 When you're done tinkering with the :class:`ColorCorrection` instance, you
 might want to write it out to a file. Currently the output file is written the
@@ -352,3 +348,171 @@ to disk.
     It is highly likely that in the future, these will be methods on the
     :class:`ColorCorrection` class itself, and that instead of writing the
     file directly, they will instead return a string formatted for writing.
+
+Creating :class:`ColorCollection`
+---------------------------------
+
+The :class:`ColorCollection` class represents both the
+``ColorCorrectionCollection`` and ``ColorDecisionList`` containers of the ASC
+CDL spec.
+
+The distinctions between the two are fairly trivial:
+
+``ColorCorrectionCollection``s contain one or more ``ColorCorrections``
+(which directly correspond to :class:`ColorCorrection` ), as well as the normal
+``Description``, ``InputDescription`` and ``ViewingDescription`` fields.
+
+``ColorDecisionList``s contain ``ColorDecision``s (directly corresponding to
+:class:`ColorDecision` ) instead of ``ColorCorrection``s. Those
+``ColorDecision``s in turn contain the same ``ColorCorrection`` elements
+that ``ColorCorrectionCollection`` directly contains. Alongside the
+``ColorCorrection``s are optional ``MediaRef`` elements (again directly
+corresponding to :class:`MediaRef` ), which simply contain a path to reference
+media for the ``ColorCorrection`` alongside.
+
+.. note::
+    One final difference is that instead of a ``ColorCorrection``
+    element, a ``ColorDecision`` could instead contain a ``ColorCorrectionRef``,
+    which is simply an ``id`` reference to another ``ColorCorrection.
+
+:class:`ColorCollection` has a ``type`` attribute that determines what
+the :class:`ColorCollection` currently describes when you call it's XML
+attributes. Setting this to ``'ccc'`` will cause a
+``ColorCorrectionCorrection`` to be returned when the ``xml`` attribute is
+retrieved. Setting it to ``'cdl'`` causes a ``ColorDecisionList`` to appear
+instead.
+
+.. note::
+    No matter what combination of ``ColorDecision``s or ``ColorCorrection``s a
+    single :class:`ColorCollection` has, any members of the 'opposite' class
+    will be displayed correctly when you switch the ``type``.
+
+    If you have 3 :class:`ColorDecision` (each with their own
+    :class:`ColorCorrection` ) under the ``color_decisions`` attribute, and 4
+    :class:`ColorCorrection` under the ``color_corrections`` attribute,
+    the XML will export 7 ``ColorCorrection`` elements when ``type`` is set to
+    ``'ccc'``, and 7 ``ColorDecision`` elements when ``type`` is set to
+    ``'cdl'``.
+
+    The converted elements are created 'on the fly' and are not saved, simply
+    exported that way.
+
+Unlike a :class:`ColorCorrection` , :class:`ColorCollection` does not have any
+default values. The description attributes it inherits from
+:class:`AscColorSpaceBase` and :class:`AscDescBase` default to none.
+
+Those inherited attributes are ``input_desc`` (to describe the colorspace
+entering the correction, ``viewing_desc`` (to describe the colorspace
+conversions that must occur for viewing, and what type of monitor was used),
+and ``desc`` (which can be an infinitely long list of shot descriptions)
+
+.. note::
+    When a child :class:`ColorCorrection` **does not** have an ``input_desc``
+    or a ``viewing_desc`` of it's own and that child is exported alone to a
+    ``.ccc`` file, the descriptions from it's parent are used.
+
+    When a child :class:`ColorCorrection` **has** a ``input_desc`` or a
+    ``viewing_desc``, that attribute is considered to have overruled the parent
+    attribute.
+
+    In both cases, ``desc``s from the parent are prepended to the child node's
+    ``desc``.
+
+    When elements (such as ``desc``) are placed into the child
+    :class:`ColorCorrection`, their text data is prepended with
+    ``From Parent Collection:`` to easily distinguish between inherited fields
+    and native.
+
+Direct Creation
+^^^^^^^^^^^^^^^
+
+Creating a new :class:`ColorCollection` is easy, and requires no arguments.
+
+    >>> ccc = cdl.ColorCollection()
+
+Alternatively, you can pass in an ``input_file``:
+
+    >>> ccc = cdl.ColorCollection(input_file='CoolMovieSequence.ccc')
+    >>> ccc.file_in
+    '/proj/UltimateMovie/share/color/CoolMovieSequence.ccc'
+
+Parsing a CDL Collection file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When the collection you want to manipulate already exists, you'll want to parse
+the file on disk. EDL files, ``.ccc`` and ``.cdl`` files all return a single
+:class:`ColorCollection` object, which contains all the child color corrections.
+
+    >>> collection = cdl.parse_ccc('/myfirstedl.ccc')
+    <cdl_convert.ColorCollection object at 0x100633b40>,
+    >>> collection.color_corrections
+    (
+        <cdl_convert.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.ColorCorrection object at 0x100633b50>,
+        <cdl_convert.ColorCorrection object at 0x100633d90>,
+        <cdl_convert.ColorCorrection object at 0x100633b10>,
+        <cdl_convert.ColorCorrection object at 0x100633ad0>,
+    )
+
+When parsing to a :class:`ColorCollection` from disk, the type of file you
+parse determines what ``type`` is set to. Parsing an EDL or a ``.cdl`` file
+creates a :class:`ColorCollection` with a type of ``'cdl'`` (since EDLs
+contain many media references and may even include ``ColorCorrectionRef``
+elements), while parsing a ``.ccc`` file or multiple ``.cc`` files will create
+an instance with a type of ``'ccc'``.
+
+Using :class:`ColorCollection`
+------------------------------
+
+Adding children to :class:`ColorCollection`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Already created :class:`ColorCorrection` or :class:`ColorDecision` can be
+added to the correct child list by calling the ``append_child`` method.
+
+    >>> ccc.color_corrections
+    ()
+    >>> ccc.append_child(cc)
+    >>> ccc.color_corrections
+    (
+        <cdl_convert.ColorCorrection object at 0x1004a5590>
+    )
+    >>> ccc.append_child(cd)
+    >>> ccc.color_decisions
+    (
+        <cdl_convert.ColorDecision object at 0x1004a5510>
+    )
+
+``append_child`` automatically detects which type of child you are attempting to
+append, and places it in the correct list. You can use ``append_children`` to
+append a list of children at once- the list can even contain mixed classes.
+
+    >>> list_of_colors
+    [
+        <cdl_convert.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.ColorDecision object at 0x100633b10>,
+        <cdl_convert.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.ColorCorrection object at 0x100633b50>,
+        <cdl_convert.ColorDecision object at 0x100633d90>,
+        <cdl_convert.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.ColorDecision object at 0x100633ad0>,
+    ]
+    >>> ccc.append_children(list_of_colors)
+    >>> ccc.color_corrections
+    (
+        <cdl_convert.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.ColorCorrection object at 0x100633b50>,
+    )
+    >>> ccc.color_decisions
+    (
+        <cdl_convert.ColorDecision object at 0x100633d90>,
+        <cdl_convert.ColorDecision object at 0x100633b10>,
+        <cdl_convert.ColorDecision object at 0x100633ad0>,
+    )
+
+Merging multiple :class:`ColorCollection`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
