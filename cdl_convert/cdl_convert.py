@@ -397,6 +397,12 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     **Attributes:**
 
+        color_corrections : (:class:`ColorCorrection`)
+            All the :class:`ColorCorrection` children are listed here.
+
+        color_decisions : (:class:`ColorDecision`)
+            All the :class:`ColorDecision` children are listed here.
+
         desc : [str]
             Since all Asc nodes which can contain a single description, can
             actually contain an infinite number of descriptions, the desc
@@ -499,14 +505,24 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def __init__(self, input_file=None):
         super(ColorCollection, self).__init__()
 
-        self.color_corrections = []
-        self.color_decisions = []
+        self._color_corrections = []
+        self._color_decisions = []
         self._file_in = os.path.abspath(input_file) if input_file else None
         self._file_out = None
         self._type = 'ccc'
         self._xmlns = "urn:ASC:CDL:v1.01"
 
     # Properties ==============================================================
+
+    @property
+    def color_corrections(self):
+        """Returns the list of child ColorCorrections"""
+        return tuple(self._color_corrections)
+
+    @property
+    def color_decisions(self):
+        """Returns the list of child ColorDecisions"""
+        return tuple(self._color_decisions)
 
     @property
     def file_in(self):
@@ -553,6 +569,21 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return self._xmlns
 
     # Public Methods ==========================================================
+
+    def append_child(self, child):
+        """Appends a given child to the correct list of children"""
+        if child.__class__ == ColorCorrection:
+            self._color_corrections.append(child)
+        elif child.__class__ == ColorDecision:
+            self._color_decisions.append(child)
+        else:
+            raise TypeError("Can only append ColorCorrection and "
+                            "ColorDecision objects.")
+
+    def append_children(self, children):
+        """Appends an entire list to the correctly list of children"""
+        for child in children:
+            self.append_child(child)
 
     def build_element(self):
         """Builds an ElementTree XML element representing for ColorCollection"""
@@ -606,7 +637,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         for cc_node in xml_element.findall('ColorCorrection'):
             cdl = parse_cc(cc_node)
             cdl.parent = self
-            self.color_corrections.append(cdl)
+            self._color_corrections.append(cdl)
 
         return True
 
