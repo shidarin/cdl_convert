@@ -797,7 +797,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             True if this collection currently represents ``.cdl``.
 
         type : (str)
-            Either ``.ccc`` or ``.cdl``, represents the type of collection
+            Either ``ccc`` or ``cdl``, represents the type of collection
             this class currently will export by default.
 
         viewing_desc : (str)
