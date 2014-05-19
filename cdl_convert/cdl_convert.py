@@ -758,6 +758,10 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     **Attributes:**
 
+        all_children : (:class:`ColorCorrection`, :class:`ColorDecision`)
+            A tuple of all the children of this collection, both
+            Corrections and Decisions.
+
         color_corrections : (:class:`ColorCorrection`)
             All the :class:`ColorCorrection` children are listed here.
 
@@ -850,6 +854,20 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             Builds a CDL style XML tree representing this
             :class:`ColorCollection` instance.
 
+        copy_collection()
+            Creates and returns an exact new instance that's an exact copy of
+            the current instance. Note that references to the child instances
+            will be copied, but that the child instances themselves will
+            not be.
+
+        merge_collections()
+            Merges all members of a list containing :class:`ColorCollection`
+            and the instance this is called on to return a new
+            :class:`ColorCollection` that is primarily a copy of this instance,
+            but contains all children and description elements from the given
+            collections. `input_desc`, `viewing_desc`, `file_in`, and `type`
+            will be set to the values of the parent instance.
+
         parse_xml_descs()
             Parses an ElementTree Element for any Description tags and appends
             any text they contain to the ``desc``. Inherited from
@@ -885,6 +903,11 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         self._xmlns = "urn:ASC:CDL:v1.01"
 
     # Properties ==============================================================
+
+    @property
+    def all_children(self):
+        """Returns a list of both color_corrections and color_decisions"""
+        return self.color_corrections + self.color_decisions
 
     @property
     def color_corrections(self):
@@ -985,6 +1008,26 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def build_element_cdl(self):  # pragma: no cover
         """Builds a CDL XML element representing this ColorCollection"""
         return None
+
+    def copy_collection(self):
+        """Creates and returns a copy of this collection"""
+        new_col = ColorCollection()
+        new_col.desc = self.desc
+        new_col.file_in = self.file_in
+        new_col.input_desc = self.input_desc
+        new_col.viewing_desc = self.viewing_desc
+        new_col.type = self.type
+        new_col.append_children(self.all_children)
+        return new_col
+
+    def merge_collections(self, collections):
+        """Merges multiple collections together and returns a new one"""
+        new_col = self.copy_collection()
+        for col in collections:
+            new_col.desc.extend(col.desc)
+            new_col.append_children(col.all_children)
+
+        return new_col
 
     def parse_xml_color_corrections(self, xml_element):
         """Parses an ElementTree element to find & add all ColorCorrection.
