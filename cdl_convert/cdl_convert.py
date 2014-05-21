@@ -912,12 +912,26 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def color_corrections(self):
         """Returns the list of child ColorCorrections"""
-        return tuple(self._color_corrections)
+        return self._color_corrections
+
+    @color_corrections.setter
+    def color_corrections(self, values):
+        """Makes sure color_corrections is only set with ColorCorrection"""
+        self._color_corrections = self._list_setter(
+            'color_corrections', ColorCorrection, values
+        )
 
     @property
     def color_decisions(self):
         """Returns the list of child ColorDecisions"""
-        return tuple(self._color_decisions)
+        return self._color_decisions
+
+    @color_decisions.setter
+    def color_decisions(self, values):
+        """Makes sure color_decisions is only set with ColorDecision"""
+        self._color_decisions = self._list_setter(
+            'color_decisions', ColorDecision, values
+        )
 
     @property
     def file_in(self):
@@ -962,6 +976,38 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def xmlns(self):
         """Describes the version of the XML schema written by cdl_convert"""
         return self._xmlns
+
+    # Private Methods =========================================================
+
+    @staticmethod
+    def _list_setter(list_name, color_class, values):
+        """Sets a list to provided values but first checks membership"""
+        if values is None:
+            return []
+        elif type(values) in [list, tuple, set]:
+            for color in values:
+                if color.__class__ != color_class:
+                    raise TypeError(
+                        "ColorCollection().{list_name} cannot be set to "
+                        "provided list because not all members of that list "
+                        "are of the {class_name} class.".format(
+                            list_name=list_name,
+                            class_name=color_class.__name__
+                        )
+                    )
+            return list(set(values))
+        elif values.__class__ == color_class:
+            return [values]
+        else:
+            raise TypeError(
+                "ColorCollection().{list_name} cannot be set to item "
+                "of type '{type}'. Please set {list_name} with a "
+                "list containing only members of class {class_name}.".format(
+                    list_name=list_name,
+                    type=type(values),
+                    class_name=color_class.__name__
+                )
+            )
 
     # Public Methods ==========================================================
 
