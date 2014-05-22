@@ -986,6 +986,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             return []
         elif type(values) in [list, tuple, set]:
             for color in values:
+                # We need to make sure each member is of the correct class.
                 if color.__class__ != color_class:
                     raise TypeError(
                         "ColorCollection().{list_name} cannot be set to "
@@ -997,6 +998,8 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                     )
             return list(set(values))
         elif values.__class__ == color_class:
+            # If we just got passed the correct class, we'll return it as a
+            # one member list.
             return [values]
         else:
             raise TypeError(
@@ -1069,9 +1072,24 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def merge_collections(self, collections):
         """Merges multiple collections together and returns a new one"""
         new_col = self.copy_collection()
+
+        # We need to move all the children into one big list, so that
+        # we can move it into a set to eliminate duplicates.
+        children = new_col.all_children
+        # Now that all of new_col's children are in the children list,
+        # let's clear out the new_col lists.
+        # We'll repopulate them with the full lists after adding
+        # all the additional children.
+        new_col.color_corrections = []
+        new_col.color_decisions = []
+
         for col in collections:
+            if col == self:  # Don't add ourselves
+                continue
             new_col.desc.extend(col.desc)
-            new_col.append_children(col.all_children)
+            children.extend(col.all_children)
+
+        new_col.append_children(set(children))
 
         return new_col
 
