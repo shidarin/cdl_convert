@@ -6,8 +6,9 @@ Most likely you'll use ``cdl_convert`` as a script, instead of a python package
 itself. Indeed, even the name is formatted more like a script (with an
 underscore) than the more common all lowercase of python modules.
 
+************
 Script Usage
-============
+************
 
 If you just want to convert to a ``.cc`` XML file, the only required argument
 is an input file, like so:
@@ -86,14 +87,17 @@ Full help is available using the standard ``--help`` command:
                             over 1 and under -1 is flagged. Note that depending on
                             the look, these still might be correct values.
 
+************
 Python Usage
-============
+************
 
 Once installed with pip, importing ``cdl_convert`` works like importing any
 other python module.
 
     >>> import cdl_convert as cdl
 
+Color Corrections
+=================
 
 Creating :class:`ColorCorrection`
 ---------------------------------
@@ -348,6 +352,9 @@ to disk.
     It is highly likely that in the future, these will be methods on the
     :class:`ColorCorrection` class itself, and that instead of writing the
     file directly, they will instead return a string formatted for writing.
+
+Color Collections
+=================
 
 Creating :class:`ColorCollection`
 ---------------------------------
