@@ -570,7 +570,7 @@ information:
     ]
     >>> dl.type
     'cdl'
-    >>> dl.all_decisions
+    >>> dl.all_children
     [
         <cdl_convert.ColorDecision object at 0x100633d90>,
         <cdl_convert.ColorDecision object at 0x100633b10>,
