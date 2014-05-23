@@ -363,7 +363,7 @@ class TestAscDescBase(unittest.TestCase):
 
 
 class TestColorCollection(unittest.TestCase):
-    """Tests the very simple base class ColorCollection"""
+    """Tests the simple parameters of ColorCollection"""
 
     #==========================================================================
     # SETUP & TEARDOWN
@@ -612,6 +612,124 @@ class TestColorCollection(unittest.TestCase):
 
         self.assertFalse(
             self.node.parse_xml_color_corrections(xml_element)
+        )
+
+
+class TestMultipleColorCollection(unittest.TestCase):
+    """Tests the very simple base class ColorCollection"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.node = cdl_convert.ColorCollection()
+        self.node2 = cdl_convert.ColorCollection()
+
+        # We need lists of color corrections and decisions
+        self.color_corrections = [
+            cdl_convert.ColorCorrection(id='001'),
+            cdl_convert.ColorCorrection(id='002'),
+            cdl_convert.ColorCorrection(id='003'),
+            cdl_convert.ColorCorrection(id='004')
+        ]
+        self.color_decisions = [
+            cdl_convert.ColorDecision(),
+            cdl_convert.ColorDecision(),
+            cdl_convert.ColorDecision()
+        ]
+
+    def tearDown(self):
+        # Empty out the members dictionary
+        cdl_convert.ColorCorrection.members = {}
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testRetrieveColorCorrections(self):
+        """Tests the color_corrections attribute"""
+        self.node._color_corrections = self.color_corrections
+        self.node._color_decisions = self.color_decisions
+
+        self.assertEqual(
+            self.color_corrections,
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testRetrieveColorDecisions(self):
+        """Tests retrieving the color_decisions attribute"""
+        self.node._color_corrections = self.color_corrections
+        self.node._color_decisions = self.color_decisions
+
+        self.assertEqual(
+            self.color_decisions,
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testRetrieveAllChildren(self):
+        """Tests retrieving all the children of a collection node"""
+        self.node._color_corrections = self.color_corrections
+        self.node._color_decisions = self.color_decisions
+
+        # We add color_corrections to the list before color_decisions, so that
+        # list is first.
+        self.assertEqual(
+            self.color_corrections + self.color_decisions,
+            self.node.all_children
+        )
+
+    #==========================================================================
+
+    def testAppendChildCorrection(self):
+        """Tests that append child works for Corrections"""
+        self.node.append_child(self.color_corrections[0])
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testAppendChildDecision(self):
+        """Tests that append child works for Decisions"""
+        self.node.append_child(self.color_decisions[0])
+
+        self.assertEqual(
+            [self.color_decisions[0]],
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testAppendChildBadType(self):
+        """Tries appending a child to Collection that's not the right type"""
+        self.assertRaises(
+            TypeError,
+            self.node.append_child,
+            'I ama a banana'
+        )
+
+    #==========================================================================
+
+    def testAppendChildren(self):
+        self.node.append_children(
+            self.color_corrections + self.color_decisions
+        )
+
+        self.assertEqual(
+            self.color_corrections,
+            self.node.color_corrections
+        )
+
+        self.assertEqual(
+            self.color_decisions,
+            self.node.color_decisions
         )
 
 # ColorCorrection =============================================================
