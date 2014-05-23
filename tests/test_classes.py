@@ -1050,10 +1050,23 @@ class TestMultipleCollections(unittest.TestCase):
             self.node.viewing_desc,
             merged.viewing_desc
         )
-        self.assertEqual(
-            self.node.all_children + self.node2.all_children,
-            merged.all_children
-        )
+        # We need different behaviors for these list comparisons across all
+        # the different python versions...
+        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+            self.assertEqual(
+                len(self.node.all_children + self.node2.all_children),
+                len(merged.all_children)
+            )
+        elif sys.version_info[0] >= 3:
+            self.assertCountEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
+        else:
+            self.assertItemsEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
         self.assertEqual(
             self.node.type,
             merged.type
@@ -1108,10 +1121,23 @@ class TestMultipleCollections(unittest.TestCase):
             self.node.viewing_desc,
             merged.viewing_desc
         )
-        self.assertEqual(
-            self.node.all_children + self.node2.all_children,
-            merged.all_children
-        )
+        # We need different behaviors for these list comparisons across all
+        # the different python versions...
+        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+            self.assertEqual(
+                len(self.node.all_children + self.node2.all_children),
+                len(merged.all_children)
+            )
+        elif sys.version_info[0] >= 3:
+            self.assertCountEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
+        else:
+            self.assertItemsEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
         self.assertEqual(
             self.node.type,
             merged.type
@@ -1135,10 +1161,23 @@ class TestMultipleCollections(unittest.TestCase):
             self.node2.viewing_desc,
             merged.viewing_desc
         )
-        self.assertEqual(
-            self.node.all_children + self.node2.all_children,
-            merged.all_children
-        )
+        # We need different behaviors for these list comparisons across all
+        # the different python versions...
+        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+            self.assertEqual(
+                len(self.node.all_children + self.node2.all_children),
+                len(merged.all_children)
+            )
+        elif sys.version_info[0] >= 3:
+            self.assertCountEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
+        else:
+            self.assertItemsEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
         self.assertEqual(
             self.node2.type,
             merged.type
