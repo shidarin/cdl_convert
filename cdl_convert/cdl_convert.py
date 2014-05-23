@@ -883,6 +883,10 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             If none is found, ``viewing_desc`` will remain set to ``None``.
             Inherited from :class:`AscColorSpaceBase`
 
+        set_parentage()
+            Sets all child :class:`ColorCorrection` and :class:`ColorDecision`
+            ``parent`` attribute to point to this instance.
+
         set_to_ccc()
             Switches the ``type`` of this collection to export a ``ccc`` style
             xml collection by default.
@@ -1119,6 +1123,11 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             self._color_corrections.append(cdl)
 
         return True
+
+    def set_parentage(self):
+        """Sets the parent of all child nodes to point to this instance"""
+        for node in self.all_children:
+            node.parent = self
 
     def set_to_ccc(self):
         """Switches the type of the ColorCollection to export .ccc style xml"""
