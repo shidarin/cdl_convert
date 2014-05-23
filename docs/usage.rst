@@ -514,5 +514,125 @@ append a list of children at once- the list can even contain mixed classes.
         <cdl_convert.ColorDecision object at 0x100633ad0>,
     ]
 
+.. warning::
+    Both ``appand_child`` and ``append_children`` will change the ``parent``
+    attribute of :class:`ColorCorrection` and :class:`ColorDecision` to point
+    to the :class:`ColorCollection` they are appending to. Since we don't
+    enforce a 1 parent to each child relationship, it's very easy to
+    accidentally lose track of original parentage.
+
+    While the child's ``parent`` attribute might point to another
+    :class:`ColorCollection`, the children of a collection will never
+    be removed from the ``color_corrections``, ``color_decisions`` and
+    ``all_children`` lists.
+
+    You can immediately reset the ``parent`` attribute to point to a specific
+    instance of :class:`ColorCollection` by calling the ``set_parentage``
+    method.
+
 Merging multiple :class:`ColorCollection`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you have multiple :class:`ColorCollection` and wish to end up with a single
+collection, you'll need to merge them together. Assuming you have two
+:class:`ColorCollection` with the names ``ccc`` and ``dl`` with the following
+information:
+
+    >>> ccc.input_desc
+    'LogC to sRGB'
+    >>> ccc.viewing_desc
+    'DaVinci Resolve on Eizo'
+    >>> ccc.desc
+    [
+        'When Babies Attack Test DI',
+        'Do not use for final',
+        'Color by Zap Brannigan',
+    ]
+    >>> ccc.type
+    'ccc'
+    >>> ccc.all_children
+    [
+        <cdl_convert.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.ColorCorrection object at 0x100633b50>,
+    ]
+    >>> dl.input_desc
+    'Cineon Log'
+    >>> dl.viewing_desc
+    'Panasonic Plasma rec709'
+    >>> dl.desc
+    [
+        'Animals shot with a fisheye lens',
+        'cute fluffy animals',
+        'watch for blown out highlights',
+        'Color by Zap Brannigan',
+    ]
+    >>> dl.type
+    'cdl'
+    >>> dl.all_decisions
+    [
+        <cdl_convert.ColorDecision object at 0x100633d90>,
+        <cdl_convert.ColorDecision object at 0x100633b10>,
+        <cdl_convert.ColorDecision object at 0x100633ad0>,
+    ]
+
+You merge by choosing a 'parent' collection, and calling the
+``merge_collections`` method on it.
+
+    >>> merged = ccc.merge_collections([dl])
+    >>> merged.all_children
+    [
+        <cdl_convert.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.ColorCorrection object at 0x100633b50>,
+        <cdl_convert.ColorDecision object at 0x100633d90>,
+        <cdl_convert.ColorDecision object at 0x100633b10>,
+        <cdl_convert.ColorDecision object at 0x100633ad0>,
+    ]
+
+.. note::
+    When merging multiple :class:`ColorCollection` , any duplicate children
+    objects (if you had the same :class:`ColorCorrection` object assigned as a
+    child to multiple :class:`ColorCollection` ) are removed, so the list only
+    contains unique members.
+
+The parent determines which Input and Viewing Description
+overrides all of the other merged collections. ``type`` is also set to match
+the ``type`` of the parent. Since ``ccc`` was our parent:
+
+    >>> merged.input_desc
+    'LogC to sRGB'
+    >>> merged.viewing_desc
+    'DaVinci Resolve on Eizo'
+    >>> merged.type
+    'ccc'
+
+If we had used ``dl`` as the merged parent:
+
+    >>> merged = dl.merge_collections([ccc])
+    >>> merged.input_desc
+    'Cineon Log'
+    >>> merged.viewing_desc
+    'Panasonic Plasma rec709'
+    >>> merged.type
+    'cdl'
+
+Unlike the Input and Viewing Descriptions, the normal Description attributes
+are all merged together.
+
+    >>> merged.desc
+    [
+        'When Babies Attack Test DI',
+        'Do not use for final',
+        'Color by Zap Brannigan',
+        'Animals shot with a fisheye lens',
+        'cute fluffy animals',
+        'watch for blown out highlights',
+        'Color by Zap Brannigan',
+    ]
+
+... note::
+    Unlike the lists of children, duplicates are not removed from the list of
+    descriptions.
