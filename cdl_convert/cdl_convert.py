@@ -559,7 +559,8 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @file_in.setter
     def file_in(self, value):
         """Sets the file_in to the absolute path of file"""
-        self._file_in = os.path.abspath(value)
+        if value:
+            self._file_in = os.path.abspath(value)
 
     @property
     def file_out(self):
@@ -946,7 +947,8 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @file_in.setter
     def file_in(self, value):
         """Sets the file_in to the absolute path of file"""
-        self._file_in = os.path.abspath(value)
+        if value:
+            self._file_in = os.path.abspath(value)
 
     @property
     def file_out(self):
@@ -1069,7 +1071,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         """Creates and returns a copy of this collection"""
         new_col = ColorCollection()
         new_col.desc = self.desc
-        new_col.file_in = self.file_in
+        new_col.file_in = self.file_in if self.file_in else None
         new_col.input_desc = self.input_desc
         new_col.viewing_desc = self.viewing_desc
         new_col.type = self.type
@@ -1096,7 +1098,11 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             new_col.desc.extend(col.desc)
             children.extend(col.all_children)
 
-        new_col.append_children(set(children))
+        new_col.append_children(children)
+
+        # Remove duplicates
+        new_col.color_corrections = set(new_col.color_corrections)
+        new_col.color_decisions = set(new_col.color_decisions)
 
         return new_col
 
