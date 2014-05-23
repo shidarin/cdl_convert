@@ -615,8 +615,8 @@ class TestColorCollection(unittest.TestCase):
         )
 
 
-class TestMultipleColorCollection(unittest.TestCase):
-    """Tests the very simple base class ColorCollection"""
+class TestCollectionChildMethods(unittest.TestCase):
+    """Tests the children methods and attributes of ColorCollection"""
 
     #==========================================================================
     # SETUP & TEARDOWN
@@ -949,6 +949,200 @@ class TestMultipleColorCollection(unittest.TestCase):
                 child.parent
             )
 
+
+class TestMultipleCollections(unittest.TestCase):
+    """Tests the children methods and attributes of ColorCollection"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.node = cdl_convert.ColorCollection()
+        self.node2 = cdl_convert.ColorCollection()
+
+        self.node.type = 'ccc'
+        self.node2.type = 'cdl'
+
+        self.node.desc = [
+            'When Babies Attack Test DI',
+            'Do not use for final',
+            'Color by Zap Brannigan',
+        ]
+        self.node2.desc = [
+            'Animals shot with a fisheye lens',
+            'cute fluffy animals',
+            'watch for blown out highlights',
+            'Color by Zap Brannigan',
+        ]
+
+        self.node.input_desc = 'LogC to sRGB'
+        self.node2.input_desc = 'Cineon Log'
+
+        self.node.viewing_desc = 'DaVinci Resolve on Eizo'
+        self.node2.viewing_desc = 'Panasonic Plasma rec709'
+
+        # We need lists of color corrections and decisions
+        self.node.color_corrections = [
+            cdl_convert.ColorCorrection(id='001'),
+            cdl_convert.ColorCorrection(id='002'),
+            cdl_convert.ColorCorrection(id='003'),
+            cdl_convert.ColorCorrection(id='004')
+        ]
+        self.node2.color_decisions = [
+            cdl_convert.ColorDecision(),
+            cdl_convert.ColorDecision(),
+            cdl_convert.ColorDecision()
+        ]
+
+    def tearDown(self):
+        # Empty out the members dictionary
+        cdl_convert.ColorCorrection.members = {}
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testCopyCollection(self):
+        """Tests copying a collection"""
+        copy = self.node.copy_collection()
+
+        self.assertEqual(
+            self.node.type,
+            copy.type
+        )
+
+        self.assertEqual(
+            self.node.desc,
+            copy.desc
+        )
+
+        self.assertEqual(
+            self.node.input_desc,
+            copy.input_desc
+        )
+
+        self.assertEqual(
+            self.node.viewing_desc,
+            copy.viewing_desc
+        )
+
+        self.assertEqual(
+            self.node.all_children,
+            copy.all_children
+        )
+
+    #==========================================================================
+
+    def testMergeCollectionsCCCParent(self):
+        """Merges collections with a CCC as parent"""
+        merged = self.node.merge_collections([self.node2])
+
+        self.assertEqual(
+            self.node.desc + self.node2.desc,
+            merged.desc
+        )
+        self.assertEqual(
+            self.node.input_desc,
+            merged.input_desc
+        )
+        self.assertEqual(
+            self.node.viewing_desc,
+            merged.viewing_desc
+        )
+        self.assertEqual(
+            self.node.all_children + self.node2.all_children,
+            merged.all_children
+        )
+        self.assertEqual(
+            self.node.type,
+            merged.type
+        )
+
+    #==========================================================================
+
+    def testMergeCollectionsCCCParentWithDuplicates(self):
+        """Merges collections with a CCC as parent and duplicates"""
+        # Now we have the same color decisions in both node and node2
+        self.node.color_decisions = self.node2.color_decisions
+
+        merged = self.node.merge_collections([self.node2])
+
+        self.assertEqual(
+            self.node.desc + self.node2.desc,
+            merged.desc
+        )
+        self.assertEqual(
+            self.node.input_desc,
+            merged.input_desc
+        )
+        self.assertEqual(
+            self.node.viewing_desc,
+            merged.viewing_desc
+        )
+        # We'll just check the length
+        self.assertEqual(
+            len(set(self.node.all_children + self.node2.all_children)),
+            len(merged.all_children)
+        )
+        self.assertEqual(
+            self.node.type,
+            merged.type
+        )
+
+    #==========================================================================
+
+    def testMergeCollectionsCCCParentIncludeSelf(self):
+        """Merges collections with a CCC as parent and includes self"""
+        merged = self.node.merge_collections([self.node2, self.node])
+
+        self.assertEqual(
+            self.node.desc + self.node2.desc,
+            merged.desc
+        )
+        self.assertEqual(
+            self.node.input_desc,
+            merged.input_desc
+        )
+        self.assertEqual(
+            self.node.viewing_desc,
+            merged.viewing_desc
+        )
+        self.assertEqual(
+            self.node.all_children + self.node2.all_children,
+            merged.all_children
+        )
+        self.assertEqual(
+            self.node.type,
+            merged.type
+        )
+
+    #==========================================================================
+
+    def testMergeCollectionsCDLParent(self):
+        """Merges collections with a CDL as parent"""
+        merged = self.node2.merge_collections([self.node])
+
+        self.assertEqual(
+            self.node2.desc + self.node.desc,
+            merged.desc
+        )
+        self.assertEqual(
+            self.node2.input_desc,
+            merged.input_desc
+        )
+        self.assertEqual(
+            self.node2.viewing_desc,
+            merged.viewing_desc
+        )
+        self.assertEqual(
+            self.node.all_children + self.node2.all_children,
+            merged.all_children
+        )
+        self.assertEqual(
+            self.node2.type,
+            merged.type
+        )
 
 # ColorCorrection =============================================================
 
