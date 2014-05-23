@@ -569,7 +569,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def has_sat(self):
         """Returns True if SOP values are set"""
-        if self.sat_node:
+        if self._sat_node:
             return True
         else:
             return False
@@ -577,7 +577,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def has_sop(self):
         """Returns True if SOP values are set"""
-        if self.sop_node:
+        if self._sop_node:
             return True
         else:
             return False

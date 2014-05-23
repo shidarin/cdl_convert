@@ -632,7 +632,7 @@ class TestColorCorrection(unittest.TestCase):
 
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
-        self.cdl = cdl_convert.ColorCorrection(
+        self.cc = cdl_convert.ColorCorrection(
             id='uniqueId', input_file='../testcdl.cc'
         )
 
@@ -651,12 +651,12 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that input_desc inherited"""
 
         self.assertTrue(
-            hasattr(self.cdl, 'input_desc')
+            hasattr(self.cc, 'input_desc')
         )
 
         self.assertEqual(
             None,
-            self.cdl.input_desc
+            self.cc.input_desc
         )
 
     #==========================================================================
@@ -665,12 +665,12 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that viewing_desc inherited"""
 
         self.assertTrue(
-            hasattr(self.cdl, 'viewing_desc')
+            hasattr(self.cc, 'viewing_desc')
         )
 
         self.assertEqual(
             None,
-            self.cdl.viewing_desc
+            self.cc.viewing_desc
         )
 
     #==========================================================================
@@ -679,22 +679,21 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that desc inherited"""
 
         self.assertTrue(
-            hasattr(self.cdl, 'desc')
+            hasattr(self.cc, 'desc')
         )
 
         self.assertEqual(
             [],
-            self.cdl.desc
+            self.cc.desc
         )
 
     #==========================================================================
-
 
     def testFileInReturn(self):
         """Tests that calling ColorCorrection.fileIn returns the file given"""
         self.assertEqual(
             os.path.abspath('../testcdl.cc'),
-            self.cdl.file_in
+            self.cc.file_in
         )
 
     #==========================================================================
@@ -702,7 +701,7 @@ class TestColorCorrection(unittest.TestCase):
     def testFileOutSetException(self):
         """Tests that exception raised when attempting to set file_out direct"""
         def testFileOut():
-            self.cdl.file_out = '../NewFile.cc'
+            self.cc.file_out = '../NewFile.cc'
 
         self.assertRaises(
             AttributeError,
@@ -715,7 +714,7 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that calling ColorCorrection.id returns the id"""
         self.assertEqual(
             'uniqueId',
-            self.cdl.id
+            self.cc.id
         )
 
     #==========================================================================
@@ -799,16 +798,48 @@ class TestColorCorrection(unittest.TestCase):
 
     #==========================================================================
 
+    def testHasSat(self):
+        """Tests the has_sat attribute"""
+        # Verify that with the blank cc, we start with no sat node
+        self.assertFalse(
+            self.cc.has_sat
+        )
+
+        # But if we make a reference to the sat node, it'll create one.
+        self.cc.sat_node
+
+        self.assertTrue(
+            self.cc.has_sat
+        )
+
+    #==========================================================================
+
+    def testHasSop(self):
+        """Tests the has_sop attribute"""
+        # Verify that with a blank cc, we start with no sop node
+        self.assertFalse(
+            self.cc.has_sop
+        )
+
+        # But if we make a reference to the sop node, it'll create one.
+        self.cc.sop_node
+
+        self.assertTrue(
+            self.cc.has_sop
+        )
+
+    #==========================================================================
+
     def testOffsetSetAndGet(self):
         """Tests setting and getting the offset"""
 
         offset = (-1.3782, 278.32, 0.738378233782)
 
-        self.cdl.offset = offset
+        self.cc.offset = offset
 
         self.assertEqual(
             offset,
-            self.cdl.offset
+            self.cc.offset
         )
 
     #==========================================================================
@@ -816,7 +847,7 @@ class TestColorCorrection(unittest.TestCase):
     def testOffsetBadLength(self):
         """Tests passing offset an incorrect length list"""
         def setOffset():
-            self.cdl.offset = ['banana']
+            self.cc.offset = ['banana']
 
         self.assertRaises(
             ValueError,
@@ -828,7 +859,7 @@ class TestColorCorrection(unittest.TestCase):
     def testOffsetSetStrings(self):
         """Tests that TypeError raised if given strings"""
         def setOffset():
-            self.cdl.offset = [-1.3782, 278.32, 'banana']
+            self.cc.offset = [-1.3782, 278.32, 'banana']
 
         self.assertRaises(
             TypeError,
@@ -840,7 +871,7 @@ class TestColorCorrection(unittest.TestCase):
     def testOffsetBadType(self):
         """Tests passing offset a correct length but bad type value"""
         def setOffset():
-            self.cdl.offset = 'ban'
+            self.cc.offset = 'ban'
 
         self.assertRaises(
             TypeError,
@@ -854,11 +885,11 @@ class TestColorCorrection(unittest.TestCase):
 
         offset = [-1.3782, 278.32, 0.738378233782]
 
-        self.cdl.offset = offset
+        self.cc.offset = offset
 
         self.assertEqual(
             tuple(offset),
-            self.cdl.offset
+            self.cc.offset
         )
 
     #==========================================================================
@@ -868,11 +899,11 @@ class TestColorCorrection(unittest.TestCase):
 
         power = (1.3782, 278.32, 0.738378233782)
 
-        self.cdl.power = power
+        self.cc.power = power
 
         self.assertEqual(
             power,
-            self.cdl.power
+            self.cc.power
         )
 
     #==========================================================================
@@ -880,7 +911,7 @@ class TestColorCorrection(unittest.TestCase):
     def testPowerSetNegative(self):
         """Tests that ValueError raised if negative value"""
         def setPower():
-            self.cdl.power = [-1.3782, 278.32, 0.738378233782]
+            self.cc.power = [-1.3782, 278.32, 0.738378233782]
 
         cdl_convert.HALT_ON_ERROR = True
 
@@ -895,7 +926,7 @@ class TestColorCorrection(unittest.TestCase):
 
         self.assertEqual(
             (0.0, 278.32, 0.738378233782),
-            self.cdl.power
+            self.cc.power
         )
 
     #==========================================================================
@@ -903,7 +934,7 @@ class TestColorCorrection(unittest.TestCase):
     def testPowerSetStrings(self):
         """Tests that TypeError raised if given strings"""
         def setPower():
-            self.cdl.power = [1.3782, 278.32, 'banana']
+            self.cc.power = [1.3782, 278.32, 'banana']
 
         self.assertRaises(
             TypeError,
@@ -915,7 +946,7 @@ class TestColorCorrection(unittest.TestCase):
     def testPowerBadLength(self):
         """Tests passing power an incorrect length list"""
         def setPower():
-            self.cdl.power = ['banana']
+            self.cc.power = ['banana']
 
         self.assertRaises(
             ValueError,
@@ -927,7 +958,7 @@ class TestColorCorrection(unittest.TestCase):
     def testPowerBadType(self):
         """Tests passing power a correct length but bad type value"""
         def setPower():
-            self.cdl.power = 'ban'
+            self.cc.power = 'ban'
 
         self.assertRaises(
             TypeError,
@@ -941,11 +972,11 @@ class TestColorCorrection(unittest.TestCase):
 
         power = [1.3782, 278.32, 0.738378233782]
 
-        self.cdl.power = power
+        self.cc.power = power
 
         self.assertEqual(
             tuple(power),
-            self.cdl.power
+            self.cc.power
         )
 
     #==========================================================================
@@ -955,11 +986,11 @@ class TestColorCorrection(unittest.TestCase):
 
         slope = (1.3782, 278.32, 0.738378233782)
 
-        self.cdl.slope = slope
+        self.cc.slope = slope
 
         self.assertEqual(
             slope,
-            self.cdl.slope
+            self.cc.slope
         )
 
     #==========================================================================
@@ -967,7 +998,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSlopeSetNegative(self):
         """Tests that ValueError raised if negative value"""
         def setSlope():
-            self.cdl.slope = [-1.3782, 278.32, 0.738378233782]
+            self.cc.slope = [-1.3782, 278.32, 0.738378233782]
 
         cdl_convert.HALT_ON_ERROR = True
 
@@ -982,7 +1013,7 @@ class TestColorCorrection(unittest.TestCase):
 
         self.assertEqual(
             (0.0, 278.32, 0.738378233782),
-            self.cdl.slope
+            self.cc.slope
         )
 
     #==========================================================================
@@ -990,7 +1021,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSlopeSetStrings(self):
         """Tests that TypeError raised if given strings"""
         def setSlope():
-            self.cdl.slope = [1.3782, 278.32, 'banana']
+            self.cc.slope = [1.3782, 278.32, 'banana']
 
         self.assertRaises(
             TypeError,
@@ -1002,7 +1033,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSlopeBadLength(self):
         """Tests passing slope an incorrect length list"""
         def setSlope():
-            self.cdl.slope = ['banana']
+            self.cc.slope = ['banana']
 
         self.assertRaises(
             ValueError,
@@ -1014,7 +1045,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSlopeBadType(self):
         """Tests passing slope a correct length but bad type value"""
         def setSlope():
-            self.cdl.slope = 'ban'
+            self.cc.slope = 'ban'
 
         self.assertRaises(
             TypeError,
@@ -1028,11 +1059,11 @@ class TestColorCorrection(unittest.TestCase):
 
         slope = [1.3782, 278.32, 0.738378233782]
 
-        self.cdl.slope = slope
+        self.cc.slope = slope
 
         self.assertEqual(
             tuple(slope),
-            self.cdl.slope
+            self.cc.slope
         )
 
     #==========================================================================
@@ -1042,11 +1073,11 @@ class TestColorCorrection(unittest.TestCase):
 
         sat = 34.3267
 
-        self.cdl.sat = sat
+        self.cc.sat = sat
 
         self.assertEqual(
             sat,
-            self.cdl.sat
+            self.cc.sat
         )
 
     #==========================================================================
@@ -1054,7 +1085,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSatSetNegative(self):
         """Tests that a ValueError is raised if sat is set to negative"""
         def setSat():
-            self.cdl.sat = -376.23
+            self.cc.sat = -376.23
 
         cdl_convert.HALT_ON_ERROR = True
 
@@ -1069,14 +1100,14 @@ class TestColorCorrection(unittest.TestCase):
 
         self.assertEqual(
             0.0,
-            self.cdl.sat
+            self.cc.sat
         )
     #==========================================================================
 
     def testSatSetString(self):
         """Tests that a TypeError is raised if sat is set to string"""
         def setSat():
-            self.cdl.sat = 'banana'
+            self.cc.sat = 'banana'
 
         self.assertRaises(
             TypeError,
@@ -1089,25 +1120,25 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that saturation is converted to float from int"""
         sat = 3
 
-        self.cdl.sat = sat
+        self.cc.sat = sat
 
         self.assertEqual(
             float(sat),
-            self.cdl.sat
+            self.cc.sat
         )
 
     # determine_dest() ========================================================
 
     def testDetermineDest(self):
         """Tests that determine destination is calculated correctly"""
-        self.cdl.determine_dest('cdl')
+        self.cc.determine_dest('cdl')
 
         dir = os.path.abspath('../')
         filename = os.path.join(dir, 'uniqueId.cdl')
 
         self.assertEqual(
             filename,
-            self.cdl.file_out
+            self.cc.file_out
         )
 
 # ColorNodeBase ===============================================================
