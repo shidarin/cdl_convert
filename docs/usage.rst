@@ -409,9 +409,9 @@ and ``desc`` (which can be an infinitely long list of shot descriptions)
 .. note::
     When a child :class:`ColorCorrection` **does not** have an ``input_desc``
     or a ``viewing_desc`` of it's own and that child is exported alone to a
-    ``.ccc`` file, the descriptions from it's parent are used.
+    ``.cc`` file, the descriptions from it's parent are used.
 
-    When a child :class:`ColorCorrection` **has** a ``input_desc`` or a
+    When a child :class:`ColorCorrection` **has** an ``input_desc`` or a
     ``viewing_desc``, that attribute is considered to have overruled the parent
     attribute.
 
@@ -446,7 +446,7 @@ the file on disk. EDL files, ``.ccc`` and ``.cdl`` files all return a single
     >>> collection = cdl.parse_ccc('/myfirstedl.ccc')
     <cdl_convert.ColorCollection object at 0x100633b40>,
     >>> collection.color_corrections
-    (
+    [
         <cdl_convert.ColorCorrection object at 0x100633b90>,
         <cdl_convert.ColorCorrection object at 0x100633c50>,
         <cdl_convert.ColorCorrection object at 0x100633cd0>,
@@ -454,7 +454,7 @@ the file on disk. EDL files, ``.ccc`` and ``.cdl`` files all return a single
         <cdl_convert.ColorCorrection object at 0x100633d90>,
         <cdl_convert.ColorCorrection object at 0x100633b10>,
         <cdl_convert.ColorCorrection object at 0x100633ad0>,
-    )
+    ]
 
 When parsing to a :class:`ColorCollection` from disk, the type of file you
 parse determines what ``type`` is set to. Parsing an EDL or a ``.cdl`` file
@@ -473,17 +473,17 @@ Already created :class:`ColorCorrection` or :class:`ColorDecision` can be
 added to the correct child list by calling the ``append_child`` method.
 
     >>> ccc.color_corrections
-    ()
+    []
     >>> ccc.append_child(cc)
     >>> ccc.color_corrections
-    (
+    [
         <cdl_convert.ColorCorrection object at 0x1004a5590>
-    )
+    ]
     >>> ccc.append_child(cd)
     >>> ccc.color_decisions
-    (
+    [
         <cdl_convert.ColorDecision object at 0x1004a5510>
-    )
+    ]
 
 ``append_child`` automatically detects which type of child you are attempting to
 append, and places it in the correct list. You can use ``append_children`` to
@@ -501,18 +501,18 @@ append a list of children at once- the list can even contain mixed classes.
     ]
     >>> ccc.append_children(list_of_colors)
     >>> ccc.color_corrections
-    (
+    [
         <cdl_convert.ColorCorrection object at 0x100633b90>,
         <cdl_convert.ColorCorrection object at 0x100633c50>,
         <cdl_convert.ColorCorrection object at 0x100633cd0>,
         <cdl_convert.ColorCorrection object at 0x100633b50>,
-    )
+    ]
     >>> ccc.color_decisions
-    (
+    [
         <cdl_convert.ColorDecision object at 0x100633d90>,
         <cdl_convert.ColorDecision object at 0x100633b10>,
         <cdl_convert.ColorDecision object at 0x100633ad0>,
-    )
+    ]
 
 Merging multiple :class:`ColorCollection`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
