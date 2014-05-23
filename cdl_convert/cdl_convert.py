@@ -743,6 +743,7 @@ class ColorDecision(AscXMLBase):  # pylint: disable=R0903
     def __init__(self):
         """Inits an instance of ColorDecision"""
         super(ColorDecision, self).__init__()
+        self.parent = None
 
 # ==============================================================================
 
@@ -1027,6 +1028,8 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         else:
             raise TypeError("Can only append ColorCorrection and "
                             "ColorDecision objects.")
+
+        child.parent = self
 
     def append_children(self, children):
         """Appends an entire list to the correctly list of children"""

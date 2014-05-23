@@ -624,7 +624,6 @@ class TestMultipleColorCollection(unittest.TestCase):
 
     def setUp(self):
         self.node = cdl_convert.ColorCollection()
-        self.node2 = cdl_convert.ColorCollection()
 
         # We need lists of color corrections and decisions
         self.color_corrections = [
@@ -718,6 +717,7 @@ class TestMultipleColorCollection(unittest.TestCase):
     #==========================================================================
 
     def testAppendChildren(self):
+        """Tries appending multiple children of different types"""
         self.node.append_children(
             self.color_corrections + self.color_decisions
         )
@@ -731,6 +731,224 @@ class TestMultipleColorCollection(unittest.TestCase):
             self.color_decisions,
             self.node.color_decisions
         )
+
+    #==========================================================================
+
+    def testSetColorCorrectionsNone(self):
+        """Tries setting the color_corrections attribute with None"""
+        self.node.color_corrections = None
+
+        self.assertEqual(
+            [],
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectionList(self):
+        """Tests setting ColorCorrection directly with a list"""
+        self.node.color_corrections = self.color_corrections
+
+        # We need to convert self.color_corrections to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_corrections)),
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectionTuple(self):
+        """Tests setting ColorCorrection directly with a tuple"""
+        self.node.color_corrections = tuple(self.color_corrections)
+
+        # We need to convert self.color_corrections to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_corrections)),
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectionSet(self):
+        """Tests setting ColorCorrection directly with a list"""
+        self.node.color_corrections = self.color_corrections
+
+        # We need to convert self.color_corrections to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_corrections)),
+            self.node.color_corrections
+        )
+    #==========================================================================
+
+    def testSetColorCorrectionSingle(self):
+        """Tests setting ColorCorrection with a single elem"""
+        self.node.color_corrections = self.color_corrections[0]
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectonBadType(self):
+        """Tests trying to set color correction with a bad type"""
+        def setNode():
+            self.node.color_corrections = 'Banana'
+
+        self.assertRaises(
+            TypeError,
+            setNode
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectionListBad(self):
+        """Tests having a bad type in a list we're attempting to set with"""
+        def setNode():
+            self.node.color_corrections = [
+                self.color_corrections[0],
+                'banana'
+            ]
+
+        self.assertRaises(
+            TypeError,
+            setNode
+        )
+
+        self.assertEqual(
+            [],
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testSetColorDecisionsNone(self):
+        """Tries setting the color_decisions attribute with None"""
+        self.node.color_decisions = None
+
+        self.assertEqual(
+            [],
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetColorDecisionList(self):
+        """Tests setting ColorDecision directly with a list"""
+        self.node.color_decisions = self.color_decisions
+
+        # We need to convert self.color_decisions to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_decisions)),
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetColorDecisionTuple(self):
+        """Tests setting ColorDecision directly with a tuple"""
+        self.node.color_decisions = tuple(self.color_decisions)
+
+        # We need to convert self.color_decisions to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_decisions)),
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetColorDecisionSet(self):
+        """Tests setting ColorDecision directly with a list"""
+        self.node.color_decisions = self.color_decisions
+
+        # We need to convert self.color_decisions to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_decisions)),
+            self.node.color_decisions
+        )
+    #==========================================================================
+
+    def testSetColorDecisionSingle(self):
+        """Tests setting ColorDecision with a single elem"""
+        self.node.color_decisions = self.color_decisions[0]
+
+        self.assertEqual(
+            [self.color_decisions[0]],
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectonBadType(self):
+        """Tests trying to set color decision with a bad type"""
+        def setNode():
+            self.node.color_decisions = 'Banana'
+
+        self.assertRaises(
+            TypeError,
+            setNode
+        )
+
+    #==========================================================================
+
+    def testSetColorDecisionListBad(self):
+        """Tests having a bad type in a list and attempting to set"""
+        def setNode():
+            self.node.color_decisions = [
+                self.color_decisions[0],
+                'banana'
+            ]
+
+        self.assertRaises(
+            TypeError,
+            setNode
+        )
+
+        self.assertEqual(
+            [],
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetParent(self):
+        """Tests setting the parent of all children to an instance"""
+        for child in self.color_corrections + self.color_decisions:
+            self.assertEqual(
+                None,
+                child.parent
+            )
+
+        self.node.append_children(
+            self.color_corrections + self.color_decisions
+        )
+
+        for child in self.node.all_children:
+            self.assertEqual(
+                self.node,
+                child.parent
+            )
+            child.parent = 'banana'
+            self.assertEqual(
+                'banana',
+                child.parent
+            )
+
+        self.node.set_parentage()
+
+        for child in self.node.all_children:
+            self.assertEqual(
+                self.node,
+                child.parent
+            )
+
 
 # ColorCorrection =============================================================
 
