@@ -56,11 +56,11 @@ AUDIO_FORMAT\t48khz
 FPS\t24
 
 Column
-Start\tEnd\tHandle Length\tAvid Clip Name\tASC_SAT\tASC_SOP\tScan Filename\tTotal Frame Count
+Start\tEnd\tHandle Length\tAvid Clip Name\tASC_SAT\tASC_SOP\tScan Filename
 
 Data
 """
-ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\t{frames}\n"
+ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\n"
 
 # misc ========================================================================
 
@@ -365,8 +365,7 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
             powerR=power[0],
             powerG=power[1],
             powerB=power[2],
-            filename=filename,
-            frames=tc.durFrames
+            filename=filename
         )
 
     return ale
