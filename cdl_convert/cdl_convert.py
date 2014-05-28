@@ -2198,7 +2198,7 @@ def parse_ale(input_file):
                 continue
             elif section['column']:
                 for i, field in enumerate(line.split('\t')):
-                    ale_indexes[field] = i
+                    ale_indexes[field.strip()] = i
                 section['column'] = False
             elif section['data']:
                 cdl_data = line.split('\t')
