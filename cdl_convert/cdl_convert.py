@@ -2228,7 +2228,10 @@ def parse_ale(input_file):
 
                 cdls.append(cdl)
 
-    return cdls
+    ccc = ColorCollection()
+    ccc.append_children(cdls)
+
+    return ccc
 
 # ==============================================================================
 
