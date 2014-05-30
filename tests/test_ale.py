@@ -127,9 +127,9 @@ class TestParseALEBasic(unittest.TestCase):
             self.filename = f.name
 
         cdls = cdl_convert.parse_ale(self.filename)
-        self.cdl1 = cdls[0]
-        self.cdl2 = cdls[1]
-        self.cdl3 = cdls[2]
+        self.cdl1 = cdls.color_corrections[0]
+        self.cdl2 = cdls.color_corrections[1]
+        self.cdl3 = cdls.color_corrections[2]
 
     #==========================================================================
 
@@ -287,9 +287,9 @@ class TestParseALEShort(TestParseALEBasic):
             self.filename = f.name
 
         cdls = cdl_convert.parse_ale(self.filename)
-        self.cdl1 = cdls[0]
-        self.cdl2 = cdls[1]
-        self.cdl3 = cdls[2]
+        self.cdl1 = cdls.color_corrections[0]
+        self.cdl2 = cdls.color_corrections[1]
+        self.cdl3 = cdls.color_corrections[2]
 
 #==============================================================================
 # FUNCTIONS
