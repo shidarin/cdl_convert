@@ -2229,6 +2229,7 @@ def parse_ale(input_file):
                 cdls.append(cdl)
 
     ccc = ColorCollection()
+    ccc.file_in = input_file
     ccc.append_children(cdls)
 
     return ccc
@@ -2625,7 +2626,11 @@ def parse_flex(input_file):
         cdl = build_cc(cc_id, input_file, sop, sat, title)
         cdls.append(cdl)
 
-    return cdls
+    ccc = ColorCollection()
+    ccc.file_in = input_file
+    ccc.append_children(cdls)
+
+    return ccc
 # ==============================================================================
 
 

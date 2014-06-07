@@ -133,9 +133,9 @@ class TestParseFLExBasic(unittest.TestCase):
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
-        self.cdl1 = self.cdls[0]
-        self.cdl2 = self.cdls[1]
-        self.cdl3 = self.cdls[2]
+        self.cdl1 = self.cdls.all_children[0]
+        self.cdl2 = self.cdls.all_children[1]
+        self.cdl3 = self.cdls.all_children[2]
 
     #==========================================================================
 
@@ -151,6 +151,32 @@ class TestParseFLExBasic(unittest.TestCase):
     # TESTS
     #==========================================================================
 
+    def testCollection(self):
+        """Tests that we were returned a ColorCollection"""
+        self.assertEqual(
+            cdl_convert.ColorCollection,
+            self.cdls.__class__
+        )
+
+    #==========================================================================
+
+    def testFileIn(self):
+        """Tests that file_in has been set on the collection correctly"""
+        self.assertEqual(
+            self.filename,
+            self.cdls.file_in
+        )
+
+    #==========================================================================
+
+    def testType(self):
+        """Test that the type of the collection is set to ccc"""
+        self.assertEqual(
+            'ccc',
+            self.cdls.type
+        )
+
+    #==========================================================================
     def testId(self):
         """Tests that filenames were parsed correctly"""
 
@@ -257,7 +283,7 @@ class TestParseFLExBasic(unittest.TestCase):
         for i in range(3):
             self.assertEqual(
                 [self.title, ],
-                self.cdls[i].desc
+                self.cdls.all_children[i].desc
             )
 
 
@@ -307,9 +333,9 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
-        self.cdl1 = self.cdls[0]
-        self.cdl2 = self.cdls[1]
-        self.cdl3 = self.cdls[2]
+        self.cdl1 = self.cdls.all_children[0]
+        self.cdl2 = self.cdls.all_children[1]
+        self.cdl3 = self.cdls.all_children[2]
 
     #==========================================================================
     # TESTS
@@ -377,9 +403,9 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
-        self.cdl1 = self.cdls[0]
-        self.cdl2 = self.cdls[1]
-        self.cdl3 = self.cdls[2]
+        self.cdl1 = self.cdls.all_children[0]
+        self.cdl2 = self.cdls.all_children[1]
+        self.cdl3 = self.cdls.all_children[2]
 
     #==========================================================================
     # TESTS
@@ -447,9 +473,9 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
-        self.cdl1 = self.cdls[0]
-        self.cdl2 = self.cdls[1]
-        self.cdl3 = self.cdls[2]
+        self.cdl1 = self.cdls.all_children[0]
+        self.cdl2 = self.cdls.all_children[1]
+        self.cdl3 = self.cdls.all_children[2]
 
     #==========================================================================
     # TESTS
@@ -483,7 +509,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
         for i in range(3):
             self.assertEqual(
                 [],
-                self.cdls[i].desc
+                self.cdls.all_children[i].desc
             )
 
 
@@ -529,9 +555,9 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
             self.filename = f.name
 
         self.raw_cdls = cdl_convert.parse_flex(self.filename)
-        self.cdls = self.raw_cdls[:]
-        self.cdl1 = self.cdls[0]
-        self.cdl2 = self.cdls[1]
+        self.cdls = self.raw_cdls.all_children
+        self.cdl1 = self.raw_cdls.all_children[0]
+        self.cdl2 = self.raw_cdls.all_children[1]
         self.cdl3 = cdl_convert.ColorCorrection(
             'bb94_x105_line3', self.filename
         )
@@ -542,12 +568,50 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
     # TESTS
     #==========================================================================
 
+    def testCollection(self):
+        """Tests that we were returned a ColorCollection"""
+        self.assertEqual(
+            cdl_convert.ColorCollection,
+            self.raw_cdls.__class__
+        )
+
+    #==========================================================================
+
+    def testFileIn(self):
+        """Tests that file_in has been set on the collection correctly"""
+        self.assertEqual(
+            self.filename,
+            self.raw_cdls.file_in
+        )
+
+    #==========================================================================
+
+    def testType(self):
+        """Test that the type of the collection is set to ccc"""
+        self.assertEqual(
+            'ccc',
+            self.raw_cdls.type
+        )
+
+    #==========================================================================
+
+    def testDescription(self):
+        """Tests that the descriptions have been parsed correctly"""
+
+        for i in range(3):
+            self.assertEqual(
+                [self.title, ],
+                self.cdls[i].desc
+            )
+
+    #==========================================================================
+
     def testOnlyTwoCDLsReturned(self):
         """Tests that with no SOP or SAT value, only 2 lines will become cdls"""
 
         self.assertEqual(
             2,
-            len(self.raw_cdls)
+            len(self.raw_cdls.all_children)
         )
 
 #==============================================================================
