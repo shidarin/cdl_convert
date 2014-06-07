@@ -2875,11 +2875,12 @@ def main():
 
     if color_decisions:
         # Sanity Check
-        if filetype_in in COLLECTION_FORMATS:
-            for color_correct in color_decisions.color_corrections:
-                sanity_check(color_correct)
-        else:
-            sanity_check(color_decisions)
+        if args.check:
+            if filetype_in in COLLECTION_FORMATS:
+                for color_correct in color_decisions.color_corrections:
+                    sanity_check(color_correct)
+            else:
+                sanity_check(color_decisions)
         # Writing
         for ext in args.output:
             if ext in SINGLE_FORMATS:

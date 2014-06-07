@@ -702,7 +702,7 @@ class TestMain(unittest.TestCase):
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testSanityCheckCalled(self, abspath, mockParse, mockWrite, mockSanity):
-        """Tests that we try and write a converted file"""
+        """Tests that --check calls sanity check"""
 
         abspath.return_value = 'file.cc'
         mockParse.return_value = self.cdl
@@ -719,6 +719,33 @@ class TestMain(unittest.TestCase):
         cdl_convert.main()
 
         mockSanity.assert_called_once_with(self.cdl)
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.sanity_check')
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testSanityCheckNotCalled(self, abspath, mockParse, mockWrite, mockSanity):
+        """Tests that sanity check is not called without --check"""
+
+        abspath.return_value = 'file.cc'
+        mockParse.return_value = self.cdl
+        sys.argv = ['scriptname', 'file.cc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cc'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        self.assertFalse(
+            mockSanity.called
+        )
 
     #==========================================================================
 
