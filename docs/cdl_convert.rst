@@ -92,6 +92,10 @@ function, see :doc:`usage` for a walkthrough.
     ``members`` to ensure that no two :class:`ColorCorrection` share the same
     ``id`` , as this is required by the specification.
 
+    Reset the members dictionary by either calling the ``reset_members`` method
+    on :class:`ColorCorrection` or by reseting all cdl_convert member
+    lists and dictionaries with the ``reset_all`` function.
+
     If the ``id`` given is a blank string and ``HALT_ON_ERROR`` is set to
     ``False``, ``id`` will be set to the total number of :class:`ColorCorrection`
     in the file, including the one currently being created. This behavior is not
@@ -162,7 +166,15 @@ SopNode
 .. autoclass:: cdl_convert.SopNode
 
 General Functions
-===============
+=================
+
+Reset All
+---------
+
+Resets all the class level lists and dictionaries of cdl_convert. Calling this
+is the same as calling each individual ``reset_members`` method.
+
+.. autofunction:: cdl_convert.reset_all
 
 Sanity Check
 ------------

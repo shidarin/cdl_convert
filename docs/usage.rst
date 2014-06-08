@@ -161,6 +161,10 @@ provide an ``id``, for the unique cdl identifier and a source filename to
     ``members`` to ensure that no two :class:`ColorCorrection` share the same
     ``id`` , as this is required by the specification.
 
+    Reset the members list by calling the ``reset_members`` method of
+    :class:`ColorCorrection` or reset all class member list and dictionaries
+    with ``reset_all``.
+
 .. warning::
     It's not possible to change the ``file_in`` attribute once it has been set.
 
