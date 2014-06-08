@@ -219,7 +219,7 @@ class TestSanityCheck(unittest.TestCase):
 
     def tearDown(self):
         sys.stdout = self.stdout
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -326,7 +326,7 @@ class TestParseArgs(unittest.TestCase):
     def tearDown(self):
         sys.stdout = self.stdout
         sys.argv = self.sysargv
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -480,6 +480,34 @@ class TestParseArgs(unittest.TestCase):
             args.no_output
         )
 
+    #==========================================================================
+
+    def testNoDestination(self):
+        """Tests that no destination defaults to ./converted"""
+
+        sys.argv = ['scriptname', 'inputFile']
+
+        args = cdl_convert.parse_args()
+
+        self.assertEqual(
+            './converted/',
+            args.destination
+        )
+
+    #==========================================================================
+
+    def testCustomDestination(self):
+        """Tests that destination flag works"""
+
+        sys.argv = ['scriptname', 'inputFile', '-d', '/best/folder/']
+
+        args = cdl_convert.parse_args()
+
+        self.assertEqual(
+            '/best/folder/',
+            args.destination
+        )
+
 # main() ======================================================================
 
 
@@ -510,7 +538,7 @@ class TestMain(unittest.TestCase):
         sys.stdout = self.stdout
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -531,7 +559,32 @@ class TestMain(unittest.TestCase):
 
         cdl_convert.main()
 
-        abspath.assert_called_once_with('file.cc')
+        file_call = mock.call('file.cc')
+        dest_call = mock.call('./converted/')
+
+        abspath.assert_has_calls([file_call, dest_call])
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_cc')
+    @mock.patch('os.path.abspath')
+    def testCustomDestinationPath(self, abspath, mockParse):
+        """Tests that we make sure to get the absolute path for dest"""
+
+        abspath.return_value = 'file.cc'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.cc', '-d', '/best/path/ever/']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cc'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        cdl_convert.main()
+
+        file_call = mock.call('file.cc')
+        dest_call = mock.call('/best/path/ever/')
+
+        abspath.assert_has_calls([file_call, dest_call])
 
     #==========================================================================
 
@@ -668,17 +721,15 @@ class TestMain(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('os.path.dirname')
     @mock.patch('cdl_convert.cdl_convert.write_cc')
     @mock.patch('cdl_convert.cdl_convert.parse_rnh_cdl')
-    @mock.patch('os.path.abspath')
-    def testDetermineDestCalled(self, abspath, mockParse, mockWrite, dirname):
+    def testDetermineDestCalled(self, mockParse, mockWrite):
         """Tests that we try and write a converted file"""
 
-        abspath.return_value = 'file.cdl'
-        dirname.return_value = ''  # determine_dest method calls to get dirname
         mockParse.return_value = self.cdl
         sys.argv = ['scriptname', 'file.cdl', '-o', 'cc']
+
+        destination_dir = os.path.abspath('./converted/')
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cdl'] = mockParse
@@ -691,7 +742,7 @@ class TestMain(unittest.TestCase):
         cdl_convert.main()
 
         self.assertEqual(
-            'uniqueId.cc',
+            os.path.join(destination_dir, 'uniqueId.cc'),
             self.cdl.file_out
         )
 
@@ -752,11 +803,9 @@ class TestMain(unittest.TestCase):
     @mock.patch('cdl_convert.cdl_convert.ColorCorrection.determine_dest')
     @mock.patch('cdl_convert.cdl_convert.write_cc')
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
-    @mock.patch('os.path.abspath')
-    def testNoOutput(self, abspath, mockParse, mockWrite, mockDest):
+    def testNoOutput(self, mockParse, mockWrite, mockDest):
         """Tests that we don't write a converted file"""
 
-        abspath.return_value = 'file.cc'
         mockParse.return_value = self.cdl
         sys.argv = ['scriptname', 'file.cc', '--no-output']
 
@@ -770,9 +819,11 @@ class TestMain(unittest.TestCase):
 
         cdl_convert.main()
 
-        mockParse.assert_called_once_with('file.cc')
+        mockParse.assert_called_once_with(os.path.join(os.getcwd(), 'file.cc'))
         # Determine dest should have set a file_out
-        mockDest.assert_called_once_with('cc')
+        mockDest.assert_called_once_with(
+            'cc', os.path.join(os.getcwd(), 'converted')
+        )
         # But the write should never have been called.
         mockWrite.assert_has_calls([])
 

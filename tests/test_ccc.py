@@ -422,7 +422,7 @@ class TestParseCCCFull(unittest.TestCase):
         os.remove(self.filename)
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -526,7 +526,7 @@ class TestParseCCCExceptions(unittest.TestCase):
     def tearDown(self):
         if self.filename:
             os.remove(self.filename)
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -578,8 +578,6 @@ class TestWriteCCCFull(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
-
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
             f.write(enc(CCC_FULL))
@@ -594,7 +592,7 @@ class TestWriteCCCFull(unittest.TestCase):
 
     def tearDown(self):
         os.remove(self.filename)
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -653,7 +651,7 @@ class TestWriteCCCOdd(TestWriteCCCFull):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:

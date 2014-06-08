@@ -324,7 +324,7 @@ class TestParseCCBasic(unittest.TestCase):
         os.remove(self.filename)
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -625,7 +625,7 @@ class TestParseCCExceptions(unittest.TestCase):
     #==========================================================================
 
     def tearDown(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         if self.file:
             os.remove(self.file)
 
@@ -728,7 +728,7 @@ class TestParseCCExceptions(unittest.TestCase):
         )
 
         cdl_convert.HALT_ON_ERROR = False
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
         cdl = cdl_convert.parse_cc(self.file)
 
@@ -748,7 +748,7 @@ class TestWriteCCFull(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("014_xf_seqGrade_v01", '')
         self.cdl.desc = [
             'CC description 1', 'CC description 2', 'CC description 3',
@@ -775,7 +775,7 @@ class TestWriteCCFull(unittest.TestCase):
     #==========================================================================
 
     def tearDown(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -830,7 +830,7 @@ class TestWriteCCOdd(TestWriteCCFull):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("f55.100", '')
         self.cdl.desc = [
             'Raised saturation1 a little!?! ag... \/Offset',
@@ -861,7 +861,7 @@ class TestWriteCCNoSop(TestWriteCCFull):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("burp_200.x15", '')
 
         self.cdl.sat = 1.0128109381
@@ -879,7 +879,7 @@ class TestWriteCCNoSat(TestWriteCCFull):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("burp_300.x35", '')
 
         self.cdl.slope = (1.233321, 0.678669, 1.0758)

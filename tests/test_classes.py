@@ -615,6 +615,51 @@ class TestColorCollection(unittest.TestCase):
         )
 
 
+    #==========================================================================
+
+    @mock.patch('os.path.abspath')
+    def testDetermineDest(self, mockPath):
+        """Tests that determine destination is calculated correctly"""
+        mockPath.return_value = '/this/is/a/path/bananaphone.ccc'
+        self.node = cdl_convert.ColorCollection(input_file='mybestfile.ccc')
+        self.node.type = 'cdl'
+
+        mockPath.assert_called_once_with('mybestfile.ccc')
+
+        self.node.determine_dest('./converted/')
+
+        self.assertEqual(
+            './converted/bananaphone.cdl',
+            self.node.file_out
+        )
+
+    #==========================================================================
+
+    def testDetermineDestNoFileIn(self):
+        """Tests determine destination works with no file_in"""
+        # Reset the members list
+        cdl_convert.ColorCollection.reset_members()
+
+        # Create a few Collections
+        cdl_convert.ColorCollection()
+        cdl_convert.ColorCollection()
+        cdl_convert.ColorCollection()
+
+        # The 4th one will be the one we use
+        self.node = cdl_convert.ColorCollection()
+
+        # But we'll create a 5th.
+        cdl_convert.ColorCollection()
+
+        self.node.type = 'ccc'
+
+        self.node.determine_dest('./converted/')
+
+        self.assertEqual(
+            './converted/color_collection_003.ccc',
+            self.node.file_out
+        )
+
 class TestCollectionChildMethods(unittest.TestCase):
     """Tests the children methods and attributes of ColorCollection"""
 
@@ -640,7 +685,7 @@ class TestCollectionChildMethods(unittest.TestCase):
 
     def tearDown(self):
         # Empty out the members dictionary
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -997,7 +1042,7 @@ class TestMultipleCollections(unittest.TestCase):
 
     def tearDown(self):
         # Empty out the members dictionary
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -1208,7 +1253,7 @@ class TestColorCorrection(unittest.TestCase):
     def tearDown(self):
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -1317,7 +1362,7 @@ class TestColorCorrection(unittest.TestCase):
 
     def testBlankId(self):
         """Tests what happens when a blank id is given to CC"""
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
         cdl1 = cdl_convert.ColorCorrection('', 'file')
 
@@ -1700,9 +1745,9 @@ class TestColorCorrection(unittest.TestCase):
 
     def testDetermineDest(self):
         """Tests that determine destination is calculated correctly"""
-        self.cc.determine_dest('cdl')
+        self.cc.determine_dest('cdl', '/bobsBestDirectory')
 
-        dir = os.path.abspath('../')
+        dir = os.path.abspath('/bobsBestDirectory')
         filename = os.path.join(dir, 'uniqueId.cdl')
 
         self.assertEqual(
@@ -1750,7 +1795,6 @@ class TestMediaRefProperties(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.MediaRef.members = {}
         self.directory = 'heeba/jeeba/race'
         self.filename = 'car.jpg'
         self.protocol = 'ftp'
@@ -1765,7 +1809,7 @@ class TestMediaRefProperties(unittest.TestCase):
     #==========================================================================
 
     def tearDown(self):
-        cdl_convert.MediaRef.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -2274,7 +2318,7 @@ class TestMediaRefPropertiesOdd(TestMediaRefProperties):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.MediaRef.members = {}
+        cdl_convert.reset_all()
         self.directory = '/bicycle24/myHat/race_condition14'
         self.filename = '17438.hds356_######.exr'
         self.protocol = ''
@@ -2295,11 +2339,10 @@ class TestMediaRefChangeMembership(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.MediaRef.members = {}
         self.mr = cdl_convert.MediaRef('hello')
 
     def tearDown(self):
-        cdl_convert.MediaRef.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -2362,7 +2405,7 @@ class TestMediaRefChangeMembership(unittest.TestCase):
 
     def testBrokenDict(self):
         """Tests that we don't fail just because we're not in the dict"""
-        cdl_convert.MediaRef.members = {}
+        cdl_convert.reset_all()
 
         self.mr._filename = 'goodbye'
         self.mr._change_membership(old_ref='hello')
