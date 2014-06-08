@@ -136,7 +136,10 @@ __all__ = [
     'parse_ccc',
     'parse_rnh_cdl',
     'parse_flex',
+    'reset_all',
+    'sanity_check',
     'write_cc',
+    'write_ccc',
     'write_rnh_cdl',
 ]
 
@@ -508,6 +511,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             If none is found, ``viewing_desc`` will remain set to ``None``.
             Inherited from :class:`AscColorSpaceBase`
 
+        reset_members()
+            Resets the class level members list.
+
     """
 
     members = {}
@@ -698,6 +704,11 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         self._file_out = os.path.join(directory, filename)
 
+    @classmethod
+    def reset_members(cls):
+        """Resets the class level members dictionary"""
+        cls.members = {}
+
 # ==============================================================================
 
 
@@ -751,6 +762,16 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     Collections need to store children and have access to descriptions,
     input descriptions, and viewing descriptions.
+
+    **Class Attributes:**
+
+        members : [ :class`ColorCollection`]
+            All instanced :class:`ColorCollection` are added to this member
+            list. Unlike the :class:`ColorCorrection` member's dictionary,
+            :class:`ColorCollection` do not need any unique values to exist.
+
+            This is currently only used for determining an id value when
+            exporting and no file_in attribute is set.
 
     **Attributes:**
 
@@ -879,6 +900,9 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             If none is found, ``viewing_desc`` will remain set to ``None``.
             Inherited from :class:`AscColorSpaceBase`
 
+        reset_members()
+            Resets the class level members list.
+
         set_parentage()
             Sets all child :class:`ColorCorrection` and :class:`ColorDecision`
             ``parent`` attribute to point to this instance.
@@ -892,6 +916,9 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             xml collection by default.
 
     """
+
+    members = []
+
     def __init__(self, input_file=None):
         super(ColorCollection, self).__init__()
 
@@ -901,6 +928,8 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         self._file_out = None
         self._type = 'ccc'
         self._xmlns = "urn:ASC:CDL:v1.01"
+
+        ColorCollection.members.append(self)
 
     # Properties ==============================================================
 
@@ -1139,6 +1168,11 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             self._color_corrections.append(cdl)
 
         return True
+
+    @classmethod
+    def reset_members(cls):
+        """Resets the member list"""
+        cls.members = []
 
     def set_parentage(self):
         """Sets the parent of all child nodes to point to this instance"""
@@ -1405,6 +1439,9 @@ class MediaRef(AscXMLBase):
             this to build the XML. This function is identical to calling the
             ``element`` attribute. Overrides inherited placeholder method
             from :class:`AscXMLBase` .
+
+        reset_members()
+            Resets the class level members list.
 
     """
 
@@ -1679,6 +1716,13 @@ class MediaRef(AscXMLBase):
         ref_file = os.path.split(uri)[1]
 
         return protocol, directory, ref_file
+
+    # Public Methods ==========================================================
+
+    @classmethod
+    def reset_members(cls):
+        """Resets the class level members dictionary"""
+        cls.members = {}
 
 # ==============================================================================
 
@@ -2638,6 +2682,16 @@ def parse_flex(input_file):
     ccc.append_children(cdls)
 
     return ccc
+
+# ==============================================================================
+
+
+def reset_all():
+    """Resets all class level member lists and dictionaries"""
+    ColorCorrection.reset_members()
+    ColorCollection.reset_members()
+    MediaRef.reset_members()
+
 # ==============================================================================
 
 
