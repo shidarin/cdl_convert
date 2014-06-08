@@ -697,12 +697,16 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return cc_xml
 
+    #==========================================================================
+
     def determine_dest(self, output, directory):
         """Determines the destination file and sets it on the color correct"""
 
         filename = "{id}.{ext}".format(id=self.id, ext=output)
 
         self._file_out = os.path.join(directory, filename)
+
+    #==========================================================================
 
     @classmethod
     def reset_members(cls):
@@ -1056,10 +1060,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         child.parent = self
 
+    #==========================================================================
+
     def append_children(self, children):
         """Appends an entire list to the correctly list of children"""
         for child in children:
             self.append_child(child)
+
+    #==========================================================================
 
     def build_element(self):
         """Builds an ElementTree XML element representing for ColorCollection"""
@@ -1067,6 +1075,8 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             return self.build_element_ccc()
         elif self.is_cdl:  # pragma: no cover
             return self.build_element_cdl()
+
+    #==========================================================================
 
     def build_element_ccc(self):
         """Builds a CCC XML element representing this ColorCollection"""
@@ -1086,9 +1096,12 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return ccc_xml
 
+    #==========================================================================
+
     def build_element_cdl(self):  # pragma: no cover
         """Builds a CDL XML element representing this ColorCollection"""
         return None
+    #==========================================================================
 
     def copy_collection(self):
         """Creates and returns a copy of this collection"""
@@ -1100,6 +1113,8 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         new_col.type = self.type
         new_col.append_children(self.all_children)
         return new_col
+
+    #==========================================================================
 
     def determine_dest(self, directory):
         """Determines the destination file and sets it on the cdl"""
@@ -1113,6 +1128,8 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         filename = "{file_in}.{ext}".format(file_in=filename, ext=self.type)
 
         self._file_out = os.path.join(directory, filename)
+
+    #==========================================================================
 
     def merge_collections(self, collections):
         """Merges multiple collections together and returns a new one"""
@@ -1142,6 +1159,8 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return new_col
 
+    #==========================================================================
+
     def parse_xml_color_corrections(self, xml_element):
         """Parses an ElementTree element to find & add all ColorCorrection.
 
@@ -1169,19 +1188,27 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return True
 
+    #==========================================================================
+
     @classmethod
     def reset_members(cls):
         """Resets the member list"""
         cls.members = []
+
+    #==========================================================================
 
     def set_parentage(self):
         """Sets the parent of all child nodes to point to this instance"""
         for node in self.all_children:
             node.parent = self
 
+    #==========================================================================
+
     def set_to_ccc(self):
         """Switches the type of the ColorCollection to export .ccc style xml"""
         self._type = 'ccc'
+
+    #==========================================================================
 
     def set_to_cdl(self):
         """Switches the type of the ColorCollection to export .cdl style xml"""
