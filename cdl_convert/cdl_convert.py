@@ -697,7 +697,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return cc_xml
 
-    #==========================================================================
+    # =========================================================================
 
     def determine_dest(self, output, directory):
         """Determines the destination file and sets it on the color correct"""
@@ -706,7 +706,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         self._file_out = os.path.join(directory, filename)
 
-    #==========================================================================
+    # =========================================================================
 
     @classmethod
     def reset_members(cls):
