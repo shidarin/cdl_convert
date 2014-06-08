@@ -7,5 +7,4 @@ ignore-paths:
     - cdl_convert/__init__.py
     - docs
     - tests
-ignore-patterns:
 autodetect: yes

@@ -186,8 +186,7 @@ single-line-if-stmt=no
 no-space-check=trailing-comma,dict-separator
 
 # Maximum number of lines in a module
-# Upped from 1000 to 3000.
-max-module-lines=3000
+max-module-lines=1000
 
 # String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
 # tab).
@@ -292,13 +291,13 @@ max-args=5
 ignored-argument-names=_.*
 
 # Maximum number of locals for function / method body
-max-locals=20
+max-locals=15
 
 # Maximum number of return / yield for function / method body
 max-returns=6
 
 # Maximum number of branch for function / method body
-max-branches=25
+max-branches=12
 
 # Maximum number of statements in function / method body
 max-statements=100

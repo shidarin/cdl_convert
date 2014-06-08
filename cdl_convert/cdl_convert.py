@@ -389,7 +389,7 @@ class AscXMLBase(object):
 # ==============================================================================
 
 
-class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0902
+class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0902,R0904
     """The basic class for the ASC CDL
 
     Description
@@ -758,7 +758,7 @@ class ColorDecision(AscXMLBase):  # pylint: disable=R0903
 # ==============================================================================
 
 
-class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0903
+class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0902,R0904
     """Container class for ColorDecisionLists and ColorCorrectionCollections.
 
     Description
@@ -1060,14 +1060,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         child.parent = self
 
-    #==========================================================================
+    # =========================================================================
 
     def append_children(self, children):
         """Appends an entire list to the correctly list of children"""
         for child in children:
             self.append_child(child)
 
-    #==========================================================================
+    # =========================================================================
 
     def build_element(self):
         """Builds an ElementTree XML element representing for ColorCollection"""
@@ -1076,7 +1076,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         elif self.is_cdl:  # pragma: no cover
             return self.build_element_cdl()
 
-    #==========================================================================
+    # =========================================================================
 
     def build_element_ccc(self):
         """Builds a CCC XML element representing this ColorCollection"""
@@ -1096,12 +1096,13 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return ccc_xml
 
-    #==========================================================================
+    # =========================================================================
 
     def build_element_cdl(self):  # pragma: no cover
         """Builds a CDL XML element representing this ColorCollection"""
         return None
-    #==========================================================================
+
+    # =========================================================================
 
     def copy_collection(self):
         """Creates and returns a copy of this collection"""
@@ -1114,7 +1115,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         new_col.append_children(self.all_children)
         return new_col
 
-    #==========================================================================
+    # =========================================================================
 
     def determine_dest(self, directory):
         """Determines the destination file and sets it on the cdl"""
@@ -1129,7 +1130,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         self._file_out = os.path.join(directory, filename)
 
-    #==========================================================================
+    # =========================================================================
 
     def merge_collections(self, collections):
         """Merges multiple collections together and returns a new one"""
@@ -1159,7 +1160,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return new_col
 
-    #==========================================================================
+    # =========================================================================
 
     def parse_xml_color_corrections(self, xml_element):
         """Parses an ElementTree element to find & add all ColorCorrection.
@@ -1188,27 +1189,27 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return True
 
-    #==========================================================================
+    # =========================================================================
 
     @classmethod
     def reset_members(cls):
         """Resets the member list"""
         cls.members = []
 
-    #==========================================================================
+    # =========================================================================
 
     def set_parentage(self):
         """Sets the parent of all child nodes to point to this instance"""
         for node in self.all_children:
             node.parent = self
 
-    #==========================================================================
+    # =========================================================================
 
     def set_to_ccc(self):
         """Switches the type of the ColorCollection to export .ccc style xml"""
         self._type = 'ccc'
 
-    #==========================================================================
+    # =========================================================================
 
     def set_to_cdl(self):
         """Switches the type of the ColorCollection to export .cdl style xml"""
@@ -1670,7 +1671,7 @@ class MediaRef(AscXMLBase):
 
     # =========================================================================
 
-    def _get_sequences(self):
+    def _get_sequences(self):  # pylint: disable=R0912
         """Determines if the media ref is pointing to an image sequence"""
         re_exp = r'(^[ \w_.-]+[_.])([0-9]+)(\.[a-zA-Z0-9]{3}$)'
         re_exp_percent = r'(^[ \w_.-]+[_.])(%[0-9]+d)(\.[a-zA-Z0-9]{3}$)'
@@ -2190,8 +2191,8 @@ def _remove_xmlns(input_file):
     # We're going to open the file as a string and remove the xmlns, as
     # it doesn't do a lot for us when working with CDLs, and in fact
     # just clutters everything the hell up.
-    with open(input_file, 'r') as f:
-        xml_string = f.read()
+    with open(input_file, 'r') as xml_file:
+        xml_string = xml_file.read()
 
     xml_string = re.sub(' xmlns="[^"]+"', '', xml_string, count=1)
 
@@ -2229,7 +2230,7 @@ def _sanitize(name):
 # ==============================================================================
 
 
-def parse_ale(input_file):
+def parse_ale(input_file):  # pylint: disable=R0914
     """Parses an Avid Log Exchange (ALE) file for CDLs
 
     **Args:**
@@ -2315,7 +2316,7 @@ def parse_ale(input_file):
 # ==============================================================================
 
 
-def parse_cc(input_file):
+def parse_cc(input_file):  # pylint: disable=R0912
     """Parses a .cc file for ASC CDL information
 
     **Args:**
@@ -2561,7 +2562,7 @@ def parse_rnh_cdl(input_file):
 # ==============================================================================
 
 
-def parse_flex(input_file):
+def parse_flex(input_file):  # pylint: disable=R0912,R0914
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
 
     **Args:**
@@ -2868,7 +2869,7 @@ def parse_args():
         "-d",
         "--destination",
         help="specify an output directory to save converted files to. If not"
-             "provided will default to ./converted/"
+             "provided will default to ./converted/"  # pylint: disable=C0330
     )
     parser.add_argument(
         "--halt",
@@ -2943,7 +2944,7 @@ def parse_args():
 # ==============================================================================
 
 
-def main():
+def main():  # pylint: disable=R0912
     """Will figure out input and destination filetypes, then convert"""
     args = parse_args()
 
@@ -2961,6 +2962,7 @@ def main():
     color_decisions = INPUT_FORMATS[filetype_in](filepath)
 
     def write_single_file(cdl, ext):
+        """Writes a single color correction file"""
         cdl.determine_dest(ext, destination_dir)
         print(
             "Writing cdl {id} to {path}".format(
