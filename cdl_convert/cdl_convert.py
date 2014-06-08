@@ -691,14 +691,8 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         return cc_xml
 
-    # =========================================================================
-
-    def determine_dest(self, output):
-        """Determines the destination file and sets it on the cdl"""
-
-        file_in = self.file_in if self.file_in else os.getcwd()
-
-        directory = os.path.dirname(file_in)
+    def determine_dest(self, output, directory):
+        """Determines the destination file and sets it on the color correct"""
 
         filename = "{id}.{ext}".format(id=self.id, ext=output)
 
@@ -1077,6 +1071,19 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         new_col.type = self.type
         new_col.append_children(self.all_children)
         return new_col
+
+    def determine_dest(self, directory):
+        """Determines the destination file and sets it on the cdl"""
+        if self.file_in:
+            filename = os.path.splitext(os.path.basename(self.file_in))[0]
+        else:
+            filename = 'color_collection_{id}'.format(
+                id=str(ColorCollection.members.index(self)).rjust(3, '0')
+            )
+
+        filename = "{file_in}.{ext}".format(file_in=filename, ext=self.type)
+
+        self._file_out = os.path.join(directory, filename)
 
     def merge_collections(self, collections):
         """Merges multiple collections together and returns a new one"""
@@ -2777,6 +2784,12 @@ def parse_args():
              "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))  # pylint: disable=C0330
     )
     parser.add_argument(
+        "-d",
+        "--destination",
+        help="specify an output directory to save converted files to. If not"
+             "provided will default to ./converted/"
+    )
+    parser.add_argument(
         "--halt",
         action='store_true',
         help="turns off exception handling default behavior. Turn this on if "
@@ -2837,6 +2850,9 @@ def parse_args():
     else:
         args.output = ['cc', ]
 
+    if not args.destination:
+        args.destination = './converted/'
+
     if args.halt:
         global HALT_ON_ERROR  # pylint: disable=W0603
         HALT_ON_ERROR = True
@@ -2854,6 +2870,7 @@ def main():
         print("Dry run initiated, no files will be written.")
 
     filepath = os.path.abspath(args.input_file)
+    destination_dir = os.path.abspath(args.destination)
 
     if not args.input:
         filetype_in = os.path.basename(filepath).split('.')[-1].lower()
@@ -2863,7 +2880,7 @@ def main():
     color_decisions = INPUT_FORMATS[filetype_in](filepath)
 
     def write_single_file(cdl, ext):
-        cdl.determine_dest(ext)
+        cdl.determine_dest(ext, destination_dir)
         print(
             "Writing cdl {id} to {path}".format(
                 id=cdl.id,
@@ -2881,6 +2898,7 @@ def main():
                     sanity_check(color_correct)
             else:
                 sanity_check(color_decisions)
+
         # Writing
         for ext in args.output:
             if ext in SINGLE_FORMATS:
