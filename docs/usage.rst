@@ -33,6 +33,18 @@ input file format. This can be done with the ``-i`` flag.
     but if you're running into trouble, it might help to indicate to
     ``cdl_convert`` what the input file type is.
 
+By default, converted files will be written to the './converted' directory, but
+a custom destination directory can easily be specified with the ``-d`` flag.
+::
+    $ cdl_convert ./hk416_210.ccc -d /hello_kitty/luts/cdls/
+
+.. warning::
+    It's possible to pass a '.' to the ``-d`` flag, causing converted files to
+    be written to the same directory as the directory you're calling cdl_convert
+    from, and often that ends up being the same directory as the file you're
+    converting from. If one isn't careful, there's a possibility you could
+    overwrite the original files.
+
 When converting large batches of color corrections, it can be helpful to know
 if there's anything odd about any of them. Using the ``--check`` flag will
 cause any potentially invalid numbers to be flagged and printed to the shell.
@@ -52,8 +64,8 @@ will enable a dry run mode and allow you to spot odd values before running.
 Full help is available using the standard ``--help`` command:
 ::
     $ cdl_convert --help
-    usage: cdl_convert.py [-h] [-i INPUT] [-o OUTPUT] [--halt] [--no-output]
-                          [--check]
+    usage: cdl_convert.py [-h] [-i INPUT] [-o OUTPUT] [-d DESTINATION] [--halt]
+                          [--no-output] [--check]
                           input_file
 
     positional arguments:
@@ -65,11 +77,14 @@ Full help is available using the standard ``--help`` command:
                             specify the filetype to convert from. Use when
                             CDLConvert cannot determine the filetype
                             automatically. Supported input formats are: ['cc',
-                            'cdl', 'ale', 'flex']
+                            'cdl', 'ale', 'ccc', 'flex']
       -o OUTPUT, --output OUTPUT
                             specify the filetype to convert to, comma separated
                             lists are accepted. Defaults to a .cc XML. Supported
-                            output formats are: ['cc', 'cdl']
+                            output formats are: ['cc', 'cdl', 'ccc']
+      -d DESTINATION, --destination DESTINATION
+                            specify an output directory to save converted files
+                            to. If not provided will default to ./converted/
       --halt                turns off exception handling default behavior. Turn
                             this on if you want the conversion process to fail and
                             not continue,rather than relying on default behavior

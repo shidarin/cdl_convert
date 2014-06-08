@@ -2868,7 +2868,7 @@ def parse_args():
     parser.add_argument(
         "-d",
         "--destination",
-        help="specify an output directory to save converted files to. If not"
+        help="specify an output directory to save converted files to. If not "
              "provided will default to ./converted/"  # pylint: disable=C0330
     )
     parser.add_argument(
@@ -2885,7 +2885,7 @@ def parse_args():
         "--no-output",
         action='store_true',
         help="parses all incoming files but no files will be written. Use this "
-             "in conjunction with '--halt' and '--check to try and "  # pylint: disable=C0330
+             "in conjunction with '--halt' and '--check' to try and "  # pylint: disable=C0330
              "track down any oddities observed in the CDLs."  # pylint: disable=C0330
     )
     parser.add_argument(
