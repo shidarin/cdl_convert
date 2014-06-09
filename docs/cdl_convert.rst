@@ -10,7 +10,7 @@ Classes
 =======
 
 The class structure of ``cdl_convert`` mirrors the element structure of the
-defined XML schema for ``ccc``, ``cdl`` and ``cc`` files as defined by the
+ XML schema for ``ccc``, ``cdl`` and ``cc`` files as defined by the
 ASC. The XML schema's represent the most complicated and structured variant of
 the format, and therefore it behooves the project to mimic their structure.
 
@@ -41,13 +41,36 @@ AscXMLBase
 
 .. autoclass:: cdl_convert.AscXMLBase
 
-ColorCollectionBase
+ColorCollection
 -------------------
 
-:class:`ColorDecisionList` and :class:`ColorCollection` use this class as a
-a base class, since they both are collections of other more specific classes.
+.. warning::
+    Functionality described below relating to ``cdl`` type collections
+    is not currently implemented. If you're reading this, you're reading
+    ``develop`` branch documentation.
 
-.. autoclass:: cdl_convert.ColorCollectionBase
+This class functions as both a ColorDecisionList and a
+ColorCorrectionCollection. It's children can be either ColorDecisions,
+ColorCorrections, or a combination of the two. Despite being able to
+have either type of child, the :class:`ColorCollection` still needs to know
+which type of collection you want it to represent.
+
+Setting the ``type`` of the :class:`ColorCollection` to either ``ccc`` or
+``cdl`` causes children of the opposite type to be converted into the
+appropriate type when exporting the class.
+
+If ``parse_ale`` is used to parse an ``ale`` edl file, the ``ale`` will be
+read into a :class:`ColorCollection` set to ``cdl`` and the children the
+``ale`` creates will actually be :class:`ColorDecision` , as that allows
+for the easy inclusion of :class:`MediaRef` objects. If you then use
+``write_ccc`` to write a ``ccc`` file, all the children :class:`ColorDecision`
+will create XML elements for their :class:`ColorCorrection` children,
+adding in any :class:`MediaRef` that were found as ``Description`` elements.
+Finally the :class:`ColorCollection` ``type`` is set to ``ccc`` and the
+``xml_root`` field is called, which knows to return a ``ccc`` style XML
+element to ``write_ccc``.
+
+.. autoclass:: cdl_convert.ColorCollection
 
 ColorCorrection
 ---------------
@@ -68,6 +91,10 @@ function, see :doc:`usage` for a walkthrough.
     provided is checked against a class level dictionary variable named
     ``members`` to ensure that no two :class:`ColorCorrection` share the same
     ``id`` , as this is required by the specification.
+
+    Reset the members dictionary by either calling the ``reset_members`` method
+    on :class:`ColorCorrection` or by reseting all cdl_convert member
+    lists and dictionaries with the ``reset_all`` function.
 
     If the ``id`` given is a blank string and ``HALT_ON_ERROR`` is set to
     ``False``, ``id`` will be set to the total number of :class:`ColorCorrection`
@@ -139,7 +166,15 @@ SopNode
 .. autoclass:: cdl_convert.SopNode
 
 General Functions
-===============
+=================
+
+Reset All
+---------
+
+Resets all the class level lists and dictionaries of cdl_convert. Calling this
+is the same as calling each individual ``reset_members`` method.
+
+.. autofunction:: cdl_convert.reset_all
 
 Sanity Check
 ------------
@@ -159,14 +194,18 @@ Parse ale
 .. autofunction:: cdl_convert.parse_ale
 
 Parse cc
----------
+--------
 
 .. autofunction:: cdl_convert.parse_cc
 
-Parse cdl
----------
+Parse Rhythm & Hues cdl
+-----------------------
 
-.. autofunction:: cdl_convert.parse_cdl
+Rhythm & Hues' implementation of the cdl format is based on a very early spec,
+and as such lacks the all metadata. It's extremely unlikely that you'll run
+into this format in the wild.
+
+.. autofunction:: cdl_convert.parse_rnh_cdl
 
 Parse flex
 ----------
@@ -185,7 +224,11 @@ Write cc
 
 .. autofunction:: cdl_convert.write_cc
 
-Write cdl
----------
+Write Rhythm & Hues cdl
+-----------------------
 
-.. autofunction:: cdl_convert.write_cdl
+This writes a very sparse cdl format that is based on a very early spec of the
+cdl implementation. It lacks all metadata. Unless you work at Rhythm & Hues,
+you probably don't want to write a cdl that uses this format.
+
+.. autofunction:: cdl_convert.write_rnh_cdl

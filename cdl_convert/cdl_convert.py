@@ -124,7 +124,7 @@ __all__ = [
     'AscColorSpaceBase',
     'AscDescBase',
     'AscXMLBase',
-    'ColorCollectionBase',
+    'ColorCollection',
     'ColorCorrection',
     'ColorDecision',
     'ColorNodeBase',
@@ -133,11 +133,14 @@ __all__ = [
     'SopNode',
     'parse_ale',
     'parse_cc',
-    'parse_cdl',
+    'parse_ccc',
+    'parse_rnh_cdl',
     'parse_flex',
+    'reset_all',
     'sanity_check',
     'write_cc',
-    'write_cdl',
+    'write_ccc',
+    'write_rnh_cdl',
 ]
 
 # ==============================================================================
@@ -386,87 +389,7 @@ class AscXMLBase(object):
 # ==============================================================================
 
 
-class ColorCollectionBase(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0903
-    """Base class for ColorDecisionList and ColorCorrectionCollection.
-
-    Description
-    ~~~~~~~~~~~
-
-    Collections need to store children and have access to descriptions,
-    input descriptions, and viewing descriptions.
-
-    Inherits desc attribute and setters from :class:`AscDescBase`
-
-    Inherits input_desc and viewing_desc from :class:`AscColorSpaceBase`
-
-    **Attributes:**
-
-        desc : [str]
-            Since all Asc nodes which can contain a single description, can
-            actually contain an infinite number of descriptions, the desc
-            attribute is a list, allowing us to store every single description
-            found during parsing.
-
-            Setting desc directly will cause the value given to append to the
-            end of the list, but desc can also be replaced by passing it a list
-            or tuple. Desc can be emptied by passing it None, [] or ().
-
-            Inherited from :class:`AscDescBase` .
-
-        element : (<xml.etree.ElementTree.Element>)
-            etree style Element representing the node. Inherited from
-            :class:`AscXMLBase` .
-
-        input_desc : (str)
-            Description of the color space, format and properties of the input
-            images. Inherited from :class:`AscColorSpaceBase` .
-
-        viewing_desc : (str)
-            Viewing device, settings and environment. Inherited from
-            :class:`AscColorSpaceBase` .
-
-        xml : (str)
-            A nicely formatted XML string representing the node. Inherited from
-            :class:`AscXMLBase`.
-
-        xml_root : (str)
-            A nicely formatted XML, ready to write to file string representing
-            the node. Formatted as an XML root, it includes the xml version and
-            encoding tags on the first line. Inherited from
-            :class:`AscXMLBase`.
-
-    **Public Methods:**
-
-        build_element()
-            Builds an ElementTree XML Element for this node and all nodes it
-            contains. ``element``, ``xml``, and ``xml_root`` attributes use
-            this to build the XML. This function is identical to calling the
-            ``element`` attribute. Overrides inherited placeholder method
-            from :class:`AscXMLBase` .
-
-        parse_xml_descs()
-            Parses an ElementTree Element for any Description tags and appends
-            any text they contain to the ``desc``. Inherited from
-            :class:`AscDescBase`
-
-        parse_xml_input_desc()
-            Parses an ElementTree Element to find & add an InputDescription.
-            If none is found, ``input_desc`` will remain set to ``None``.
-            Inherited from :class:`AscColorSpaceBase`
-
-        parse_xml_viewing_desc()
-            Parses an ElementTree Element to find & add a ViewingDescription.
-            If none is found, ``viewing_desc`` will remain set to ``None``.
-            Inherited from :class:`AscColorSpaceBase`
-
-    """
-    def __init__(self):
-        super(ColorCollectionBase, self).__init__()
-
-# ==============================================================================
-
-
-class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0902
+class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0902,R0904
     """The basic class for the ASC CDL
 
     Description
@@ -511,10 +434,10 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             :class:`AscXMLBase` .
 
         file_in : (str)
-            Filepath used to create this CDL.
+            Filepath used to create this :class:`ColorCorrection` .
 
         file_out : (str)
-            Filepath this CDL will be written to.
+            Filepath this :class:`ColorCorrection` will be written to.
 
         has_sat : (bool)
             Returns True if SOP values are set
@@ -534,6 +457,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         input_desc : (str)
             Description of the color space, format and properties of the input
             images. Inherited from :class:`AscColorSpaceBase` .
+
+        parent : (:class:`ColorCollection`)
+            The parent node that contains this node.
 
         sat_node : ( :class:`SatNode` )
             Contains a reference to a single instance of :class:`SatNode` ,
@@ -585,19 +511,23 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             If none is found, ``viewing_desc`` will remain set to ``None``.
             Inherited from :class:`AscColorSpaceBase`
 
+        reset_members()
+            Resets the class level members list.
+
     """
 
     members = {}
 
-    def __init__(self, id, cdl_file):  # pylint: disable=W0622
+    def __init__(self, id, input_file=None):  # pylint: disable=W0622
         """Inits an instance of a ColorCorrection"""
         super(ColorCorrection, self).__init__()
 
         # File Attributes
-        self._files = {
-            'file_in': os.path.abspath(cdl_file),
-            'file_out': None
-        }
+        self._file_in = os.path.abspath(input_file) if input_file else None
+        self._file_out = None
+
+        # If we're under a ColorCorrectionCollection or ColorDecision node:
+        self.parent = None
 
         # The id is really the only required part of a ColorCorrection node
         # Each ID should be unique
@@ -620,27 +550,33 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         ColorCorrection.members[self._id] = self
 
         # ASC_SAT attribute
-        self.sat_node = None
+        self._sat_node = None
 
         # ASC_SOP attributes
-        self.sop_node = None
+        self._sop_node = None
 
     # Properties ==============================================================
 
     @property
     def file_in(self):
         """Returns the absolute filepath to the input file"""
-        return self._files['file_in']
+        return self._file_in
+
+    @file_in.setter
+    def file_in(self, value):
+        """Sets the file_in to the absolute path of file"""
+        if value:
+            self._file_in = os.path.abspath(value)
 
     @property
     def file_out(self):
         """Returns a theoretical absolute filepath based on output ext"""
-        return self._files['file_out']
+        return self._file_out
 
     @property
     def has_sat(self):
         """Returns True if SOP values are set"""
-        if self.sat_node:
+        if self._sat_node:
             return True
         else:
             return False
@@ -648,7 +584,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def has_sop(self):
         """Returns True if SOP values are set"""
-        if self.sop_node:
+        if self._sop_node:
             return True
         else:
             return False
@@ -666,57 +602,55 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def offset(self):
         """Returns list of RGB offset values"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         return self.sop_node.offset
 
     @offset.setter
     def offset(self, offset_rgb):
         """Runs tests and converts offset rgb values before setting"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         self.sop_node.offset = offset_rgb
 
     @property
     def power(self):
         """Returns list of RGB power values"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         return self.sop_node.power
 
     @power.setter
     def power(self, power_rgb):
         """Runs tests and converts power rgb values before setting"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         self.sop_node.power = power_rgb
+
+    @property
+    def sat_node(self):
+        """Initializes a SatNode if one doesn't already exist"""
+        if not self._sat_node:
+            self._sat_node = SatNode(self)
+        return self._sat_node
 
     @property
     def slope(self):
         """Returns list of RGB slope values"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         return self.sop_node.slope
 
     @slope.setter
     def slope(self, slope_rgb):
         """Runs tests and converts slope rgb values before setting"""
-        if not self.sop_node:
-            self.sop_node = SopNode(self)
         self.sop_node.slope = slope_rgb
+
+    @property
+    def sop_node(self):
+        """Initializes a SopNode if one doesn't already exist"""
+        if not self._sop_node:
+            self._sop_node = SopNode(self)
+        return self._sop_node
 
     @property
     def sat(self):
         """Returns float value for saturation"""
-        if not self.sat_node:
-            self.sat_node = SatNode(self)
         return self.sat_node.sat
 
     @sat.setter
     def sat(self, sat_value):
         """Makes sure provided sat value is a positive float"""
-        if not self.sat_node:
-            self.sat_node = SatNode(self)
         self.sat_node.sat = sat_value
 
     # Private Methods =========================================================
@@ -754,23 +688,30 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         for description in self.desc:
             desc = ElementTree.SubElement(cc_xml, 'Description')
             desc.text = description
-        if self.sop_node:
+        # We need to make sure we call the private attributes here, since
+        # we don't want to trigger a virgin sop or sat being initialized.
+        if self._sop_node:
             cc_xml.append(self.sop_node.element)
-        if self.sat_node:
+        if self._sat_node:
             cc_xml.append(self.sat_node.element)
 
         return cc_xml
 
     # =========================================================================
 
-    def determine_dest(self, output):
-        """Determines the destination file and sets it on the cdl"""
-
-        directory = os.path.dirname(self.file_in)
+    def determine_dest(self, output, directory):
+        """Determines the destination file and sets it on the color correct"""
 
         filename = "{id}.{ext}".format(id=self.id, ext=output)
 
-        self._files['file_out'] = os.path.join(directory, filename)
+        self._file_out = os.path.join(directory, filename)
+
+    # =========================================================================
+
+    @classmethod
+    def reset_members(cls):
+        """Resets the class level members dictionary"""
+        cls.members = {}
 
 # ==============================================================================
 
@@ -812,6 +753,467 @@ class ColorDecision(AscXMLBase):  # pylint: disable=R0903
     def __init__(self):
         """Inits an instance of ColorDecision"""
         super(ColorDecision, self).__init__()
+        self.parent = None
+
+# ==============================================================================
+
+
+class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0902,R0904
+    """Container class for ColorDecisionLists and ColorCorrectionCollections.
+
+    Description
+    ~~~~~~~~~~~
+
+    Collections need to store children and have access to descriptions,
+    input descriptions, and viewing descriptions.
+
+    **Class Attributes:**
+
+        members : [ :class`ColorCollection`]
+            All instanced :class:`ColorCollection` are added to this member
+            list. Unlike the :class:`ColorCorrection` member's dictionary,
+            :class:`ColorCollection` do not need any unique values to exist.
+
+            This is currently only used for determining an id value when
+            exporting and no file_in attribute is set.
+
+    **Attributes:**
+
+        all_children : (:class:`ColorCorrection`, :class:`ColorDecision`)
+            A tuple of all the children of this collection, both
+            Corrections and Decisions.
+
+        color_corrections : (:class:`ColorCorrection`)
+            All the :class:`ColorCorrection` children are listed here.
+
+        color_decisions : (:class:`ColorDecision`)
+            All the :class:`ColorDecision` children are listed here.
+
+        desc : [str]
+            Since all Asc nodes which can contain a single description, can
+            actually contain an infinite number of descriptions, the desc
+            attribute is a list, allowing us to store every single description
+            found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list, but desc can also be replaced by passing it a list
+            or tuple. Desc can be emptied by passing it None, [] or ().
+
+            Inherited from :class:`AscDescBase` .
+
+        element : (<xml.etree.ElementTree.Element>)
+            etree style Element representing the node. Inherited from
+            :class:`AscXMLBase` .
+
+        file_in : (str)
+            Filepath used to create this :class:`ColorCollection` .
+
+        file_out : (str)
+            Filepath this :class:`ColorCollection` will be written to.
+
+        input_desc : (str)
+            Description of the color space, format and properties of the input
+            images. Inherited from :class:`AscColorSpaceBase` .
+
+        is_ccc : (bool)
+            True if this collection currently represents ``.ccc``.
+
+        is_cdl : (bool)
+            True if this collection currently represents ``.cdl``.
+
+        type : (str)
+            Either ``ccc`` or ``cdl``, represents the type of collection
+            this class currently will export by default.
+
+        viewing_desc : (str)
+            Viewing device, settings and environment. Inherited from
+            :class:`AscColorSpaceBase` .
+
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+        xmlns : (str)
+            Describes the version of the ASC XML Schema that cdl_convert writes
+            out to files following the full schema (``.ccc`` and ``.cdl``)
+
+    **Public Methods:**
+
+        append_child()
+            Appends the given object, either a :class:`ColorCorrection` or a
+            :class:`ColorDecision` , to the respective attribute list, either
+            ``color_corrections`` or ``color_decision`` depending on the class
+            of the object passed in.
+
+        append_children()
+            Given a list, will iterate through and append each element of that
+            list to the correct child list, using the ``append_child()``
+            method.
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
+            Here on :class:`ColorCollection` , this is a pointer to
+            ``build_element_ccc()`` or ``build_element_cdl()`` depending on
+            which type the :class:`ColorCollection` is currently set to.
+
+        build_element_ccc()
+            Builds a CCC style XML tree representing this
+            :class:`ColorCollection` instance.
+
+        build_element_cdl()
+            Builds a CDL style XML tree representing this
+            :class:`ColorCollection` instance.
+
+        copy_collection()
+            Creates and returns an exact new instance that's an exact copy of
+            the current instance. Note that references to the child instances
+            will be copied, but that the child instances themselves will
+            not be.
+
+        merge_collections()
+            Merges all members of a list containing :class:`ColorCollection`
+            and the instance this is called on to return a new
+            :class:`ColorCollection` that is primarily a copy of this instance,
+            but contains all children and description elements from the given
+            collections. `input_desc`, `viewing_desc`, `file_in`, and `type`
+            will be set to the values of the parent instance.
+
+        parse_xml_descs()
+            Parses an ElementTree Element for any Description tags and appends
+            any text they contain to the ``desc``. Inherited from
+            :class:`AscDescBase`
+
+        parse_xml_input_desc()
+            Parses an ElementTree Element to find & add an InputDescription.
+            If none is found, ``input_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
+
+        parse_xml_viewing_desc()
+            Parses an ElementTree Element to find & add a ViewingDescription.
+            If none is found, ``viewing_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
+
+        reset_members()
+            Resets the class level members list.
+
+        set_parentage()
+            Sets all child :class:`ColorCorrection` and :class:`ColorDecision`
+            ``parent`` attribute to point to this instance.
+
+        set_to_ccc()
+            Switches the ``type`` of this collection to export a ``ccc`` style
+            xml collection by default.
+
+        set_to_cdl()
+            Switches the ``type`` of this collection to export a ``cdl`` style
+            xml collection by default.
+
+    """
+
+    members = []
+
+    def __init__(self, input_file=None):
+        super(ColorCollection, self).__init__()
+
+        self._color_corrections = []
+        self._color_decisions = []
+        self._file_in = os.path.abspath(input_file) if input_file else None
+        self._file_out = None
+        self._type = 'ccc'
+        self._xmlns = "urn:ASC:CDL:v1.01"
+
+        ColorCollection.members.append(self)
+
+    # Properties ==============================================================
+
+    @property
+    def all_children(self):
+        """Returns a list of both color_corrections and color_decisions"""
+        return self.color_corrections + self.color_decisions
+
+    @property
+    def color_corrections(self):
+        """Returns the list of child ColorCorrections"""
+        return self._color_corrections
+
+    @color_corrections.setter
+    def color_corrections(self, values):
+        """Makes sure color_corrections is only set with ColorCorrection"""
+        self._color_corrections = self._list_setter(
+            'color_corrections', ColorCorrection, values
+        )
+
+    @property
+    def color_decisions(self):
+        """Returns the list of child ColorDecisions"""
+        return self._color_decisions
+
+    @color_decisions.setter
+    def color_decisions(self, values):
+        """Makes sure color_decisions is only set with ColorDecision"""
+        self._color_decisions = self._list_setter(
+            'color_decisions', ColorDecision, values
+        )
+
+    @property
+    def file_in(self):
+        """Returns the absolute filepath to the input file"""
+        return self._file_in
+
+    @file_in.setter
+    def file_in(self, value):
+        """Sets the file_in to the absolute path of file"""
+        if value:
+            self._file_in = os.path.abspath(value)
+
+    @property
+    def file_out(self):
+        """Returns a theoretical absolute filepath based on output ext"""
+        return self._file_out
+
+    @property
+    def is_ccc(self):
+        """True if this collection currently represents .ccc"""
+        return self.type == 'ccc'
+
+    @property
+    def is_cdl(self):
+        """True if this collection currently represents .cdl"""
+        return self.type == 'cdl'
+
+    @property
+    def type(self):
+        """Describes the type of ColorCollection this class will export"""
+        return self._type
+
+    @type.setter
+    def type(self, value):
+        """Checks if type is either cdl or ccc"""
+        if value.lower() not in ['ccc', 'cdl']:
+            raise ValueError('ColorCollection type must be set to either '
+                             'ccc or cdl.')
+        else:
+            self._type = value.lower()
+
+    @property
+    def xmlns(self):
+        """Describes the version of the XML schema written by cdl_convert"""
+        return self._xmlns
+
+    # Private Methods =========================================================
+
+    @staticmethod
+    def _list_setter(list_name, color_class, values):
+        """Sets a list to provided values but first checks membership"""
+        if values is None:
+            return []
+        elif type(values) in [list, tuple, set]:
+            for color in values:
+                # We need to make sure each member is of the correct class.
+                if color.__class__ != color_class:
+                    raise TypeError(
+                        "ColorCollection().{list_name} cannot be set to "
+                        "provided list because not all members of that list "
+                        "are of the {class_name} class.".format(
+                            list_name=list_name,
+                            class_name=color_class.__name__
+                        )
+                    )
+            return list(set(values))
+        elif values.__class__ == color_class:
+            # If we just got passed the correct class, we'll return it as a
+            # one member list.
+            return [values]
+        else:
+            raise TypeError(
+                "ColorCollection().{list_name} cannot be set to item "
+                "of type '{type}'. Please set {list_name} with a "
+                "list containing only members of class {class_name}.".format(
+                    list_name=list_name,
+                    type=type(values),
+                    class_name=color_class.__name__
+                )
+            )
+
+    # Public Methods ==========================================================
+
+    def append_child(self, child):
+        """Appends a given child to the correct list of children"""
+        if child.__class__ == ColorCorrection:
+            self._color_corrections.append(child)
+        elif child.__class__ == ColorDecision:
+            self._color_decisions.append(child)
+        else:
+            raise TypeError("Can only append ColorCorrection and "
+                            "ColorDecision objects.")
+
+        child.parent = self
+
+    # =========================================================================
+
+    def append_children(self, children):
+        """Appends an entire list to the correctly list of children"""
+        for child in children:
+            self.append_child(child)
+
+    # =========================================================================
+
+    def build_element(self):
+        """Builds an ElementTree XML element representing for ColorCollection"""
+        if self.is_ccc:
+            return self.build_element_ccc()
+        elif self.is_cdl:  # pragma: no cover
+            return self.build_element_cdl()
+
+    # =========================================================================
+
+    def build_element_ccc(self):
+        """Builds a CCC XML element representing this ColorCollection"""
+        ccc_xml = ElementTree.Element('ColorCorrectionCollection')
+        ccc_xml.attrib = {'xmlns': self.xmlns}
+        if self.input_desc:
+            input_desc = ElementTree.SubElement(ccc_xml, 'InputDescription')
+            input_desc.text = self.input_desc
+        if self.viewing_desc:
+            viewing_desc = ElementTree.SubElement(ccc_xml, 'ViewingDescription')
+            viewing_desc.text = self.viewing_desc
+        for description in self.desc:
+            desc = ElementTree.SubElement(ccc_xml, 'Description')
+            desc.text = description
+        for color_correct in self.color_corrections:
+            ccc_xml.append(color_correct.element)
+
+        return ccc_xml
+
+    # =========================================================================
+
+    def build_element_cdl(self):  # pragma: no cover
+        """Builds a CDL XML element representing this ColorCollection"""
+        return None
+
+    # =========================================================================
+
+    def copy_collection(self):
+        """Creates and returns a copy of this collection"""
+        new_col = ColorCollection()
+        new_col.desc = self.desc
+        new_col.file_in = self.file_in if self.file_in else None
+        new_col.input_desc = self.input_desc
+        new_col.viewing_desc = self.viewing_desc
+        new_col.type = self.type
+        new_col.append_children(self.all_children)
+        return new_col
+
+    # =========================================================================
+
+    def determine_dest(self, directory):
+        """Determines the destination file and sets it on the cdl"""
+        if self.file_in:
+            filename = os.path.splitext(os.path.basename(self.file_in))[0]
+        else:
+            filename = 'color_collection_{id}'.format(
+                id=str(ColorCollection.members.index(self)).rjust(3, '0')
+            )
+
+        filename = "{file_in}.{ext}".format(file_in=filename, ext=self.type)
+
+        self._file_out = os.path.join(directory, filename)
+
+    # =========================================================================
+
+    def merge_collections(self, collections):
+        """Merges multiple collections together and returns a new one"""
+        new_col = self.copy_collection()
+
+        # We need to move all the children into one big list, so that
+        # we can move it into a set to eliminate duplicates.
+        children = new_col.all_children
+        # Now that all of new_col's children are in the children list,
+        # let's clear out the new_col lists.
+        # We'll repopulate them with the full lists after adding
+        # all the additional children.
+        new_col.color_corrections = []
+        new_col.color_decisions = []
+
+        for col in collections:
+            if col == self:  # Don't add ourselves
+                continue
+            new_col.desc.extend(col.desc)
+            children.extend(col.all_children)
+
+        new_col.append_children(children)
+
+        # Remove duplicates
+        new_col.color_corrections = set(new_col.color_corrections)
+        new_col.color_decisions = set(new_col.color_decisions)
+
+        return new_col
+
+    # =========================================================================
+
+    def parse_xml_color_corrections(self, xml_element):
+        """Parses an ElementTree element to find & add all ColorCorrection.
+
+        **Args:**
+            xml_element : (``xml.etree.ElementTree.Element``)
+                The element to parse for multiple ColorCorrection elements. If
+                found, append to our ``color_corrections``.
+
+        **Returns:**
+            (bool)
+                True if found ColorCorrections.
+
+        **Raises:**
+            None
+
+        """
+        cc_nodes = xml_element.findall('ColorCorrection')
+        if not cc_nodes:
+            return False
+
+        for cc_node in xml_element.findall('ColorCorrection'):
+            cdl = parse_cc(cc_node)
+            cdl.parent = self
+            self._color_corrections.append(cdl)
+
+        return True
+
+    # =========================================================================
+
+    @classmethod
+    def reset_members(cls):
+        """Resets the member list"""
+        cls.members = []
+
+    # =========================================================================
+
+    def set_parentage(self):
+        """Sets the parent of all child nodes to point to this instance"""
+        for node in self.all_children:
+            node.parent = self
+
+    # =========================================================================
+
+    def set_to_ccc(self):
+        """Switches the type of the ColorCollection to export .ccc style xml"""
+        self._type = 'ccc'
+
+    # =========================================================================
+
+    def set_to_cdl(self):
+        """Switches the type of the ColorCollection to export .cdl style xml"""
+        self._type = 'cdl'
 
 # ==============================================================================
 
@@ -1066,6 +1468,9 @@ class MediaRef(AscXMLBase):
             ``element`` attribute. Overrides inherited placeholder method
             from :class:`AscXMLBase` .
 
+        reset_members()
+            Resets the class level members list.
+
     """
 
     members = {}
@@ -1266,7 +1671,7 @@ class MediaRef(AscXMLBase):
 
     # =========================================================================
 
-    def _get_sequences(self):
+    def _get_sequences(self):  # pylint: disable=R0912
         """Determines if the media ref is pointing to an image sequence"""
         re_exp = r'(^[ \w_.-]+[_.])([0-9]+)(\.[a-zA-Z0-9]{3}$)'
         re_exp_percent = r'(^[ \w_.-]+[_.])(%[0-9]+d)(\.[a-zA-Z0-9]{3}$)'
@@ -1339,6 +1744,13 @@ class MediaRef(AscXMLBase):
         ref_file = os.path.split(uri)[1]
 
         return protocol, directory, ref_file
+
+    # Public Methods ==========================================================
+
+    @classmethod
+    def reset_members(cls):
+        """Resets the class level members dictionary"""
+        cls.members = {}
 
 # ==============================================================================
 
@@ -1774,6 +2186,21 @@ def _de_exponent(notation):
 # ==============================================================================
 
 
+def _remove_xmlns(input_file):
+    """Removes the xmlns attribute from XML files, then returns the element"""
+    # We're going to open the file as a string and remove the xmlns, as
+    # it doesn't do a lot for us when working with CDLs, and in fact
+    # just clutters everything the hell up.
+    with open(input_file, 'r') as xml_file:
+        xml_string = xml_file.read()
+
+    xml_string = re.sub(' xmlns="[^"]+"', '', xml_string, count=1)
+
+    return ElementTree.fromstring(xml_string)
+
+# ==============================================================================
+
+
 def _sanitize(name):
     """Removes any characters in string name that aren't alnum or in '_.'"""
     if not name:
@@ -1803,11 +2230,11 @@ def _sanitize(name):
 # ==============================================================================
 
 
-def parse_ale(edl_file):
+def parse_ale(input_file):  # pylint: disable=R0914
     """Parses an Avid Log Exchange (ALE) file for CDLs
 
     **Args:**
-        file : (str)
+        input_file : (str)
             The filepath to the ALE EDL
 
     **Returns:**
@@ -1839,7 +2266,7 @@ def parse_ale(edl_file):
 
     cdls = []
 
-    with open(edl_file, 'r') as edl:
+    with open(input_file, 'r') as edl:
         lines = edl.readlines()
         for line in lines:
             if line.startswith('Column'):
@@ -1871,7 +2298,7 @@ def parse_ale(edl_file):
                     'power': literal_eval(sop[2])
                 }
 
-                cdl = ColorCorrection(cc_id, edl_file)
+                cdl = ColorCorrection(cc_id, input_file)
 
                 cdl.sat = sat
                 cdl.slope = sop_values['slope']
@@ -1880,17 +2307,21 @@ def parse_ale(edl_file):
 
                 cdls.append(cdl)
 
-    return cdls
+    ccc = ColorCollection()
+    ccc.file_in = input_file
+    ccc.append_children(cdls)
+
+    return ccc
 
 # ==============================================================================
 
 
-def parse_cc(cdl_file):
+def parse_cc(input_file):  # pylint: disable=R0912
     """Parses a .cc file for ASC CDL information
 
     **Args:**
-        file : (str)
-            The filepath to the CC
+        input_file : (str|<ElementTree.Element>)
+            The filepath to the CC or the ``ElementTree.Element`` object.
 
     **Returns:**
         [:class:`ColorCorrection`]
@@ -1924,9 +2355,12 @@ def parse_cc(cdl_file):
     colorspace and equipment.
 
     """
-    root = ElementTree.parse(cdl_file).getroot()
-
-    cdls = []
+    if type(input_file) is str:
+        root = _remove_xmlns(input_file)
+        file_in = input_file
+    else:
+        root = input_file
+        file_in = None
 
     if not root.tag == 'ColorCorrection':
         # This is not a CC file...
@@ -1937,13 +2371,15 @@ def parse_cc(cdl_file):
     except KeyError:
         raise ValueError('No id found on ColorCorrection')
 
-    cdl = ColorCorrection(cc_id, cdl_file)
+    cdl = ColorCorrection(cc_id)
+    if file_in:
+        cdl.file_in = file_in
 
-    # Grab our descriptions and add them to the cdl
+    # Grab our descriptions and add them to the cdl.
     cdl.parse_xml_descs(root)
     # See if we have a viewing description.
     cdl.parse_xml_viewing_desc(root)
-    # See if we have an input description
+    # See if we have an input description.
     cdl.parse_xml_input_desc(root)
 
     def find_required(elem, names):
@@ -2014,18 +2450,71 @@ def parse_cc(cdl_file):
         # desc descriptions.
         cdl.sat_node.parse_xml_descs(sat_xml)
 
-    cdls.append(cdl)
-
-    return cdls
+    return cdl
 
 # ==============================================================================
 
 
-def parse_cdl(cdl_file):
+def parse_ccc(input_file):
+    """Parses a .ccc file into a :class:`ColorCorrectionCollection`
+
+    **Args:**
+        input_file : (str)
+            The filepath to the CCC.
+
+    **Returns:**
+        (:class:`ColorCollection`)
+            A collection of all the found :class:`ColorCorrection` as well
+            as any metadata within the XML
+
+    **Raises:**
+        ValueError:
+            Bad XML formatting can raise ValueError is missing required
+            elements.
+
+    A ColorCorrectionCollection is just that- a collection of ColorCorrection
+    elements. It does not contain any ColorDecision or MediaRef elements,
+    but is free to contain as many Description elements as someone adds in.
+
+    It should also contain an InputDescription element, describing the color
+    space and other properties of the incoming image, as well as a
+    ViewingDescription which describes the viewing environment as well
+    as any relevant hardware devices used to view or grade.
+
+    """
+    root = _remove_xmlns(input_file)
+
+    if root.tag != 'ColorCorrectionCollection':
+        # This is not a CC file...
+        raise ValueError('CCC parsed but no ColorCorrectionCollection found')
+
+    ccc = ColorCollection()
+    ccc.set_to_ccc()
+    ccc.file_in = input_file
+
+    # Grab our descriptions and add them to the ccc.
+    ccc.parse_xml_descs(root)
+    # See if we have a viewing description.
+    ccc.parse_xml_viewing_desc(root)
+    # See if we have an input description.
+    ccc.parse_xml_input_desc(root)
+    # Add all of our found color corrections. If the parse_xml returns False,
+    # (for no CCs found) we raise a value error.
+    if not ccc.parse_xml_color_corrections(root):
+        raise ValueError('ColorCorrectionCollections require at least one '
+                         'ColorCorrection node, but no ColorCorrection nodes '
+                         'were found.')
+
+    return ccc
+
+# ==============================================================================
+
+
+def parse_rnh_cdl(input_file):
     """Parses a space separated .cdl file for ASC CDL information.
 
     **Args:**
-        file : (str)
+        input_file : (str)
             The filepath to the CDL
 
     **Returns:**
@@ -2046,16 +2535,14 @@ def parse_cdl(cdl_file):
     ``SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat``
 
     """
-    # Although we only parse one cdl file, we still want to return a list
-    cdls = []
 
-    with open(cdl_file, 'r') as cdl_f:
+    with open(input_file, 'r') as cdl_f:
         # We only need to read the first line
         line = cdl_f.readline()
         line = line.split()
 
         # The filename without extension will become the id
-        filename = os.path.basename(cdl_file).split('.')[0]
+        filename = os.path.basename(input_file).split('.')[0]
 
         slope = [line[0], line[1], line[2]]
         offset = [line[3], line[4], line[5]]
@@ -2063,25 +2550,23 @@ def parse_cdl(cdl_file):
 
         sat = line[9]
 
-        cdl = ColorCorrection(filename, cdl_file)
+        cdl = ColorCorrection(filename, input_file)
 
         cdl.slope = slope
         cdl.offset = offset
         cdl.power = power
         cdl.sat = sat
 
-        cdls.append(cdl)
-
-    return cdls
+    return cdl
 
 # ==============================================================================
 
 
-def parse_flex(edl_file):
+def parse_flex(input_file):  # pylint: disable=R0912,R0914
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
 
     **Args:**
-        file : (str)
+        input_file : (str)
             The filepath to the FLEx EDL
 
     **Returns:**
@@ -2130,10 +2615,10 @@ def parse_flex(edl_file):
 
     cdls = []
 
-    with open(edl_file, 'r') as edl:
+    with open(input_file, 'r') as edl:
         lines = edl.readlines()
 
-        filename = os.path.basename(edl_file).split('.')[0]
+        filename = os.path.basename(input_file).split('.')[0]
 
         title = None
         # Metadata will store, in order, the various scene, take, reel fields
@@ -2173,7 +2658,7 @@ def parse_flex(edl_file):
 
                 # If we already have values:
                 if sop or sat:
-                    cdl = build_cc(cc_id, edl_file, sop, sat, title)
+                    cdl = build_cc(cc_id, input_file, sop, sat, title)
                     cdls.append(cdl)
 
                 metadata = []
@@ -2217,10 +2702,24 @@ def parse_flex(edl_file):
 
     # If we found values at all:
     if sop or sat:
-        cdl = build_cc(cc_id, edl_file, sop, sat, title)
+        cdl = build_cc(cc_id, input_file, sop, sat, title)
         cdls.append(cdl)
 
-    return cdls
+    ccc = ColorCollection()
+    ccc.file_in = input_file
+    ccc.append_children(cdls)
+
+    return ccc
+
+# ==============================================================================
+
+
+def reset_all():
+    """Resets all class level member lists and dictionaries"""
+    ColorCorrection.reset_members()
+    ColorCollection.reset_members()
+    MediaRef.reset_members()
+
 # ==============================================================================
 
 
@@ -2294,7 +2793,16 @@ def write_cc(cdl):
 # ==============================================================================
 
 
-def write_cdl(cdl):
+def write_ccc(cdl):
+    """Writes the ColorCollection to a .ccc file"""
+    cdl.set_to_ccc()
+    with open(cdl.file_out, 'wb') as cdl_f:
+        cdl_f.write(cdl.xml_root)
+
+# ==============================================================================
+
+
+def write_rnh_cdl(cdl):
     """Writes the ColorCorrection to a space separated .cdl file"""
 
     values = list(cdl.slope)
@@ -2317,39 +2825,26 @@ def write_cdl(cdl):
 
 INPUT_FORMATS = {
     'ale': parse_ale,
+    'ccc': parse_ccc,
     'cc': parse_cc,
-    'cdl': parse_cdl,
+    'cdl': parse_rnh_cdl,
     'flex': parse_flex,
 }
 
 OUTPUT_FORMATS = {
     'cc': write_cc,
-    'cdl': write_cdl,
+    'ccc': write_ccc,
+    'cdl': write_rnh_cdl,
 }
+
+COLLECTION_FORMATS = ['ale', 'ccc', 'flex']
+SINGLE_FORMATS = ['cc', 'cdl']
 
 # ==============================================================================
 
 
 def parse_args():
     """Uses argparse to parse command line arguments"""
-
-    def list_type(argument):
-        """Converts a comma seperated entry into a list"""
-        argument_values = argument.split(',')
-        return [arg_value.lower() for arg_value in argument_values]
-
-    def valid_arg(argument, valid_args, arg_name):
-        """Checks if a supplied argument is a valid argument"""
-        if argument not in valid_args:
-            raise ValueError(
-                "'{argument}' is not an allowed value for {arg_name}. "
-                "Allowed values are: {valid_args}".format(
-                    argument=argument,
-                    arg_name=arg_name,
-                    valid_args=valid_args,
-                )
-            )
-
     parser = ArgumentParser()
     parser.add_argument(
         "input_file",
@@ -2366,10 +2861,15 @@ def parse_args():
     parser.add_argument(
         "-o",
         "--output",
-        type=list_type,
         help="specify the filetype to convert to, comma separated lists are "
              "accepted. Defaults to a .cc XML. Supported output formats are: "  # pylint: disable=C0330
              "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))  # pylint: disable=C0330
+    )
+    parser.add_argument(
+        "-d",
+        "--destination",
+        help="specify an output directory to save converted files to. If not "
+             "provided will default to ./converted/"  # pylint: disable=C0330
     )
     parser.add_argument(
         "--halt",
@@ -2385,7 +2885,7 @@ def parse_args():
         "--no-output",
         action='store_true',
         help="parses all incoming files but no files will be written. Use this "
-             "in conjunction with '--halt' and '--check to try and "  # pylint: disable=C0330
+             "in conjunction with '--halt' and '--check' to try and "  # pylint: disable=C0330
              "track down any oddities observed in the CDLs."  # pylint: disable=C0330
     )
     parser.add_argument(
@@ -2401,14 +2901,39 @@ def parse_args():
     args = parser.parse_args()
 
     if args.input:
-        args.input = args.input.lower()
-        valid_arg(args.input, INPUT_FORMATS, 'input')
+        if args.input.lower() not in INPUT_FORMATS:
+            raise ValueError(
+                "The input format: {input} is not supported".format(
+                    input=args.input
+                )
+            )
+        else:
+            args.input = args.input.lower()
 
     if args.output:
-        for arg in args.output:
-            valid_arg(arg, OUTPUT_FORMATS, 'output')
+        # This might be a string separated list of output types.
+        # We'll split it, check each against the supported types, convert
+        # them to lowercase if not already, and place the resulting list back
+        # into args.output
+        #
+        # TODO: Define and add a new argparse type as described in:
+        # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
+        output_types = args.output.split(',')
+        for i in xrange(len(output_types)):
+            if output_types[i].lower() not in OUTPUT_FORMATS.keys():
+                raise ValueError(
+                    "The output format: {output} is not supported".format(
+                        output=output_types[i]
+                    )
+                )
+            else:
+                output_types[i] = output_types[i].lower()
+        args.output = output_types
     else:
-        args.output = ['cc']
+        args.output = ['cc', ]
+
+    if not args.destination:
+        args.destination = './converted/'
 
     if args.halt:
         global HALT_ON_ERROR  # pylint: disable=W0603
@@ -2419,7 +2944,7 @@ def parse_args():
 # ==============================================================================
 
 
-def main():
+def main():  # pylint: disable=R0912
     """Will figure out input and destination filetypes, then convert"""
     args = parse_args()
 
@@ -2427,29 +2952,85 @@ def main():
         print("Dry run initiated, no files will be written.")
 
     filepath = os.path.abspath(args.input_file)
+    destination_dir = os.path.abspath(args.destination)
+
+    if not os.path.exists(destination_dir):
+        print(
+            "Destination directory {dir} does not exist.".format(
+                dir=destination_dir
+            )
+        )
+        if not args.no_output:
+            print("Creating destination directory.")
+            os.makedirs(destination_dir)
+        else:
+            print("--no-output argument provided. Skipping directory creation")
 
     if not args.input:
         filetype_in = os.path.basename(filepath).split('.')[-1].lower()
     else:
         filetype_in = args.input
 
-    cdls = INPUT_FORMATS[filetype_in](filepath)
+    color_decisions = INPUT_FORMATS[filetype_in](filepath)
 
-    if cdls:
-        for cdl in cdls:
-            if args.check:
-                for cdl in cdls:
-                    sanity_check(cdl)
-            for ext in args.output:
-                cdl.determine_dest(ext)
-                print(
-                    "Writing cdl {id} to {path}".format(
-                        id=cdl.id,
-                        path=cdl.file_out
-                    )
-                )
-                if not args.no_output:
-                    OUTPUT_FORMATS[ext](cdl)
+    def write_single_file(cdl, ext):
+        """Writes a single color correction file"""
+        cdl.determine_dest(ext, destination_dir)
+        print(
+            "Writing cdl {id} to {path}".format(
+                id=cdl.id,
+                path=cdl.file_out
+            )
+        )
+        if not args.no_output:
+            OUTPUT_FORMATS[ext](cdl)
+
+    def write_collection_file(col, ext):
+        """Writes a collection file"""
+        col.type = ext
+        col.determine_dest(destination_dir)
+        print(
+            "Writing collection to {path}".format(
+                path=col.file_out
+            )
+        )
+        if not args.no_output:
+            OUTPUT_FORMATS[ext](col)
+
+    if color_decisions:
+        # Sanity Check
+        if args.check:
+            if filetype_in in COLLECTION_FORMATS:
+                for color_correct in color_decisions.color_corrections:
+                    sanity_check(color_correct)
+            else:
+                sanity_check(color_decisions)
+
+        # Writing
+        for ext in args.output:
+            if ext in SINGLE_FORMATS:
+                if filetype_in in COLLECTION_FORMATS:
+                    for color_correct in color_decisions.color_corrections:
+                        write_single_file(color_correct, ext)
+                else:
+                    write_single_file(color_decisions, ext)
+            else:
+                if filetype_in in COLLECTION_FORMATS:
+                    # If we read a collection type, color_decisions is
+                    # already a ColorCollection.
+                    write_collection_file(color_decisions, ext)
+                else:
+                    # If we read a single, non-collection file, we need to
+                    # create a collection for exporting.
+                    #
+                    # Since we only read a single file, we can safely use that
+                    # filepath as the input_file.
+                    #
+                    # If we read a group of files, we would want to default to
+                    # the generic collection naming.
+                    collection = ColorCollection(input_file=filepath)
+                    collection.append_child(color_decisions)
+                    write_collection_file(collection, ext)
 
 if __name__ == '__main__':  # pragma: no cover
     try:

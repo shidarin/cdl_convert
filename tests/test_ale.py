@@ -126,10 +126,10 @@ class TestParseALEBasic(unittest.TestCase):
             f.write(enc(self.file))
             self.filename = f.name
 
-        cdls = cdl_convert.parse_ale(self.filename)
-        self.cdl1 = cdls[0]
-        self.cdl2 = cdls[1]
-        self.cdl3 = cdls[2]
+        self.cdls = cdl_convert.parse_ale(self.filename)
+        self.cdl1 = self.cdls.color_corrections[0]
+        self.cdl2 = self.cdls.color_corrections[1]
+        self.cdl3 = self.cdls.color_corrections[2]
 
     #==========================================================================
 
@@ -139,10 +139,37 @@ class TestParseALEBasic(unittest.TestCase):
         os.remove(self.filename)
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
+    #==========================================================================
+
+    def testCollection(self):
+        """Tests that we were returned a ColorCollection"""
+        self.assertEqual(
+            cdl_convert.ColorCollection,
+            self.cdls.__class__
+        )
+
+    #==========================================================================
+
+    def testFileIn(self):
+        """Tests that file_in has been set on the collection correctly"""
+        self.assertEqual(
+            self.filename,
+            self.cdls.file_in
+        )
+
+    #==========================================================================
+
+    def testType(self):
+        """Test that the type of the collection is set to ccc"""
+        self.assertEqual(
+            'ccc',
+            self.cdls.type
+        )
+
     #==========================================================================
 
     def testId(self):
@@ -286,10 +313,10 @@ class TestParseALEShort(TestParseALEBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        cdls = cdl_convert.parse_ale(self.filename)
-        self.cdl1 = cdls[0]
-        self.cdl2 = cdls[1]
-        self.cdl3 = cdls[2]
+        self.cdls = cdl_convert.parse_ale(self.filename)
+        self.cdl1 = self.cdls.color_corrections[0]
+        self.cdl2 = self.cdls.color_corrections[1]
+        self.cdl3 = self.cdls.color_corrections[2]
 
 #==============================================================================
 # FUNCTIONS

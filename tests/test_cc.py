@@ -314,7 +314,7 @@ class TestParseCCBasic(unittest.TestCase):
             f.write(enc(CC_FULL))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
     #==========================================================================
 
@@ -324,7 +324,7 @@ class TestParseCCBasic(unittest.TestCase):
         os.remove(self.filename)
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -451,7 +451,7 @@ class TestParseCCOdd(TestParseCCBasic):
             f.write(enc(CC_ODD))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -481,7 +481,7 @@ class TestParseCCBasic(TestParseCCBasic):
             f.write(enc(CC_BASIC))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -511,7 +511,7 @@ class TestParseCCBasicOrder(TestParseCCBasic):
             f.write(enc(CC_BASIC_ORDER))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -541,7 +541,7 @@ class TestParseCCBlankMetadata(TestParseCCBasic):
             f.write(enc(CC_BLANK_METADATA))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -571,7 +571,7 @@ class TestParseCCNoSop(TestParseCCBasic):
             f.write(enc(CC_NO_SOP))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
         # We need to call a SOP value to initialize the SOP subnode
         self.cdl.slope
@@ -604,7 +604,7 @@ class TestParseCCNoSat(TestParseCCBasic):
             f.write(enc(CC_NO_SAT))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
         # We need to call a SAT value to initialize the SAT subnode
         self.cdl.sat
@@ -625,7 +625,7 @@ class TestParseCCExceptions(unittest.TestCase):
     #==========================================================================
 
     def tearDown(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         if self.file:
             os.remove(self.file)
 
@@ -702,7 +702,7 @@ class TestParseCCExceptions(unittest.TestCase):
 
         cdl_convert.HALT_ON_ERROR = False
 
-        cdl = cdl_convert.parse_cc(self.file)[0]
+        cdl = cdl_convert.parse_cc(self.file)
 
         self.assertEqual(
             '001',
@@ -728,9 +728,9 @@ class TestParseCCExceptions(unittest.TestCase):
         )
 
         cdl_convert.HALT_ON_ERROR = False
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
-        cdl = cdl_convert.parse_cc(self.file)[0]
+        cdl = cdl_convert.parse_cc(self.file)
 
         self.assertEqual(
             (0.0, 0.678669, 1.0758),
@@ -748,7 +748,7 @@ class TestWriteCCFull(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("014_xf_seqGrade_v01", '')
         self.cdl.desc = [
             'CC description 1', 'CC description 2', 'CC description 3',
@@ -775,8 +775,10 @@ class TestWriteCCFull(unittest.TestCase):
     #==========================================================================
 
     def tearDown(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
+    #==========================================================================
+    # TESTS
     #==========================================================================
 
     def test_root_xml(self):
@@ -804,11 +806,13 @@ class TestWriteCCFull(unittest.TestCase):
             self.cdl.element.tag
         )
 
+    #==========================================================================
+
     def test_write(self):
         """Tests writing the cc itself"""
         mockOpen = mock.mock_open()
 
-        self.cdl._files['file_out'] = 'bobs_big_file.cc'
+        self.cdl._file_out = 'bobs_big_file.cc'
 
         with mock.patch(builtins + '.open', mockOpen, create=True):
             cdl_convert.write_cc(self.cdl)
@@ -826,7 +830,7 @@ class TestWriteCCOdd(TestWriteCCFull):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("f55.100", '')
         self.cdl.desc = [
             'Raised saturation1 a little!?! ag... \/Offset',
@@ -857,7 +861,7 @@ class TestWriteCCNoSop(TestWriteCCFull):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("burp_200.x15", '')
 
         self.cdl.sat = 1.0128109381
@@ -875,7 +879,7 @@ class TestWriteCCNoSat(TestWriteCCFull):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("burp_300.x35", '')
 
         self.cdl.slope = (1.233321, 0.678669, 1.0758)

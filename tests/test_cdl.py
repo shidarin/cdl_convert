@@ -95,7 +95,7 @@ class TestParseCDLBasic(unittest.TestCase):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cdl(self.filename)[0]
+        self.cdl = cdl_convert.parse_rnh_cdl(self.filename)
 
     #==========================================================================
 
@@ -105,7 +105,7 @@ class TestParseCDLBasic(unittest.TestCase):
         os.remove(self.filename)
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -179,7 +179,7 @@ class TestParseCDLOdd(TestParseCDLBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cdl(self.filename)[0]
+        self.cdl = cdl_convert.parse_rnh_cdl(self.filename)
 
 
 class TestWriteCDLBasic(unittest.TestCase):
@@ -200,7 +200,7 @@ class TestWriteCDLBasic(unittest.TestCase):
             '../theVeryBestFile.ale'
         )
 
-        self.cdl.determine_dest('cdl')
+        self.cdl.determine_dest('cdl', '../converted/')
         self.cdl.slope = self.slope
         self.cdl.offset = self.offset
         self.cdl.power = self.power
@@ -211,12 +211,12 @@ class TestWriteCDLBasic(unittest.TestCase):
         self.mockOpen = mock.mock_open()
 
         with mock.patch(builtins + '.open', self.mockOpen, create=True):
-            cdl_convert.write_cdl(self.cdl)
+            cdl_convert.write_rnh_cdl(self.cdl)
 
     def tearDown(self):
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -229,7 +229,7 @@ class TestWriteCDLBasic(unittest.TestCase):
     #==========================================================================
 
     def testContent(self):
-        """Tests that write_cdl wrote the correct CDL"""
+        """Tests that write_rnh_cdl wrote the correct CDL"""
         handle = self.mockOpen()
         handle.write.assert_called_once_with(enc(self.file))
 
@@ -254,7 +254,7 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
             'uniqueId', '../theVeryBestFile.ale'
         )
 
-        self.cdl.determine_dest('cdl')
+        self.cdl.determine_dest('cdl', '../converted/')
         self.cdl.slope = self.slope
         self.cdl.offset = self.offset
         self.cdl.power = self.power
@@ -265,7 +265,7 @@ class TestWriteCDLOdd(TestWriteCDLBasic):
         self.mockOpen = mock.mock_open()
 
         with mock.patch(builtins + '.open', self.mockOpen, create=True):
-            cdl_convert.write_cdl(self.cdl)
+            cdl_convert.write_rnh_cdl(self.cdl)
 
 #==============================================================================
 # FUNCTIONS

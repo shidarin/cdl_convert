@@ -359,18 +359,18 @@ class TestAscDescBase(unittest.TestCase):
             self.node.desc
         )
 
-# ColorNodeBase ===============================================================
+# ColorCollection==============================================================
 
 
-class TestColorCollectionBase(unittest.TestCase):
-    """Tests the very simple base class ColorCollectionBase"""
+class TestColorCollection(unittest.TestCase):
+    """Tests the simple parameters of ColorCollection"""
 
     #==========================================================================
     # SETUP & TEARDOWN
     #==========================================================================
 
     def setUp(self):
-        self.node = cdl_convert.ColorCollectionBase()
+        self.node = cdl_convert.ColorCollection()
 
     #==========================================================================
     # TESTS
@@ -416,6 +416,819 @@ class TestColorCollectionBase(unittest.TestCase):
             self.node.desc
         )
 
+    #==========================================================================
+
+    def testIsCCC(self):
+        """Tests that is_ccc works correctly"""
+        self.assertTrue(
+            self.node.is_ccc
+        )
+
+        self.node._type = 'cdl'
+
+        self.assertFalse(
+            self.node.is_ccc
+        )
+
+    #==========================================================================
+
+    def testIsCDL(self):
+        """Tests that is_cdl works correctly"""
+        self.assertFalse(
+            self.node.is_cdl
+        )
+
+        self.node._type = 'cdl'
+
+        self.assertTrue(
+            self.node.is_cdl
+        )
+
+    #==========================================================================
+
+    def testType(self):
+        """Tests that type protects and accesses the _type attribute"""
+        def setType():
+            self.node.type = 'banana'
+
+        self.assertRaises(
+            ValueError,
+            setType
+        )
+
+        self.assertEqual(
+            'ccc',
+            self.node.type
+        )
+
+        self.node._type = 'cdl'
+
+        self.assertEqual(
+            'cdl',
+            self.node.type
+        )
+
+        self.node.type = 'ccc'
+
+        self.assertEqual(
+            'ccc',
+            self.node.type
+        )
+
+    #==========================================================================
+
+    def testXmlns(self):
+        """Tests the XML specificiation attribute"""
+        def setXML():
+            self.node.xmlns = 'banana'
+
+        self.assertRaises(
+            AttributeError,
+            setXML
+        )
+
+        self.assertEqual(
+            "urn:ASC:CDL:v1.01",
+            self.node.xmlns
+        )
+
+    #==========================================================================
+
+    def testSetToCCC(self):
+        """Tests the set to CCC method"""
+        self.node._type = 'cdl'
+
+        self.node.set_to_ccc()
+
+        self.assertEqual(
+            'ccc',
+            self.node._type
+        )
+
+    #==========================================================================
+
+    def testSetToCDL(self):
+        """Tests the set to CDL method"""
+        self.node._type = 'ccc'
+
+        self.node.set_to_cdl()
+
+        self.assertEqual(
+            'cdl',
+            self.node._type
+        )
+
+    #==========================================================================
+
+    @mock.patch('os.path.abspath')
+    def testFileInRead(self, mockPath):
+        """Tests that file in returns what's passed through"""
+        mockPath.return_value = 'bananaphone.ccc'
+        self.node = cdl_convert.ColorCollection(input_file='mybestfile.ccc')
+
+        mockPath.assert_called_once_with('mybestfile.ccc')
+
+        self.assertEqual(
+            'bananaphone.ccc',
+            self.node.file_in
+        )
+
+    #==========================================================================
+
+    @mock.patch('os.path.abspath')
+    def testFileInRead(self, mockPath):
+        """Tests that file in returns what's passed through"""
+        mockPath.return_value = 'bananaphone.ccc'
+
+        self.assertEqual(
+            None,
+            self.node.file_in
+        )
+
+        self.node.file_in = 'mybestfile.ccc'
+
+        mockPath.assert_called_once_with('mybestfile.ccc')
+
+        self.assertEqual(
+            'bananaphone.ccc',
+            self.node.file_in
+        )
+
+    #==========================================================================
+
+    def testFileOutSetException(self):
+        """Tests that exception raised when attempting to set file_out direct"""
+        def testFileOut():
+            self.node.file_out = '../NewFile.ccc'
+
+        self.assertRaises(
+            AttributeError,
+            testFileOut
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_cc')
+    def testParseXMLColorCorrectionsMultiFound(self, mock_parse):
+        """Tests that the method returns True when CCs are found"""
+
+        xml_element = mock.MagicMock()
+        xml_element.findall.return_value = ['banana', 'apple', 'egg']
+
+        mock_cdl = mock.MagicMock()
+        mock_parse.return_value = mock_cdl
+
+        self.assertTrue(
+            self.node.parse_xml_color_corrections(xml_element)
+        )
+
+        mock_parse.assert_has_calls(
+            [
+                mock.call('banana'),
+                mock.call('apple'),
+                mock.call('egg')
+            ]
+        )
+
+        self.assertEqual(
+            self.node,
+            mock_cdl.parent
+        )
+
+        # Tests that the returned mock_cdls were added to the color_corrections
+        # list.
+        self.assertEqual(
+            [mock_cdl, mock_cdl, mock_cdl],
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testParseXMLColorCorrectionsNoneFound(self):
+        """Tests that the method returns True when CCs are found"""
+
+        xml_element = mock.MagicMock()
+        xml_element.findall.return_value = []
+
+        self.assertFalse(
+            self.node.parse_xml_color_corrections(xml_element)
+        )
+
+
+    #==========================================================================
+
+    @mock.patch('os.path.abspath')
+    def testDetermineDest(self, mockPath):
+        """Tests that determine destination is calculated correctly"""
+        mockPath.return_value = '/this/is/a/path/bananaphone.ccc'
+        self.node = cdl_convert.ColorCollection(input_file='mybestfile.ccc')
+        self.node.type = 'cdl'
+
+        mockPath.assert_called_once_with('mybestfile.ccc')
+
+        self.node.determine_dest('./converted/')
+
+        self.assertEqual(
+            './converted/bananaphone.cdl',
+            self.node.file_out
+        )
+
+    #==========================================================================
+
+    def testDetermineDestNoFileIn(self):
+        """Tests determine destination works with no file_in"""
+        # Reset the members list
+        cdl_convert.ColorCollection.reset_members()
+
+        # Create a few Collections
+        cdl_convert.ColorCollection()
+        cdl_convert.ColorCollection()
+        cdl_convert.ColorCollection()
+
+        # The 4th one will be the one we use
+        self.node = cdl_convert.ColorCollection()
+
+        # But we'll create a 5th.
+        cdl_convert.ColorCollection()
+
+        self.node.type = 'ccc'
+
+        self.node.determine_dest('./converted/')
+
+        self.assertEqual(
+            './converted/color_collection_003.ccc',
+            self.node.file_out
+        )
+
+
+class TestCollectionChildMethods(unittest.TestCase):
+    """Tests the children methods and attributes of ColorCollection"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.node = cdl_convert.ColorCollection()
+
+        # We need lists of color corrections and decisions
+        self.color_corrections = [
+            cdl_convert.ColorCorrection(id='001'),
+            cdl_convert.ColorCorrection(id='002'),
+            cdl_convert.ColorCorrection(id='003'),
+            cdl_convert.ColorCorrection(id='004')
+        ]
+        self.color_decisions = [
+            cdl_convert.ColorDecision(),
+            cdl_convert.ColorDecision(),
+            cdl_convert.ColorDecision()
+        ]
+
+    def tearDown(self):
+        # Empty out the members dictionary
+        cdl_convert.reset_all()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testRetrieveColorCorrections(self):
+        """Tests the color_corrections attribute"""
+        self.node._color_corrections = self.color_corrections
+        self.node._color_decisions = self.color_decisions
+
+        self.assertEqual(
+            self.color_corrections,
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testRetrieveColorDecisions(self):
+        """Tests retrieving the color_decisions attribute"""
+        self.node._color_corrections = self.color_corrections
+        self.node._color_decisions = self.color_decisions
+
+        self.assertEqual(
+            self.color_decisions,
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testRetrieveAllChildren(self):
+        """Tests retrieving all the children of a collection node"""
+        self.node._color_corrections = self.color_corrections
+        self.node._color_decisions = self.color_decisions
+
+        # We add color_corrections to the list before color_decisions, so that
+        # list is first.
+        self.assertEqual(
+            self.color_corrections + self.color_decisions,
+            self.node.all_children
+        )
+
+    #==========================================================================
+
+    def testAppendChildCorrection(self):
+        """Tests that append child works for Corrections"""
+        self.node.append_child(self.color_corrections[0])
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testAppendChildDecision(self):
+        """Tests that append child works for Decisions"""
+        self.node.append_child(self.color_decisions[0])
+
+        self.assertEqual(
+            [self.color_decisions[0]],
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testAppendChildBadType(self):
+        """Tries appending a child to Collection that's not the right type"""
+        self.assertRaises(
+            TypeError,
+            self.node.append_child,
+            'I ama a banana'
+        )
+
+    #==========================================================================
+
+    def testAppendChildren(self):
+        """Tries appending multiple children of different types"""
+        self.node.append_children(
+            self.color_corrections + self.color_decisions
+        )
+
+        self.assertEqual(
+            self.color_corrections,
+            self.node.color_corrections
+        )
+
+        self.assertEqual(
+            self.color_decisions,
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectionsNone(self):
+        """Tries setting the color_corrections attribute with None"""
+        self.node.color_corrections = None
+
+        self.assertEqual(
+            [],
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectionList(self):
+        """Tests setting ColorCorrection directly with a list"""
+        self.node.color_corrections = self.color_corrections
+
+        # We need to convert self.color_corrections to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_corrections)),
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectionTuple(self):
+        """Tests setting ColorCorrection directly with a tuple"""
+        self.node.color_corrections = tuple(self.color_corrections)
+
+        # We need to convert self.color_corrections to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_corrections)),
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectionSet(self):
+        """Tests setting ColorCorrection directly with a list"""
+        self.node.color_corrections = self.color_corrections
+
+        # We need to convert self.color_corrections to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_corrections)),
+            self.node.color_corrections
+        )
+    #==========================================================================
+
+    def testSetColorCorrectionSingle(self):
+        """Tests setting ColorCorrection with a single elem"""
+        self.node.color_corrections = self.color_corrections[0]
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectonBadType(self):
+        """Tests trying to set color correction with a bad type"""
+        def setNode():
+            self.node.color_corrections = 'Banana'
+
+        self.assertRaises(
+            TypeError,
+            setNode
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectionListBad(self):
+        """Tests having a bad type in a list we're attempting to set with"""
+        def setNode():
+            self.node.color_corrections = [
+                self.color_corrections[0],
+                'banana'
+            ]
+
+        self.assertRaises(
+            TypeError,
+            setNode
+        )
+
+        self.assertEqual(
+            [],
+            self.node.color_corrections
+        )
+
+    #==========================================================================
+
+    def testSetColorDecisionsNone(self):
+        """Tries setting the color_decisions attribute with None"""
+        self.node.color_decisions = None
+
+        self.assertEqual(
+            [],
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetColorDecisionList(self):
+        """Tests setting ColorDecision directly with a list"""
+        self.node.color_decisions = self.color_decisions
+
+        # We need to convert self.color_decisions to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_decisions)),
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetColorDecisionTuple(self):
+        """Tests setting ColorDecision directly with a tuple"""
+        self.node.color_decisions = tuple(self.color_decisions)
+
+        # We need to convert self.color_decisions to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_decisions)),
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetColorDecisionSet(self):
+        """Tests setting ColorDecision directly with a list"""
+        self.node.color_decisions = self.color_decisions
+
+        # We need to convert self.color_decisions to a set then to a list
+        # so the order matches
+        self.assertEqual(
+            list(set(self.color_decisions)),
+            self.node.color_decisions
+        )
+    #==========================================================================
+
+    def testSetColorDecisionSingle(self):
+        """Tests setting ColorDecision with a single elem"""
+        self.node.color_decisions = self.color_decisions[0]
+
+        self.assertEqual(
+            [self.color_decisions[0]],
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetColorCorrectonBadType(self):
+        """Tests trying to set color decision with a bad type"""
+        def setNode():
+            self.node.color_decisions = 'Banana'
+
+        self.assertRaises(
+            TypeError,
+            setNode
+        )
+
+    #==========================================================================
+
+    def testSetColorDecisionListBad(self):
+        """Tests having a bad type in a list and attempting to set"""
+        def setNode():
+            self.node.color_decisions = [
+                self.color_decisions[0],
+                'banana'
+            ]
+
+        self.assertRaises(
+            TypeError,
+            setNode
+        )
+
+        self.assertEqual(
+            [],
+            self.node.color_decisions
+        )
+
+    #==========================================================================
+
+    def testSetParent(self):
+        """Tests setting the parent of all children to an instance"""
+        for child in self.color_corrections + self.color_decisions:
+            self.assertEqual(
+                None,
+                child.parent
+            )
+
+        self.node.append_children(
+            self.color_corrections + self.color_decisions
+        )
+
+        for child in self.node.all_children:
+            self.assertEqual(
+                self.node,
+                child.parent
+            )
+            child.parent = 'banana'
+            self.assertEqual(
+                'banana',
+                child.parent
+            )
+
+        self.node.set_parentage()
+
+        for child in self.node.all_children:
+            self.assertEqual(
+                self.node,
+                child.parent
+            )
+
+
+class TestMultipleCollections(unittest.TestCase):
+    """Tests the children methods and attributes of ColorCollection"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.node = cdl_convert.ColorCollection()
+        self.node2 = cdl_convert.ColorCollection()
+
+        self.node.type = 'ccc'
+        self.node2.type = 'cdl'
+
+        self.node.desc = [
+            'When Babies Attack Test DI',
+            'Do not use for final',
+            'Color by Zap Brannigan',
+        ]
+        self.node2.desc = [
+            'Animals shot with a fisheye lens',
+            'cute fluffy animals',
+            'watch for blown out highlights',
+            'Color by Zap Brannigan',
+        ]
+
+        self.node.input_desc = 'LogC to sRGB'
+        self.node2.input_desc = 'Cineon Log'
+
+        self.node.viewing_desc = 'DaVinci Resolve on Eizo'
+        self.node2.viewing_desc = 'Panasonic Plasma rec709'
+
+        # We need lists of color corrections and decisions
+        self.node.color_corrections = [
+            cdl_convert.ColorCorrection(id='001'),
+            cdl_convert.ColorCorrection(id='002'),
+            cdl_convert.ColorCorrection(id='003'),
+            cdl_convert.ColorCorrection(id='004')
+        ]
+        self.node2.color_decisions = [
+            cdl_convert.ColorDecision(),
+            cdl_convert.ColorDecision(),
+            cdl_convert.ColorDecision()
+        ]
+
+    def tearDown(self):
+        # Empty out the members dictionary
+        cdl_convert.reset_all()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testCopyCollection(self):
+        """Tests copying a collection"""
+        copy = self.node.copy_collection()
+
+        self.assertEqual(
+            self.node.type,
+            copy.type
+        )
+
+        self.assertEqual(
+            self.node.desc,
+            copy.desc
+        )
+
+        self.assertEqual(
+            self.node.input_desc,
+            copy.input_desc
+        )
+
+        self.assertEqual(
+            self.node.viewing_desc,
+            copy.viewing_desc
+        )
+
+        self.assertEqual(
+            self.node.all_children,
+            copy.all_children
+        )
+
+    #==========================================================================
+
+    def testMergeCollectionsCCCParent(self):
+        """Merges collections with a CCC as parent"""
+        merged = self.node.merge_collections([self.node2])
+
+        self.assertEqual(
+            self.node.desc + self.node2.desc,
+            merged.desc
+        )
+        self.assertEqual(
+            self.node.input_desc,
+            merged.input_desc
+        )
+        self.assertEqual(
+            self.node.viewing_desc,
+            merged.viewing_desc
+        )
+        # We need different behaviors for these list comparisons across all
+        # the different python versions...
+        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+            self.assertEqual(
+                len(self.node.all_children + self.node2.all_children),
+                len(merged.all_children)
+            )
+        elif sys.version_info[0] >= 3:
+            self.assertCountEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
+        else:
+            self.assertItemsEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
+        self.assertEqual(
+            self.node.type,
+            merged.type
+        )
+
+    #==========================================================================
+
+    def testMergeCollectionsCCCParentWithDuplicates(self):
+        """Merges collections with a CCC as parent and duplicates"""
+        # Now we have the same color decisions in both node and node2
+        self.node.color_decisions = self.node2.color_decisions
+
+        merged = self.node.merge_collections([self.node2])
+
+        self.assertEqual(
+            self.node.desc + self.node2.desc,
+            merged.desc
+        )
+        self.assertEqual(
+            self.node.input_desc,
+            merged.input_desc
+        )
+        self.assertEqual(
+            self.node.viewing_desc,
+            merged.viewing_desc
+        )
+        # We'll just check the length
+        self.assertEqual(
+            len(set(self.node.all_children + self.node2.all_children)),
+            len(merged.all_children)
+        )
+        self.assertEqual(
+            self.node.type,
+            merged.type
+        )
+
+    #==========================================================================
+
+    def testMergeCollectionsCCCParentIncludeSelf(self):
+        """Merges collections with a CCC as parent and includes self"""
+        merged = self.node.merge_collections([self.node2, self.node])
+
+        self.assertEqual(
+            self.node.desc + self.node2.desc,
+            merged.desc
+        )
+        self.assertEqual(
+            self.node.input_desc,
+            merged.input_desc
+        )
+        self.assertEqual(
+            self.node.viewing_desc,
+            merged.viewing_desc
+        )
+        # We need different behaviors for these list comparisons across all
+        # the different python versions...
+        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+            self.assertEqual(
+                len(self.node.all_children + self.node2.all_children),
+                len(merged.all_children)
+            )
+        elif sys.version_info[0] >= 3:
+            self.assertCountEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
+        else:
+            self.assertItemsEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
+        self.assertEqual(
+            self.node.type,
+            merged.type
+        )
+
+    #==========================================================================
+
+    def testMergeCollectionsCDLParent(self):
+        """Merges collections with a CDL as parent"""
+        merged = self.node2.merge_collections([self.node])
+
+        self.assertEqual(
+            self.node2.desc + self.node.desc,
+            merged.desc
+        )
+        self.assertEqual(
+            self.node2.input_desc,
+            merged.input_desc
+        )
+        self.assertEqual(
+            self.node2.viewing_desc,
+            merged.viewing_desc
+        )
+        # We need different behaviors for these list comparisons across all
+        # the different python versions...
+        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+            self.assertEqual(
+                len(self.node.all_children + self.node2.all_children),
+                len(merged.all_children)
+            )
+        elif sys.version_info[0] >= 3:
+            self.assertCountEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
+        else:
+            self.assertItemsEqual(
+                self.node.all_children + self.node2.all_children,
+                merged.all_children
+            )
+        self.assertEqual(
+            self.node2.type,
+            merged.type
+        )
+
 # ColorCorrection =============================================================
 
 
@@ -434,14 +1247,14 @@ class TestColorCorrection(unittest.TestCase):
 
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
-        self.cdl = cdl_convert.ColorCorrection(
-            id='uniqueId', cdl_file='../testcdl.cc'
+        self.cc = cdl_convert.ColorCorrection(
+            id='uniqueId', input_file='../testcdl.cc'
         )
 
     def tearDown(self):
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -453,12 +1266,12 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that input_desc inherited"""
 
         self.assertTrue(
-            hasattr(self.cdl, 'input_desc')
+            hasattr(self.cc, 'input_desc')
         )
 
         self.assertEqual(
             None,
-            self.cdl.input_desc
+            self.cc.input_desc
         )
 
     #==========================================================================
@@ -467,12 +1280,12 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that viewing_desc inherited"""
 
         self.assertTrue(
-            hasattr(self.cdl, 'viewing_desc')
+            hasattr(self.cc, 'viewing_desc')
         )
 
         self.assertEqual(
             None,
-            self.cdl.viewing_desc
+            self.cc.viewing_desc
         )
 
     #==========================================================================
@@ -481,34 +1294,21 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that desc inherited"""
 
         self.assertTrue(
-            hasattr(self.cdl, 'desc')
+            hasattr(self.cc, 'desc')
         )
 
         self.assertEqual(
             [],
-            self.cdl.desc
+            self.cc.desc
         )
 
     #==========================================================================
-
 
     def testFileInReturn(self):
         """Tests that calling ColorCorrection.fileIn returns the file given"""
         self.assertEqual(
             os.path.abspath('../testcdl.cc'),
-            self.cdl.file_in
-        )
-
-    #==========================================================================
-
-    def testFileInSetException(self):
-        """Tests that exception raised when setting file_in after init"""
-        def testFileIn():
-            self.cdl.file_in = '../NewFile.cc'
-
-        self.assertRaises(
-            AttributeError,
-            testFileIn
+            self.cc.file_in
         )
 
     #==========================================================================
@@ -516,7 +1316,7 @@ class TestColorCorrection(unittest.TestCase):
     def testFileOutSetException(self):
         """Tests that exception raised when attempting to set file_out direct"""
         def testFileOut():
-            self.cdl.file_out = '../NewFile.cc'
+            self.cc.file_out = '../NewFile.cc'
 
         self.assertRaises(
             AttributeError,
@@ -529,7 +1329,7 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that calling ColorCorrection.id returns the id"""
         self.assertEqual(
             'uniqueId',
-            self.cdl.id
+            self.cc.id
         )
 
     #==========================================================================
@@ -563,7 +1363,7 @@ class TestColorCorrection(unittest.TestCase):
 
     def testBlankId(self):
         """Tests what happens when a blank id is given to CC"""
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
         cdl1 = cdl_convert.ColorCorrection('', 'file')
 
@@ -613,16 +1413,48 @@ class TestColorCorrection(unittest.TestCase):
 
     #==========================================================================
 
+    def testHasSat(self):
+        """Tests the has_sat attribute"""
+        # Verify that with the blank cc, we start with no sat node
+        self.assertFalse(
+            self.cc.has_sat
+        )
+
+        # But if we make a reference to the sat node, it'll create one.
+        self.cc.sat_node
+
+        self.assertTrue(
+            self.cc.has_sat
+        )
+
+    #==========================================================================
+
+    def testHasSop(self):
+        """Tests the has_sop attribute"""
+        # Verify that with a blank cc, we start with no sop node
+        self.assertFalse(
+            self.cc.has_sop
+        )
+
+        # But if we make a reference to the sop node, it'll create one.
+        self.cc.sop_node
+
+        self.assertTrue(
+            self.cc.has_sop
+        )
+
+    #==========================================================================
+
     def testOffsetSetAndGet(self):
         """Tests setting and getting the offset"""
 
         offset = (-1.3782, 278.32, 0.738378233782)
 
-        self.cdl.offset = offset
+        self.cc.offset = offset
 
         self.assertEqual(
             offset,
-            self.cdl.offset
+            self.cc.offset
         )
 
     #==========================================================================
@@ -630,7 +1462,7 @@ class TestColorCorrection(unittest.TestCase):
     def testOffsetBadLength(self):
         """Tests passing offset an incorrect length list"""
         def setOffset():
-            self.cdl.offset = ['banana']
+            self.cc.offset = ['banana']
 
         self.assertRaises(
             ValueError,
@@ -642,7 +1474,7 @@ class TestColorCorrection(unittest.TestCase):
     def testOffsetSetStrings(self):
         """Tests that TypeError raised if given strings"""
         def setOffset():
-            self.cdl.offset = [-1.3782, 278.32, 'banana']
+            self.cc.offset = [-1.3782, 278.32, 'banana']
 
         self.assertRaises(
             TypeError,
@@ -654,7 +1486,7 @@ class TestColorCorrection(unittest.TestCase):
     def testOffsetBadType(self):
         """Tests passing offset a correct length but bad type value"""
         def setOffset():
-            self.cdl.offset = 'ban'
+            self.cc.offset = 'ban'
 
         self.assertRaises(
             TypeError,
@@ -668,11 +1500,11 @@ class TestColorCorrection(unittest.TestCase):
 
         offset = [-1.3782, 278.32, 0.738378233782]
 
-        self.cdl.offset = offset
+        self.cc.offset = offset
 
         self.assertEqual(
             tuple(offset),
-            self.cdl.offset
+            self.cc.offset
         )
 
     #==========================================================================
@@ -682,11 +1514,11 @@ class TestColorCorrection(unittest.TestCase):
 
         power = (1.3782, 278.32, 0.738378233782)
 
-        self.cdl.power = power
+        self.cc.power = power
 
         self.assertEqual(
             power,
-            self.cdl.power
+            self.cc.power
         )
 
     #==========================================================================
@@ -694,7 +1526,7 @@ class TestColorCorrection(unittest.TestCase):
     def testPowerSetNegative(self):
         """Tests that ValueError raised if negative value"""
         def setPower():
-            self.cdl.power = [-1.3782, 278.32, 0.738378233782]
+            self.cc.power = [-1.3782, 278.32, 0.738378233782]
 
         cdl_convert.HALT_ON_ERROR = True
 
@@ -709,7 +1541,7 @@ class TestColorCorrection(unittest.TestCase):
 
         self.assertEqual(
             (0.0, 278.32, 0.738378233782),
-            self.cdl.power
+            self.cc.power
         )
 
     #==========================================================================
@@ -717,7 +1549,7 @@ class TestColorCorrection(unittest.TestCase):
     def testPowerSetStrings(self):
         """Tests that TypeError raised if given strings"""
         def setPower():
-            self.cdl.power = [1.3782, 278.32, 'banana']
+            self.cc.power = [1.3782, 278.32, 'banana']
 
         self.assertRaises(
             TypeError,
@@ -729,7 +1561,7 @@ class TestColorCorrection(unittest.TestCase):
     def testPowerBadLength(self):
         """Tests passing power an incorrect length list"""
         def setPower():
-            self.cdl.power = ['banana']
+            self.cc.power = ['banana']
 
         self.assertRaises(
             ValueError,
@@ -741,7 +1573,7 @@ class TestColorCorrection(unittest.TestCase):
     def testPowerBadType(self):
         """Tests passing power a correct length but bad type value"""
         def setPower():
-            self.cdl.power = 'ban'
+            self.cc.power = 'ban'
 
         self.assertRaises(
             TypeError,
@@ -755,11 +1587,11 @@ class TestColorCorrection(unittest.TestCase):
 
         power = [1.3782, 278.32, 0.738378233782]
 
-        self.cdl.power = power
+        self.cc.power = power
 
         self.assertEqual(
             tuple(power),
-            self.cdl.power
+            self.cc.power
         )
 
     #==========================================================================
@@ -769,11 +1601,11 @@ class TestColorCorrection(unittest.TestCase):
 
         slope = (1.3782, 278.32, 0.738378233782)
 
-        self.cdl.slope = slope
+        self.cc.slope = slope
 
         self.assertEqual(
             slope,
-            self.cdl.slope
+            self.cc.slope
         )
 
     #==========================================================================
@@ -781,7 +1613,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSlopeSetNegative(self):
         """Tests that ValueError raised if negative value"""
         def setSlope():
-            self.cdl.slope = [-1.3782, 278.32, 0.738378233782]
+            self.cc.slope = [-1.3782, 278.32, 0.738378233782]
 
         cdl_convert.HALT_ON_ERROR = True
 
@@ -796,7 +1628,7 @@ class TestColorCorrection(unittest.TestCase):
 
         self.assertEqual(
             (0.0, 278.32, 0.738378233782),
-            self.cdl.slope
+            self.cc.slope
         )
 
     #==========================================================================
@@ -804,7 +1636,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSlopeSetStrings(self):
         """Tests that TypeError raised if given strings"""
         def setSlope():
-            self.cdl.slope = [1.3782, 278.32, 'banana']
+            self.cc.slope = [1.3782, 278.32, 'banana']
 
         self.assertRaises(
             TypeError,
@@ -816,7 +1648,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSlopeBadLength(self):
         """Tests passing slope an incorrect length list"""
         def setSlope():
-            self.cdl.slope = ['banana']
+            self.cc.slope = ['banana']
 
         self.assertRaises(
             ValueError,
@@ -828,7 +1660,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSlopeBadType(self):
         """Tests passing slope a correct length but bad type value"""
         def setSlope():
-            self.cdl.slope = 'ban'
+            self.cc.slope = 'ban'
 
         self.assertRaises(
             TypeError,
@@ -842,11 +1674,11 @@ class TestColorCorrection(unittest.TestCase):
 
         slope = [1.3782, 278.32, 0.738378233782]
 
-        self.cdl.slope = slope
+        self.cc.slope = slope
 
         self.assertEqual(
             tuple(slope),
-            self.cdl.slope
+            self.cc.slope
         )
 
     #==========================================================================
@@ -856,11 +1688,11 @@ class TestColorCorrection(unittest.TestCase):
 
         sat = 34.3267
 
-        self.cdl.sat = sat
+        self.cc.sat = sat
 
         self.assertEqual(
             sat,
-            self.cdl.sat
+            self.cc.sat
         )
 
     #==========================================================================
@@ -868,7 +1700,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSatSetNegative(self):
         """Tests that a ValueError is raised if sat is set to negative"""
         def setSat():
-            self.cdl.sat = -376.23
+            self.cc.sat = -376.23
 
         cdl_convert.HALT_ON_ERROR = True
 
@@ -883,14 +1715,14 @@ class TestColorCorrection(unittest.TestCase):
 
         self.assertEqual(
             0.0,
-            self.cdl.sat
+            self.cc.sat
         )
     #==========================================================================
 
     def testSatSetString(self):
         """Tests that a TypeError is raised if sat is set to string"""
         def setSat():
-            self.cdl.sat = 'banana'
+            self.cc.sat = 'banana'
 
         self.assertRaises(
             TypeError,
@@ -903,25 +1735,25 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that saturation is converted to float from int"""
         sat = 3
 
-        self.cdl.sat = sat
+        self.cc.sat = sat
 
         self.assertEqual(
             float(sat),
-            self.cdl.sat
+            self.cc.sat
         )
 
     # determine_dest() ========================================================
 
     def testDetermineDest(self):
         """Tests that determine destination is calculated correctly"""
-        self.cdl.determine_dest('cdl')
+        self.cc.determine_dest('cdl', '/bobsBestDirectory')
 
-        dir = os.path.abspath('../')
+        dir = os.path.abspath('/bobsBestDirectory')
         filename = os.path.join(dir, 'uniqueId.cdl')
 
         self.assertEqual(
             filename,
-            self.cdl.file_out
+            self.cc.file_out
         )
 
 # ColorNodeBase ===============================================================
@@ -964,7 +1796,6 @@ class TestMediaRefProperties(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.MediaRef.members = {}
         self.directory = 'heeba/jeeba/race'
         self.filename = 'car.jpg'
         self.protocol = 'ftp'
@@ -979,7 +1810,7 @@ class TestMediaRefProperties(unittest.TestCase):
     #==========================================================================
 
     def tearDown(self):
-        cdl_convert.MediaRef.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -1488,7 +2319,7 @@ class TestMediaRefPropertiesOdd(TestMediaRefProperties):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.MediaRef.members = {}
+        cdl_convert.reset_all()
         self.directory = '/bicycle24/myHat/race_condition14'
         self.filename = '17438.hds356_######.exr'
         self.protocol = ''
@@ -1509,11 +2340,10 @@ class TestMediaRefChangeMembership(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.MediaRef.members = {}
         self.mr = cdl_convert.MediaRef('hello')
 
     def tearDown(self):
-        cdl_convert.MediaRef.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -1576,7 +2406,7 @@ class TestMediaRefChangeMembership(unittest.TestCase):
 
     def testBrokenDict(self):
         """Tests that we don't fail just because we're not in the dict"""
-        cdl_convert.MediaRef.members = {}
+        cdl_convert.reset_all()
 
         self.mr._filename = 'goodbye'
         self.mr._change_membership(old_ref='hello')
