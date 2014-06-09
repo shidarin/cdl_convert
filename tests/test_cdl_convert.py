@@ -525,9 +525,12 @@ class TestMain(unittest.TestCase):
         )
         self.inputFormats = cdl_convert.INPUT_FORMATS
         self.outputFormats = cdl_convert.OUTPUT_FORMATS
+        self.makedirs = os.makedirs
+        self.mockMakeDirs = mock.MagicMock('os.makedirs')
         self.sysargv = sys.argv
         self.stdout = sys.stdout
         sys.stdout = StringIO()
+        os.makedirs = self.mockMakeDirs
 
     #==========================================================================
 
@@ -536,6 +539,7 @@ class TestMain(unittest.TestCase):
         cdl_convert.OUTPUT_FORMATS = self.outputFormats
         sys.argv = self.sysargv
         sys.stdout = self.stdout
+        os.makedirs = self.makedirs
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
         cdl_convert.reset_all()
@@ -800,14 +804,21 @@ class TestMain(unittest.TestCase):
 
     #==========================================================================
 
+    @mock.patch('os.path.exists')
     @mock.patch('cdl_convert.cdl_convert.ColorCorrection.determine_dest')
     @mock.patch('cdl_convert.cdl_convert.write_cc')
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
-    def testNoOutput(self, mockParse, mockWrite, mockDest):
+    def testNoOutput(self, mockParse, mockWrite, mockDest, mockPathExists):
         """Tests that we don't write a converted file"""
 
+        # We'll set the path exists return value to equal false, so that
+        # normally a new directory would be created.
+        mockPathExists.return_value = False
+
+        self.mockMakeDirs.reset_mock()
+
         mockParse.return_value = self.cdl
-        sys.argv = ['scriptname', 'file.cc', '--no-output']
+        sys.argv = ['scriptname', 'file.cc', '-d', '/fakepath', '--no-output']
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cc'] = mockParse
@@ -819,13 +830,69 @@ class TestMain(unittest.TestCase):
 
         cdl_convert.main()
 
+        # Because we have no output selected, a new directory should NOT
+        # be created, but path exists should have still been called.
+        mockPathExists.assert_called_with('/fakepath')
+        self.assertFalse(
+            self.mockMakeDirs.called
+        )
+
         mockParse.assert_called_once_with(os.path.join(os.getcwd(), 'file.cc'))
         # Determine dest should have set a file_out
-        mockDest.assert_called_once_with(
-            'cc', os.path.join(os.getcwd(), 'converted')
-        )
+        mockDest.assert_called_once_with('cc', '/fakepath')
         # But the write should never have been called.
-        mockWrite.assert_has_calls([])
+        self.assertFalse(
+            mockWrite.called
+        )
+
+    #==========================================================================
+
+    @mock.patch('os.path.exists')
+    @mock.patch('cdl_convert.cdl_convert.ColorCollection.determine_dest')
+    @mock.patch('cdl_convert.cdl_convert.write_ccc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    def testNoOutputCollection(self, mockParse, mockWrite, mockDest, mockPathExists):
+        """Tests that we don't write a converted collection file"""
+
+        mockPathExists.return_value = True
+
+        self.mockMakeDirs.reset_mock()
+
+        mockParse.return_value = self.cdl
+        sys.argv = [
+            'scriptname',
+            'file.cc',
+            '-o',
+            'ccc',
+            '-d',
+            '/fakepath',
+            '--no-output'
+        ]
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cc'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['ccc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        # Because we have no output selected, a new directory should NOT
+        # be created, but path exists should have still been called.
+        mockPathExists.assert_called_with('/fakepath')
+        self.assertFalse(
+            self.mockMakeDirs.called
+        )
+
+        mockParse.assert_called_once_with(os.path.join(os.getcwd(), 'file.cc'))
+        # Determine dest should have set a file_out
+        mockDest.assert_called_once_with('/fakepath')
+        # But the write should never have been called.
+        self.assertFalse(
+            mockWrite.called
+        )
 
     #==========================================================================
 
