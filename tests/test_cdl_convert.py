@@ -523,6 +523,7 @@ class TestMain(unittest.TestCase):
         self.cdl = cdl_convert.ColorCorrection(
             id='uniqueId', input_file='../testcdl.flex'
         )
+        self.ccc = cdl_convert.ColorCollection(input_file='../testcdl.flex')
         self.inputFormats = cdl_convert.INPUT_FORMATS
         self.outputFormats = cdl_convert.OUTPUT_FORMATS
         self.makedirs = os.makedirs
@@ -752,6 +753,33 @@ class TestMain(unittest.TestCase):
 
     #==========================================================================
 
+    @mock.patch('cdl_convert.cdl_convert.write_ccc')
+    @mock.patch('cdl_convert.cdl_convert.parse_rnh_cdl')
+    def testDetermineDestCalledCollection(self, mockParse, mockWrite):
+        """Tests that we try and write a converted collection file"""
+
+        mockParse.return_value = self.ccc
+        sys.argv = ['scriptname', 'file.flex', '-o', 'ccc']
+
+        destination_dir = os.path.abspath('./converted/')
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['ccc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        self.assertEqual(
+            os.path.join(destination_dir, 'testcdl.ccc'),
+            self.ccc.file_out
+        )
+
+    #==========================================================================
+
     @mock.patch('cdl_convert.cdl_convert.sanity_check')
     @mock.patch('cdl_convert.cdl_convert.write_cc')
     @mock.patch('cdl_convert.cdl_convert.parse_flex')
@@ -774,6 +802,42 @@ class TestMain(unittest.TestCase):
         cdl_convert.main()
 
         mockSanity.assert_called_once_with(self.cdl)
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.sanity_check')
+    @mock.patch('cdl_convert.cdl_convert.write_cc')
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testSanityCheckCollectionCalled(
+            self, abspath, mockParse, mockWrite, mockSanity
+    ):
+        """Tests that --check calls sanity check with collection"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = self.ccc
+        self.ccc.append_children([self.cdl, self.cdl, self.cdl])
+        sys.argv = ['scriptname', 'file.flex', '--check']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        self.assertEqual(
+            [mock.call(self.cdl)] * 3,
+            mockSanity.call_args_list
+        )
+
+        self.assertEqual(
+            [mock.call(self.cdl)] * 3,
+            mockWrite.call_args_list
+        )
 
     #==========================================================================
 
@@ -918,6 +982,36 @@ class TestMain(unittest.TestCase):
 
         mockWrite.assert_called_once_with(self.cdl)
 
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.write_ccc')
+    @mock.patch('cdl_convert.cdl_convert.parse_rnh_cdl')
+    @mock.patch('os.path.abspath')
+    def testWriteCollectionCalled(self, abspath, mockParse, mockWrite):
+        """Tests that we try and write a converted collection file"""
+
+        abspath.return_value = 'file.cdl'
+        mockParse.return_value = self.cdl
+        sys.argv = ['scriptname', 'file.cdl', '-o', 'ccc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cdl'] = mockParse
+        cdl_convert.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['ccc'] = mockWrite
+        cdl_convert.OUTPUT_FORMATS = mockOutputs
+
+        cdl_convert.main()
+
+        self.assertTrue(
+            mockWrite.called
+        )
+
+        self.assertEqual(
+            [self.cdl],
+            mockWrite.call_args_list[0][0][0].all_children
+        )
 
     #==========================================================================
 
