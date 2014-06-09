@@ -2954,6 +2954,9 @@ def main():  # pylint: disable=R0912
     filepath = os.path.abspath(args.input_file)
     destination_dir = os.path.abspath(args.destination)
 
+    if not os.path.exists(destination_dir):
+        os.makedirs(destination_dir)
+
     if not args.input:
         filetype_in = os.path.basename(filepath).split('.')[-1].lower()
     else:
