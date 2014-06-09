@@ -2455,6 +2455,8 @@ if __name__ == '__main__':  # pragma: no cover
     try:
         main()
     except Exception as err:  # pylint: disable=W0703
+        import traceback
         print('Unexpected error encountered:')
         print(err)
+        print(traceback.format_exc())
         raw_input('Press enter key to exit')
