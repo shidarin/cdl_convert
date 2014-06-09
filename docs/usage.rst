@@ -150,10 +150,10 @@ Direct Creation
 ^^^^^^^^^^^^^^^
 
 If you want to create a new instance of :class:`ColorCorrection`, you have to
-provide an ``id``, for the unique cdl identifier and a source filename to
-``cdl_file``.
+provide an ``id``, for the unique cdl identifier and an optional source
+filename to ``input_file``.
 
-    >>> cc = cdl.ColorCorrection(id='cc1', cdl_file='./myfirstcdl.cc')
+    >>> cc = cdl.ColorCorrection(id='cc1', input_file='./myfirstcdl.cc')
 
 .. warning::
     When an instance of :class:`ColorCorrection` is first created, the ``id``
@@ -164,12 +164,6 @@ provide an ``id``, for the unique cdl identifier and a source filename to
     Reset the members list by calling the ``reset_members`` method of
     :class:`ColorCorrection` or reset all class member list and dictionaries
     with ``reset_all``.
-
-.. warning::
-    It's not possible to change the ``file_in`` attribute once it has been set.
-
-.. warning::
-    ``cdl_file`` is likely to not be a required attribute in the future.
 
 Parsing a single correction CDL file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -210,7 +204,7 @@ whatever values it found on the file now exist on the instance of
     >>> cc.id
     '015_xf_seqGrade_v01'
     >>> cc.file_in
-    '/Users/sean/cdls/xf/015.cc'
+    '/Users/niven/cdls/xf/015.cc'
 
 .. note::
     When parsing, the ``id`` attribute is set in a variety of ways depending
@@ -321,8 +315,8 @@ is not unique.
 
 You can change the id after creation, but it will perform the same check.
 
-    >>> cc = cdl.ColorCorrection(id='cc1', cdl_file='./myfirstcdl.cc')
-    >>> cc2 = cdl.ColorCorrection(id='cc2', cdl_file='./mysecondcdl.cc')
+    >>> cc = cdl.ColorCorrection(id='cc1', input_file='./myfirstcdl.cc')
+    >>> cc2 = cdl.ColorCorrection(id='cc2', input_file='./mysecondcdl.cc')
     >>> cc.id
     'cc1'
     >>> cc2.id
@@ -339,32 +333,31 @@ You can change the id after creation, but it will perform the same check.
 
 At the current time, filepaths cannot be changed after
 :class:`ColorCorrection` instantiation. ``file_out`` is determined by using
-the class method ``determine_dest``, which takes the ``file_in`` directory,
+the class method ``determine_dest``, which takes a provided directory,
 the ``id`` and figures out the output path.
 
     >>> cc.file_in
     '/Users/sean/cdls/xf/015.cc'
     >>> cc.file_out
-    >>> cc.determine_dest('cdl')
+    >>> cc.determine_dest('cdl', '/Users/potter/cdls/converted/')
     >>> cc.id
     '015_xf_seqGrade_v01'
     >>> cc.file_out
-    '/Users/sean/cdls/xf/015_xf_seqGrade_v01.cdl'
+    '/Users/potter/cdls/converted/015_xf_seqGrade_v01.cdl'
 
 Writing :class:`ColorCorrection`
 --------------------------------
 
 When you're done tinkering with the :class:`ColorCorrection` instance, you
-might want to write it out to a file. Currently the output file is written the
-same directory as the input file. We need to give :class:`ColorCorrection` the
+might want to write it out to a file. We need to give :class:`ColorCorrection` the
 file extension we plan to write to, then call a ``write`` function with our
 :class:`ColorCorrection` instance, which will actually convert the values on
 the :class:`ColorCorrection` into the format desired, then write that format
 to disk.
 
-    >>> cc.determine_dest('cdl')
+    >>> cc.determine_dest('cdl', '/Users/potter/cdls/converted/')
     >>> cc.file_out
-    '/Users/sean/cdls/xf/015_xf_seqGrade_v01.cdl'
+    '/Users/potter/cdls/converted/015_xf_seqGrade_v01.cdl'
     >>> cdl.write_rnh_cdl(cc)
 
 .. warning::
@@ -402,7 +395,7 @@ media for the ``ColorCorrection`` alongside.
     which is simply an ``id`` reference to another ``ColorCorrection.
 
 :class:`ColorCollection` has a ``type`` attribute that determines what
-the :class:`ColorCollection` currently describes when you call it's XML
+the :class:`ColorCollection` currently describes when you call its XML
 attributes. Setting this to ``'ccc'`` will cause a
 ``ColorCorrectionCorrection`` to be returned when the ``xml`` attribute is
 retrieved. Setting it to ``'cdl'`` causes a ``ColorDecisionList`` to appear

@@ -5,6 +5,10 @@ Changelog
 Version 0.7
 ===========
 
+The biggest change in 0.7 is the addition of collection format support.
+``.ccc``, Color Correction Collections, can now be parsed and saved. ``.ale``
+and ``.flex`` files now return a collection.
+
 - New script flags:
     - Adds ``--check`` flag to script, which checks all parsed :class:`ColorCorrects` for sane values, and prints warnings to shell
     - Adds ``-d``, ``--destination`` flag to the script, which allows user to specify the output directory converted files will be written to.

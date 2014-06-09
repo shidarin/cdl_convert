@@ -660,6 +660,7 @@ class TestColorCollection(unittest.TestCase):
             self.node.file_out
         )
 
+
 class TestCollectionChildMethods(unittest.TestCase):
     """Tests the children methods and attributes of ColorCollection"""
 
