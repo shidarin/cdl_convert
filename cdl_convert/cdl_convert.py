@@ -2955,7 +2955,16 @@ def main():  # pylint: disable=R0912
     destination_dir = os.path.abspath(args.destination)
 
     if not os.path.exists(destination_dir):
-        os.makedirs(destination_dir)
+        print(
+            "Destination directory {dir} does not exist.".format(
+                dir=destination_dir
+            )
+        )
+        if not args.no_output:
+            print("Creating destination directory.")
+            os.makedirs(destination_dir)
+        else:
+            print("--no-output argument provided. Skipping directory creation")
 
     if not args.input:
         filetype_in = os.path.basename(filepath).split('.')[-1].lower()
@@ -2975,6 +2984,18 @@ def main():  # pylint: disable=R0912
         )
         if not args.no_output:
             OUTPUT_FORMATS[ext](cdl)
+
+    def write_collection_file(col, ext):
+        """Writes a collection file"""
+        col.type = ext
+        col.determine_dest(destination_dir)
+        print(
+            "Writing collection to {path}".format(
+                path=col.file_out
+            )
+        )
+        if not args.no_output:
+            OUTPUT_FORMATS[ext](col)
 
     if color_decisions:
         # Sanity Check
@@ -2997,8 +3018,7 @@ def main():  # pylint: disable=R0912
                 if filetype_in in COLLECTION_FORMATS:
                     # If we read a collection type, color_decisions is
                     # already a ColorCollection.
-                    color_decisions.determine_dest(destination_dir)
-                    OUTPUT_FORMATS[ext](color_decisions)
+                    write_collection_file(color_decisions, ext)
                 else:
                     # If we read a single, non-collection file, we need to
                     # create a collection for exporting.
@@ -3010,8 +3030,7 @@ def main():  # pylint: disable=R0912
                     # the generic collection naming.
                     collection = ColorCollection(input_file=filepath)
                     collection.append_child(color_decisions)
-                    collection.determine_dest(destination_dir)
-                    OUTPUT_FORMATS[ext](collection)
+                    write_collection_file(collection, ext)
 
 if __name__ == '__main__':  # pragma: no cover
     try:
