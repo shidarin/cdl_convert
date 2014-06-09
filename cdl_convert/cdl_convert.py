@@ -2991,8 +2991,12 @@ def main():  # pylint: disable=R0912
                 else:
                     write_single_file(color_decisions, ext)
             else:  # pragma: no cover
-                # TODO: Write to collection formats
-                raise Exception('Unsupported output format.')
+                if filetype_in in COLLECTION_FORMATS:
+                    OUTPUT_FORMATS[ext](color_decisions)
+                else:
+                    collection = ColorCollection()
+                    collection.append_children(list(color_decisions))
+                    OUTPUT_FORMATS[ext](collection)
 
 if __name__ == '__main__':  # pragma: no cover
     try:
