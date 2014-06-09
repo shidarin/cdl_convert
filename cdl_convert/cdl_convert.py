@@ -2990,12 +2990,24 @@ def main():  # pylint: disable=R0912
                         write_single_file(color_correct, ext)
                 else:
                     write_single_file(color_decisions, ext)
-            else:  # pragma: no cover
+            else:
                 if filetype_in in COLLECTION_FORMATS:
+                    # If we read a collection type, color_decisions is
+                    # already a ColorCollection.
+                    color_decisions.determine_dest(destination_dir)
                     OUTPUT_FORMATS[ext](color_decisions)
                 else:
-                    collection = ColorCollection()
-                    collection.append_children(list(color_decisions))
+                    # If we read a single, non-collection file, we need to
+                    # create a collection for exporting.
+                    #
+                    # Since we only read a single file, we can safely use that
+                    # filepath as the input_file.
+                    #
+                    # If we read a group of files, we would want to default to
+                    # the generic collection naming.
+                    collection = ColorCollection(input_file=filepath)
+                    collection.append_child(color_decisions)
+                    collection.determine_dest(destination_dir)
                     OUTPUT_FORMATS[ext](collection)
 
 if __name__ == '__main__':  # pragma: no cover
