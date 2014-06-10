@@ -849,6 +849,9 @@ class ColorCorrectionReference(AscXMLBase):
         # we set it.
         if self.ref in ColorCorrectionReference.members:
             ColorCorrectionReference.members[self.ref].remove(self)
+            # If the remaining list is empty, we'll pop it out
+            if not ColorCorrectionReference.members[self.ref]:
+                ColorCorrectionReference.members.pop(self.ref)
 
         # Check if this ref is already registered
         if new_ref in ColorCorrectionReference.members:

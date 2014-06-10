@@ -1756,6 +1756,150 @@ class TestColorCorrection(unittest.TestCase):
             self.cc.file_out
         )
 
+# ColorCorrection =============================================================
+
+
+class TestColorCorrectionReference(unittest.TestCase):
+    """Tests the ColorCorrectionReference class"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        # Note that the file doesn't really need to exist for our test purposes
+        self.cc = cdl_convert.ColorCorrection(
+            id='uniqueId', input_file='../testcdl.cc'
+        )
+
+        self.ccr = cdl_convert.ColorCorrectionReference(ref='uniqueId')
+        self.ccr_bad = cdl_convert.ColorCorrectionReference(ref='oldId')
+
+    def tearDown(self):
+        # We need to clear the ColorCorrection member dictionary so we don't
+        # have to worry about non-unique ids.
+        cdl_convert.reset_all()
+        cdl_convert.HALT_ON_ERROR = False
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testCC(self):
+        """Tests that a CC is returned correctly"""
+        self.assertEqual(
+            self.cc,
+            self.ccr.cc
+        )
+
+        self.assertEqual(
+            None,
+            self.ccr_bad.cc
+        )
+
+    #==========================================================================
+
+    def testCCHalt(self):
+        """Tests trying to get a CC reference with Halt set"""
+        cdl_convert.HALT_ON_ERROR = True
+
+        def getCC():
+            self.ccr_bad.cc
+
+        self.assertRaises(
+            ValueError,
+            getCC
+        )
+
+    #==========================================================================
+
+    def testRef(self):
+        """Tests that ref is returned correctly"""
+        self.assertEqual(
+            'uniqueId',
+            self.ccr.ref
+        )
+
+        self.assertEqual(
+            'oldId',
+            self.ccr_bad.ref
+        )
+
+    #==========================================================================
+
+    def testMembers(self):
+        """Tests that the member's dictionary looks like it should"""
+        self.assertEqual(
+            {'uniqueId': [self.ccr], 'oldId': [self.ccr_bad]},
+            cdl_convert.ColorCorrectionReference.members
+        )
+
+    #==========================================================================
+
+    def testChangeRef(self):
+        """Tests changing a reference id"""
+        self.ccr.ref = 'blahblahblah'
+
+        self.assertEqual(
+            {'blahblahblah': [self.ccr], 'oldId': [self.ccr_bad]},
+            cdl_convert.ColorCorrectionReference.members
+        )
+
+    #==========================================================================
+
+    def testChangeRefAppend(self):
+        """Tests changing a reference id"""
+        self.ccr.ref = 'oldId'
+
+        self.assertEqual(
+            {'oldId': [self.ccr_bad, self.ccr]},
+            cdl_convert.ColorCorrectionReference.members
+        )
+
+    #==========================================================================
+
+    def testChangeRefHALT(self):
+        """Tests changing a reference id if halt on error true"""
+        def setRef():
+            self.ccr.ref = 'blahblahblah'
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            setRef
+        )
+
+        self.assertEqual(
+            'uniqueId',
+            self.ccr.ref
+        )
+
+        self.assertEqual(
+            {'uniqueId': [self.ccr], 'oldId': [self.ccr_bad]},
+            cdl_convert.ColorCorrectionReference.members
+        )
+
+    #==========================================================================
+
+    def testBuildElement(self):
+        """Tests that build element works correctly"""
+        self.assertEqual(
+            b'<ColorCorrectionRef ref="uniqueId"/>\n',
+            self.ccr.xml
+        )
+
+    #==========================================================================
+
+    def testResetMembers(self):
+        """Tests resetting the member dict"""
+        cdl_convert.ColorCorrectionReference.reset_members()
+
+        self.assertEqual(
+            {},
+            cdl_convert.ColorCorrectionReference.members
+        )
+
 # ColorNodeBase ===============================================================
 
 
