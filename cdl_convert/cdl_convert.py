@@ -718,7 +718,61 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
 
 class ColorCorrectionReference(AscXMLBase):
-    """Reference marker to a full color correction"""
+    """Reference marker to a full color correction
+
+    Description
+    ~~~~~~~~~~~
+
+    This is a fairly basic class that simply contains a reference to a full
+    :class:`ColorCorrection` . The ``ref`` attribute must match the
+    ``id`` attribute in order for this class to function fully.
+
+    When writing to a format that allows empty references (like ``cdl``),
+    the reference can write correctly without breaking. However, if writing to
+    a format that does not support reference objects at all (like ``ccc``),
+    attempting to write an empty reference will result in a ``ValueError`` (if
+    ``HALT_ON_ERROR`` is set to ``True``, or simply skip past the reference
+    entirely.
+
+    **Attributes:**
+
+        ref : (str)
+            The :class:`ColorCorrection` id that this reference refers to. When
+            setting this after creation, set will fail if the reference does
+            not match to an excisting :class:`ColorCorrection` ``id``.
+
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+    **Public Methods:**
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
+        resolve_reference()
+            Attempts to return the :class:`ColorCorrection` that this
+            reference is supposed to refer to.
+
+            If ``HALT_ON_ERROR`` is set to ``True``, resolving a bad reference
+            will raise a ``ValueError`` exception. If not set, it will simply
+            return None.
+
+            Otherwise (if the ``ref`` attribute matches a known
+            :class:`ColorCorrection` ``id``, the :class:`ColorCorrection` will
+            be returned.
+
+    """
 
     def __init__(self, ref):
         super(ColorCorrectionReference, self).__init__()
