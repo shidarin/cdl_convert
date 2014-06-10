@@ -750,6 +750,15 @@ class ColorCorrectionReference(AscXMLBase):
 
     **Attributes:**
 
+        cc : (:class:`ColorCorrection`)
+            If the stored reference resolves to an existing
+            :class:`ColorCorrection`, this attribute will return that node
+            using the ``resolve_reference`` method. This attribute is the same
+            as calling that method.
+
+        parent : (:class:`ColorDecision`)
+            The parent :class:`ColorDecision` that contains this node.
+
         ref : (str)
             The :class:`ColorCorrection` id that this reference refers to. If
             ``HALT_ON_ERROR`` is set to ``True``, will raise a ``ValueError``
@@ -801,7 +810,17 @@ class ColorCorrectionReference(AscXMLBase):
         # method directly.
         self._set_ref(ref)
 
+        # While all ColorCorrectionReferences should be under a
+        # ColorDecision node, we won't strictly enforce that a
+        # parent must exist.
+        self.parent = None
+
     # Properties ==============================================================
+
+    @property
+    def cc(self):
+        """Returns the referenced ColorCorrection"""
+        return self.resolve_reference()
 
     @property
     def ref(self):
