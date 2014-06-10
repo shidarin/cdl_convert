@@ -114,6 +114,10 @@ else:  # pragma: no cover
 #   If id given to ColorCorrection is blank, will set to number of CCs
 #   When determining if a non-existent directory referenced by MediaRef
 #       contains an image sequence, will just return False.
+#   If attempting to retrieve a referenced ColorCorrection whose id doesn't
+#       exist.
+#   If attempting to set a ColorCorrectionReference to a ColorCorrection whose
+#       id doesn't exist. (Other than first creation)
 HALT_ON_ERROR = False
 
 # ==============================================================================
@@ -737,9 +741,10 @@ class ColorCorrectionReference(AscXMLBase):
     **Attributes:**
 
         ref : (str)
-            The :class:`ColorCorrection` id that this reference refers to. When
-            setting this after creation, set will fail if the reference does
-            not match to an excisting :class:`ColorCorrection` ``id``.
+            The :class:`ColorCorrection` id that this reference refers to. If
+            ``HALT_ON_ERROR`` is set to ``True``, will raise a ``ValueError``
+            if set to a :class:`ColorCorrection` ``id`` value that doesn't
+            yet exist.
 
         xml : (str)
             A nicely formatted XML string representing the node. Inherited from
@@ -774,9 +779,14 @@ class ColorCorrectionReference(AscXMLBase):
 
     """
 
+    members = {}
+
     def __init__(self, ref):
         super(ColorCorrectionReference, self).__init__()
-        self._ref = ref
+        self._ref = None
+        # Bypass cc id existence checks on first set by calling private
+        # method directly.
+        self._set_ref(ref)
 
     # Properties ==============================================================
 
@@ -786,18 +796,35 @@ class ColorCorrectionReference(AscXMLBase):
         return self._ref
 
     @ref.setter
-    def ref(self, id):
+    def ref(self, ref_id):
         """Sets the reference id"""
-        if id in ColorCorrection.members:
-            self._ref = id
-        else:
+        if ref_id not in ColorCorrection.members and HALT_ON_ERROR:
             raise ValueError(
                 "Reference id '{id}' does not match any existing "
                 "ColorCorrection id in ColorCorrection.members "
                 "dictionary.".format(
-                    id=id
+                    id=ref_id
                 )
             )
+
+        self._set_ref(ref_id)
+
+    # Private Methods =========================================================
+
+    def _set_ref(self, new_ref):
+        """Changes the ref field and updates members dictionary"""
+        # The only time it won't be in here is if this is the first time
+        # we set it.
+        if self.ref in ColorCorrectionReference.members:
+            ColorCorrectionReference.members[self.ref].remove(self)
+
+        # Check if this ref is already registered
+        if new_ref in ColorCorrectionReference.members:
+            ColorCorrectionReference.members[new_ref].append(self)
+        else:
+            ColorCorrectionReference.members[new_ref] = [self]
+
+        self._ref = new_ref
 
     # Public Methods ==========================================================
 
