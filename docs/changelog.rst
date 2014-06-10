@@ -18,6 +18,7 @@ and ``.flex`` files now return a collection.
 - Adds ``parse_ccc`` which returns a :class:`ColorCollection` .
 - Adds ``write_ccc`` which writes a :class:`ColorCollection` as a ``ccc`` file.
 - :class:`ColorCollection` is now a fully functional container class, with many attributes and methods.
+- Added :class:`ColorCorrectionReference` , which stores a reference to a :class:`ColorCorrection`
 - Added ``parent`` attribute to :class:`ColorCorrection` .
 - Calling ``sop_node`` or ``sat_node`` on a :class:`ColorCorrection` before attempting to set a SOP or Sat power now works.
 - :class:`ColorCorrection` ``cdl_file`` init argument renamed to ``input_file``, which is now optional and able to be set after init.
