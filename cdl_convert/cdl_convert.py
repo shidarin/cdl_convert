@@ -126,6 +126,7 @@ __all__ = [
     'AscXMLBase',
     'ColorCollection',
     'ColorCorrection',
+    'ColorCorrectionReference',
     'ColorDecision',
     'ColorNodeBase',
     'MediaRef',
@@ -712,6 +713,64 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def reset_members(cls):
         """Resets the class level members dictionary"""
         cls.members = {}
+
+# ==============================================================================
+
+
+class ColorCorrectionReference(AscXMLBase):
+    """Reference marker to a full color correction"""
+
+    def __init__(self, ref):
+        super(ColorCorrectionReference, self).__init__()
+        self._ref = ref
+
+    # Properties ==============================================================
+
+    @property
+    def ref(self):
+        """Returns the reference id"""
+        return self._ref
+
+    @ref.setter
+    def ref(self, id):
+        """Sets the reference id"""
+        if id in ColorCorrection.members:
+            self._ref = id
+        else:
+            raise ValueError(
+                "Reference id '{id}' does not match any existing "
+                "ColorCorrection id in ColorCorrection.members "
+                "dictionary.".format(
+                    id=id
+                )
+            )
+
+    # Public Methods ==========================================================
+
+    def build_element(self):
+        """Builds an ElementTree XML element representing this reference"""
+        cc_ref_xml = ElementTree.Element('ColorCorrectionRef')
+        cc_ref_xml.attrib = {'ref': self.ref}
+
+        return cc_ref_xml
+
+    # =========================================================================
+
+    def resolve_reference(self):
+        """Returns the ColorCorrection this reference points to"""
+        if self.ref in ColorCorrection.members:
+            return ColorCorrection.members[self.ref]
+        else:
+            if HALT_ON_ERROR:
+                raise ValueError(
+                    "Cannot resolve ColorCorrectionReference with reference "
+                    "id of '{id}' because no ColorCorrection with that id "
+                    "can be found.".format(
+                        id=self.ref
+                    )
+                )
+            else:
+                return None
 
 # ==============================================================================
 
