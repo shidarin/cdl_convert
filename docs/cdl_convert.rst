@@ -42,7 +42,7 @@ AscXMLBase
 .. autoclass:: cdl_convert.AscXMLBase
 
 ColorCollection
--------------------
+---------------
 
 .. warning::
     Functionality described below relating to ``cdl`` type collections
@@ -105,6 +105,11 @@ function, see :doc:`usage` for a walkthrough.
     ``cdl_file`` is likely to not be a required attribute in the future.
 
 .. autoclass:: cdl_convert.ColorCorrection
+
+ColorCorrectionReference
+------------------------
+
+.. autoclass:: cdl_convert.ColorCorrectionReference
 
 ColorDecision
 -------------

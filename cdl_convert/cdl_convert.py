@@ -114,6 +114,10 @@ else:  # pragma: no cover
 #   If id given to ColorCorrection is blank, will set to number of CCs
 #   When determining if a non-existent directory referenced by MediaRef
 #       contains an image sequence, will just return False.
+#   If attempting to retrieve a referenced ColorCorrection whose id doesn't
+#       exist.
+#   If attempting to set a ColorCorrectionReference to a ColorCorrection whose
+#       id doesn't exist. (Other than first creation)
 HALT_ON_ERROR = False
 
 # ==============================================================================
@@ -126,6 +130,7 @@ __all__ = [
     'AscXMLBase',
     'ColorCollection',
     'ColorCorrection',
+    'ColorCorrectionReference',
     'ColorDecision',
     'ColorNodeBase',
     'MediaRef',
@@ -712,6 +717,183 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def reset_members(cls):
         """Resets the class level members dictionary"""
         cls.members = {}
+
+# ==============================================================================
+
+
+class ColorCorrectionReference(AscXMLBase):
+    """Reference marker to a full color correction
+
+    Description
+    ~~~~~~~~~~~
+
+    This is a fairly basic class that simply contains a reference to a full
+    :class:`ColorCorrection` . The ``ref`` attribute must match the
+    ``id`` attribute in order for this class to function fully.
+
+    When writing to a format that allows empty references (like ``cdl``),
+    the reference can write correctly without breaking. However, if writing to
+    a format that does not support reference objects at all (like ``ccc``),
+    attempting to write an empty reference will result in a ``ValueError`` (if
+    ``HALT_ON_ERROR`` is set to ``True``, or simply skip past the reference
+    entirely.
+
+    **Class Attributes:**
+
+        members : {str: [:class`ColorCorrectionReference`]}
+            All instanced :class:`ColorCorrectionReference` are added to this
+            member dictionary. Multiple :class:`ColorCorrectionReference` can
+            share the same reference id, therefore for each reference id key,
+            the members dictionary stores a list of
+            :class:`ColorCorrectionReference` instances that share that ``ref``
+            value.
+
+    **Attributes:**
+
+        cc : (:class:`ColorCorrection`)
+            If the stored reference resolves to an existing
+            :class:`ColorCorrection`, this attribute will return that node
+            using the ``resolve_reference`` method. This attribute is the same
+            as calling that method.
+
+        parent : (:class:`ColorDecision`)
+            The parent :class:`ColorDecision` that contains this node.
+
+        ref : (str)
+            The :class:`ColorCorrection` id that this reference refers to. If
+            ``HALT_ON_ERROR`` is set to ``True``, will raise a ``ValueError``
+            if set to a :class:`ColorCorrection` ``id`` value that doesn't
+            yet exist.
+
+        xml : (str)
+            A nicely formatted XML string representing the node. Inherited from
+            :class:`AscXMLBase`.
+
+        xml_root : (str)
+            A nicely formatted XML, ready to write to file string representing
+            the node. Formatted as an XML root, it includes the xml version and
+            encoding tags on the first line. Inherited from
+            :class:`AscXMLBase`.
+
+    **Public Methods:**
+
+        build_element()
+            Builds an ElementTree XML Element for this node and all nodes it
+            contains. ``element``, ``xml``, and ``xml_root`` attributes use
+            this to build the XML. This function is identical to calling the
+            ``element`` attribute. Overrides inherited placeholder method
+            from :class:`AscXMLBase` .
+
+        reset_members()
+            Resets the class level members list.
+
+        resolve_reference()
+            Attempts to return the :class:`ColorCorrection` that this
+            reference is supposed to refer to.
+
+            If ``HALT_ON_ERROR`` is set to ``True``, resolving a bad reference
+            will raise a ``ValueError`` exception. If not set, it will simply
+            return None.
+
+            Otherwise (if the ``ref`` attribute matches a known
+            :class:`ColorCorrection` ``id``, the :class:`ColorCorrection` will
+            be returned.
+
+    """
+
+    members = {}
+
+    def __init__(self, ref):
+        super(ColorCorrectionReference, self).__init__()
+        self._ref = None
+        # Bypass cc id existence checks on first set by calling private
+        # method directly.
+        self._set_ref(ref)
+
+        # While all ColorCorrectionReferences should be under a
+        # ColorDecision node, we won't strictly enforce that a
+        # parent must exist.
+        self.parent = None
+
+    # Properties ==============================================================
+
+    @property
+    def cc(self):
+        """Returns the referenced ColorCorrection"""
+        return self.resolve_reference()
+
+    @property
+    def ref(self):
+        """Returns the reference id"""
+        return self._ref
+
+    @ref.setter
+    def ref(self, ref_id):
+        """Sets the reference id"""
+        if ref_id not in ColorCorrection.members and HALT_ON_ERROR:
+            raise ValueError(
+                "Reference id '{id}' does not match any existing "
+                "ColorCorrection id in ColorCorrection.members "
+                "dictionary.".format(
+                    id=ref_id
+                )
+            )
+
+        self._set_ref(ref_id)
+
+    # Private Methods =========================================================
+
+    def _set_ref(self, new_ref):
+        """Changes the ref field and updates members dictionary"""
+        # The only time it won't be in here is if this is the first time
+        # we set it.
+        if self.ref in ColorCorrectionReference.members:
+            ColorCorrectionReference.members[self.ref].remove(self)
+            # If the remaining list is empty, we'll pop it out
+            if not ColorCorrectionReference.members[self.ref]:
+                ColorCorrectionReference.members.pop(self.ref)
+
+        # Check if this ref is already registered
+        if new_ref in ColorCorrectionReference.members:
+            ColorCorrectionReference.members[new_ref].append(self)
+        else:
+            ColorCorrectionReference.members[new_ref] = [self]
+
+        self._ref = new_ref
+
+    # Public Methods ==========================================================
+
+    def build_element(self):
+        """Builds an ElementTree XML element representing this reference"""
+        cc_ref_xml = ElementTree.Element('ColorCorrectionRef')
+        cc_ref_xml.attrib = {'ref': self.ref}
+
+        return cc_ref_xml
+
+    # =========================================================================
+
+    @classmethod
+    def reset_members(cls):
+        """Resets the member list"""
+        cls.members = {}
+
+    # =========================================================================
+
+    def resolve_reference(self):
+        """Returns the ColorCorrection this reference points to"""
+        if self.ref in ColorCorrection.members:
+            return ColorCorrection.members[self.ref]
+        else:
+            if HALT_ON_ERROR:
+                raise ValueError(
+                    "Cannot resolve ColorCorrectionReference with reference "
+                    "id of '{id}' because no ColorCorrection with that id "
+                    "can be found.".format(
+                        id=self.ref
+                    )
+                )
+            else:
+                return None
 
 # ==============================================================================
 
@@ -2717,6 +2899,7 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
 def reset_all():
     """Resets all class level member lists and dictionaries"""
     ColorCorrection.reset_members()
+    ColorCorrectionReference.reset_members()
     ColorCollection.reset_members()
     MediaRef.reset_members()
 
