@@ -738,6 +738,16 @@ class ColorCorrectionReference(AscXMLBase):
     ``HALT_ON_ERROR`` is set to ``True``, or simply skip past the reference
     entirely.
 
+    **Class Attributes:**
+
+        members : {str: [:class`ColorCorrectionReference`]}
+            All instanced :class:`ColorCorrectionReference` are added to this
+            member dictionary. Multiple :class:`ColorCorrectionReference` can
+            share the same reference id, therefore for each reference id key,
+            the members dictionary stores a list of
+            :class:`ColorCorrectionReference` instances that share that ``ref``
+            value.
+
     **Attributes:**
 
         ref : (str)
@@ -764,6 +774,9 @@ class ColorCorrectionReference(AscXMLBase):
             this to build the XML. This function is identical to calling the
             ``element`` attribute. Overrides inherited placeholder method
             from :class:`AscXMLBase` .
+
+        reset_members()
+            Resets the class level members list.
 
         resolve_reference()
             Attempts to return the :class:`ColorCorrection` that this
@@ -834,6 +847,13 @@ class ColorCorrectionReference(AscXMLBase):
         cc_ref_xml.attrib = {'ref': self.ref}
 
         return cc_ref_xml
+
+    # =========================================================================
+
+    @classmethod
+    def reset_members(cls):
+        """Resets the member list"""
+        cls.members = {}
 
     # =========================================================================
 
@@ -2857,6 +2877,7 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
 def reset_all():
     """Resets all class level member lists and dictionaries"""
     ColorCorrection.reset_members()
+    ColorCorrectionReference.reset_members()
     ColorCollection.reset_members()
     MediaRef.reset_members()
 
