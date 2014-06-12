@@ -932,10 +932,54 @@ class ColorDecision(AscXMLBase):  # pylint: disable=R0903
             from :class:`AscXMLBase` .
 
     """
-    def __init__(self):
+
+    members = {}
+
+    def __init__(self, cc, media=None):
         """Inits an instance of ColorDecision"""
         super(ColorDecision, self).__init__()
         self.parent = None
+        self._cc = cc
+        self._media_ref = media
+
+    # Properties ==============================================================
+
+    @property
+    def cc(self):
+        return self._cc
+
+    @cc.setter
+    def cc(self, new_cc):
+        self._cc = new_cc
+        new_cc.parent = self
+
+    @property
+    def is_ref(self):
+        return type(self.cc) is ColorCorrectionReference
+
+    @property
+    def media_ref(self):
+        return self._media_ref
+
+    @media_ref.setter
+    def media_ref(self, new_media_ref):
+        self._media_ref = new_media_ref
+        new_media_ref.parent = self
+
+    # Public Methods ==========================================================
+
+    @classmethod
+    def reset_members(cls):
+        """Resets the member list"""
+        cls.members = {}
+
+    # =========================================================================
+
+    def set_parentage(self):
+        """Sets the parent of all child nodes to point to this instance"""
+        self.cc.parent = self
+        if self.media_ref:  # Media ref objects are optional
+            self.media_ref.parent = self
 
 # ==============================================================================
 
