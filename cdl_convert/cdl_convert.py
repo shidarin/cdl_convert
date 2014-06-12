@@ -1023,6 +1023,28 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # Public Methods ==========================================================
 
+    def build_element(self):
+        """Builds an ElementTree XML element representing this CC"""
+        cd_xml = ElementTree.Element('ColorDecision')
+        if self.input_desc:
+            input_desc = ElementTree.SubElement(cd_xml, 'InputDescription')
+            input_desc.text = self.input_desc
+        if self.viewing_desc:
+            viewing_desc = ElementTree.SubElement(cd_xml, 'ViewingDescription')
+            viewing_desc.text = self.viewing_desc
+        for description in self.desc:
+            desc = ElementTree.SubElement(cd_xml, 'Description')
+            desc.text = description
+        # Customary for the Media Ref element to go first (if there is one)
+        if self.media_ref:
+            cd_xml.append(self.media_ref.element)
+
+        cd_xml.append(self.cc.element)
+
+        return cd_xml
+
+    # =========================================================================
+
     @classmethod
     def reset_members(cls):
         """Resets the member list"""
