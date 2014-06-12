@@ -679,9 +679,11 @@ class TestCollectionChildMethods(unittest.TestCase):
             cdl_convert.ColorCorrection(id='004')
         ]
         self.color_decisions = [
-            cdl_convert.ColorDecision(),
-            cdl_convert.ColorDecision(),
-            cdl_convert.ColorDecision()
+            cdl_convert.ColorDecision(cdl_convert.ColorCorrection(id='005')),
+            cdl_convert.ColorDecision(cdl_convert.ColorCorrection(id='006')),
+            cdl_convert.ColorDecision(
+                cdl_convert.ColorCorrectionReference('005')
+            ),
         ]
 
     def tearDown(self):
@@ -1029,16 +1031,18 @@ class TestMultipleCollections(unittest.TestCase):
         self.node2.viewing_desc = 'Panasonic Plasma rec709'
 
         # We need lists of color corrections and decisions
-        self.node.color_corrections = [
+        self.color_corrections = [
             cdl_convert.ColorCorrection(id='001'),
             cdl_convert.ColorCorrection(id='002'),
             cdl_convert.ColorCorrection(id='003'),
             cdl_convert.ColorCorrection(id='004')
         ]
-        self.node2.color_decisions = [
-            cdl_convert.ColorDecision(),
-            cdl_convert.ColorDecision(),
-            cdl_convert.ColorDecision()
+        self.color_decisions = [
+            cdl_convert.ColorDecision(cdl_convert.ColorCorrection(id='005')),
+            cdl_convert.ColorDecision(cdl_convert.ColorCorrection(id='006')),
+            cdl_convert.ColorDecision(
+                cdl_convert.ColorCorrectionReference('005')
+            ),
         ]
 
     def tearDown(self):
@@ -1945,7 +1949,8 @@ class TestMediaRefProperties(unittest.TestCase):
         self.protocol = 'ftp'
         self.path = os.path.join(self.directory, self.filename)
         self.ref = self.protocol + '://' + self.path
-        self.parent = cdl_convert.ColorDecision()
+        cc = cdl_convert.ColorCorrectionReference('001')
+        self.parent = cdl_convert.ColorDecision(cc)
         self.mr = cdl_convert.MediaRef(
             ref_uri=self.ref,
             parent=self.parent
@@ -2469,7 +2474,8 @@ class TestMediaRefPropertiesOdd(TestMediaRefProperties):
         self.protocol = ''
         self.path = os.path.join(self.directory, self.filename)
         self.ref = self.path
-        self.parent = cdl_convert.ColorDecision()
+        cc = cdl_convert.ColorCorrectionReference('001')
+        self.parent = cdl_convert.ColorDecision(cc)
         self.mr = cdl_convert.MediaRef(
             ref_uri=self.ref,
             parent=self.parent
