@@ -818,7 +818,7 @@ class ColorCorrectionReference(AscXMLBase):
     # Properties ==============================================================
 
     @property
-    def cc(self):
+    def cc(self):  # pylint: disable=C0103
         """Returns the referenced ColorCorrection"""
         return self.resolve_reference()
 
@@ -898,19 +898,71 @@ class ColorCorrectionReference(AscXMLBase):
 # ==============================================================================
 
 
-class ColorDecision(AscXMLBase):  # pylint: disable=R0903
+class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0903
     """Contains a media ref and a ColorCorrection or reference to CC.
 
     Description
     ~~~~~~~~~~~
 
-    This class is a stub for now, with no functionality.
+    This class is a simple container to link a :class:`ColorCorrection` (or
+    :class:`ColorCorrectionReference` ) with a :class:`MediaRef` . The
+    :class:`MediaRef` is optional, the ColorCorrection is not.
+
+    **Class Attributes:**
+
+        members : {str: [:class`ColorDecision`]}
+            All instanced :class:`ColorDecision` are added to this
+            member dictionary. The key is the id or reference id of the
+            contained :class:`ColorCorrection` or
+            :class:`ColorCorrectionReference` Multiple :class:`ColorDecision`
+            can , therefore for each reference id key,
+            the members dictionary stores a list of
+            :class:`ColorDecision` instances that share that ``ref``
+            value.
 
     **Attributes:**
+
+        cc : (:class:`ColorCorrection` | :class:`ColorCorrectionReference`)
+            Returns the contained ColorCorrection, even if it's a reference.
+
+        desc : [str]
+            Since all Asc nodes which can contain a single description, can
+            actually contain an infinite number of descriptions, the desc
+            attribute is a list, allowing us to store every single description
+            found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list, but desc can also be replaced by passing it a list
+            or tuple. Desc can be emptied by passing it None, [] or ().
+
+            Inherited from :class:`AscDescBase` .
 
         element : (<xml.etree.ElementTree.Element>)
             etree style Element representing the node. Inherited from
             :class:`AscXMLBase` .
+
+        input_desc : (str)
+            Description of the color space, format and properties of the input
+            images. Inherited from :class:`AscColorSpaceBase` .
+
+        is_ref : (bool)
+            True if contains a :class:`ColorCorrectionReference` object instead
+            of a :class:`ColorCorrection`
+
+        media_ref : (:class:`MediaRef`)
+            Returns the contained :class:`MediaRef` or None.
+
+        parent : (:class:`ColorDecisionList`)
+            The parent node that contains this node.
+
+        set_parentage()
+            Sets child :class:`ColorCorrection` (or
+            :class:`ColorCorrectionReference`) and :class:`MediaRef` (if
+            present) ``parent`` attribute to point to this instance.
+
+        viewing_desc : (str)
+            Viewing device, settings and environment. Inherited from
+            :class:`AscColorSpaceBase` .
 
         xml : (str)
             A nicely formatted XML string representing the node. Inherited from
@@ -931,11 +983,119 @@ class ColorDecision(AscXMLBase):  # pylint: disable=R0903
             ``element`` attribute. Overrides inherited placeholder method
             from :class:`AscXMLBase` .
 
+        reset_members()
+            Resets the class level members list.
+
     """
-    def __init__(self):
+
+    members = {}
+
+    def __init__(self, cc, media=None):
         """Inits an instance of ColorDecision"""
         super(ColorDecision, self).__init__()
         self.parent = None
+        self._cc = cc
+        self._media_ref = media
+
+        self.set_parentage()
+
+        # Need to add the cdl to the dictionary based on the id or ref field
+        # of the child.
+        key = self.cc.ref if self.is_ref else self.cc.id
+        if key in ColorDecision.members:
+            ColorDecision.members[key].append(self)
+        else:
+            ColorDecision.members[key] = [self]
+
+    # Properties ==============================================================
+
+    @property
+    def cc(self):  # pylint: disable=C0103
+        """Returns the contained CC or CC Ref"""
+        return self._cc
+
+    @cc.setter
+    def cc(self, new_cc):  # pylint: disable=C0103
+        """Sets the contained cc, updates dictionary and parentage"""
+        self._set_id(new_cc)
+        self._cc = new_cc
+        new_cc.parent = self
+
+    @property
+    def is_ref(self):
+        """True if our cc is a reference cc"""
+        return type(self.cc) is ColorCorrectionReference
+
+    @property
+    def media_ref(self):
+        """Returns Media Ref (if we have one) or none"""
+        return self._media_ref
+
+    @media_ref.setter
+    def media_ref(self, new_media_ref):
+        """Sets media ref and updates parentage"""
+        self._media_ref = new_media_ref
+        if new_media_ref:
+            new_media_ref.parent = self
+
+    # Private Methods =========================================================
+
+    def _set_id(self, new_cc):
+        """Updates members dictionary"""
+        key = self.cc.ref if self.is_ref else self.cc.id
+        if key in ColorDecision.members:
+            ColorDecision.members[key].remove(self)
+            # If the remaining list is empty, we'll pop it out
+            if not ColorDecision.members[key]:
+                ColorDecision.members.pop(key)
+
+        if type(new_cc) is ColorCorrectionReference:
+            new_key = new_cc.ref
+        else:
+            new_key = new_cc.id
+
+        # Check if this ref is already registered
+        if new_key in ColorDecision.members:
+            ColorDecision.members[new_key].append(self)
+        else:
+            ColorDecision.members[new_key] = [self]
+
+    # Public Methods ==========================================================
+
+    def build_element(self):
+        """Builds an ElementTree XML element representing this CC"""
+        cd_xml = ElementTree.Element('ColorDecision')
+        if self.input_desc:
+            input_desc = ElementTree.SubElement(cd_xml, 'InputDescription')
+            input_desc.text = self.input_desc
+        if self.viewing_desc:
+            viewing_desc = ElementTree.SubElement(cd_xml, 'ViewingDescription')
+            viewing_desc.text = self.viewing_desc
+        for description in self.desc:
+            desc = ElementTree.SubElement(cd_xml, 'Description')
+            desc.text = description
+        # Customary for the Media Ref element to go first (if there is one)
+        if self.media_ref:
+            cd_xml.append(self.media_ref.element)
+
+        cd_xml.append(self.cc.element)
+
+        return cd_xml
+
+    # =========================================================================
+
+    @classmethod
+    def reset_members(cls):
+        """Resets the member list"""
+        cls.members = {}
+
+    # =========================================================================
+
+    def set_parentage(self):
+        """Sets the parent of all child nodes to point to this instance"""
+        self.cc.parent = self
+        if self.media_ref:  # Media ref objects are optional
+            self.media_ref.parent = self
 
 # ==============================================================================
 
@@ -2900,6 +3060,7 @@ def reset_all():
     """Resets all class level member lists and dictionaries"""
     ColorCorrection.reset_members()
     ColorCorrectionReference.reset_members()
+    ColorDecision.reset_members()
     ColorCollection.reset_members()
     MediaRef.reset_members()
 
