@@ -955,9 +955,6 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         parent : (:class:`ColorDecisionList`)
             The parent node that contains this node.
 
-        reset_members()
-            Resets the class level members list.
-
         set_parentage()
             Sets child :class:`ColorCorrection` (or
             :class:`ColorCorrectionReference`) and :class:`MediaRef` (if
@@ -986,6 +983,9 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             ``element`` attribute. Overrides inherited placeholder method
             from :class:`AscXMLBase` .
 
+        reset_members()
+            Resets the class level members list.
+
     """
 
     members = {}
@@ -996,7 +996,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         self.parent = None
         self._cc = cc
         self._media_ref = media
-        
+
         self.set_parentage()
 
     # Properties ==============================================================
