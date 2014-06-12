@@ -3054,6 +3054,7 @@ def reset_all():
     """Resets all class level member lists and dictionaries"""
     ColorCorrection.reset_members()
     ColorCorrectionReference.reset_members()
+    ColorDecision.reset_members()
     ColorCollection.reset_members()
     MediaRef.reset_members()
 
