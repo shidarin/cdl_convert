@@ -818,7 +818,7 @@ class ColorCorrectionReference(AscXMLBase):
     # Properties ==============================================================
 
     @property
-    def cc(self):
+    def cc(self):  # pylint: disable=C0103
         """Returns the referenced ColorCorrection"""
         return self.resolve_reference()
 
@@ -1010,27 +1010,33 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     # Properties ==============================================================
 
     @property
-    def cc(self):
+    def cc(self):  # pylint: disable=C0103
+        """Returns the contained CC or CC Ref"""
         return self._cc
 
     @cc.setter
-    def cc(self, new_cc):
+    def cc(self, new_cc):  # pylint: disable=C0103
+        """Sets the contained cc, updates dictionary and parentage"""
         self._set_id(new_cc)
         self._cc = new_cc
         new_cc.parent = self
 
     @property
     def is_ref(self):
+        """True if our cc is a reference cc"""
         return type(self.cc) is ColorCorrectionReference
 
     @property
     def media_ref(self):
+        """Returns Media Ref (if we have one) or none"""
         return self._media_ref
 
     @media_ref.setter
     def media_ref(self, new_media_ref):
+        """Sets media ref and updates parentage"""
         self._media_ref = new_media_ref
-        new_media_ref.parent = self
+        if new_media_ref:
+            new_media_ref.parent = self
 
     # Private Methods =========================================================
 
