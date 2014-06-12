@@ -377,15 +377,15 @@ CDL spec.
 
 The distinctions between the two are fairly trivial:
 
-``ColorCorrectionCollection``s contain one or more ``ColorCorrections``
+``ColorCorrectionCollection`` contain one or more ``ColorCorrections``
 (which directly correspond to :class:`ColorCorrection` ), as well as the normal
 ``Description``, ``InputDescription`` and ``ViewingDescription`` fields.
 
-``ColorDecisionList``s contain ``ColorDecision``s (directly corresponding to
-:class:`ColorDecision` ) instead of ``ColorCorrection``s. Those
-``ColorDecision``s in turn contain the same ``ColorCorrection`` elements
+``ColorDecisionList`` contain ``ColorDecision`` (directly corresponding to
+:class:`ColorDecision` ) instead of ``ColorCorrection`` . Those
+``ColorDecision`` in turn contain the same ``ColorCorrection`` elements
 that ``ColorCorrectionCollection`` directly contains. Alongside the
-``ColorCorrection``s are optional ``MediaRef`` elements (again directly
+``ColorCorrection`` are optional ``MediaRef`` elements (again directly
 corresponding to :class:`MediaRef` ), which simply contain a path to reference
 media for the ``ColorCorrection`` alongside.
 
@@ -402,7 +402,7 @@ retrieved. Setting it to ``'cdl'`` causes a ``ColorDecisionList`` to appear
 instead.
 
 .. note::
-    No matter what combination of ``ColorDecision``s or ``ColorCorrection``s a
+    No matter what combination of ``ColorDecision`` or ``ColorCorrection`` a
     single :class:`ColorCollection` has, any members of the 'opposite' class
     will be displayed correctly when you switch the ``type``.
 
@@ -652,6 +652,6 @@ are all merged together.
         'Color by Zap Brannigan',
     ]
 
-... note::
+.. note::
     Unlike the lists of children, duplicates are not removed from the list of
     descriptions.
