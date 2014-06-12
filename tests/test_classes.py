@@ -1760,7 +1760,7 @@ class TestColorCorrection(unittest.TestCase):
             self.cc.file_out
         )
 
-# ColorCorrection =============================================================
+# ColorCorrectionReference ====================================================
 
 
 class TestColorCorrectionReference(unittest.TestCase):
@@ -1902,6 +1902,263 @@ class TestColorCorrectionReference(unittest.TestCase):
         self.assertEqual(
             {},
             cdl_convert.ColorCorrectionReference.members
+        )
+
+# ColorDecision ===============================================================
+
+
+class TestColorDecision(unittest.TestCase):
+    """Tests all aspects of the ColorCorrection class."""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        # Note that the file doesn't really need to exist for our test purposes
+        self.cc = cdl_convert.ColorCorrection(
+            id='uniqueId', input_file='../testcdl.cc'
+        )
+        self.media_ref = cdl_convert.MediaRef('/best/url/ever/me.jpg')
+        self.cd = cdl_convert.ColorDecision(self.cc, self.media_ref)
+
+    def tearDown(self):
+        # We need to clear the ColorCorrection member dictionary so we don't
+        # have to worry about non-unique ids.
+        cdl_convert.reset_all()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testInputDesc(self):
+        """Tests that input_desc inherited"""
+
+        self.assertTrue(
+            hasattr(self.cd, 'input_desc')
+        )
+
+        self.assertEqual(
+            None,
+            self.cd.input_desc
+        )
+
+    #==========================================================================
+
+    def testViewingDesc(self):
+        """Tests that viewing_desc inherited"""
+
+        self.assertTrue(
+            hasattr(self.cd, 'viewing_desc')
+        )
+
+        self.assertEqual(
+            None,
+            self.cc.viewing_desc
+        )
+
+    #==========================================================================
+
+    def testDesc(self):
+        """Tests that desc inherited"""
+
+        self.assertTrue(
+            hasattr(self.cd, 'desc')
+        )
+
+        self.assertEqual(
+            [],
+            self.cc.desc
+        )
+
+    #==========================================================================
+
+    def testParentage(self):
+        """Tests that our children were parented to our cd during init"""
+        self.assertEqual(
+            self.cd,
+            self.media_ref.parent
+        )
+
+        self.assertEqual(
+            self.cd,
+            self.cc.parent
+        )
+
+    #==========================================================================
+
+    def testParentageChange(self):
+        """Tests that changing our cc or media_ref changes their parents"""
+        cc2 = cdl_convert.ColorCorrectionReference('001')
+        cc2.parent = 'bob'
+        mr2 = cdl_convert.MediaRef('sdhjd.dpx')
+        mr2.parent = 'jim'
+
+        self.cd.cc = cc2
+        self.cd.media_ref = mr2
+
+        self.assertEqual(
+            self.cd,
+            cc2.parent
+        )
+
+        self.assertEqual(
+            self.cd,
+            mr2.parent
+        )
+
+    #==========================================================================
+
+    def testMemberListDefault(self):
+        """Tests that we've been entered into the member dictionary correctly"""
+        self.assertEqual(
+            {'uniqueId': [self.cd]},
+            cdl_convert.ColorDecision.members
+        )
+
+    #==========================================================================
+
+    def testMemberListOnIdChange(self):
+        """Tests that our membership changes as our child cc changes"""
+        self.assertEqual(
+            {'uniqueId': [self.cd]},
+            cdl_convert.ColorDecision.members
+        )
+
+        cc2 = cdl_convert.ColorCorrectionReference('001')
+        self.cd.cc = cc2
+
+        self.assertEqual(
+            {'001': [self.cd]},
+            cdl_convert.ColorDecision.members
+        )
+
+    #==========================================================================
+
+    def testMemberListGrowing(self):
+        """Tests that member list grows and changes correctly"""
+
+        self.assertEqual(
+            {'uniqueId': [self.cd]},
+            cdl_convert.ColorDecision.members
+        )
+
+        ccr = cdl_convert.ColorCorrectionReference('uniqueId')
+        cd2 = cdl_convert.ColorDecision(ccr)
+
+        self.assertEqual(
+            {'uniqueId': [self.cd, cd2]},
+            cdl_convert.ColorDecision.members
+        )
+
+        cc2 = cdl_convert.ColorCorrection('betterId')
+        cd3 = cdl_convert.ColorDecision(cc2)
+
+        self.assertEqual(
+            {'uniqueId': [self.cd, cd2], 'betterId': [cd3]},
+            cdl_convert.ColorDecision.members
+        )
+
+        self.cd.cc = cc2
+
+        self.assertEqual(
+            {'uniqueId': [cd2], 'betterId': [cd3, self.cd]},
+            cdl_convert.ColorDecision.members
+        )
+
+    #==========================================================================
+
+    def testCC(self):
+        """Tests that we return the color correct correctly"""
+        self.assertEqual(
+            self.cc,
+            self.cd.cc
+        )
+
+    #==========================================================================
+
+    def testIsRef(self):
+        """Tests that is_ref responds correctly"""
+        self.assertFalse(
+            self.cd.is_ref
+        )
+
+        self.cd.cc = cdl_convert.ColorCorrectionReference('001')
+
+        self.assertTrue(
+            self.cd.is_ref
+        )
+
+    #==========================================================================
+
+    def testMediaRef(self):
+        """Tests that media ref returns"""
+        self.assertEqual(
+            self.media_ref,
+            self.cd.media_ref
+        )
+
+        self.cd.media_ref = None
+
+        self.assertEqual(
+            None,
+            self.cd.media_ref
+        )
+
+        self.media_ref.parent = 'bob'
+
+        self.cd.media_ref = self.media_ref
+
+        self.assertEqual(
+            self.cd,
+            self.cd.media_ref.parent
+        )
+
+    #==========================================================================
+
+    def testResetMembers(self):
+        """Tess that our membership resets correctly"""
+
+        self.assertEqual(
+            {'uniqueId': [self.cd]},
+            cdl_convert.ColorDecision.members
+        )
+
+        cdl_convert.ColorDecision.reset_members()
+
+        self.assertEqual(
+            {},
+              cdl_convert.ColorDecision.members
+        )
+
+    #==========================================================================
+
+    def testSetParentage(self):
+        """Sets reseting the parentage to point to our current frame"""
+
+        self.assertEqual(
+            self.cd,
+            self.cc.parent
+        )
+
+        self.assertEqual(
+            self.cd,
+            self.cd.media_ref.parent
+        )
+
+        self.cc.parent = 'bob'
+        self.media_ref.parent = 'joe'
+
+        self.cd.set_parentage()
+
+        self.assertEqual(
+            self.cd,
+            self.cc.parent
+        )
+
+        self.assertEqual(
+            self.cd,
+            self.cd.media_ref.parent
         )
 
 # ColorNodeBase ===============================================================
