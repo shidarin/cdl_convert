@@ -898,19 +898,74 @@ class ColorCorrectionReference(AscXMLBase):
 # ==============================================================================
 
 
-class ColorDecision(AscXMLBase):  # pylint: disable=R0903
+class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0903
     """Contains a media ref and a ColorCorrection or reference to CC.
 
     Description
     ~~~~~~~~~~~
 
-    This class is a stub for now, with no functionality.
+    This class is a simple container to link a :class:`ColorCorrection` (or
+    :class:`ColorCorrectionReference` ) with a :class:`MediaRef` . The
+    :class:`MediaRef` is optional, the ColorCorrection is not.
+
+    **Class Attributes:**
+
+        members : {str: [:class`ColorDecision`]}
+            All instanced :class:`ColorDecision` are added to this
+            member dictionary. The key is the id or reference id of the
+            contained :class:`ColorCorrection` or
+            :class:`ColorCorrectionReference` Multiple :class:`ColorDecision`
+            can , therefore for each reference id key,
+            the members dictionary stores a list of
+            :class:`ColorDecision` instances that share that ``ref``
+            value.
 
     **Attributes:**
+
+        cc : (:class:`ColorCorrection` | :class:`ColorCorrectionReference`)
+            Returns the contained ColorCorrection, even if it's a reference.
+
+        desc : [str]
+            Since all Asc nodes which can contain a single description, can
+            actually contain an infinite number of descriptions, the desc
+            attribute is a list, allowing us to store every single description
+            found during parsing.
+
+            Setting desc directly will cause the value given to append to the
+            end of the list, but desc can also be replaced by passing it a list
+            or tuple. Desc can be emptied by passing it None, [] or ().
+
+            Inherited from :class:`AscDescBase` .
 
         element : (<xml.etree.ElementTree.Element>)
             etree style Element representing the node. Inherited from
             :class:`AscXMLBase` .
+
+        input_desc : (str)
+            Description of the color space, format and properties of the input
+            images. Inherited from :class:`AscColorSpaceBase` .
+
+        is_ref : (bool)
+            True if contains a :class:`ColorCorrectionReference` object instead
+            of a :class:`ColorCorrection`
+
+        media_ref : (:class:`MediaRef`)
+            Returns the contained :class:`MediaRef` or None.
+
+        parent : (:class:`ColorDecisionList`)
+            The parent node that contains this node.
+
+        reset_members()
+            Resets the class level members list.
+
+        set_parentage()
+            Sets child :class:`ColorCorrection` (or
+            :class:`ColorCorrectionReference`) and :class:`MediaRef` (if
+            present) ``parent`` attribute to point to this instance.
+
+        viewing_desc : (str)
+            Viewing device, settings and environment. Inherited from
+            :class:`AscColorSpaceBase` .
 
         xml : (str)
             A nicely formatted XML string representing the node. Inherited from
