@@ -996,6 +996,8 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         self.parent = None
         self._cc = cc
         self._media_ref = media
+        
+        self.set_parentage()
 
     # Properties ==============================================================
 
