@@ -999,6 +999,14 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
         self.set_parentage()
 
+        # Need to add the cdl to the dictionary based on the id or ref field
+        # of the child.
+        key = self.cc.ref if self.is_ref else self.cc.id
+        if key in ColorDecision.members:
+            ColorDecision.members[key].append(self)
+        else:
+            ColorDecision.members[key] = [self]
+
     # Properties ==============================================================
 
     @property
@@ -1007,6 +1015,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     @cc.setter
     def cc(self, new_cc):
+        self._set_id(new_cc)
         self._cc = new_cc
         new_cc.parent = self
 
@@ -1022,6 +1031,28 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     def media_ref(self, new_media_ref):
         self._media_ref = new_media_ref
         new_media_ref.parent = self
+
+    # Private Methods =========================================================
+
+    def _set_id(self, new_cc):
+        """Updates members dictionary"""
+        key = self.cc.ref if self.is_ref else self.cc.id
+        if key in ColorDecision.members:
+            ColorDecision.members[key].remove(self)
+            # If the remaining list is empty, we'll pop it out
+            if not ColorDecision.members[key]:
+                ColorDecision.members.pop(key)
+
+        if type(new_cc) is ColorCorrectionReference:
+            new_key = new_cc.ref
+        else:
+            new_key = new_cc.id
+
+        # Check if this ref is already registered
+        if new_key in ColorDecision.members:
+            ColorDecision.members[new_key].append(self)
+        else:
+            ColorDecision.members[new_key] = [self]
 
     # Public Methods ==========================================================
 
