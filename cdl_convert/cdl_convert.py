@@ -2586,8 +2586,8 @@ def parse_ale(input_file):  # pylint: disable=R0914
             The filepath to the ALE EDL
 
     **Returns:**
-        [:class:`ColorCorrection`]
-            A list of CDL objects retrieved from the ALE
+        (:class:`ColorCollection`)
+            A collection that contains all found ColorCorrections
 
     **Raises:**
         N/A
@@ -2672,8 +2672,8 @@ def parse_cc(input_file):  # pylint: disable=R0912
             The filepath to the CC or the ``ElementTree.Element`` object.
 
     **Returns:**
-        [:class:`ColorCorrection`]
-            A list of CDL objects retrieved from the CC
+        (:class:`ColorCorrection`)
+            The :class:`ColorCorrection` described within.
 
     **Raises:**
         ValueError:
@@ -2804,7 +2804,7 @@ def parse_cc(input_file):  # pylint: disable=R0912
 
 
 def parse_ccc(input_file):
-    """Parses a .ccc file into a :class:`ColorCorrectionCollection`
+    """Parses a .ccc file into a :class:`ColorCollection` with type 'ccc'
 
     **Args:**
         input_file : (str)
@@ -2833,7 +2833,7 @@ def parse_ccc(input_file):
     root = _remove_xmlns(input_file)
 
     if root.tag != 'ColorCorrectionCollection':
-        # This is not a CC file...
+        # This is not a CCC file...
         raise ValueError('CCC parsed but no ColorCorrectionCollection found')
 
     ccc = ColorCollection()
@@ -2849,9 +2849,10 @@ def parse_ccc(input_file):
     # Add all of our found color corrections. If the parse_xml returns False,
     # (for no CCs found) we raise a value error.
     if not ccc.parse_xml_color_corrections(root):
-        raise ValueError('ColorCorrectionCollections require at least one '
-                         'ColorCorrection node, but no ColorCorrection nodes '
-                         'were found.')
+        raise ValueError(
+            'ColorCorrectionCollections require at least one ColorCorrection '
+            'node, but no ColorCorrection nodes were found.'
+        )
 
     return ccc
 
@@ -2866,8 +2867,8 @@ def parse_rnh_cdl(input_file):
             The filepath to the CDL
 
     **Returns:**
-        [:class:`ColorCorrection`]
-            A list with only the single CDL object retrieved from the SS CDL
+        (:class:`ColorCorrection`)
+            The single ColorCorrection object retrieved from the beta CDL
 
     **Raises:**
         N/A
@@ -2918,8 +2919,9 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
             The filepath to the FLEx EDL
 
     **Returns:**
-        [:class:`ColorCorrection`]
-            A list of CDL objects retrieved from the FLEx
+        (:class:`ColorCollection`)
+            A collection that contains all the ColorCorrection objects found
+            within this EDL
 
     **Raises:**
         N/A
