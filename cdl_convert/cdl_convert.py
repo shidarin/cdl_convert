@@ -1039,26 +1039,21 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         if self.cc:
             # If we have a cc, we've already been added to the member's list,
             # and need to update membership.
-            key = self.cc.id if self.is_ref else self.cc.id
-            if key in ColorDecision.members:
-                ColorDecision.members[key].remove(self)
+            if self.cc.id in ColorDecision.members:
+                ColorDecision.members[self.cc.id].remove(self)
                 # If the remaining list is empty, we'll pop it out
-                if not ColorDecision.members[key]:
-                    ColorDecision.members.pop(key)
+                if not ColorDecision.members[self.cc.id]:
+                    ColorDecision.members.pop(self.cc.id)
 
         if new_cc:
             # It's possible to have new_cc be None, in which case we won't
             # assign this ColorDecision to the member dictionary.
-            if type(new_cc) is ColorCorrectionReference:
-                new_key = new_cc.id
-            else:
-                new_key = new_cc.id
-
+            #
             # Check if this id is already registered
-            if new_key in ColorDecision.members:
-                ColorDecision.members[new_key].append(self)
+            if new_cc.id in ColorDecision.members:
+                ColorDecision.members[new_cc.id].append(self)
             else:
-                ColorDecision.members[new_key] = [self]
+                ColorDecision.members[new_cc.id] = [self]
 
             new_cc.parent = self
 
