@@ -1539,6 +1539,35 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
+    def parse_xml_color_decisions(self, xml_element):
+        """Parses an ElementTree element to find & add all ColorDecisions.
+
+        **Args:**
+            xml_element : (``xml.etree.ElementTree.Element``)
+                The element to parse for multiple ColorDecision elements. If
+                found, append to our ``color_decisions``.
+
+        **Returns:**
+            (bool)
+                True if found ColorCorrections.
+
+        **Raises:**
+            None
+
+        """
+        cd_nodes = xml_element.findall('ColorDecision')
+        if not cd_nodes:
+            return False
+
+        for cd_node in xml_element.findall('ColorDecision'):
+            cdl = parse_cd(cd_node)
+            cdl.parent = self
+            self._color_decisions.append(cdl)
+
+        return True
+
+    # =========================================================================
+
     @classmethod
     def reset_members(cls):
         """Resets the member list"""
@@ -2803,6 +2832,84 @@ def parse_cc(input_file):  # pylint: disable=R0912
 # ==============================================================================
 
 
+def parse_cd(input_file):  # pylint: disable=R0912
+    """Parses a Color Decision element and builds a :class:`ColorDecision`
+
+    **Args:**
+        input_file : (<ElementTree.Element>)
+            The ``ElementTree.Element`` object of the ColorDecision
+
+    **Returns:**
+        (:class:`ColorDecision`)
+            A :class:`ColorDecision` as described by this element
+
+    **Raises:**
+        ValueError:
+            Bad XML formatting can raise ValueError is missing required
+            elements.
+
+    The primary purpose of a ColorDecision node is to associate a
+    ColorCorrection node with one or more items of Media Reference.
+
+    Along with Media Reference, a ColorDecision can contain the normal type of
+    input, viewer and description metadata.
+
+    Additional, it is the only node that can contain ColorCorrectionRef
+    nodes, which link the same ColorCorrection to many different ColorDecisions
+    (and thus, many different items of media reference)
+
+    An example containing a ColorCorrection node:
+    ::
+        <ColorDecision>
+            <MediaRef ref="http://www.theasc.com/images/friends/promo/foasc-logo2.png"/>
+            <ColorCorrection id="ascpromo">
+                <SOPNode>
+                    <Description>get me outta here</Description>
+                    <Slope>0.9 1.1 1.0</Slope>
+                    <Offset>0.1 -0.01 0.0</Offset>
+                    <Power>1.0 0.99 1.0</Power>
+                </SOPNode>
+            </ColorCorrection>
+        </ColorDecision>
+
+    But it can also contain just a reference:
+    ::
+        <ColorDecision>
+            <MediaRef ref="best/project/ever/jim.0100.dpx"/>
+            <ColorCorrectionRef ref="xf45.x628"/>
+        </ColorDecision>
+
+
+    """
+    root = input_file
+
+    cc_elem = root.find('ColorCorrection')
+    if not cc_elem:
+        cc_elem = root.find('ColorCorrectionRef')
+        if not cc_elem:
+            raise ValueError(
+                'The ColorDecision element could not be parsed because the '
+                'XML is missing required either a ColorCorrection or a '
+                'ColorCorrectionRef node'
+            )
+        cc_node = parse_cc_ref(cc_elem)
+    else:
+        cc_node = parse_cc(cc_elem)
+
+    color_decision = ColorCorrection(cc_node)
+
+    # Grab our descriptions and add them to the cd.
+    color_decision.parse_xml_descs(root)
+    # See if we have a viewing description.
+    color_decision.parse_xml_viewing_desc(root)
+    # See if we have an input description.
+    color_decision.parse_xml_input_desc(root)
+
+    return color_decision
+
+# ==============================================================================
+
+
 def parse_ccc(input_file):
     """Parses a .ccc file into a :class:`ColorCollection` with type 'ccc'
 
@@ -2855,6 +2962,63 @@ def parse_ccc(input_file):
         )
 
     return ccc
+
+# ==============================================================================
+
+
+def parse_cdl(input_file):
+    """Parses a .cdl file into a :class:`ColorCollection` with type 'cdl'
+
+    **Args:**
+        input_file : (str)
+            The filepath to the CDL.
+
+    **Returns:**
+        (:class:`ColorCollection`)
+            A collection of all the found :class:`ColorDecisions` as well
+            as any metadata within the XML
+
+    **Raises:**
+        ValueError:
+            Bad XML formatting can raise ValueError is missing required
+            elements.
+
+    A ColorDecicionList is just that- a list of ColorDecision elements. It does
+    not directly contain any ColorCorrections or Media Ref, only
+    ColorDecisions, but is free to contain as many Description elements as
+    someone adds in.
+
+    It should also contain an InputDescription element, describing the color
+    space and other properties of the incoming image, as well as a
+    ViewingDescription which describes the viewing environment as well
+    as any relevant hardware devices used to view or grade.
+
+    """
+    root = _remove_xmlns(input_file)
+
+    if root.tag != 'ColorDecisionList':
+        # This is not a CDL file...
+        raise ValueError('CDL parsed but no ColorDecisionList found')
+
+    cdl = ColorCollection()
+    cdl.set_to_cdl()
+    cdl.file_in = input_file
+
+    # Grab our descriptions and add them to the ccc.
+    cdl.parse_xml_descs(root)
+    # See if we have a viewing description.
+    cdl.parse_xml_viewing_desc(root)
+    # See if we have an input description.
+    cdl.parse_xml_input_desc(root)
+    # Add all of our found color decisions. If the parse_xml returns False,
+    # (for no CDs found) we raise a value error.
+    if not cdl.parse_xml_color_decisions(root):
+        raise ValueError(
+            'ColorDecisionLists require at least one ColorDecision node, but '
+            'no ColorDecision nodes were found.'
+        )
+
+    return cdl
 
 # ==============================================================================
 
