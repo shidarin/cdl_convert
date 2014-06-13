@@ -728,7 +728,7 @@ class ColorCorrectionReference(AscXMLBase):
     ~~~~~~~~~~~
 
     This is a fairly basic class that simply contains a reference to a full
-    :class:`ColorCorrection` . The ``ref`` attribute must match the
+    :class:`ColorCorrection` . The ``id`` attribute must match the
     ``id`` attribute in order for this class to function fully.
 
     When writing to a format that allows empty references (like ``cdl``),
@@ -745,7 +745,7 @@ class ColorCorrectionReference(AscXMLBase):
             member dictionary. Multiple :class:`ColorCorrectionReference` can
             share the same reference id, therefore for each reference id key,
             the members dictionary stores a list of
-            :class:`ColorCorrectionReference` instances that share that ``ref``
+            :class:`ColorCorrectionReference` instances that share that ``id``
             value.
 
     **Attributes:**
@@ -759,7 +759,7 @@ class ColorCorrectionReference(AscXMLBase):
         parent : (:class:`ColorDecision`)
             The parent :class:`ColorDecision` that contains this node.
 
-        ref : (str)
+        id : (str)
             The :class:`ColorCorrection` id that this reference refers to. If
             ``HALT_ON_ERROR`` is set to ``True``, will raise a ``ValueError``
             if set to a :class:`ColorCorrection` ``id`` value that doesn't
@@ -795,7 +795,7 @@ class ColorCorrectionReference(AscXMLBase):
             will raise a ``ValueError`` exception. If not set, it will simply
             return None.
 
-            Otherwise (if the ``ref`` attribute matches a known
+            Otherwise (if the ``id`` attribute matches a known
             :class:`ColorCorrection` ``id``, the :class:`ColorCorrection` will
             be returned.
 
@@ -803,12 +803,12 @@ class ColorCorrectionReference(AscXMLBase):
 
     members = {}
 
-    def __init__(self, ref):
+    def __init__(self, id):
         super(ColorCorrectionReference, self).__init__()
-        self._ref = None
+        self._id = None
         # Bypass cc id existence checks on first set by calling private
         # method directly.
-        self._set_ref(ref)
+        self._set_id(id)
 
         # While all ColorCorrectionReferences should be under a
         # ColorDecision node, we won't strictly enforce that a
@@ -823,12 +823,12 @@ class ColorCorrectionReference(AscXMLBase):
         return self.resolve_reference()
 
     @property
-    def ref(self):
+    def id(self):
         """Returns the reference id"""
-        return self._ref
+        return self._id
 
-    @ref.setter
-    def ref(self, ref_id):
+    @id.setter
+    def id(self, ref_id):
         """Sets the reference id"""
         if ref_id not in ColorCorrection.members and HALT_ON_ERROR:
             raise ValueError(
@@ -839,34 +839,34 @@ class ColorCorrectionReference(AscXMLBase):
                 )
             )
 
-        self._set_ref(ref_id)
+        self._set_id(ref_id)
 
     # Private Methods =========================================================
 
-    def _set_ref(self, new_ref):
-        """Changes the ref field and updates members dictionary"""
+    def _set_id(self, new_ref):
+        """Changes the id field and updates members dictionary"""
         # The only time it won't be in here is if this is the first time
         # we set it.
-        if self.ref in ColorCorrectionReference.members:
-            ColorCorrectionReference.members[self.ref].remove(self)
+        if self.id in ColorCorrectionReference.members:
+            ColorCorrectionReference.members[self.id].remove(self)
             # If the remaining list is empty, we'll pop it out
-            if not ColorCorrectionReference.members[self.ref]:
-                ColorCorrectionReference.members.pop(self.ref)
+            if not ColorCorrectionReference.members[self.id]:
+                ColorCorrectionReference.members.pop(self.id)
 
-        # Check if this ref is already registered
+        # Check if this id is already registered
         if new_ref in ColorCorrectionReference.members:
             ColorCorrectionReference.members[new_ref].append(self)
         else:
             ColorCorrectionReference.members[new_ref] = [self]
 
-        self._ref = new_ref
+        self._id = new_ref
 
     # Public Methods ==========================================================
 
     def build_element(self):
         """Builds an ElementTree XML element representing this reference"""
         cc_ref_xml = ElementTree.Element('ColorCorrectionRef')
-        cc_ref_xml.attrib = {'ref': self.ref}
+        cc_ref_xml.attrib = {'ref': self.id}
 
         return cc_ref_xml
 
@@ -881,15 +881,15 @@ class ColorCorrectionReference(AscXMLBase):
 
     def resolve_reference(self):
         """Returns the ColorCorrection this reference points to"""
-        if self.ref in ColorCorrection.members:
-            return ColorCorrection.members[self.ref]
+        if self.id in ColorCorrection.members:
+            return ColorCorrection.members[self.id]
         else:
             if HALT_ON_ERROR:
                 raise ValueError(
                     "Cannot resolve ColorCorrectionReference with reference "
                     "id of '{id}' because no ColorCorrection with that id "
                     "can be found.".format(
-                        id=self.ref
+                        id=self.id
                     )
                 )
             else:
@@ -920,7 +920,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             :class:`ColorCorrectionReference` Multiple :class:`ColorDecision`
             can , therefore for each reference id key,
             the members dictionary stores a list of
-            :class:`ColorDecision` instances that share that ``ref``
+            :class:`ColorDecision` instances that share that ``id``
             value.
 
     **Attributes:**
@@ -1039,7 +1039,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         if self.cc:
             # If we have a cc, we've already been added to the member's list,
             # and need to update membership.
-            key = self.cc.ref if self.is_ref else self.cc.id
+            key = self.cc.id if self.is_ref else self.cc.id
             if key in ColorDecision.members:
                 ColorDecision.members[key].remove(self)
                 # If the remaining list is empty, we'll pop it out
@@ -1050,11 +1050,11 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             # It's possible to have new_cc be None, in which case we won't
             # assign this ColorDecision to the member dictionary.
             if type(new_cc) is ColorCorrectionReference:
-                new_key = new_cc.ref
+                new_key = new_cc.id
             else:
                 new_key = new_cc.id
 
-            # Check if this ref is already registered
+            # Check if this id is already registered
             if new_key in ColorDecision.members:
                 ColorDecision.members[new_key].append(self)
             else:

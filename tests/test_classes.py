@@ -1776,8 +1776,8 @@ class TestColorCorrectionReference(unittest.TestCase):
             id='uniqueId', input_file='../testcdl.cc'
         )
 
-        self.ccr = cdl_convert.ColorCorrectionReference(ref='uniqueId')
-        self.ccr_bad = cdl_convert.ColorCorrectionReference(ref='oldId')
+        self.ccr = cdl_convert.ColorCorrectionReference(id='uniqueId')
+        self.ccr_bad = cdl_convert.ColorCorrectionReference(id='oldId')
 
     def tearDown(self):
         # We need to clear the ColorCorrection member dictionary so we don't
@@ -1818,15 +1818,15 @@ class TestColorCorrectionReference(unittest.TestCase):
     #==========================================================================
 
     def testRef(self):
-        """Tests that ref is returned correctly"""
+        """Tests that id is returned correctly"""
         self.assertEqual(
             'uniqueId',
-            self.ccr.ref
+            self.ccr.id
         )
 
         self.assertEqual(
             'oldId',
-            self.ccr_bad.ref
+            self.ccr_bad.id
         )
 
     #==========================================================================
@@ -1842,7 +1842,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
     def testChangeRef(self):
         """Tests changing a reference id"""
-        self.ccr.ref = 'blahblahblah'
+        self.ccr.id = 'blahblahblah'
 
         self.assertEqual(
             {'blahblahblah': [self.ccr], 'oldId': [self.ccr_bad]},
@@ -1853,7 +1853,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
     def testChangeRefAppend(self):
         """Tests changing a reference id"""
-        self.ccr.ref = 'oldId'
+        self.ccr.id = 'oldId'
 
         self.assertEqual(
             {'oldId': [self.ccr_bad, self.ccr]},
@@ -1865,7 +1865,7 @@ class TestColorCorrectionReference(unittest.TestCase):
     def testChangeRefHALT(self):
         """Tests changing a reference id if halt on error true"""
         def setRef():
-            self.ccr.ref = 'blahblahblah'
+            self.ccr.id = 'blahblahblah'
 
         cdl_convert.HALT_ON_ERROR = True
 
@@ -1876,7 +1876,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
         self.assertEqual(
             'uniqueId',
-            self.ccr.ref
+            self.ccr.id
         )
 
         self.assertEqual(
