@@ -997,6 +997,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         """Inits an instance of ColorDecision"""
         super(ColorDecision, self).__init__()
         self.parent = None
+        self._cc = None
         self._set_cc(color_correct)
         self._media_ref = media
 
