@@ -2879,20 +2879,7 @@ def parse_cd(input_file):  # pylint: disable=R0912
     """
     root = input_file
 
-    cc_elem = root.find('ColorCorrection')
-    if not cc_elem:
-        cc_elem = root.find('ColorCorrectionRef')
-        if not cc_elem:
-            raise ValueError(
-                'The ColorDecision element could not be parsed because the '
-                'XML is missing required either a ColorCorrection or a '
-                'ColorCorrectionRef node'
-            )
-        cc_node = parse_cc_ref(cc_elem)
-    else:
-        cc_node = parse_cc(cc_elem)
-
-    color_decision = ColorCorrection(cc_node)
+    color_decision = ColorDecision()
 
     # Grab our descriptions and add them to the cd.
     color_decision.parse_xml_descs(root)
@@ -2900,6 +2887,16 @@ def parse_cd(input_file):  # pylint: disable=R0912
     color_decision.parse_xml_viewing_desc(root)
     # See if we have an input description.
     color_decision.parse_xml_input_desc(root)
+
+    # Grab our ColorCorrection
+    if not color_decision.parse_xml_color_correction(root):
+        raise ValueError(
+            'ColorDecisions require at least one ColorCorrection or '
+            'ColorCorrectionReference node, but neither was found.'
+        )
+
+    # Grab our MediaRef (if found)
+    color_decision.parse_xml_media_ref(root)
 
     return color_decision
 
