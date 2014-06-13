@@ -2857,7 +2857,7 @@ def parse_cd(input_file):  # pylint: disable=R0912
     An example containing a ColorCorrection node:
     ::
         <ColorDecision>
-            <MediaRef ref="http://www.theasc.com/images/friends/promo/foasc-logo2.png"/>
+            <MediaRef ref="http://www.theasc.com/foasc-logo2.png"/>
             <ColorCorrection id="ascpromo">
                 <SOPNode>
                     <Description>get me outta here</Description>
