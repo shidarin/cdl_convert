@@ -906,7 +906,10 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     This class is a simple container to link a :class:`ColorCorrection` (or
     :class:`ColorCorrectionReference` ) with a :class:`MediaRef` . The
-    :class:`MediaRef` is optional, the ColorCorrection is not.
+    :class:`MediaRef` is optional, the ColorCorrection is not. The
+    ColorCorrection does not need to be provided at initialization time
+    however, as :class:`ColorDecision` provides an XML element parser
+    for deriving one.
 
     **Class Attributes:**
 
@@ -990,22 +993,14 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     members = {}
 
-    def __init__(self, cc, media=None):
+    def __init__(self, color_correct=None, media=None):
         """Inits an instance of ColorDecision"""
         super(ColorDecision, self).__init__()
         self.parent = None
-        self._cc = cc
+        self._set_cc(color_correct)
         self._media_ref = media
 
         self.set_parentage()
-
-        # Need to add the cdl to the dictionary based on the id or ref field
-        # of the child.
-        key = self.cc.ref if self.is_ref else self.cc.id
-        if key in ColorDecision.members:
-            ColorDecision.members[key].append(self)
-        else:
-            ColorDecision.members[key] = [self]
 
     # Properties ==============================================================
 
@@ -1017,9 +1012,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     @cc.setter
     def cc(self, new_cc):  # pylint: disable=C0103
         """Sets the contained cc, updates dictionary and parentage"""
-        self._set_id(new_cc)
-        self._cc = new_cc
-        new_cc.parent = self
+        self._set_cc(new_cc)
 
     @property
     def is_ref(self):
@@ -1040,25 +1033,35 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # Private Methods =========================================================
 
-    def _set_id(self, new_cc):
-        """Updates members dictionary"""
-        key = self.cc.ref if self.is_ref else self.cc.id
-        if key in ColorDecision.members:
-            ColorDecision.members[key].remove(self)
-            # If the remaining list is empty, we'll pop it out
-            if not ColorDecision.members[key]:
-                ColorDecision.members.pop(key)
+    def _set_cc(self, new_cc):
+        """Sets cc to new_cc and updates members dictionary"""
+        if self.cc:
+            # If we have a cc, we've already been added to the member's list,
+            # and need to update membership.
+            key = self.cc.ref if self.is_ref else self.cc.id
+            if key in ColorDecision.members:
+                ColorDecision.members[key].remove(self)
+                # If the remaining list is empty, we'll pop it out
+                if not ColorDecision.members[key]:
+                    ColorDecision.members.pop(key)
 
-        if type(new_cc) is ColorCorrectionReference:
-            new_key = new_cc.ref
-        else:
-            new_key = new_cc.id
+        if new_cc:
+            # It's possible to have new_cc be None, in which case we won't
+            # assign this ColorDecision to the member dictionary.
+            if type(new_cc) is ColorCorrectionReference:
+                new_key = new_cc.ref
+            else:
+                new_key = new_cc.id
 
-        # Check if this ref is already registered
-        if new_key in ColorDecision.members:
-            ColorDecision.members[new_key].append(self)
-        else:
-            ColorDecision.members[new_key] = [self]
+            # Check if this ref is already registered
+            if new_key in ColorDecision.members:
+                ColorDecision.members[new_key].append(self)
+            else:
+                ColorDecision.members[new_key] = [self]
+
+            new_cc.parent = self
+
+        self._cc = new_cc
 
     # Public Methods ==========================================================
 
