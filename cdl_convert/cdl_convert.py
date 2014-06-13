@@ -803,7 +803,7 @@ class ColorCorrectionReference(AscXMLBase):
 
     members = {}
 
-    def __init__(self, id):
+    def __init__(self, id):  # pylint: disable=W0622
         super(ColorCorrectionReference, self).__init__()
         self._id = None
         # Bypass cc id existence checks on first set by calling private
@@ -823,12 +823,12 @@ class ColorCorrectionReference(AscXMLBase):
         return self.resolve_reference()
 
     @property
-    def id(self):
+    def id(self):  # pylint: disable=C0103
         """Returns the reference id"""
         return self._id
 
     @id.setter
-    def id(self, ref_id):
+    def id(self, ref_id):  # pylint: disable=C0103
         """Sets the reference id"""
         if ref_id not in ColorCorrection.members and HALT_ON_ERROR:
             raise ValueError(
