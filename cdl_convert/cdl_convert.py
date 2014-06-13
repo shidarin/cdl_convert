@@ -1234,6 +1234,9 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             collections. `input_desc`, `viewing_desc`, `file_in`, and `type`
             will be set to the values of the parent instance.
 
+        parse_xml_color_corrections()
+            Parses an ElementTree element to find & add all ColorCorrection.
+
         parse_xml_descs()
             Parses an ElementTree Element for any Description tags and appends
             any text they contain to the ``desc``. Inherited from
