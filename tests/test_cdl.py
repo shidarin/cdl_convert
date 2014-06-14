@@ -491,6 +491,54 @@ CDL_ODD_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
 </ColorDecisionList>
 """
 
+CDL_ODD_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
+    <Description>CDL description 1</Description>
+    <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
+    <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
+    <ColorCorrection id="014_xf_seqGrade_v01">
+        <SOPNode>
+            <Description>Sop description 1</Description>
+            <Description>Sop description 2</Description>
+            <Description>Sop description 3</Description>
+            <Slope>1.014 1.0104 0.62</Slope>
+            <Offset>-0.00315 -0.00124 0.3103</Offset>
+            <Power>1.0 0.9983 1.0</Power>
+        </SOPNode>
+    </ColorCorrection>
+    <ColorCorrection id="f51.200">
+        <SOPNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SOPNode>
+    </ColorCorrection>
+    <ColorCorrection id="014_xf_seqGrade_v01">
+        <SOPNode>
+            <Description>Sop description 1</Description>
+            <Description>Sop description 2</Description>
+            <Description>Sop description 3</Description>
+            <Slope>1.014 1.0104 0.62</Slope>
+            <Offset>-0.00315 -0.00124 0.3103</Offset>
+            <Power>1.0 0.9983 1.0</Power>
+        </SOPNode>
+    </ColorCorrection>
+    <ColorCorrection id="burp_200.x15">
+        <SATNode>
+            <Description>I am a lovely sat node</Description>
+            <Saturation>1.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="f51.200">
+        <SOPNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SOPNode>
+    </ColorCorrection>
+</ColorCorrectionCollection>
+"""
+
 # misc ========================================================================
 
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -971,6 +1019,32 @@ class TestWriteCDLFullAsCCC(TestWriteCDLFull):
         mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
 
         mockOpen().write.assert_called_once_with(self.target_xml_root)
+
+
+class TestWriteCDLOddAsCCC(TestWriteCDLFullAsCCC):
+    """Tests an write of the CDL file as a CCC file
+
+    This is an integration style test. If parse_cdl stops working, this stops
+    working.
+
+    """
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.reset_all()
+
+        # Build our ccc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(CDL_ODD))
+            self.filename = f.name
+
+        self.cdl = cdl_convert.parse_cdl(self.filename)
+        self.cdl.set_to_ccc()
+
+        self.target_xml_root = enc(CDL_ODD_WRITE_CCC)
+        self.target_xml = enc('\n'.join(CDL_ODD_WRITE_CCC.split('\n')[1:]))
 
 
 class TestWriteCDLOdd(TestWriteCDLFull):
