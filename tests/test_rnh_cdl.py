@@ -75,7 +75,7 @@ else:
 #==============================================================================
 
 
-class TestParseCDLBasic(unittest.TestCase):
+class TestParseRnHCDLBasic(unittest.TestCase):
     """Tests parsing a space separated cdl, a Rhythm & Hues format"""
 
     #==========================================================================
@@ -156,7 +156,7 @@ class TestParseCDLBasic(unittest.TestCase):
         )
 
 
-class TestParseCDLOdd(TestParseCDLBasic):
+class TestParseRnHCDLOdd(TestParseRnHCDLBasic):
     """Tests parsing a space separated cdl with odd but valid numbers"""
 
     #==========================================================================
@@ -182,7 +182,7 @@ class TestParseCDLOdd(TestParseCDLBasic):
         self.cdl = cdl_convert.parse_rnh_cdl(self.filename)
 
 
-class TestWriteCDLBasic(unittest.TestCase):
+class TestWriteRnHCDLBasic(unittest.TestCase):
     """Tests writing a space separated cdl with basic values"""
 
     #==========================================================================
@@ -234,7 +234,7 @@ class TestWriteCDLBasic(unittest.TestCase):
         handle.write.assert_called_once_with(enc(self.file))
 
 
-class TestWriteCDLOdd(TestWriteCDLBasic):
+class TestWriteRnHCDLOdd(TestWriteRnHCDLBasic):
     """Tests writing a space separated cdl with basic values"""
 
     #==========================================================================
