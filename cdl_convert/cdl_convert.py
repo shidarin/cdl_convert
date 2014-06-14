@@ -1544,7 +1544,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         """Builds an ElementTree XML element representing for ColorCollection"""
         if self.is_ccc:
             return self.build_element_ccc()
-        elif self.is_cdl:  # pragma: no cover
+        elif self.is_cdl:
             return self.build_element_cdl()
 
     # =========================================================================
