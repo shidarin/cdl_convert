@@ -157,51 +157,73 @@ CDL_FULL = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorDecisionList>
 """
 
-CCC_ODD = """<?xml version="1.0" encoding="UTF-8"?>
-<ColorCorrectionCollection>
+CDL_ODD = r"""<?xml version="1.0" encoding="UTF-8"?>
+<ColorDecisionList>
     <Description></Description>
     <InputDescription></InputDescription>
-    <Description>CCC description 1</Description>
+    <Description>CDL description 1</Description>
     <Description></Description>
     <Description></Description>
     <Description></Description>
-    <ColorCorrection id="014_xf_seqGrade_v01">
-        <SOPNode>
-            <Description>Sop description 1</Description>
-            <Description>Sop description 2</Description>
-            <Slope>1.014 1.0104 0.62</Slope>
-            <Offset>-0.00315 -0.00124 0.3103</Offset>
-            <Power>1.0 0.9983 1.0</Power>
-            <Description>Sop description 3</Description>
-        </SOPNode>
-    </ColorCorrection>
-    <ColorCorrection id="f51.200">
-        <SopNode>
-            <Slope>0.2331 0.678669 1.0758</Slope>
-            <Offset>0.031 0.128 -0.096</Offset>
-            <Power>1.8 0.97 0.961</Power>
-        </SopNode>
-    </ColorCorrection>
+    <ColorDecision>
+        <MediaRef ref="C:\\Windows\File\Path"/>
+        <ColorCorrection id="014_xf_seqGrade_v01">
+            <SOPNode>
+                <Description>Sop description 1</Description>
+                <Description>Sop description 2</Description>
+                <Slope>1.014 1.0104 0.62</Slope>
+                <Offset>-0.00315 -0.00124 0.3103</Offset>
+                <Power>1.0 0.9983 1.0</Power>
+                <Description>Sop description 3</Description>
+            </SOPNode>
+        </ColorCorrection>
+    </ColorDecision>
+    <ColorDecision>
+        <ColorCorrection id="f51.200">
+            <SopNode>
+                <Slope>0.2331 0.678669 1.0758</Slope>
+                <Offset>0.031 0.128 -0.096</Offset>
+                <Power>1.8 0.97 0.961</Power>
+            </SopNode>
+        </ColorCorrection>
+        <MediaRef ref="relative\windows\path"/>
+    </ColorDecision>
     <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
     <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
-    <ColorCorrection id="f55.100">
-        <SatNode>
-            <Saturation>1798787.01</Saturation>
-        </SatNode>
-    </ColorCorrection>
-    <ColorCorrection id="f54.112">
-        <ASC_SAT>
-            <Saturation>1.01</Saturation>
-        </ASC_SAT>
-    </ColorCorrection>
+    <ColorDecision>
+        <Description></Description>
+        <InputDescription></InputDescription>
+        <Description>CD description 1</Description>
+        <Description></Description>
+        <Description></Description>
+        <Description></Description>
+        <ColorCorrectionRef ref="014_xf_seqGrade_v01"/>
+        <MediaRef ref="./sameDirectory/loser.####.fbx"/>
+    </ColorDecision>
+    <ColorDecision>
+        <MediaRef ref="../lateralDirectory/file.lives.here.0120.dpx"/>
+        <ColorCorrectionRef ref="missingRef"/>
+    </ColorDecision>
     <ViewingDescription></ViewingDescription>
-    <ColorCorrection id="burp_200.x15">
-        <SatNode>
-            <Description>I am a lovely sat node</Description>
-            <Saturation>1.01</Saturation>
-        </SatNode>
-    </ColorCorrection>
-</ColorCorrectionCollection>
+    <ColorDecision>
+        <MediaRef ref="http://www.google.com/logo.jpg"/>
+        <ColorCorrectionRef ref="alsoMissingRef"/>
+    </ColorDecision>
+    <ColorDecision>
+        <MediaRef ref="serv://proto/uri:area:full?query=result#fragment"/>
+        <ColorCorrection id="burp_200.x15">
+            <SatNode>
+                <Description>I am a lovely sat node</Description>
+                <Saturation>1.01</Saturation>
+            </SatNode>
+        </ColorCorrection>
+    </ColorDecision>
+    <ColorDecision>
+        <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
+        <MediaRef ref="..\.\..\..\..\This\should\not\be\legal\"/>
+        <ColorCorrectionRef ref="f51.200"/>
+    </ColorDecision>
+</ColorDecisionList>
 """
 
 # write_cdl ===================================================================
@@ -312,12 +334,23 @@ CDL_FULL_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorDecisionList>
 """
 
-CCC_ODD_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
+CDL_FULL_WRITE_CCC = """<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
-    <Description>CCC description 1</Description>
-    <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
-    <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
+    <InputDescription>CDL Input Desc Text</InputDescription>
+    <ViewingDescription>CDL Viewing Desc Text</ViewingDescription>
+    <Description>CDL description 1</Description>
+    <Description>CDL description 2</Description>
+    <Description>CDL description 3</Description>
+    <Description>CDL description 4</Description>
+    <Description>CDL description 5</Description>
     <ColorCorrection id="014_xf_seqGrade_v01">
+        <InputDescription>Input Desc Text</InputDescription>
+        <ViewingDescription>Viewing Desc Text</ViewingDescription>
+        <Description>CC description 1</Description>
+        <Description>CC description 2</Description>
+        <Description>CC description 3</Description>
+        <Description>CC description 4</Description>
+        <Description>CC description 5</Description>
         <SOPNode>
             <Description>Sop description 1</Description>
             <Description>Sop description 2</Description>
@@ -326,6 +359,11 @@ CCC_ODD_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
             <Offset>-0.00315 -0.00124 0.3103</Offset>
             <Power>1.0 0.9983 1.0</Power>
         </SOPNode>
+        <SATNode>
+            <Description>Sat description 1</Description>
+            <Description>Sat description 2</Description>
+            <Saturation>1.09</Saturation>
+        </SATNode>
     </ColorCorrection>
     <ColorCorrection id="f51.200">
         <SOPNode>
@@ -333,65 +371,124 @@ CCC_ODD_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
             <Offset>0.031 0.128 -0.096</Offset>
             <Power>1.8 0.97 0.961</Power>
         </SOPNode>
+        <SATNode>
+            <Saturation>1.01</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="f51.200">
+        <SOPNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SOPNode>
+        <SATNode>
+            <Saturation>1.01</Saturation>
+        </SATNode>
     </ColorCorrection>
     <ColorCorrection id="f55.100">
+        <InputDescription>METAL VIEWER!!! \/\/</InputDescription>
+        <ViewingDescription>WOOD VIEWER!? ////</ViewingDescription>
+        <Description>Raised saturation a little!?! ag... \/Offset</Description>
+        <Description>Raised saturation a little!?! ag... \/Offset</Description>
+        <SOPNode>
+            <Description>Raised saturation a little!?! ag... \/Offset</Description>
+            <Slope>137829.329 4327890.9833 3489031.003</Slope>
+            <Offset>-3424.011 -342789423.013 -4238923.11</Offset>
+            <Power>3271893.993 0.0000998 0.0000000000000000113</Power>
+        </SOPNode>
         <SATNode>
             <Saturation>1798787.01</Saturation>
         </SATNode>
     </ColorCorrection>
     <ColorCorrection id="f54.112">
+        <SOPNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SOPNode>
         <SATNode>
             <Saturation>1.01</Saturation>
         </SATNode>
     </ColorCorrection>
-    <ColorCorrection id="burp_200.x15">
+    <ColorCorrection id="burp_100.x12">
+        <SOPNode>
+            <Slope>1.014 1.0104 0.62</Slope>
+            <Offset>-0.00315 -0.00124 0.3103</Offset>
+            <Power>1.0 0.9983 1.0</Power>
+        </SOPNode>
         <SATNode>
-            <Description>I am a lovely sat node</Description>
+            <Saturation>1.09</Saturation>
+        </SATNode>
+    </ColorCorrection>
+    <ColorCorrection id="f54.112">
+        <SOPNode>
+            <Slope>0.2331 0.678669 1.0758</Slope>
+            <Offset>0.031 0.128 -0.096</Offset>
+            <Power>1.8 0.97 0.961</Power>
+        </SOPNode>
+        <SATNode>
             <Saturation>1.01</Saturation>
         </SATNode>
     </ColorCorrection>
 </ColorCorrectionCollection>
 """
 
-CCC_BAD_TAG = """<?xml version="1.0" encoding="UTF-8"?>
-<ColorCorrectionBollection xmlns="urn:ASC:CDL:v1.01">
-    <Description>CCC description 1</Description>
+CDL_ODD_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
+<ColorDecisionList xmlns="urn:ASC:CDL:v1.01">
+    <Description>CDL description 1</Description>
     <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
     <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
-    <ColorCorrection id="014_xf_seqGrade_v01">
-        <SOPNode>
-            <Description>Sop description 1</Description>
-            <Description>Sop description 2</Description>
-            <Description>Sop description 3</Description>
-            <Slope>1.014 1.0104 0.62</Slope>
-            <Offset>-0.00315 -0.00124 0.3103</Offset>
-            <Power>1.0 0.9983 1.0</Power>
-        </SOPNode>
-    </ColorCorrection>
-    <ColorCorrection id="f51.200">
-        <SOPNode>
-            <Slope>0.2331 0.678669 1.0758</Slope>
-            <Offset>0.031 0.128 -0.096</Offset>
-            <Power>1.8 0.97 0.961</Power>
-        </SOPNode>
-    </ColorCorrection>
-    <ColorCorrection id="f55.100">
-        <SATNode>
-            <Saturation>1798787.01</Saturation>
-        </SATNode>
-    </ColorCorrection>
-    <ColorCorrection id="f54.112">
-        <SATNode>
-            <Saturation>1.01</Saturation>
-        </SATNode>
-    </ColorCorrection>
-    <ColorCorrection id="burp_200.x15">
-        <SATNode>
-            <Description>I am a lovely sat node</Description>
-            <Saturation>1.01</Saturation>
-        </SATNode>
-    </ColorCorrection>
-</ColorCorrectionBollection>
+    <ColorDecision>
+        <MediaRef ref="C:\\Windows\File\Path"/>
+        <ColorCorrection id="014_xf_seqGrade_v01">
+            <SOPNode>
+                <Description>Sop description 1</Description>
+                <Description>Sop description 2</Description>
+                <Description>Sop description 3</Description>
+                <Slope>1.014 1.0104 0.62</Slope>
+                <Offset>-0.00315 -0.00124 0.3103</Offset>
+                <Power>1.0 0.9983 1.0</Power>
+            </SOPNode>
+        </ColorCorrection>
+    </ColorDecision>
+    <ColorDecision>
+        <MediaRef ref="relative\windows\path"/>
+        <ColorCorrection id="f51.200">
+            <SOPNode>
+                <Slope>0.2331 0.678669 1.0758</Slope>
+                <Offset>0.031 0.128 -0.096</Offset>
+                <Power>1.8 0.97 0.961</Power>
+            </SOPNode>
+        </ColorCorrection>
+    </ColorDecision>
+    <ColorDecision>
+        <Description>CD description 1</Description>
+        <MediaRef ref="./sameDirectory/loser.####.fbx"/>
+        <ColorCorrectionRef ref="014_xf_seqGrade_v01"/>
+    </ColorDecision>
+    <ColorDecision>
+        <MediaRef ref="../lateralDirectory/file.lives.here.0120.dpx"/>
+        <ColorCorrectionRef ref="missingRef"/>
+    </ColorDecision>
+    <ColorDecision>
+        <MediaRef ref="http://www.google.com/logo.jpg"/>
+        <ColorCorrectionRef ref="alsoMissingRef"/>
+    </ColorDecision>
+    <ColorDecision>
+        <MediaRef ref="serv://proto/uri:area:full?query=result#fragment"/>
+        <ColorCorrection id="burp_200.x15">
+            <SATNode>
+                <Description>I am a lovely sat node</Description>
+                <Saturation>1.01</Saturation>
+            </SATNode>
+        </ColorCorrection>
+    </ColorDecision>
+    <ColorDecision>
+        <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
+        <MediaRef ref="..\.\..\..\..\This\should\not\be\legal\"/>
+        <ColorCorrectionRef ref="f51.200"/>
+    </ColorDecision>
+</ColorDecisionList>
 """
 
 # misc ========================================================================
@@ -620,9 +717,9 @@ class TestParseCDLFull(unittest.TestCase):
             ref_list
         )
 
-'''
-class TestParseCCCOdd(TestParseCCCFull):
-    """Tests an odd CCC parse"""
+
+class TestParseCDLOdd(TestParseCDLFull):
+    """Tests an odd CDL parse"""
 
     #==========================================================================
     # SETUP & TEARDOWN
@@ -630,7 +727,7 @@ class TestParseCCCOdd(TestParseCCCFull):
 
     def setUp(self):
         self.desc = [
-            'CCC description 1',
+            'CDL description 1',
             'Raised1 saturation a little!?! ag... \/Offset',
             'Raised2 saturation a little!?! ag... \/Offset',
         ]
@@ -639,19 +736,66 @@ class TestParseCCCOdd(TestParseCCCFull):
         self.color_correction_ids = [
             '014_xf_seqGrade_v01',
             'f51.200',
-            'f55.100',
-            'f54.112',
+            '014_xf_seqGrade_v01',
+            'missingRef',
+            'alsoMissingRef',
             'burp_200.x15',
+            'f51.200'
+        ]
+        self.media_ref_refs = [
+            "C:\\\\Windows\\File\\Path",
+            "relative\\windows\\path",
+            "./sameDirectory/loser.####.fbx",
+            "../lateralDirectory/file.lives.here.0120.dpx",
+            "http://www.google.com/logo.jpg",
+            "serv://proto/uri:area:full?query=result#fragment",
+            "..\\.\\..\\..\\..\\This\\should\\not\\be\\legal\\"
+        ]
+        self.color_decision_descs = [
+            [],
+            [],
+            ['CD description 1'],
+            [],
+            [],
+            [],
+            ['Raised2 saturation a little!?! ag... \/Offset']
+        ]
+        self.color_decision_input_descs = [
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        ]
+        self.color_decision_viewing_descs = [
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        ]
+        self.color_decision_is_ref = [
+            False,
+            False,
+            True,
+            True,
+            True,
+            False,
+            True,
         ]
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CCC_ODD))
+            f.write(enc(CDL_ODD))
             self.filename = f.name
 
-        self.node = cdl_convert.parse_ccc(self.filename)
+        self.node = cdl_convert.parse_cdl(self.filename)
 
-
+'''
 class TestParseCCCExceptions(unittest.TestCase):
     """Tests that we run into the correct exceptions with bad XMLs"""
 
@@ -778,11 +922,11 @@ class TestWriteCDLFull(unittest.TestCase):
 
         mockOpen().write.assert_called_once_with(self.target_xml_root)
 
-'''
-class TestWriteCCCOdd(TestWriteCCCFull):
-    """Tests an odd write of the CCC file
 
-    This is an integration style test. If parse_ccc stops working, this stops
+class TestWriteCDLFullAsCCC(TestWriteCDLFull):
+    """Tests an write of the CDL file as a CCC file
+
+    This is an integration style test. If parse_cdl stops working, this stops
     working.
 
     """
@@ -795,14 +939,64 @@ class TestWriteCCCOdd(TestWriteCCCFull):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CCC_ODD))
+            f.write(enc(CDL_FULL))
             self.filename = f.name
 
-        self.ccc = cdl_convert.parse_ccc(self.filename)
+        self.cdl = cdl_convert.parse_cdl(self.filename)
+        self.cdl.set_to_ccc()
 
-        self.target_xml_root = enc(CCC_ODD_WRITE)
-        self.target_xml = enc('\n'.join(CCC_ODD_WRITE.split('\n')[1:]))
-'''
+        self.target_xml_root = enc(CDL_FULL_WRITE_CCC)
+        self.target_xml = enc('\n'.join(CDL_FULL_WRITE_CCC.split('\n')[1:]))
+
+    #==========================================================================
+
+    def test_element(self):
+        """Tests that the element returned is an etree type"""
+        self.assertEqual(
+            'ColorCorrectionCollection',
+            self.cdl.element.tag
+        )
+
+    #==========================================================================
+
+    def test_write(self):
+        """Tests writing the cdl itself"""
+        mockOpen = mock.mock_open()
+
+        self.cdl._file_out = 'bobs_big_file.cdl'
+
+        with mock.patch(builtins + '.open', mockOpen, create=True):
+            cdl_convert.write_ccc(self.cdl)
+
+        mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
+
+        mockOpen().write.assert_called_once_with(self.target_xml_root)
+
+
+class TestWriteCDLOdd(TestWriteCDLFull):
+    """Tests an odd write of the CDL file
+
+    This is an integration style test. If parse_cdl stops working, this stops
+    working.
+
+    """
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.reset_all()
+
+        # Build our ccc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(CDL_ODD))
+            self.filename = f.name
+
+        self.cdl = cdl_convert.parse_cdl(self.filename)
+
+        self.target_xml_root = enc(CDL_ODD_WRITE)
+        self.target_xml = enc('\n'.join(CDL_ODD_WRITE.split('\n')[1:]))
+
 #==============================================================================
 # RUNNER
 #==============================================================================
