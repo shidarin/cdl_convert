@@ -1154,7 +1154,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             else:
                 # Parse the ColorCorrectionRef
                 ref_id = cc_elem.attrib['ref']
-                self.cc = ColorCorrectionReference(ref_id)
+                self.cc = ColorCorrectionReference(ref_id)  # pylint: disable=C0103
                 self.cc.parent = self
         else:
             # Parse the ColorCorrection
