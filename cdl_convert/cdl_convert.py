@@ -139,6 +139,7 @@ __all__ = [
     'parse_ale',
     'parse_cc',
     'parse_ccc',
+    'parse_cdl',
     'parse_rnh_cdl',
     'parse_flex',
     'reset_all',
@@ -1058,7 +1059,8 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         self._set_cc(color_correct)
         self._media_ref = media
 
-        self.set_parentage()
+        if self.cc:
+            self.set_parentage()
 
     # Properties ==============================================================
 
@@ -1143,10 +1145,10 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     def parse_xml_color_correction(self, xml_element):
         """Parses a Color Decision element to find a ColorCorrection"""
         cc_elem = xml_element.find('ColorCorrection')
-        if not cc_elem:
+        if cc_elem is None:
             # Perhaps we're a ColorCorrectionRef?
             cc_elem = xml_element.find('ColorCorrectionRef')
-            if not cc_elem:
+            if cc_elem is None:
                 # No ColorCorrection or CCRef? This is a bad ColorDecision
                 return False
             else:
@@ -1158,6 +1160,8 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             # Parse the ColorCorrection
             self.cc = parse_cc(cc_elem)
             self.cc.parent = self
+
+        return True
 
     # =========================================================================
 
@@ -1199,7 +1203,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     def parse_xml_media_ref(self, xml_element):
         """Parses a Color Decision element to find a MediaRef"""
         media_ref_elem = xml_element.find('MediaRef')
-        if media_ref_elem:
+        if media_ref_elem is not None:
             ref_uri = media_ref_elem.attrib['ref']
             self.media_ref = MediaRef(ref_uri=ref_uri)
 
@@ -1557,16 +1561,32 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         for description in self.desc:
             desc = ElementTree.SubElement(ccc_xml, 'Description')
             desc.text = description
-        for color_correct in self.color_corrections:
-            ccc_xml.append(color_correct.element)
+        if self.color_corrections:
+            for color_correct in self.color_corrections:
+                ccc_xml.append(color_correct.element)
 
         return ccc_xml
 
     # =========================================================================
 
-    def build_element_cdl(self):  # pragma: no cover
+    def build_element_cdl(self):
         """Builds a CDL XML element representing this ColorCollection"""
-        return None
+        cdl_xml = ElementTree.Element('ColorDecisionList')
+        cdl_xml.attrib = {'xmlns': self.xmlns}
+        if self.input_desc:
+            input_desc = ElementTree.SubElement(cdl_xml, 'InputDescription')
+            input_desc.text = self.input_desc
+        if self.viewing_desc:
+            viewing_desc = ElementTree.SubElement(cdl_xml, 'ViewingDescription')
+            viewing_desc.text = self.viewing_desc
+        for description in self.desc:
+            desc = ElementTree.SubElement(cdl_xml, 'Description')
+            desc.text = description
+        if self.color_decisions:
+            for color_decision in self.color_decisions:
+                cdl_xml.append(color_decision.element)
+
+        return cdl_xml
 
     # =========================================================================
 
@@ -2242,6 +2262,15 @@ class MediaRef(AscXMLBase):
         return protocol, directory, ref_file
 
     # Public Methods ==========================================================
+
+    def build_element(self):
+        """Builds an ElementTree XML element representing this reference"""
+        media_ref_xml = ElementTree.Element('MediaRef')
+        media_ref_xml.attrib = {'ref': self.ref}
+
+        return media_ref_xml
+
+    # =========================================================================
 
     @classmethod
     def reset_members(cls):
