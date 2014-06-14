@@ -140,12 +140,13 @@ __all__ = [
     'parse_cc',
     'parse_ccc',
     'parse_cdl',
-    'parse_rnh_cdl',
     'parse_flex',
+    'parse_rnh_cdl',
     'reset_all',
     'sanity_check',
     'write_cc',
     'write_ccc',
+    'write_cdl',
     'write_rnh_cdl',
 ]
 
@@ -3433,9 +3434,22 @@ def write_cc(cdl):
 
 def write_ccc(cdl):
     """Writes the ColorCollection to a .ccc file"""
+    collection_type = cdl.type
     cdl.set_to_ccc()
     with open(cdl.file_out, 'wb') as cdl_f:
         cdl_f.write(cdl.xml_root)
+    cdl.type = collection_type
+
+# ==============================================================================
+
+
+def write_cdl(cdl):
+    """Writes the ColorCollection to a .cdl file"""
+    collection_type = cdl.type
+    cdl.set_to_cdl()
+    with open(cdl.file_out, 'wb') as cdl_f:
+        cdl_f.write(cdl.xml_root)
+    cdl.type = collection_type
 
 # ==============================================================================
 
@@ -3465,18 +3479,20 @@ INPUT_FORMATS = {
     'ale': parse_ale,
     'ccc': parse_ccc,
     'cc': parse_cc,
-    'cdl': parse_rnh_cdl,
+    'cdl': parse_cdl,
     'flex': parse_flex,
+    'rcdl': parse_rnh_cdl,
 }
 
 OUTPUT_FORMATS = {
     'cc': write_cc,
     'ccc': write_ccc,
-    'cdl': write_rnh_cdl,
+    'cdl': write_cdl,
+    'rcdl': write_rnh_cdl,
 }
 
-COLLECTION_FORMATS = ['ale', 'ccc', 'flex']
-SINGLE_FORMATS = ['cc', 'cdl']
+COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'flex']
+SINGLE_FORMATS = ['cc', 'rcdl']
 
 # ==============================================================================
 
