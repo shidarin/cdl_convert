@@ -2303,7 +2303,7 @@ class MediaRef(AscXMLBase):
     @staticmethod
     def _split_uri(uri):
         """Splits uri into protocol, base and filename"""
-        if ':' in uri:
+        if '://' in uri:
             protocol = uri.split('://')[0]
             uri = uri.split('://')[1]
         else:
