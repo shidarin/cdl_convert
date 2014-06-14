@@ -911,6 +911,37 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     however, as :class:`ColorDecision` provides an XML element parser
     for deriving one.
 
+    The primary purpose of a ColorDecision node is to associate a
+    ColorCorrection node with one or more items of Media Reference.
+
+    Along with Media Reference, a ColorDecision can contain the normal
+    type of input, viewer and description metadata.
+
+    Additional, it is the only node that can contain ColorCorrectionRef
+    nodes, which link the same ColorCorrection to many different
+    ColorDecisions (and thus, many different items of media reference)
+
+    An example containing a ColorCorrection node:
+    ::
+        <ColorDecision>
+            <MediaRef ref="http://www.theasc.com/foasc-logo2.png"/>
+            <ColorCorrection id="ascpromo">
+                <SOPNode>
+                    <Description>get me outta here</Description>
+                    <Slope>0.9 1.1 1.0</Slope>
+                    <Offset>0.1 -0.01 0.0</Offset>
+                    <Power>1.0 0.99 1.0</Power>
+                </SOPNode>
+            </ColorCorrection>
+        </ColorDecision>
+
+    But it can also contain just a reference:
+    ::
+        <ColorDecision>
+            <MediaRef ref="best/project/ever/jim.0100.dpx"/>
+            <ColorCorrectionRef ref="xf45.x628"/>
+        </ColorDecision>
+
     **Class Attributes:**
 
         members : {str: [:class`ColorDecision`]}
@@ -985,6 +1016,32 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             this to build the XML. This function is identical to calling the
             ``element`` attribute. Overrides inherited placeholder method
             from :class:`AscXMLBase` .
+
+        parse_xml_color_correction()
+            Parses a ColorDecision ElementTree Element for a ColorCorrection
+            Element or a ColorCorrectionRef Element.
+
+        parse_xml_color_decision()
+            Parses a ColorDecision ElementTree Element for metadata,
+            then calls parsers for ColorCorrection and MediaRef.
+
+        parse_xml_descs()
+            Parses an ElementTree Element for any Description tags and appends
+            any text they contain to the ``desc``. Inherited from
+            :class:`AscDescBase`
+
+        parse_xml_input_desc()
+            Parses an ElementTree Element to find & add an InputDescription.
+            If none is found, ``input_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
+
+        parse_xml_media_ref()
+            Parses an ColorDecision Element for a MediaRef Element.
+
+        parse_xml_viewing_desc()
+            Parses an ElementTree Element to find & add a ViewingDescription.
+            If none is found, ``viewing_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
 
         reset_members()
             Resets the class level members list.
@@ -1080,6 +1137,71 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         cd_xml.append(self.cc.element)
 
         return cd_xml
+
+    # =========================================================================
+
+    def parse_xml_color_correction(self, xml_element):
+        """Parses a Color Decision element to find a ColorCorrection"""
+        cc_elem = xml_element.find('ColorCorrection')
+        if not cc_elem:
+            # Perhaps we're a ColorCorrectionRef?
+            cc_elem = xml_element.find('ColorCorrectionRef')
+            if not cc_elem:
+                # No ColorCorrection or CCRef? This is a bad ColorDecision
+                return False
+            else:
+                # Parse the ColorCorrectionRef
+                ref_id = cc_elem.attrib['ref']
+                self.cc = ColorCorrectionReference(ref_id)
+                self.cc.parent = self
+        else:
+            # Parse the ColorCorrection
+            self.cc = parse_cc(cc_elem)
+            self.cc.parent = self
+
+    # =========================================================================
+
+    def parse_xml_color_decision(self, xml_element):
+        """Parses a Color Decision element and builds a :class:`ColorDecision`
+
+        **Args:**
+            input_file : (<ElementTree.Element>)
+                The ``ElementTree.Element`` object of the ColorDecision
+
+        **Returns:**
+            None
+
+        **Raises:**
+            ValueError:
+                Bad XML formatting can raise ValueError is missing required
+                elements.
+
+        """
+        # Grab our descriptions and add them to the cd.
+        self.parse_xml_descs(xml_element)
+        # See if we have a viewing description.
+        self.parse_xml_viewing_desc(xml_element)
+        # See if we have an input description.
+        self.parse_xml_input_desc(xml_element)
+
+        # Grab our ColorCorrection
+        if not self.parse_xml_color_correction(xml_element):
+            raise ValueError(
+                'ColorDecisions require at least one ColorCorrection or '
+                'ColorCorrectionReference node, but neither was found.'
+            )
+
+        # Grab our MediaRef (if found)
+        self.parse_xml_media_ref(xml_element)
+
+    # =========================================================================
+
+    def parse_xml_media_ref(self, xml_element):
+        """Parses a Color Decision element to find a MediaRef"""
+        media_ref_elem = xml_element.find('MediaRef')
+        if media_ref_elem:
+            ref_uri = media_ref_elem.attrib['ref']
+            self.media_ref = MediaRef(ref_uri=ref_uri)
 
     # =========================================================================
 
@@ -1556,9 +1678,10 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             return False
 
         for cd_node in xml_element.findall('ColorDecision'):
-            cdl = parse_cd(cd_node)
-            cdl.parent = self
-            self._color_decisions.append(cdl)
+            color_decision = ColorDecision()
+            color_decision.parse_xml_color_decision(cd_node)
+            color_decision.parent = self
+            self._color_decisions.append(color_decision)
 
         return True
 
@@ -2824,81 +2947,6 @@ def parse_cc(input_file):  # pylint: disable=R0912
         cdl.sat_node.parse_xml_descs(sat_xml)
 
     return cdl
-
-# ==============================================================================
-
-
-def parse_cd(input_file):  # pylint: disable=R0912
-    """Parses a Color Decision element and builds a :class:`ColorDecision`
-
-    **Args:**
-        input_file : (<ElementTree.Element>)
-            The ``ElementTree.Element`` object of the ColorDecision
-
-    **Returns:**
-        (:class:`ColorDecision`)
-            A :class:`ColorDecision` as described by this element
-
-    **Raises:**
-        ValueError:
-            Bad XML formatting can raise ValueError is missing required
-            elements.
-
-    The primary purpose of a ColorDecision node is to associate a
-    ColorCorrection node with one or more items of Media Reference.
-
-    Along with Media Reference, a ColorDecision can contain the normal type of
-    input, viewer and description metadata.
-
-    Additional, it is the only node that can contain ColorCorrectionRef
-    nodes, which link the same ColorCorrection to many different ColorDecisions
-    (and thus, many different items of media reference)
-
-    An example containing a ColorCorrection node:
-    ::
-        <ColorDecision>
-            <MediaRef ref="http://www.theasc.com/foasc-logo2.png"/>
-            <ColorCorrection id="ascpromo">
-                <SOPNode>
-                    <Description>get me outta here</Description>
-                    <Slope>0.9 1.1 1.0</Slope>
-                    <Offset>0.1 -0.01 0.0</Offset>
-                    <Power>1.0 0.99 1.0</Power>
-                </SOPNode>
-            </ColorCorrection>
-        </ColorDecision>
-
-    But it can also contain just a reference:
-    ::
-        <ColorDecision>
-            <MediaRef ref="best/project/ever/jim.0100.dpx"/>
-            <ColorCorrectionRef ref="xf45.x628"/>
-        </ColorDecision>
-
-
-    """
-    root = input_file
-
-    color_decision = ColorDecision()
-
-    # Grab our descriptions and add them to the cd.
-    color_decision.parse_xml_descs(root)
-    # See if we have a viewing description.
-    color_decision.parse_xml_viewing_desc(root)
-    # See if we have an input description.
-    color_decision.parse_xml_input_desc(root)
-
-    # Grab our ColorCorrection
-    if not color_decision.parse_xml_color_correction(root):
-        raise ValueError(
-            'ColorDecisions require at least one ColorCorrection or '
-            'ColorCorrectionReference node, but neither was found.'
-        )
-
-    # Grab our MediaRef (if found)
-    color_decision.parse_xml_media_ref(root)
-
-    return color_decision
 
 # ==============================================================================
 
