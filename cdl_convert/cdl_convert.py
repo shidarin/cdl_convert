@@ -1454,6 +1454,13 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return self._file_out
 
     @property
+    def id_list(self):
+        """A list of the ids of fully qualified ColorCorrection children"""
+        current_ids = [i.cc.id for i in self.color_decisions if not i.is_ref]
+        current_ids.extend([i.id for i in self.color_corrections])
+        return current_ids
+
+    @property
     def is_ccc(self):
         """True if this collection currently represents .ccc"""
         return self.type == 'ccc'
@@ -1521,15 +1528,43 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     def append_child(self, child):
         """Appends a given child to the correct list of children"""
+        # We need to make sure not to append a ColorDecision or ColorCorrection
+        # if that id attribute already exists as a direct child or a child of a
+        # ColorDecision child.
+        #
+        # This is only possible through the python API- assigning
+        # the same ColorCorrection object to multiple ColorDecisions,
+        # or clearing the member dictionary and creating a second
+        # ColorCorrection with the same id, etc.
+        dup = False
+
         if child.__class__ == ColorCorrection:
-            self._color_corrections.append(child)
+            if child.id in self.id_list:
+                dup = True
+            else:
+                self._color_corrections.append(child)
+
         elif child.__class__ == ColorDecision:
-            self._color_decisions.append(child)
+            if not child.is_ref and child.cc.id in self.id_list:
+                dup = True
+            else:
+                self._color_decisions.append(child)
         else:
+
             raise TypeError("Can only append ColorCorrection and "
                             "ColorDecision objects.")
 
-        child.parent = self
+        if dup:
+            if HALT_ON_ERROR:
+                raise ValueError(
+                    "Attempted to put a ColorDecision with a child "
+                    "ColorCorrection id that duplicates an id of a "
+                    "ColorCorrection that is already a child of "
+                    "this collection or a ColorDecision that is a "
+                    "child of this collection."
+                )
+        else:
+            child.parent = self
 
     # =========================================================================
 
