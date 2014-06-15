@@ -46,6 +46,17 @@ from .correction import ColorCorrection
 from .decision import  ColorCorrectionRef, ColorDecision, MediaRef
 
 # ==============================================================================
+# GLOBALS
+# ==============================================================================
+
+# Python 3 Compatibility
+
+try:
+    xrange
+except NameError:  # pragma: no cover
+    xrange = range  # pylint: disable=W0622, C0103
+
+# ==============================================================================
 # PUBLIC FUNCTIONS
 # ==============================================================================
 
