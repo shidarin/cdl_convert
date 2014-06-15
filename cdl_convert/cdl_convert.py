@@ -1121,7 +1121,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # Public Methods ==========================================================
 
-    def build_element(self, resolve=False):
+    def build_element(self, resolve=False):  # pylint: disable=W0221
         """Builds an ElementTree XML element representing this CC"""
         cd_xml = ElementTree.Element('ColorDecision')
         if self.input_desc:
@@ -1653,7 +1653,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                     resolve = False
                 else:
                     try:
-                        cc = color_decision.cc.cc
+                        color_correction = color_decision.cc.cc
                     except ValueError:
                         # ValueError will be raised if we can't resolve the
                         # reference. This shouldn't be a game-stopper here.
@@ -1661,10 +1661,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                         # We'll just add the unresolved reference
                         resolve = False
                     else:
-                        if cc:
-                            resolve = True
-                        else:
-                            resolve = False
+                        resolve = True if color_correction else False
 
                 cdl_xml.append(color_decision.build_element(resolve=resolve))
 
