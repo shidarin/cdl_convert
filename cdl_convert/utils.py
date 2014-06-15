@@ -43,7 +43,7 @@ from __future__ import absolute_import, print_function
 # cdl_convert Imports
 from .collection import ColorCollection
 from .correction import ColorCorrection
-from .decision import  ColorCorrectionRef, ColorDecision, MediaRef
+from .decision import ColorCorrectionRef, ColorDecision, MediaRef
 
 # ==============================================================================
 # GLOBALS
@@ -130,5 +130,3 @@ def sanity_check(colcor):
             sane_values = False
 
     return sane_values
-
-# ==============================================================================

@@ -66,11 +66,12 @@ from __future__ import absolute_import, print_function
 # cdl_convert imports
 
 from .collection import ColorCollection
-from . import config
 from .correction import ColorCorrection, SatNode, SopNode
 from .decision import ColorCorrectionRef, ColorDecision, MediaRef
 from .parse import (
-    parse_ale, parse_cc, parse_ccc, parse_cdl, parse_flex, parse_rnh_cdl
+    parse_ale, parse_cc, parse_ccc,
+    parse_cdl, parse_file, parse_flex,
+    parse_rnh_cdl
 )
 from .utils import reset_all, sanity_check
 from .write import write_cc, write_ccc, write_cdl, write_rnh_cdl
@@ -95,6 +96,7 @@ __status__ = "Development"
 __all__ = [
     'ColorCorrection',
     'ColorCorrectionRef',
+    'ColorCollection',
     'ColorDecision',
     'MediaRef',
     'parse_ale',

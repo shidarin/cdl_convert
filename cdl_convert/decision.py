@@ -58,7 +58,7 @@ from .correction import ColorCorrection
 # ==============================================================================
 
 __all__ = [
-    'ColorCorrectionRef'
+    'ColorCorrectionRef',
     'ColorDecision',
     'MediaRef'
 ]

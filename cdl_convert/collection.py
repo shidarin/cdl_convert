@@ -654,5 +654,3 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def set_to_cdl(self):
         """Switches the type of the ColorCollection to export .cdl style xml"""
         self._type = 'cdl'
-
-# ==============================================================================
