@@ -816,7 +816,9 @@ class TestMain(unittest.TestCase):
 
         abspath.return_value = 'file.flex'
         mockParse.return_value = self.ccc
-        self.ccc.append_children([self.cdl, self.cdl, self.cdl])
+        cdl2 = cdl_convert.ColorCorrection('45')
+        cdl3 = cdl_convert.ColorCorrection('100')
+        self.ccc.append_children([self.cdl, cdl2, cdl3])
         sys.argv = ['scriptname', 'file.flex', '--check']
 
         mockInputs = dict(self.inputFormats)
@@ -830,12 +832,12 @@ class TestMain(unittest.TestCase):
         cdl_convert.main()
 
         self.assertEqual(
-            [mock.call(self.cdl)] * 3,
+            [mock.call(self.cdl), mock.call(cdl2), mock.call(cdl3)],
             mockSanity.call_args_list
         )
 
         self.assertEqual(
-            [mock.call(self.cdl)] * 3,
+            [mock.call(self.cdl), mock.call(cdl2), mock.call(cdl3)],
             mockWrite.call_args_list
         )
 
