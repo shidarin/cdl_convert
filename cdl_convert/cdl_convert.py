@@ -1121,7 +1121,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # Public Methods ==========================================================
 
-    def build_element(self):
+    def build_element(self, resolve=False):
         """Builds an ElementTree XML element representing this CC"""
         cd_xml = ElementTree.Element('ColorDecision')
         if self.input_desc:
@@ -1137,7 +1137,18 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         if self.media_ref:
             cd_xml.append(self.media_ref.element)
 
-        cd_xml.append(self.cc.element)
+        # The resolve arg should only be applied to reference color decisions.
+        #
+        # Our behavior for non-reference CDs is the same as our behavior
+        # for non-resolving.
+        if not resolve or not self.is_ref:
+            cd_xml.append(self.cc.element)
+        elif resolve:
+            # We're a reference and we need to be resolved
+            # Note that this will raise an exception if called
+            # when a reference cannot be resolve due to a ColorCorrection
+            # with matching id not existing.
+            cd_xml.append(self.cc.cc.element)
 
         return cd_xml
 
@@ -1458,6 +1469,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         """A list of the ids of fully qualified ColorCorrection children"""
         current_ids = [i.cc.id for i in self.color_decisions if not i.is_ref]
         current_ids.extend([i.id for i in self.color_corrections])
+        current_ids.sort()
         return current_ids
 
     @property
