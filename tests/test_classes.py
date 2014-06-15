@@ -739,7 +739,7 @@ class TestCollectionChildMethods(unittest.TestCase):
     def tearDown(self):
         # Empty out the members dictionary
         cdl_convert.reset_all()
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
     #==========================================================================
     # TESTS
@@ -834,7 +834,7 @@ class TestCollectionChildMethods(unittest.TestCase):
             self.node.color_corrections
         )
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
@@ -862,7 +862,7 @@ class TestCollectionChildMethods(unittest.TestCase):
             self.node.color_decisions
         )
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
@@ -894,7 +894,7 @@ class TestCollectionChildMethods(unittest.TestCase):
             self.node.all_children
         )
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
@@ -1523,7 +1523,7 @@ class TestColorCorrection(unittest.TestCase):
             cdl2.id
         )
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
@@ -1532,7 +1532,7 @@ class TestColorCorrection(unittest.TestCase):
             'file'
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
     #==========================================================================
 
@@ -1672,14 +1672,14 @@ class TestColorCorrection(unittest.TestCase):
         def setPower():
             self.cc.power = [-1.3782, 278.32, 0.738378233782]
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setPower
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setPower()
 
@@ -1759,14 +1759,14 @@ class TestColorCorrection(unittest.TestCase):
         def setSlope():
             self.cc.slope = [-1.3782, 278.32, 0.738378233782]
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setSlope
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setSlope()
 
@@ -1846,14 +1846,14 @@ class TestColorCorrection(unittest.TestCase):
         def setSat():
             self.cc.sat = -376.23
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setSat
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setSat()
 
@@ -1923,7 +1923,7 @@ class TestColorCorrectionReference(unittest.TestCase):
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
         cdl_convert.reset_all()
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
     #==========================================================================
     # TESTS
@@ -1945,7 +1945,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
     def testCCHalt(self):
         """Tests trying to get a CC reference with Halt set"""
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         def getCC():
             self.ccr_bad.cc
@@ -2007,7 +2007,7 @@ class TestColorCorrectionReference(unittest.TestCase):
         def setRef():
             self.ccr.id = 'blahblahblah'
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
@@ -3076,14 +3076,14 @@ class TestMediaRefGetSequences(unittest.TestCase):
         mock_dir.return_value = True
         mock_exists.return_value = False
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             self.mr._get_sequences
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         self.assertEqual(
             False,
@@ -3321,14 +3321,14 @@ class TestSatNode(unittest.TestCase):
         def setSat():
             self.node.sat = '-20'
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setSat
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setSat()
 
@@ -3355,14 +3355,14 @@ class TestSatNode(unittest.TestCase):
         def setSat():
             self.node.sat = -20.1
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setSat
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setSat()
 
@@ -3389,14 +3389,14 @@ class TestSatNode(unittest.TestCase):
         def setSat():
             self.node.sat = -20
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setSat
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setSat()
 
@@ -3518,14 +3518,14 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = '-20'
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setSlope
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setSlope()
 
@@ -3552,14 +3552,14 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = -20.1
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setSlope
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setSlope()
 
@@ -3586,14 +3586,14 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = -20
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setSlope
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setSlope()
 
@@ -3609,14 +3609,14 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = [-1.3782, 278.32, 0.738378233782]
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setSlope
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setSlope()
 
@@ -3886,14 +3886,14 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = '-20'
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setPower
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setPower()
 
@@ -3920,14 +3920,14 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = -20.1
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setPower
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setPower()
 
@@ -3954,14 +3954,14 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = -20
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setPower
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setPower()
 
@@ -3977,14 +3977,14 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = [-1.3782, 278.32, 0.738378233782]
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
             setPower
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         setPower()
 

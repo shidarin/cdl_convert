@@ -63,6 +63,8 @@ SOFTWARE.
 
 from __future__ import print_function
 
+# Standard Imports
+
 from argparse import ArgumentParser
 from ast import literal_eval
 from xml.dom import minidom
@@ -71,7 +73,12 @@ import re
 import sys
 from xml.etree import ElementTree
 
+# cdl_convert imports
+
+import config
+
 # Python 3 compatibility
+
 try:
     xrange
 except NameError:  # pragma: no cover
@@ -102,23 +109,6 @@ if sys.version_info[0] >= 3:  # pragma: no cover
     enc = lambda x: bytes(x, 'UTF-8')  # pylint: disable=C0103
 else:  # pragma: no cover
     enc = lambda x: x  # pylint: disable=C0103
-
-# HALT_ON_ERROR is the exception handling variable for exceptions that can
-# be handled silently.
-#
-# If we begin to get more config options, this will be moved into a singleton
-# config class.
-#
-# Used in the following places:
-#   Slope, power and sat values can't be negative and will truncate to 0.0
-#   If id given to ColorCorrection is blank, will set to number of CCs
-#   When determining if a non-existent directory referenced by MediaRef
-#       contains an image sequence, will just return False.
-#   If attempting to retrieve a referenced ColorCorrection whose id doesn't
-#       exist.
-#   If attempting to set a ColorCorrectionRef to a ColorCorrection whose
-#       id doesn't exist. (Other than first creation)
-HALT_ON_ERROR = False
 
 # ==============================================================================
 # EXPORTS
@@ -548,7 +538,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                 )
             )
         elif not id:
-            if HALT_ON_ERROR:
+            if config.HALT_ON_ERROR:
                 raise ValueError('Blank id given to ColorCorrection.')
             else:
                 id = str(len(ColorCorrection.members) + 1).rjust(3, '0')
@@ -833,7 +823,7 @@ class ColorCorrectionRef(AscXMLBase):
     @id.setter
     def id(self, ref_id):  # pylint: disable=C0103
         """Sets the reference id"""
-        if ref_id not in ColorCorrection.members and HALT_ON_ERROR:
+        if ref_id not in ColorCorrection.members and config.HALT_ON_ERROR:
             raise ValueError(
                 "Reference id '{id}' does not match any existing "
                 "ColorCorrection id in ColorCorrection.members "
@@ -887,7 +877,7 @@ class ColorCorrectionRef(AscXMLBase):
         if self.id in ColorCorrection.members:
             return ColorCorrection.members[self.id]
         else:
-            if HALT_ON_ERROR:
+            if config.HALT_ON_ERROR:
                 raise ValueError(
                     "Cannot resolve ColorCorrectionRef with reference "
                     "id of '{id}' because no ColorCorrection with that id "
@@ -1568,7 +1558,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                             "ColorDecision objects.")
 
         if dup:
-            if HALT_ON_ERROR:
+            if config.HALT_ON_ERROR:
                 raise ValueError(
                     "Attempted to put a ColorDecision with a child "
                     "ColorCorrection id that duplicates an id of a "
@@ -2292,7 +2282,7 @@ class MediaRef(AscXMLBase):
 
         if self.is_dir and not self.exists:
             # It doesn't exist, so we can't tell if it's a sequence
-            if HALT_ON_ERROR:
+            if config.HALT_ON_ERROR:
                 raise ValueError(
                     'Cannot determine if non-existent directory {dir} '
                     'contains an image sequence.'.format(
@@ -3634,8 +3624,7 @@ def parse_args():
         args.destination = './converted/'
 
     if args.halt:
-        global HALT_ON_ERROR  # pylint: disable=W0603
-        HALT_ON_ERROR = True
+        config.HALT_ON_ERROR = True
 
     return args
 
