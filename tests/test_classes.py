@@ -739,6 +739,7 @@ class TestCollectionChildMethods(unittest.TestCase):
     def tearDown(self):
         # Empty out the members dictionary
         cdl_convert.reset_all()
+        cdl_convert.HALT_ON_ERROR = False
 
     #==========================================================================
     # TESTS
@@ -810,6 +811,95 @@ class TestCollectionChildMethods(unittest.TestCase):
             TypeError,
             self.node.append_child,
             'I ama a banana'
+        )
+
+    #==========================================================================
+
+    def testAppendDuplicateCorrection(self):
+        """Tests appending a ColorCorrection that's already been appended"""
+        def append():
+            self.node.append_child(self.color_corrections[0])
+
+        append()
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.color_corrections
+        )
+
+        append()
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.color_corrections
+        )
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            append
+        )
+
+    #==========================================================================
+
+    def testAppendDuplicateDecision(self):
+        """Tests appending a ColorCorrection that's already been appended"""
+        def append():
+            self.node.append_child(self.color_decisions[0])
+
+        append()
+
+        self.assertEqual(
+            [self.color_decisions[0]],
+            self.node.color_decisions
+        )
+
+        append()
+
+        self.assertEqual(
+            [self.color_decisions[0]],
+            self.node.color_decisions
+        )
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            append
+        )
+
+    #==========================================================================
+
+    def testAppendDuplicateMixed(self):
+        """Tests appending a duplicate id with mixed objects"""
+        def append():
+            self.node.append_child(self.color_corrections[0])
+
+        cd = cdl_convert.ColorDecision(self.color_corrections[0])
+
+        append()
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.color_corrections
+        )
+
+        self.assertFalse(
+            self.node.append_child(cd)
+        )
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.all_children
+        )
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            self.node.append_child,
+            cd
         )
 
     #==========================================================================
