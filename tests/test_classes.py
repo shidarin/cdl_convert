@@ -418,6 +418,56 @@ class TestColorCollection(unittest.TestCase):
 
     #==========================================================================
 
+    def testIdList(self):
+        """Tests that the id_list behaves correctly"""
+        self.assertEqual(
+            [],
+            self.node.id_list
+        )
+
+        self.node.append_child(cdl_convert.ColorCorrection('001'))
+
+        self.assertEqual(
+            ['001'],
+            self.node.id_list
+        )
+
+        self.node.append_child(cdl_convert.ColorCorrection('002'))
+
+        self.assertEqual(
+            ['001', '002'],
+            self.node.id_list
+        )
+
+        cd = cdl_convert.ColorDecision()
+        cd.cc = cdl_convert.ColorCorrection('003')
+
+        self.node.append_child(cd)
+
+        self.assertEqual(
+            ['001', '002', '003'],
+            self.node.id_list
+        )
+
+        cd2 = cdl_convert.ColorDecision()
+        cd2.cc = cdl_convert.ColorCorrectionReference('004')
+
+        self.node.append_child(cd2)
+
+        self.assertEqual(
+            ['001', '002', '003'],  # Unresolved references do not return
+            self.node.id_list
+        )
+
+        self.node.color_decisions.remove(cd)
+
+        self.assertEqual(
+            ['001', '002'],
+            self.node.id_list
+        )
+
+    #==========================================================================
+
     def testIsCCC(self):
         """Tests that is_ccc works correctly"""
         self.assertTrue(
