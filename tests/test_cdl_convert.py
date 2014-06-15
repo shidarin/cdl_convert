@@ -10,6 +10,7 @@ mock
 #==============================================================================
 # IMPORTS
 #==============================================================================
+from __future__ import absolute_import, print_function
 
 # Standard Imports
 import datetime
@@ -39,6 +40,7 @@ sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert
 from cdl_convert import cdl_convert as main
+from cdl_convert import parse, write
 from cdl_convert.correction import _de_exponent, _sanitize
 
 #==============================================================================
@@ -517,10 +519,10 @@ class TestParseFile(unittest.TestCase):
     """Tests ParseFile, a convenience function"""
 
     def setUp(self):
-        self.stored_inputs = main.INPUT_FORMATS
+        self.stored_inputs = parse.INPUT_FORMATS
 
     def tearDown(self):
-        main.INPUT_FORMATS = self.stored_inputs
+        parse.INPUT_FORMATS = self.stored_inputs
         cdl_convert.reset_all()
 
     #==========================================================================
@@ -529,9 +531,9 @@ class TestParseFile(unittest.TestCase):
     def test_ale(self, mockParse):
         """Tests that the parser is called correctly"""
         filepath = 'blah.ale'
-        main.INPUT_FORMATS['ale'] = mockParse
+        parse.INPUT_FORMATS['ale'] = mockParse
 
-        main.parse_file(filepath)
+        parse.parse_file(filepath)
 
         mockParse.assert_called_once_with('blah.ale')
 
@@ -541,9 +543,9 @@ class TestParseFile(unittest.TestCase):
     def test_ccc(self, mockParse):
         """Tests that the parser is called correctly"""
         filepath = 'blah.ccc'
-        main.INPUT_FORMATS['ccc'] = mockParse
+        parse.INPUT_FORMATS['ccc'] = mockParse
 
-        main.parse_file(filepath)
+        parse.parse_file(filepath)
 
         mockParse.assert_called_once_with('blah.ccc')
 
@@ -553,9 +555,9 @@ class TestParseFile(unittest.TestCase):
     def test_cc(self, mockParse):
         """Tests that the parser is called correctly"""
         filepath = 'blah.cc'
-        main.INPUT_FORMATS['cc'] = mockParse
+        parse.INPUT_FORMATS['cc'] = mockParse
 
-        main.parse_file(filepath)
+        parse.parse_file(filepath)
 
         mockParse.assert_called_once_with('blah.cc')
 
@@ -565,9 +567,9 @@ class TestParseFile(unittest.TestCase):
     def test_cdl(self, mockParse):
         """Tests that the parser is called correctly"""
         filepath = 'blah.cdl'
-        main.INPUT_FORMATS['cdl'] = mockParse
+        parse.INPUT_FORMATS['cdl'] = mockParse
 
-        main.parse_file(filepath)
+        parse.parse_file(filepath)
 
         mockParse.assert_called_once_with('blah.cdl')
 
@@ -577,9 +579,9 @@ class TestParseFile(unittest.TestCase):
     def test_flex(self, mockParse):
         """Tests that the parser is called correctly"""
         filepath = 'blah.flex'
-        main.INPUT_FORMATS['flex'] = mockParse
+        parse.INPUT_FORMATS['flex'] = mockParse
 
-        main.parse_file(filepath)
+        parse.parse_file(filepath)
 
         mockParse.assert_called_once_with('blah.flex')
 
@@ -589,9 +591,9 @@ class TestParseFile(unittest.TestCase):
     def test_rnh_cdl(self, mockParse):
         """Tests that the parser is called correctly"""
         filepath = 'blah.cdl'
-        main.INPUT_FORMATS['rcdl'] = mockParse
+        parse.INPUT_FORMATS['rcdl'] = mockParse
 
-        main.parse_file(filepath, 'rcdl')
+        parse.parse_file(filepath, 'rcdl')
 
         mockParse.assert_called_once_with('blah.cdl')
 
@@ -611,8 +613,8 @@ class TestMain(unittest.TestCase):
             id='uniqueId', input_file='../testcdl.flex'
         )
         self.ccc = cdl_convert.ColorCollection(input_file='../testcdl.flex')
-        self.inputFormats = main.INPUT_FORMATS
-        self.outputFormats = main.OUTPUT_FORMATS
+        self.inputFormats = parse.INPUT_FORMATS
+        self.outputFormats = write.OUTPUT_FORMATS
         self.makedirs = os.makedirs
         self.mockMakeDirs = mock.MagicMock('os.makedirs')
         self.sysargv = sys.argv
@@ -623,8 +625,8 @@ class TestMain(unittest.TestCase):
     #==========================================================================
 
     def tearDown(self):
-        main.INPUT_FORMATS = self.inputFormats
-        main.OUTPUT_FORMATS = self.outputFormats
+        parse.INPUT_FORMATS = self.inputFormats
+        write.OUTPUT_FORMATS = self.outputFormats
         sys.argv = self.sysargv
         sys.stdout = self.stdout
         os.makedirs = self.makedirs
@@ -647,7 +649,7 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cc'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         main.main()
 
@@ -669,7 +671,7 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cc'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         main.main()
 
@@ -691,7 +693,7 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['flex'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         main.main()
 
@@ -710,7 +712,7 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['ale'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         main.main()
 
@@ -729,7 +731,7 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['ccc'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         main.main()
 
@@ -748,7 +750,7 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cc'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         main.main()
 
@@ -767,7 +769,7 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cdl'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         main.main()
 
@@ -786,7 +788,7 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['flex'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         main.main()
 
@@ -805,7 +807,7 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['flex'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         main.main()
 
@@ -825,11 +827,11 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['rcdl'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWrite
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 
@@ -852,11 +854,11 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['flex'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['ccc'] = mockWrite
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 
@@ -880,11 +882,11 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cc'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWrite
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 
@@ -910,11 +912,11 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['flex'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWrite
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 
@@ -943,11 +945,11 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cc'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWrite
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 
@@ -975,11 +977,11 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cc'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWrite
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 
@@ -1024,11 +1026,11 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cc'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['ccc'] = mockWrite
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 
@@ -1061,11 +1063,11 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['rcdl'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWrite
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 
@@ -1085,11 +1087,11 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['rcdl'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['ccc'] = mockWrite
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 
@@ -1118,12 +1120,12 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['ccc'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWriteCC
         mockOutputs['rcdl'] = mockWriteCDL
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 
@@ -1148,11 +1150,11 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['ccc'] = mockParse
-        main.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWriteCC
-        main.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
         main.main()
 

@@ -112,3 +112,14 @@ def write_rnh_cdl(cdl):
 
     with open(cdl.file_out, 'wb') as cdl_f:
         cdl_f.write(enc(ss_cdl))
+
+# ==============================================================================
+# GLOBALS
+# ==============================================================================
+
+OUTPUT_FORMATS = {
+    'cc': write_cc,
+    'ccc': write_ccc,
+    'cdl': write_cdl,
+    'rcdl': write_rnh_cdl,
+}

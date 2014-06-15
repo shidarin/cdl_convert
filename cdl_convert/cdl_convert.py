@@ -47,13 +47,9 @@ import os
 
 # cdl_convert imports
 
+from . import config, parse, write
 from .collection import ColorCollection
-from . import config
-from .parse import (
-    parse_ale, parse_cc, parse_ccc, parse_cdl, parse_flex, parse_rnh_cdl
-)
 from .utils import sanity_check
-from .write import write_cc, write_ccc, write_cdl, write_rnh_cdl
 
 # Python 3 compatibility
 
@@ -65,29 +61,6 @@ try:
     raw_input
 except NameError:  # pragma: no cover
     raw_input = input  # pylint: disable=W0622, C0103
-
-# ==============================================================================
-# GLOBALS
-# ==============================================================================
-
-INPUT_FORMATS = {
-    'ale': parse_ale,
-    'ccc': parse_ccc,
-    'cc': parse_cc,
-    'cdl': parse_cdl,
-    'flex': parse_flex,
-    'rcdl': parse_rnh_cdl,
-}
-
-OUTPUT_FORMATS = {
-    'cc': write_cc,
-    'ccc': write_ccc,
-    'cdl': write_cdl,
-    'rcdl': write_rnh_cdl,
-}
-
-COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'flex']
-SINGLE_FORMATS = ['cc', 'rcdl']
 
 # ==============================================================================
 # EXPORTS
@@ -113,14 +86,14 @@ def parse_args():
         help="specify the filetype to convert from. Use when CDLConvert "
              "cannot determine the filetype automatically. Supported input "  # pylint: disable=C0330
              "formats are: "  # pylint: disable=C0330
-             "{inputs}".format(inputs=str(INPUT_FORMATS.keys()))  # pylint: disable=C0330
+             "{inputs}".format(inputs=str(parse.INPUT_FORMATS.keys()))  # pylint: disable=C0330
     )
     parser.add_argument(
         "-o",
         "--output",
         help="specify the filetype to convert to, comma separated lists are "
              "accepted. Defaults to a .cc XML. Supported output formats are: "  # pylint: disable=C0330
-             "{outputs}".format(outputs=str(OUTPUT_FORMATS.keys()))  # pylint: disable=C0330
+             "{outputs}".format(outputs=str(write.OUTPUT_FORMATS.keys()))  # pylint: disable=C0330
     )
     parser.add_argument(
         "-d",
@@ -158,7 +131,7 @@ def parse_args():
     args = parser.parse_args()
 
     if args.input:
-        if args.input.lower() not in INPUT_FORMATS:
+        if args.input.lower() not in parse.INPUT_FORMATS:
             raise ValueError(
                 "The input format: {input} is not supported".format(
                     input=args.input
@@ -177,7 +150,7 @@ def parse_args():
         # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
         output_types = args.output.split(',')
         for i in xrange(len(output_types)):
-            if output_types[i].lower() not in OUTPUT_FORMATS.keys():
+            if output_types[i].lower() not in write.OUTPUT_FORMATS.keys():
                 raise ValueError(
                     "The output format: {output} is not supported".format(
                         output=output_types[i]
@@ -196,16 +169,6 @@ def parse_args():
         config.HALT_ON_ERROR = True
 
     return args
-
-# ==============================================================================
-
-
-def parse_file(filepath, filetype=None):
-    """Determines & uses the correct parser to use on a CDL file"""
-    if not filetype:
-        filetype = os.path.basename(filepath).split('.')[-1].lower()
-
-    return INPUT_FORMATS[filetype](filepath)
 
 # ==============================================================================
 # MAIN
@@ -239,7 +202,7 @@ def main():  # pylint: disable=R0912
     else:
         filetype_in = args.input
 
-    color_decisions = parse_file(filepath, filetype_in)
+    color_decisions = parse.parse_file(filepath, filetype_in)
 
     def write_single_file(cdl, ext):
         """Writes a single color correction file"""
@@ -251,7 +214,7 @@ def main():  # pylint: disable=R0912
             )
         )
         if not args.no_output:
-            OUTPUT_FORMATS[ext](cdl)
+            write.OUTPUT_FORMATS[ext](cdl)
 
     def write_collection_file(col, ext):
         """Writes a collection file"""
@@ -263,12 +226,12 @@ def main():  # pylint: disable=R0912
             )
         )
         if not args.no_output:
-            OUTPUT_FORMATS[ext](col)
+            write.OUTPUT_FORMATS[ext](col)
 
     if color_decisions:
         # Sanity Check
         if args.check:
-            if filetype_in in COLLECTION_FORMATS:
+            if filetype_in in config.COLLECTION_FORMATS:
                 for color_correct in color_decisions.color_corrections:
                     sanity_check(color_correct)
             else:
@@ -276,14 +239,14 @@ def main():  # pylint: disable=R0912
 
         # Writing
         for ext in args.output:
-            if ext in SINGLE_FORMATS:
-                if filetype_in in COLLECTION_FORMATS:
+            if ext in config.SINGLE_FORMATS:
+                if filetype_in in config.COLLECTION_FORMATS:
                     for color_correct in color_decisions.color_corrections:
                         write_single_file(color_correct, ext)
                 else:
                     write_single_file(color_decisions, ext)
             else:
-                if filetype_in in COLLECTION_FORMATS:
+                if filetype_in in config.COLLECTION_FORMATS:
                     # If we read a collection type, color_decisions is
                     # already a ColorCollection.
                     write_collection_file(color_decisions, ext)

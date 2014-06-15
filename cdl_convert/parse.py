@@ -627,3 +627,27 @@ def _remove_xmlns(input_file):
 
     return ElementTree.fromstring(xml_string)
 
+# ==============================================================================
+# GLOBALS
+# ==============================================================================
+
+INPUT_FORMATS = {
+    'ale': parse_ale,
+    'ccc': parse_ccc,
+    'cc': parse_cc,
+    'cdl': parse_cdl,
+    'flex': parse_flex,
+    'rcdl': parse_rnh_cdl,
+}
+
+# ==============================================================================
+# PARSE FILE
+# ==============================================================================
+
+
+def parse_file(filepath, filetype=None):
+    """Determines & uses the correct parser to use on a CDL file"""
+    if not filetype:
+        filetype = os.path.basename(filepath).split('.')[-1].lower()
+
+    return INPUT_FORMATS[filetype](filepath)

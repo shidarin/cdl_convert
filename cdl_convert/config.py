@@ -55,6 +55,9 @@ SOFTWARE.
 #       id doesn't exist. (Other than first creation)
 HALT_ON_ERROR = False
 
+COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'flex']
+SINGLE_FORMATS = ['cc', 'rcdl']
+
 # ==============================================================================
 # EXPORTS
 # ==============================================================================
