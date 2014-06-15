@@ -108,10 +108,10 @@ function, see :doc:`usage` for a walkthrough.
 
 .. autoclass:: cdl_convert.ColorCorrection
 
-ColorCorrectionReference
-------------------------
+ColorCorrectionRef
+------------------
 
-.. autoclass:: cdl_convert.ColorCorrectionReference
+.. autoclass:: cdl_convert.ColorCorrectionRef
 
 ColorDecision
 -------------

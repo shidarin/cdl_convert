@@ -450,7 +450,7 @@ class TestColorCollection(unittest.TestCase):
         )
 
         cd2 = cdl_convert.ColorDecision()
-        cd2.cc = cdl_convert.ColorCorrectionReference('004')
+        cd2.cc = cdl_convert.ColorCorrectionRef('004')
 
         self.node.append_child(cd2)
 
@@ -732,7 +732,7 @@ class TestCollectionChildMethods(unittest.TestCase):
             cdl_convert.ColorDecision(cdl_convert.ColorCorrection(id='005')),
             cdl_convert.ColorDecision(cdl_convert.ColorCorrection(id='006')),
             cdl_convert.ColorDecision(
-                cdl_convert.ColorCorrectionReference('005')
+                cdl_convert.ColorCorrectionRef('005')
             ),
         ]
 
@@ -1181,7 +1181,7 @@ class TestMultipleCollections(unittest.TestCase):
             cdl_convert.ColorDecision(cdl_convert.ColorCorrection(id='005')),
             cdl_convert.ColorDecision(cdl_convert.ColorCorrection(id='006')),
             cdl_convert.ColorDecision(
-                cdl_convert.ColorCorrectionReference('005')
+                cdl_convert.ColorCorrectionRef('005')
             ),
         ]
 
@@ -1900,11 +1900,11 @@ class TestColorCorrection(unittest.TestCase):
             self.cc.file_out
         )
 
-# ColorCorrectionReference ====================================================
+# ColorCorrectionRef ====================================================
 
 
 class TestColorCorrectionReference(unittest.TestCase):
-    """Tests the ColorCorrectionReference class"""
+    """Tests the ColorCorrectionRef class"""
 
     #==========================================================================
     # SETUP & TEARDOWN
@@ -1916,8 +1916,8 @@ class TestColorCorrectionReference(unittest.TestCase):
             id='uniqueId', input_file='../testcdl.cc'
         )
 
-        self.ccr = cdl_convert.ColorCorrectionReference(id='uniqueId')
-        self.ccr_bad = cdl_convert.ColorCorrectionReference(id='oldId')
+        self.ccr = cdl_convert.ColorCorrectionRef(id='uniqueId')
+        self.ccr_bad = cdl_convert.ColorCorrectionRef(id='oldId')
 
     def tearDown(self):
         # We need to clear the ColorCorrection member dictionary so we don't
@@ -1975,7 +1975,7 @@ class TestColorCorrectionReference(unittest.TestCase):
         """Tests that the member's dictionary looks like it should"""
         self.assertEqual(
             {'uniqueId': [self.ccr], 'oldId': [self.ccr_bad]},
-            cdl_convert.ColorCorrectionReference.members
+            cdl_convert.ColorCorrectionRef.members
         )
 
     #==========================================================================
@@ -1986,7 +1986,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
         self.assertEqual(
             {'blahblahblah': [self.ccr], 'oldId': [self.ccr_bad]},
-            cdl_convert.ColorCorrectionReference.members
+            cdl_convert.ColorCorrectionRef.members
         )
 
     #==========================================================================
@@ -1997,7 +1997,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
         self.assertEqual(
             {'oldId': [self.ccr_bad, self.ccr]},
-            cdl_convert.ColorCorrectionReference.members
+            cdl_convert.ColorCorrectionRef.members
         )
 
     #==========================================================================
@@ -2021,7 +2021,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
         self.assertEqual(
             {'uniqueId': [self.ccr], 'oldId': [self.ccr_bad]},
-            cdl_convert.ColorCorrectionReference.members
+            cdl_convert.ColorCorrectionRef.members
         )
 
     #==========================================================================
@@ -2037,11 +2037,11 @@ class TestColorCorrectionReference(unittest.TestCase):
 
     def testResetMembers(self):
         """Tests resetting the member dict"""
-        cdl_convert.ColorCorrectionReference.reset_members()
+        cdl_convert.ColorCorrectionRef.reset_members()
 
         self.assertEqual(
             {},
-            cdl_convert.ColorCorrectionReference.members
+            cdl_convert.ColorCorrectionRef.members
         )
 
 # ColorDecision ===============================================================
@@ -2129,7 +2129,7 @@ class TestColorDecision(unittest.TestCase):
 
     def testParentageChange(self):
         """Tests that changing our cc or media_ref changes their parents"""
-        cc2 = cdl_convert.ColorCorrectionReference('001')
+        cc2 = cdl_convert.ColorCorrectionRef('001')
         cc2.parent = 'bob'
         mr2 = cdl_convert.MediaRef('sdhjd.dpx')
         mr2.parent = 'jim'
@@ -2165,7 +2165,7 @@ class TestColorDecision(unittest.TestCase):
             cdl_convert.ColorDecision.members
         )
 
-        cc2 = cdl_convert.ColorCorrectionReference('001')
+        cc2 = cdl_convert.ColorCorrectionRef('001')
         self.cd.cc = cc2
 
         self.assertEqual(
@@ -2183,7 +2183,7 @@ class TestColorDecision(unittest.TestCase):
             cdl_convert.ColorDecision.members
         )
 
-        ccr = cdl_convert.ColorCorrectionReference('uniqueId')
+        ccr = cdl_convert.ColorCorrectionRef('uniqueId')
         cd2 = cdl_convert.ColorDecision(ccr)
 
         self.assertEqual(
@@ -2223,7 +2223,7 @@ class TestColorDecision(unittest.TestCase):
             self.cd.is_ref
         )
 
-        self.cd.cc = cdl_convert.ColorCorrectionReference('001')
+        self.cd.cc = cdl_convert.ColorCorrectionRef('001')
 
         self.assertTrue(
             self.cd.is_ref
@@ -2346,7 +2346,7 @@ class TestMediaRefProperties(unittest.TestCase):
         self.protocol = 'ftp'
         self.path = os.path.join(self.directory, self.filename)
         self.ref = self.protocol + '://' + self.path
-        cc = cdl_convert.ColorCorrectionReference('001')
+        cc = cdl_convert.ColorCorrectionRef('001')
         self.parent = cdl_convert.ColorDecision(cc)
         self.mr = cdl_convert.MediaRef(
             ref_uri=self.ref,
@@ -2871,7 +2871,7 @@ class TestMediaRefPropertiesOdd(TestMediaRefProperties):
         self.protocol = ''
         self.path = os.path.join(self.directory, self.filename)
         self.ref = self.path
-        cc = cdl_convert.ColorCorrectionReference('001')
+        cc = cdl_convert.ColorCorrectionRef('001')
         self.parent = cdl_convert.ColorDecision(cc)
         self.mr = cdl_convert.MediaRef(
             ref_uri=self.ref,

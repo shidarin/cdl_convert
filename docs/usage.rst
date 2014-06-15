@@ -542,7 +542,7 @@ append a list of children at once- the list can even contain mixed classes.
 
     ``append_child`` and ``append_children`` will fail if you attempt to append
     a child which has a matching ``id`` to an already present child. The only
-    exception is a :class:`ColorCorrectionReference` , which of course should
+    exception is a :class:`ColorCorrectionRef` , which of course should
     have the same ``id`` as a full :class:`ColorCorrection` .
 
 .. warning::

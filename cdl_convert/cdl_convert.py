@@ -116,7 +116,7 @@ else:  # pragma: no cover
 #       contains an image sequence, will just return False.
 #   If attempting to retrieve a referenced ColorCorrection whose id doesn't
 #       exist.
-#   If attempting to set a ColorCorrectionReference to a ColorCorrection whose
+#   If attempting to set a ColorCorrectionRef to a ColorCorrection whose
 #       id doesn't exist. (Other than first creation)
 HALT_ON_ERROR = False
 
@@ -130,7 +130,7 @@ __all__ = [
     'AscXMLBase',
     'ColorCollection',
     'ColorCorrection',
-    'ColorCorrectionReference',
+    'ColorCorrectionRef',
     'ColorDecision',
     'ColorNodeBase',
     'MediaRef',
@@ -723,7 +723,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 # ==============================================================================
 
 
-class ColorCorrectionReference(AscXMLBase):
+class ColorCorrectionRef(AscXMLBase):
     """Reference marker to a full color correction
 
     Description
@@ -742,12 +742,12 @@ class ColorCorrectionReference(AscXMLBase):
 
     **Class Attributes:**
 
-        members : {str: [:class`ColorCorrectionReference`]}
-            All instanced :class:`ColorCorrectionReference` are added to this
-            member dictionary. Multiple :class:`ColorCorrectionReference` can
+        members : {str: [:class`ColorCorrectionRef`]}
+            All instanced :class:`ColorCorrectionRef` are added to this
+            member dictionary. Multiple :class:`ColorCorrectionRef` can
             share the same reference id, therefore for each reference id key,
             the members dictionary stores a list of
-            :class:`ColorCorrectionReference` instances that share that ``id``
+            :class:`ColorCorrectionRef` instances that share that ``id``
             value.
 
     **Attributes:**
@@ -806,7 +806,7 @@ class ColorCorrectionReference(AscXMLBase):
     members = {}
 
     def __init__(self, id):  # pylint: disable=W0622
-        super(ColorCorrectionReference, self).__init__()
+        super(ColorCorrectionRef, self).__init__()
         self._id = None
         # Bypass cc id existence checks on first set by calling private
         # method directly.
@@ -849,17 +849,17 @@ class ColorCorrectionReference(AscXMLBase):
         """Changes the id field and updates members dictionary"""
         # The only time it won't be in here is if this is the first time
         # we set it.
-        if self.id in ColorCorrectionReference.members:
-            ColorCorrectionReference.members[self.id].remove(self)
+        if self.id in ColorCorrectionRef.members:
+            ColorCorrectionRef.members[self.id].remove(self)
             # If the remaining list is empty, we'll pop it out
-            if not ColorCorrectionReference.members[self.id]:
-                ColorCorrectionReference.members.pop(self.id)
+            if not ColorCorrectionRef.members[self.id]:
+                ColorCorrectionRef.members.pop(self.id)
 
         # Check if this id is already registered
-        if new_ref in ColorCorrectionReference.members:
-            ColorCorrectionReference.members[new_ref].append(self)
+        if new_ref in ColorCorrectionRef.members:
+            ColorCorrectionRef.members[new_ref].append(self)
         else:
-            ColorCorrectionReference.members[new_ref] = [self]
+            ColorCorrectionRef.members[new_ref] = [self]
 
         self._id = new_ref
 
@@ -888,7 +888,7 @@ class ColorCorrectionReference(AscXMLBase):
         else:
             if HALT_ON_ERROR:
                 raise ValueError(
-                    "Cannot resolve ColorCorrectionReference with reference "
+                    "Cannot resolve ColorCorrectionRef with reference "
                     "id of '{id}' because no ColorCorrection with that id "
                     "can be found.".format(
                         id=self.id
@@ -907,7 +907,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     ~~~~~~~~~~~
 
     This class is a simple container to link a :class:`ColorCorrection` (or
-    :class:`ColorCorrectionReference` ) with a :class:`MediaRef` . The
+    :class:`ColorCorrectionRef` ) with a :class:`MediaRef` . The
     :class:`MediaRef` is optional, the ColorCorrection is not. The
     ColorCorrection does not need to be provided at initialization time
     however, as :class:`ColorDecision` provides an XML element parser
@@ -950,7 +950,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             All instanced :class:`ColorDecision` are added to this
             member dictionary. The key is the id or reference id of the
             contained :class:`ColorCorrection` or
-            :class:`ColorCorrectionReference` Multiple :class:`ColorDecision`
+            :class:`ColorCorrectionRef` Multiple :class:`ColorDecision`
             can , therefore for each reference id key,
             the members dictionary stores a list of
             :class:`ColorDecision` instances that share that ``id``
@@ -958,7 +958,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     **Attributes:**
 
-        cc : (:class:`ColorCorrection` | :class:`ColorCorrectionReference`)
+        cc : (:class:`ColorCorrection` | :class:`ColorCorrectionRef`)
             Returns the contained ColorCorrection, even if it's a reference.
 
         desc : [str]
@@ -982,7 +982,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             images. Inherited from :class:`AscColorSpaceBase` .
 
         is_ref : (bool)
-            True if contains a :class:`ColorCorrectionReference` object instead
+            True if contains a :class:`ColorCorrectionRef` object instead
             of a :class:`ColorCorrection`
 
         media_ref : (:class:`MediaRef`)
@@ -993,7 +993,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
         set_parentage()
             Sets child :class:`ColorCorrection` (or
-            :class:`ColorCorrectionReference`) and :class:`MediaRef` (if
+            :class:`ColorCorrectionRef`) and :class:`MediaRef` (if
             present) ``parent`` attribute to point to this instance.
 
         viewing_desc : (str)
@@ -1078,7 +1078,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     @property
     def is_ref(self):
         """True if our cc is a reference cc"""
-        return type(self.cc) is ColorCorrectionReference
+        return type(self.cc) is ColorCorrectionRef
 
     @property
     def media_ref(self):
@@ -1166,7 +1166,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             else:
                 # Parse the ColorCorrectionRef
                 ref_id = cc_elem.attrib['ref']
-                self.cc = ColorCorrectionReference(ref_id)  # pylint: disable=C0103
+                self.cc = ColorCorrectionRef(ref_id)  # pylint: disable=C0103
                 self.cc.parent = self
         else:
             # Parse the ColorCorrection
@@ -1204,7 +1204,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         if not self.parse_xml_color_correction(xml_element):
             raise ValueError(
                 'ColorDecisions require at least one ColorCorrection or '
-                'ColorCorrectionReference node, but neither was found.'
+                'ColorCorrectionRef node, but neither was found.'
             )
 
         # Grab our MediaRef (if found)
@@ -3397,7 +3397,7 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
 def reset_all():
     """Resets all class level member lists and dictionaries"""
     ColorCorrection.reset_members()
-    ColorCorrectionReference.reset_members()
+    ColorCorrectionRef.reset_members()
     ColorDecision.reset_members()
     ColorCollection.reset_members()
     MediaRef.reset_members()
