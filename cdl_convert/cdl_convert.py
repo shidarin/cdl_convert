@@ -3189,58 +3189,6 @@ def parse_cdl(input_file):
 # ==============================================================================
 
 
-def parse_rnh_cdl(input_file):
-    """Parses a space separated .cdl file for ASC CDL information.
-
-    **Args:**
-        input_file : (str)
-            The filepath to the CDL
-
-    **Returns:**
-        (:class:`ColorCorrection`)
-            The single ColorCorrection object retrieved from the beta CDL
-
-    **Raises:**
-        N/A
-
-    A space separated cdl file is an internal Rhythm & Hues format used by
-    the Rhythm & Hues for displaying shot level and sequence level within
-    their internally developed playback software.
-
-    The file is a simple file consisting of one line. That line has 10, space
-    separated elements that correspond to the ten ASC CDL elements in order of
-    operations.
-
-    ``SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat``
-
-    """
-
-    with open(input_file, 'r') as cdl_f:
-        # We only need to read the first line
-        line = cdl_f.readline()
-        line = line.split()
-
-        # The filename without extension will become the id
-        filename = os.path.basename(input_file).split('.')[0]
-
-        slope = [line[0], line[1], line[2]]
-        offset = [line[3], line[4], line[5]]
-        power = [line[6], line[7], line[8]]
-
-        sat = line[9]
-
-        cdl = ColorCorrection(filename, input_file)
-
-        cdl.slope = slope
-        cdl.offset = offset
-        cdl.power = power
-        cdl.sat = sat
-
-    return cdl
-
-# ==============================================================================
-
-
 def parse_flex(input_file):  # pylint: disable=R0912,R0914
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
 
@@ -3390,6 +3338,58 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
     ccc.append_children(cdls)
 
     return ccc
+
+# ==============================================================================
+
+
+def parse_rnh_cdl(input_file):
+    """Parses a space separated .cdl file for ASC CDL information.
+
+    **Args:**
+        input_file : (str)
+            The filepath to the CDL
+
+    **Returns:**
+        (:class:`ColorCorrection`)
+            The single ColorCorrection object retrieved from the beta CDL
+
+    **Raises:**
+        N/A
+
+    A space separated cdl file is an internal Rhythm & Hues format used by
+    the Rhythm & Hues for displaying shot level and sequence level within
+    their internally developed playback software.
+
+    The file is a simple file consisting of one line. That line has 10, space
+    separated elements that correspond to the ten ASC CDL elements in order of
+    operations.
+
+    ``SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat``
+
+    """
+
+    with open(input_file, 'r') as cdl_f:
+        # We only need to read the first line
+        line = cdl_f.readline()
+        line = line.split()
+
+        # The filename without extension will become the id
+        filename = os.path.basename(input_file).split('.')[0]
+
+        slope = [line[0], line[1], line[2]]
+        offset = [line[3], line[4], line[5]]
+        power = [line[6], line[7], line[8]]
+
+        sat = line[9]
+
+        cdl = ColorCorrection(filename, input_file)
+
+        cdl.slope = slope
+        cdl.offset = offset
+        cdl.power = power
+        cdl.sat = sat
+
+    return cdl
 
 # ==============================================================================
 
