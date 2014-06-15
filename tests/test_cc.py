@@ -33,7 +33,7 @@ from xml.etree import ElementTree
 
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
-import cdl_convert.cdl_convert as cdl_convert
+import cdl_convert
 
 #==============================================================================
 # GLOBALS
@@ -692,7 +692,7 @@ class TestParseCCExceptions(unittest.TestCase):
             f.write(enc(CC_BLANK_ID))
             self.file = f.name
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
@@ -700,7 +700,7 @@ class TestParseCCExceptions(unittest.TestCase):
             self.file
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
         cdl = cdl_convert.parse_cc(self.file)
 
@@ -719,7 +719,7 @@ class TestParseCCExceptions(unittest.TestCase):
             f.write(enc(CC_NEGATIVE_SLOPE))
             self.file = f.name
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
@@ -727,7 +727,7 @@ class TestParseCCExceptions(unittest.TestCase):
             self.file
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
         cdl_convert.reset_all()
 
         cdl = cdl_convert.parse_cc(self.file)

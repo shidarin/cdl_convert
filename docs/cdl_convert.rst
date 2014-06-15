@@ -23,7 +23,7 @@ AscColorSpaceBase
 Classes that deal with input and viewer colorspace can subclass from this class
 to get the ``input_desc`` and ``viewing_desc`` attributes.
 
-.. autoclass:: cdl_convert.AscColorSpaceBase
+.. autoclass:: cdl_convert.base.AscColorSpaceBase
 
 AscDescBase
 -----------
@@ -34,12 +34,12 @@ with a single string, which will append to the list of strings already present
 in ``desc``. If set to a list or tuple, ``desc`` will become a list of those
 values. If set to ``None``, ``desc`` will become an empty list.
 
-.. autoclass:: cdl_convert.AscDescBase
+.. autoclass:: cdl_convert.base.AscDescBase
 
 AscXMLBase
 ----------
 
-.. autoclass:: cdl_convert.AscXMLBase
+.. autoclass:: cdl_convert.base.AscXMLBase
 
 ColorCollection
 ---------------
@@ -72,7 +72,7 @@ Finally the :class:`ColorCollection` ``type`` is set to ``ccc`` and the
 ``xml_root`` field is called, which knows to return a ``ccc`` style XML
 element to ``write_ccc``.
 
-.. autoclass:: cdl_convert.ColorCollection
+.. autoclass:: cdl_convert.collection.ColorCollection
 
 ColorCorrection
 ---------------
@@ -106,12 +106,12 @@ function, see :doc:`usage` for a walkthrough.
 .. warning::
     ``cdl_file`` is likely to not be a required attribute in the future.
 
-.. autoclass:: cdl_convert.ColorCorrection
+.. autoclass:: cdl_convert.correction.ColorCorrection
 
 ColorCorrectionRef
 ------------------
 
-.. autoclass:: cdl_convert.ColorCorrectionRef
+.. autoclass:: cdl_convert.decision.ColorCorrectionRef
 
 ColorDecision
 -------------
@@ -119,7 +119,7 @@ ColorDecision
 ColorDecision's are normally found only within :class:`ColorCorrection` but
 this limitation of the ASC CDL schema is not enforced by cdl_convert.
 
-.. autoclass:: cdl_convert.ColorDecision
+.. autoclass:: cdl_convert.decision.ColorDecision
 
 ColorNodeBase
 -------------
@@ -127,7 +127,7 @@ ColorNodeBase
 This class only exists to be subclassed by :class:`SatNode` and :class:`SopNode`
 and should not be used directly.
 
-.. autoclass:: cdl_convert.ColorNodeBase
+.. autoclass:: cdl_convert.base.ColorNodeBase
 
 MediaRef
 --------
@@ -150,7 +150,7 @@ and interpreting data stored in CDLs. You can change a broken absolute link
 directory to a relative link without touching the filename, or retrieve a full
 list of image sequences contained within a referenced directory.
 
-.. autoclass:: cdl_convert.MediaRef
+.. autoclass:: cdl_convert.decision.MediaRef
 
 
 SatNode
@@ -160,7 +160,7 @@ SatNode
     This class is meant only to be created by a container CDL format, and thus has
     the required arg of ``parent`` when instantiating it.
 
-.. autoclass:: cdl_convert.SatNode
+.. autoclass:: cdl_convert.correction.SatNode
 
 SopNode
 -------
@@ -174,7 +174,7 @@ SopNode
     ``offset = 5.4`` will cause that value to be copied over all 3 colors,
     resulting in ``[5.4, 5.4, 5.4]``.
 
-.. autoclass:: cdl_convert.SopNode
+.. autoclass:: cdl_convert.correction.SopNode
 
 General Functions
 =================
@@ -185,12 +185,12 @@ Reset All
 Resets all the class level lists and dictionaries of cdl_convert. Calling this
 is the same as calling each individual ``reset_members`` method.
 
-.. autofunction:: cdl_convert.reset_all
+.. autofunction:: cdl_convert.utils.reset_all
 
 Sanity Check
 ------------
 
-.. autofunction:: cdl_convert.sanity_check
+.. autofunction:: cdl_convert.utils.sanity_check
 
 Parse Functions
 ===============
@@ -205,34 +205,34 @@ These functions can either return a :class:`ColorCorrection` , or a
 Parse ale
 ---------
 
-.. autofunction:: cdl_convert.parse_ale
+.. autofunction:: cdl_convert.parse.parse_ale
 
 Parse cc
 --------
 
-.. autofunction:: cdl_convert.parse_cc
+.. autofunction:: cdl_convert.parse.parse_cc
 
 Parse ccc
 ---------
 
-.. autofunction:: cdl_convert.parse_ccc
+.. autofunction:: cdl_convert.parse.parse_ccc
 
 Parse cdl
 ---------
 
-.. autofunction:: cdl_convert.parse_cdl
+.. autofunction:: cdl_convert.parse.parse_cdl
 
 Parse file
 ----------
 
 Passes on the file to the correct parser.
 
-.. autofunction:: cdl_convert.parse_file
+.. autofunction:: cdl_convert.parse.parse_file
 
 Parse flex
 ----------
 
-.. autofunction:: cdl_convert.parse_flex
+.. autofunction:: cdl_convert.parse.parse_flex
 
 Parse Rhythm & Hues cdl
 -----------------------
@@ -241,7 +241,7 @@ Rhythm & Hues' implementation of the cdl format is based on a very early spec,
 and as such lacks the all metadata. It's extremely unlikely that you'll run
 into this format in the wild.
 
-.. autofunction:: cdl_convert.parse_rnh_cdl
+.. autofunction:: cdl_convert.parse.parse_rnh_cdl
 
 Write Functions
 ===============
@@ -253,17 +253,17 @@ into a properly formatted string or XML Tree, then writes that file.
 Write cc
 --------
 
-.. autofunction:: cdl_convert.write_cc
+.. autofunction:: cdl_convert.write.write_cc
 
 Write ccc
 ---------
 
-.. autofunction:: cdl_convert.write_ccc
+.. autofunction:: cdl_convert.write.write_ccc
 
 Write cdl
 ---------
 
-.. autofunction:: cdl_convert.write_cdl
+.. autofunction:: cdl_convert.write.write_cdl
 
 Write Rhythm & Hues cdl
 -----------------------
@@ -272,4 +272,4 @@ This writes a very sparse cdl format that is based on a very early spec of the
 cdl implementation. It lacks all metadata. Unless you work at Rhythm & Hues,
 you probably don't want to write a cdl that uses this format.
 
-.. autofunction:: cdl_convert.write_rnh_cdl
+.. autofunction:: cdl_convert.write.write_rnh_cdl

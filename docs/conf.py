@@ -22,7 +22,7 @@ sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 
-import cdl_convert.cdl_convert as cdl
+import cdl_convert as cdl
 
 # -- General configuration ------------------------------------------------
 

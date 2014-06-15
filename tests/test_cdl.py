@@ -33,7 +33,7 @@ from xml.etree import ElementTree
 
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
-import cdl_convert.cdl_convert as cdl_convert
+import cdl_convert
 
 #==============================================================================
 # GLOBALS
@@ -1210,7 +1210,7 @@ class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
 
     def testMissingRef(self):
         """Tests what happens with a missing ref and HALT"""
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         # We shouldn't stop just because a ref is missing
         mockOpen = mock.mock_open()
@@ -1224,7 +1224,7 @@ class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
 
         mockOpen().write.assert_called_once_with(self.target_xml_root)
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
 #==============================================================================
 # RUNNER

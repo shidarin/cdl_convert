@@ -31,10 +31,10 @@ Project Structure
     ``cdl_convert`` started as a simple script to convert from one format to
     another. As such, it wasn't named with the standards that one would usually
     use for a python module. By the time the project became big enough, was on
-    PyPI, etc, it was too spread out, in too many places to make changing easy.
-    In the end, I opted to keep it. At some point, ``cdl_convert`` might migrate
-    into a larger, more generic film & tv python module, which will be named
-    properly.
+    PyPI, etc, it was too spread out on the web, in too many places to make
+    changing easy. In the end, I opted to keep it. At some point,
+    ``cdl_convert`` might migrate into a larger, more generic film & tv
+    python module, which will be named properly.
 
 .. _Travis-ci.org: http://travis-ci.org/shidarin/cdl_convert
 .. _coveralls.io: http://coveralls.io/r/shidarin/cdl_convert

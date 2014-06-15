@@ -40,6 +40,17 @@ and ``.flex`` files now return a collection.
     - ``parse_rnh_cdl`` ``cdl_file`` arg renamed to ``input_file``.
     - ``parse_ale`` ``edl_file`` arg renamed to ``input_file``.
     - ``parse_flex`` ``edl_file`` arg renamed to ``input_file``.
+- Python Structure Refactoring
+    - Moved ``HALT_ON_ERROR`` into the ``config`` module, which should now be referenced and set by importing the entire ``config`` module, and referencing or setting ``config.HALT_ON_ERROR``
+    - Script functionality remains in ``cdl_convert.cdl_convert``, but everything else has been moved out.
+    - :class:`AscColorSpaceBase` , :class:`AscDescBase` , :class:`AscXMLBase` and :class:`ColorNodeBase` now live under ``cdl_convert.base``
+    - :class:`ColorCollection` now lives in ``cdl_convert.collection``
+    - :class:`ColorCorrection` , :class:`SatNode` and :class:`SopNode` now live under ``cdl_convert.correction``
+    - :class:`ColorDecision` , :class:`ColorCorrectionRef` and :class:`MediaRef` now live under ``cdl_convert.decision``
+    - All parse functions now live under ``cdl_convert.parse``
+    - All write functions now live under ``cdl_convert.write``
+    - ``reset_all`` and ``sanity_check`` now live under ``cdl_convert.utils``
+
 
 Version 0.6.1
 =============
