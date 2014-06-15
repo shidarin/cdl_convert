@@ -61,7 +61,7 @@ SOFTWARE.
 # IMPORTS
 # ==============================================================================
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 # Standard Imports
 
@@ -75,8 +75,8 @@ from xml.etree import ElementTree
 
 # cdl_convert imports
 
-from base import AscColorSpaceBase, AscDescBase, AscXMLBase, ColorNodeBase
-import config
+from .base import AscColorSpaceBase, AscDescBase, AscXMLBase, ColorNodeBase
+from . import config
 
 # Python 3 compatibility
 

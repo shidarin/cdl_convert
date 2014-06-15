@@ -41,26 +41,13 @@ SOFTWARE.
 from __future__ import print_function
 
 # Standard Imports
-from argparse import ArgumentParser
-from ast import literal_eval
 from xml.dom import minidom
-import os
 import re
 import sys
 from xml.etree import ElementTree
 
 # cdl_convert Imports
 import config
-
-# Python 3 compatibility
-try:
-    xrange
-except NameError:  # pragma: no cover
-    xrange = range  # pylint: disable=W0622, C0103
-try:
-    raw_input
-except NameError:  # pragma: no cover
-    raw_input = input  # pylint: disable=W0622, C0103
 
 # ==============================================================================
 # GLOBALS
