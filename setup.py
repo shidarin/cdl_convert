@@ -22,7 +22,7 @@ import re
 #       python setup.py sdist bdist_wheel upload
 
 here = os.path.abspath(os.path.dirname(__file__))
-main_file = os.path.join(here, 'cdl_convert', 'cdl_convert.py')
+main_file = os.path.join(here, 'cdl_convert', '__init__.py')
 
 # Read the version number from a source file.
 # Why read it, and not import?

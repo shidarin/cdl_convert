@@ -5,10 +5,6 @@
 
 from __future__ import absolute_import, print_function
 
-# Standard Imports
-
-import sys
-
 # cdl_convert imports
 
 from .collection import ColorCollection
