@@ -1575,8 +1575,10 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                     "this collection or a ColorDecision that is a "
                     "child of this collection."
                 )
+            return False
         else:
             child.parent = self
+            return True
 
     # =========================================================================
 
