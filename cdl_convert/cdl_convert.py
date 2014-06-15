@@ -1614,16 +1614,12 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                 ccc_xml.append(color_correct.element)
         if self.color_decisions:
             # We'll need to extract the ColorCorrections from the
-            # ColorDecisions, but only if those ColorCorrections have not
-            # already been included.
+            # ColorDecisions
             for color_decision in self.color_decisions:
                 if color_decision.is_ref:
                     color_correction = color_decision.cc.cc
                 else:
                     color_correction = color_decision.cc
-                if color_correction in self.color_corrections:
-                    # We've already been included in the CCC XML
-                    continue
 
                 # We do one last check to ensure that we actually have a
                 # returned ColorCorrection, as ColorCorrectionRef will
@@ -1651,7 +1647,25 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             desc.text = description
         if self.color_decisions:
             for color_decision in self.color_decisions:
-                cdl_xml.append(color_decision.element)
+                if color_decision.cc.id in self.id_list:
+                    resolve = False
+                else:
+                    try:
+                        cc = color_decision.cc.cc
+                    except ValueError:
+                        # ValueError will be raised if we can't resolve the
+                        # reference. This shouldn't be a game-stopper here.
+                        #
+                        # We'll just add the unresolved reference
+                        resolve = False
+                    else:
+                        if cc:
+                            resolve = True
+                        else:
+                            resolve = False
+
+                cdl_xml.append(color_decision.build_element(resolve=resolve))
+
         if self.color_corrections:
             # We'll create some temporary ColorDecision instances, and place
             # the ColorCorrects inside of them.
@@ -1662,23 +1676,6 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             color_decisions_members = ColorDecision.members
 
             for color_correction in self.color_corrections:
-                # Before creating a temporary ColorDecision, we should ensure
-                # that this color_correction has not already been included
-                # as a child of one of the ColorDecisions
-                found = False
-                for color_decision in self.color_decisions:
-                    if color_correction.id == color_decision.cc.id:
-                        if not color_decision.is_ref:
-                            # If the color_correction id matches a previously
-                            # included ColorDecision ColorCorrection AND
-                            # the included ColorCorrection is not a reference,
-                            # including this ColorCorrection would create
-                            # a duplicate.
-                            found = True
-                            break
-                if found:
-                    continue
-
                 color_decision = ColorDecision(color_correction)
                 cdl_xml.append(color_decision.element)
 
