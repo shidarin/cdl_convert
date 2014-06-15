@@ -57,11 +57,7 @@ from .correction import ColorCorrection
 # EXPORTS
 # ==============================================================================
 
-__all__ = [
-    'ColorCorrectionRef',
-    'ColorDecision',
-    'MediaRef'
-]
+__all__ = ['ColorCorrectionRef', 'ColorDecision', 'MediaRef']
 
 # ==============================================================================
 # CLASSES
@@ -235,9 +231,7 @@ class ColorCorrectionRef(AscXMLBase):
                 raise ValueError(
                     "Cannot resolve ColorCorrectionRef with reference "
                     "id of '{id}' because no ColorCorrection with that id "
-                    "can be found.".format(
-                        id=self.id
-                    )
+                    "can be found.".format(id=self.id)
                 )
             else:
                 return None
@@ -449,7 +443,6 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
                 # If the remaining list is empty, we'll pop it out
                 if not ColorDecision.members[self.cc.id]:
                     ColorDecision.members.pop(self.cc.id)
-
         if new_cc:
             # It's possible to have new_cc be None, in which case we won't
             # assign this ColorDecision to the member dictionary.
@@ -490,9 +483,8 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             cd_xml.append(self.cc.element)
         elif resolve:
             # We're a reference and we need to be resolved
-            # Note that this will raise an exception if called
-            # when a reference cannot be resolve due to a ColorCorrection
-            # with matching id not existing.
+            # Note that this will raise an exception if called when a reference
+            # cannot be resolve due to a non-existent ColorCorrection.
             cd_xml.append(self.cc.cc.element)
 
         return cd_xml
@@ -604,8 +596,7 @@ class MediaRef(AscXMLBase):
     The parent of a :class:`MediaRef` should typically be a
     :class:`ColorDecision` , and in fact the CDL specification states that
     no other container is allowed to contain a :class:`MediaRef`. That
-    restriction is not enforced here, but writers for ``.ccc`` and ``.cc`` will
-    only pass through :class:`MediaRef` as Description entries.
+    restriction is not enforced in the python API.
 
     **Class Attributes:**
 
@@ -731,7 +722,6 @@ class MediaRef(AscXMLBase):
         self._is_seq = None
         self._sequences = None
 
-        # Add this instance to the member dictionary.
         self._change_membership()
 
     # Properties ==============================================================
@@ -927,9 +917,7 @@ class MediaRef(AscXMLBase):
             if config.HALT_ON_ERROR:
                 raise ValueError(
                     'Cannot determine if non-existent directory {dir} '
-                    'contains an image sequence.'.format(
-                        dir=self.path,
-                    )
+                    'contains an image sequence.'.format(dir=self.path)
                 )
             else:
                 self._is_seq = False
