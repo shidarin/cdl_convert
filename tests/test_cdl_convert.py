@@ -508,6 +508,91 @@ class TestParseArgs(unittest.TestCase):
             args.destination
         )
 
+# parse_args() ================================================================
+
+
+class TestParseFile(unittest.TestCase):
+    """Tests ParseFile, a convenience function"""
+
+    def setUp(self):
+        self.stored_inputs = cdl_convert.INPUT_FORMATS
+
+    def tearDown(self):
+        cdl_convert.INPUT_FORMATS = self.stored_inputs
+        cdl_convert.reset_all()
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_ale')
+    def test_ale(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.ale'
+        cdl_convert.INPUT_FORMATS['ale'] = mockParse
+
+        cdl_convert.parse_file(filepath)
+
+        mockParse.assert_called_once_with('blah.ale')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_ccc')
+    def test_ccc(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.ccc'
+        cdl_convert.INPUT_FORMATS['ccc'] = mockParse
+
+        cdl_convert.parse_file(filepath)
+
+        mockParse.assert_called_once_with('blah.ccc')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_cc')
+    def test_cc(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.cc'
+        cdl_convert.INPUT_FORMATS['cc'] = mockParse
+
+        cdl_convert.parse_file(filepath)
+
+        mockParse.assert_called_once_with('blah.cc')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_cdl')
+    def test_cdl(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.cdl'
+        cdl_convert.INPUT_FORMATS['cdl'] = mockParse
+
+        cdl_convert.parse_file(filepath)
+
+        mockParse.assert_called_once_with('blah.cdl')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    def test_flex(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.flex'
+        cdl_convert.INPUT_FORMATS['flex'] = mockParse
+
+        cdl_convert.parse_file(filepath)
+
+        mockParse.assert_called_once_with('blah.flex')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.parse_rnh_cdl')
+    def test_rnh_cdl(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.cdl'
+        cdl_convert.INPUT_FORMATS['rcdl'] = mockParse
+
+        cdl_convert.parse_file(filepath, 'rcdl')
+
+        mockParse.assert_called_once_with('blah.cdl')
+
 # main() ======================================================================
 
 

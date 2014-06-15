@@ -195,9 +195,12 @@ Sanity Check
 Parse Functions
 ===============
 
-These functions create and return one of more :class:`ColorCorrection`, always
-returning their results in the form of a list, even if the file type can only
-produce a single cdl.
+These functions can either return a :class:`ColorCorrection` , or a
+:class:`ColorCollection` , depending on if they are from a container format.
+
+.. note::
+    Use the ``parse_file`` function to parse any input file correctly, without
+    worrying about matching the file extension by hand.
 
 Parse ale
 ---------
@@ -219,6 +222,18 @@ Parse cdl
 
 .. autofunction:: cdl_convert.parse_cdl
 
+Parse file
+----------
+
+Passes on the file to the correct parser.
+
+.. autofunction:: cdl_convert.parse_file
+
+Parse flex
+----------
+
+.. autofunction:: cdl_convert.parse_flex
+
 Parse Rhythm & Hues cdl
 -----------------------
 
@@ -227,11 +242,6 @@ and as such lacks the all metadata. It's extremely unlikely that you'll run
 into this format in the wild.
 
 .. autofunction:: cdl_convert.parse_rnh_cdl
-
-Parse flex
-----------
-
-.. autofunction:: cdl_convert.parse_flex
 
 Write Functions
 ===============

@@ -140,6 +140,7 @@ __all__ = [
     'parse_cc',
     'parse_ccc',
     'parse_cdl',
+    'parse_file',
     'parse_flex',
     'parse_rnh_cdl',
     'reset_all',
@@ -3641,6 +3642,16 @@ def parse_args():
 # ==============================================================================
 
 
+def parse_file(filepath, filetype=None):
+    """Determines & uses the correct parser to use on a CDL file"""
+    if not filetype:
+        filetype = os.path.basename(filepath).split('.')[-1].lower()
+
+    return INPUT_FORMATS[filetype](filepath)
+
+# ==============================================================================
+
+
 def main():  # pylint: disable=R0912
     """Will figure out input and destination filetypes, then convert"""
     args = parse_args()
@@ -3668,7 +3679,7 @@ def main():  # pylint: disable=R0912
     else:
         filetype_in = args.input
 
-    color_decisions = INPUT_FORMATS[filetype_in](filepath)
+    color_decisions = parse_file(filepath, filetype_in)
 
     def write_single_file(cdl, ext):
         """Writes a single color correction file"""

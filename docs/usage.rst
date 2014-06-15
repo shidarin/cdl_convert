@@ -173,9 +173,12 @@ and it will return a single :class:`ColorCorrection` matching the correction
 found in the file. Formats that contain multiple corrections will return
 a :class:`ColorCollection` , which contains child :class:`ColorCorrection` .
 
-    >>> cdl.parse_cc('./myfirstcdl.cc')
+If you don't want to worry about matching the filetype to a parser, just use
+the generic ``parse_file`` function.
+
+    >>> cdl.parse_file('./myfirstcdl.cc')
     <cdl_convert.ColorCorrection object at 0x1004a5590>
-    >>> collection = cdl.parse_ccc('/myfirstedl.ccc')
+    >>> collection = cdl.parse_file('/myfirstedl.ccc')
     <cdl_convert.ColorCollection object at 0x100633b40>,
     >>> collection.color_corrections
     [
