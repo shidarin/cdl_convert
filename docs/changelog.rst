@@ -40,6 +40,9 @@ and ``.flex`` files now return a collection.
     - ``parse_rnh_cdl`` ``cdl_file`` arg renamed to ``input_file``.
     - ``parse_ale`` ``edl_file`` arg renamed to ``input_file``.
     - ``parse_flex`` ``edl_file`` arg renamed to ``input_file``.
+- Python Structure Refactoring
+    - Moved ``HALT_ON_ERROR`` into the ``config`` module, which should now be referenced and set by importing the entire ``config`` module, and referencing or setting ``config.HALT_ON_ERROR``
+
 
 Version 0.6.1
 =============
