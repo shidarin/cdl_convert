@@ -52,12 +52,6 @@ data within the Film and TV industries.
 **cdl_convert is not associated with the American Society of
 Cinematographers**
 
-.. warning::
-    ``cdl_convert`` is still in active development and the API is changing
-    rapidly. Not all features work correctly in every instance. The best thing
-    you can do to help this is to :doc:`contribute </contributing>` and get
-    through this period the quickest.
-
 Changelog
 =========
 

@@ -23,15 +23,15 @@ the ``-o`` flag.
 Sometimes it might be necessary to disable cdl_convert's auto-detection of the
 input file format. This can be done with the ``-i`` flag.
 ::
-    $ cdl_convert ./ca102_x34.cdl -i cdl
+    $ cdl_convert ./ca102_x34.cdl -i rcdl
 
 .. note::
     You should not normally need to do this, but it is possible especially since
     there are multiple formats sharing the same file extension. In this case,
-    ``.cdl`` could have indicated either a space separated cdl, or an XML
-    cdl. ``cdl_convert`` does it's best to try and guess which one the file is,
-    but if you're running into trouble, it might help to indicate to
-    ``cdl_convert`` what the input file type is.
+    ``.cdl`` could have indicated either a space separated cdl (an ``rcdl``),
+    or an XML cdl. ``cdl_convert`` does it's best to try and guess which one
+    the file is, but if you're running into trouble, it might help to indicate
+    to ``cdl_convert`` what the input file type is.
 
 By default, converted files will be written to the './converted' directory, but
 a custom destination directory can easily be specified with the ``-d`` flag.
@@ -76,12 +76,12 @@ Full help is available using the standard ``--help`` command:
       -i INPUT, --input INPUT
                             specify the filetype to convert from. Use when
                             CDLConvert cannot determine the filetype
-                            automatically. Supported input formats are: ['cc',
-                            'cdl', 'ale', 'ccc', 'flex']
+                            automatically. Supported input formats are: ['flex',
+                            'cc', 'ale', 'cdl', 'rcdl', 'ccc']
       -o OUTPUT, --output OUTPUT
                             specify the filetype to convert to, comma separated
                             lists are accepted. Defaults to a .cc XML. Supported
-                            output formats are: ['cc', 'cdl', 'ccc']
+                            output formats are: ['cc', 'cdl', 'ccc', 'rcdl']
       -d DESTINATION, --destination DESTINATION
                             specify an output directory to save converted files
                             to. If not provided will default to ./converted/
@@ -94,7 +94,7 @@ Full help is available using the standard ``--help`` command:
                             if no or a bad id is given.
       --no-output           parses all incoming files but no files will be
                             written. Use this in conjunction with '--halt' and '--
-                            check to try and track down any oddities observed in
+                            check' to try and track down any oddities observed in
                             the CDLs.
       --check               checks all ColorCorrects that were parsed for odd
                             values. Odd values are any values over 3 or under 0.1
@@ -331,10 +331,9 @@ You can change the id after creation, but it will perform the same check.
         cc_id=cc_id
     ValueError: Error setting the id to "cc1". This id is already a registered id.
 
-At the current time, filepaths cannot be changed after
-:class:`ColorCorrection` instantiation. ``file_out`` is determined by using
-the class method ``determine_dest``, which takes a provided directory,
-the ``id`` and figures out the output path.
+At the current time, ``file_out`` cannot be set directly. ``file_out`` is
+determined by using the class method ``determine_dest``, which takes a
+provided directory, the ``id`` and figures out the output path.
 
     >>> cc.file_in
     '/Users/sean/cdls/xf/015.cc'
@@ -358,7 +357,7 @@ to disk.
     >>> cc.determine_dest('cdl', '/Users/potter/cdls/converted/')
     >>> cc.file_out
     '/Users/potter/cdls/converted/015_xf_seqGrade_v01.cdl'
-    >>> cdl.write_rnh_cdl(cc)
+    >>> cdl.write_cdl(cc)
 
 .. warning::
     It is highly likely that in the future, these will be methods on the
@@ -442,6 +441,10 @@ and ``desc`` (which can be an infinitely long list of shot descriptions)
     ``From Parent Collection:`` to easily distinguish between inherited fields
     and native.
 
+.. warning::
+    The above note describes behavior not yet implemeneted and should be
+    ignored. The author of the above note has been sacked.
+
 Direct Creation
 ^^^^^^^^^^^^^^^
 
@@ -481,6 +484,10 @@ creates a :class:`ColorCollection` with a type of ``'cdl'`` (since EDLs
 contain many media references and may even include ``ColorCorrectionRef``
 elements), while parsing a ``.ccc`` file or multiple ``.cc`` files will create
 an instance with a type of ``'ccc'``.
+
+.. note::
+    At the current time, parsing EDLs results on a ``ccc`` collection, not a
+    ``cdl`` as stated above.
 
 Using :class:`ColorCollection`
 ------------------------------
@@ -532,6 +539,11 @@ append a list of children at once- the list can even contain mixed classes.
         <cdl_convert.ColorDecision object at 0x100633b10>,
         <cdl_convert.ColorDecision object at 0x100633ad0>,
     ]
+
+    ``append_child`` and ``append_children`` will fail if you attempt to append
+    a child which has a matching ``id`` to an already present child. The only
+    exception is a :class:`ColorCorrectionReference` , which of course should
+    have the same ``id`` as a full :class:`ColorCorrection` .
 
 .. warning::
     Both ``appand_child`` and ``append_children`` will change the ``parent``

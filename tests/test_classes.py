@@ -418,6 +418,56 @@ class TestColorCollection(unittest.TestCase):
 
     #==========================================================================
 
+    def testIdList(self):
+        """Tests that the id_list behaves correctly"""
+        self.assertEqual(
+            [],
+            self.node.id_list
+        )
+
+        self.node.append_child(cdl_convert.ColorCorrection('001'))
+
+        self.assertEqual(
+            ['001'],
+            self.node.id_list
+        )
+
+        self.node.append_child(cdl_convert.ColorCorrection('002'))
+
+        self.assertEqual(
+            ['001', '002'],
+            self.node.id_list
+        )
+
+        cd = cdl_convert.ColorDecision()
+        cd.cc = cdl_convert.ColorCorrection('003')
+
+        self.node.append_child(cd)
+
+        self.assertEqual(
+            ['001', '002', '003'],
+            self.node.id_list
+        )
+
+        cd2 = cdl_convert.ColorDecision()
+        cd2.cc = cdl_convert.ColorCorrectionReference('004')
+
+        self.node.append_child(cd2)
+
+        self.assertEqual(
+            ['001', '002', '003'],  # Unresolved references do not return
+            self.node.id_list
+        )
+
+        self.node.color_decisions.remove(cd)
+
+        self.assertEqual(
+            ['001', '002'],
+            self.node.id_list
+        )
+
+    #==========================================================================
+
     def testIsCCC(self):
         """Tests that is_ccc works correctly"""
         self.assertTrue(
@@ -689,6 +739,7 @@ class TestCollectionChildMethods(unittest.TestCase):
     def tearDown(self):
         # Empty out the members dictionary
         cdl_convert.reset_all()
+        cdl_convert.HALT_ON_ERROR = False
 
     #==========================================================================
     # TESTS
@@ -760,6 +811,95 @@ class TestCollectionChildMethods(unittest.TestCase):
             TypeError,
             self.node.append_child,
             'I ama a banana'
+        )
+
+    #==========================================================================
+
+    def testAppendDuplicateCorrection(self):
+        """Tests appending a ColorCorrection that's already been appended"""
+        def append():
+            self.node.append_child(self.color_corrections[0])
+
+        append()
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.color_corrections
+        )
+
+        append()
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.color_corrections
+        )
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            append
+        )
+
+    #==========================================================================
+
+    def testAppendDuplicateDecision(self):
+        """Tests appending a ColorCorrection that's already been appended"""
+        def append():
+            self.node.append_child(self.color_decisions[0])
+
+        append()
+
+        self.assertEqual(
+            [self.color_decisions[0]],
+            self.node.color_decisions
+        )
+
+        append()
+
+        self.assertEqual(
+            [self.color_decisions[0]],
+            self.node.color_decisions
+        )
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            append
+        )
+
+    #==========================================================================
+
+    def testAppendDuplicateMixed(self):
+        """Tests appending a duplicate id with mixed objects"""
+        def append():
+            self.node.append_child(self.color_corrections[0])
+
+        cd = cdl_convert.ColorDecision(self.color_corrections[0])
+
+        append()
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.color_corrections
+        )
+
+        self.assertFalse(
+            self.node.append_child(cd)
+        )
+
+        self.assertEqual(
+            [self.color_corrections[0]],
+            self.node.all_children
+        )
+
+        cdl_convert.HALT_ON_ERROR = True
+
+        self.assertRaises(
+            ValueError,
+            self.node.append_child,
+            cd
         )
 
     #==========================================================================
@@ -1776,8 +1916,8 @@ class TestColorCorrectionReference(unittest.TestCase):
             id='uniqueId', input_file='../testcdl.cc'
         )
 
-        self.ccr = cdl_convert.ColorCorrectionReference(ref='uniqueId')
-        self.ccr_bad = cdl_convert.ColorCorrectionReference(ref='oldId')
+        self.ccr = cdl_convert.ColorCorrectionReference(id='uniqueId')
+        self.ccr_bad = cdl_convert.ColorCorrectionReference(id='oldId')
 
     def tearDown(self):
         # We need to clear the ColorCorrection member dictionary so we don't
@@ -1818,15 +1958,15 @@ class TestColorCorrectionReference(unittest.TestCase):
     #==========================================================================
 
     def testRef(self):
-        """Tests that ref is returned correctly"""
+        """Tests that id is returned correctly"""
         self.assertEqual(
             'uniqueId',
-            self.ccr.ref
+            self.ccr.id
         )
 
         self.assertEqual(
             'oldId',
-            self.ccr_bad.ref
+            self.ccr_bad.id
         )
 
     #==========================================================================
@@ -1842,7 +1982,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
     def testChangeRef(self):
         """Tests changing a reference id"""
-        self.ccr.ref = 'blahblahblah'
+        self.ccr.id = 'blahblahblah'
 
         self.assertEqual(
             {'blahblahblah': [self.ccr], 'oldId': [self.ccr_bad]},
@@ -1853,7 +1993,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
     def testChangeRefAppend(self):
         """Tests changing a reference id"""
-        self.ccr.ref = 'oldId'
+        self.ccr.id = 'oldId'
 
         self.assertEqual(
             {'oldId': [self.ccr_bad, self.ccr]},
@@ -1865,7 +2005,7 @@ class TestColorCorrectionReference(unittest.TestCase):
     def testChangeRefHALT(self):
         """Tests changing a reference id if halt on error true"""
         def setRef():
-            self.ccr.ref = 'blahblahblah'
+            self.ccr.id = 'blahblahblah'
 
         cdl_convert.HALT_ON_ERROR = True
 
@@ -1876,7 +2016,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
         self.assertEqual(
             'uniqueId',
-            self.ccr.ref
+            self.ccr.id
         )
 
         self.assertEqual(

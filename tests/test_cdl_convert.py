@@ -732,12 +732,12 @@ class TestMain(unittest.TestCase):
         """Tests that we try and write a converted file"""
 
         mockParse.return_value = self.cdl
-        sys.argv = ['scriptname', 'file.cdl', '-o', 'cc']
+        sys.argv = ['scriptname', 'file.cdl', '-i', 'rcdl', '-o', 'cc']
 
         destination_dir = os.path.abspath('./converted/')
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['cdl'] = mockParse
+        mockInputs['rcdl'] = mockParse
         cdl_convert.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
@@ -816,7 +816,9 @@ class TestMain(unittest.TestCase):
 
         abspath.return_value = 'file.flex'
         mockParse.return_value = self.ccc
-        self.ccc.append_children([self.cdl, self.cdl, self.cdl])
+        cdl2 = cdl_convert.ColorCorrection('45')
+        cdl3 = cdl_convert.ColorCorrection('100')
+        self.ccc.append_children([self.cdl, cdl2, cdl3])
         sys.argv = ['scriptname', 'file.flex', '--check']
 
         mockInputs = dict(self.inputFormats)
@@ -830,12 +832,12 @@ class TestMain(unittest.TestCase):
         cdl_convert.main()
 
         self.assertEqual(
-            [mock.call(self.cdl)] * 3,
+            [mock.call(self.cdl), mock.call(cdl2), mock.call(cdl3)],
             mockSanity.call_args_list
         )
 
         self.assertEqual(
-            [mock.call(self.cdl)] * 3,
+            [mock.call(self.cdl), mock.call(cdl2), mock.call(cdl3)],
             mockWrite.call_args_list
         )
 
@@ -968,10 +970,10 @@ class TestMain(unittest.TestCase):
 
         abspath.return_value = 'file.cdl'
         mockParse.return_value = self.cdl
-        sys.argv = ['scriptname', 'file.cdl', '-o', 'cc']
+        sys.argv = ['scriptname', 'file.cdl', '-i', 'rcdl', '-o', 'cc']
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['cdl'] = mockParse
+        mockInputs['rcdl'] = mockParse
         cdl_convert.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
@@ -992,10 +994,10 @@ class TestMain(unittest.TestCase):
 
         abspath.return_value = 'file.cdl'
         mockParse.return_value = self.cdl
-        sys.argv = ['scriptname', 'file.cdl', '-o', 'ccc']
+        sys.argv = ['scriptname', 'file.cdl', '-i', 'rcdl', '-o', 'ccc']
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['cdl'] = mockParse
+        mockInputs['rcdl'] = mockParse
         cdl_convert.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
@@ -1025,7 +1027,7 @@ class TestMain(unittest.TestCase):
 
         abspath.return_value = 'file.ccc'
         mockParse.return_value.color_corrections = [self.cdl, ]
-        sys.argv = ['scriptname', 'file.ccc', '-o', 'cc,cdl']
+        sys.argv = ['scriptname', 'file.ccc', '-o', 'cc,rcdl']
 
         mockInputs = dict(self.inputFormats)
         mockInputs['ccc'] = mockParse
@@ -1033,7 +1035,7 @@ class TestMain(unittest.TestCase):
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWriteCC
-        mockOutputs['cdl'] = mockWriteCDL
+        mockOutputs['rcdl'] = mockWriteCDL
         cdl_convert.OUTPUT_FORMATS = mockOutputs
 
         cdl_convert.main()

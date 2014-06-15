@@ -139,12 +139,14 @@ __all__ = [
     'parse_ale',
     'parse_cc',
     'parse_ccc',
-    'parse_rnh_cdl',
+    'parse_cdl',
     'parse_flex',
+    'parse_rnh_cdl',
     'reset_all',
     'sanity_check',
     'write_cc',
     'write_ccc',
+    'write_cdl',
     'write_rnh_cdl',
 ]
 
@@ -728,7 +730,7 @@ class ColorCorrectionReference(AscXMLBase):
     ~~~~~~~~~~~
 
     This is a fairly basic class that simply contains a reference to a full
-    :class:`ColorCorrection` . The ``ref`` attribute must match the
+    :class:`ColorCorrection` . The ``id`` attribute must match the
     ``id`` attribute in order for this class to function fully.
 
     When writing to a format that allows empty references (like ``cdl``),
@@ -745,7 +747,7 @@ class ColorCorrectionReference(AscXMLBase):
             member dictionary. Multiple :class:`ColorCorrectionReference` can
             share the same reference id, therefore for each reference id key,
             the members dictionary stores a list of
-            :class:`ColorCorrectionReference` instances that share that ``ref``
+            :class:`ColorCorrectionReference` instances that share that ``id``
             value.
 
     **Attributes:**
@@ -759,7 +761,7 @@ class ColorCorrectionReference(AscXMLBase):
         parent : (:class:`ColorDecision`)
             The parent :class:`ColorDecision` that contains this node.
 
-        ref : (str)
+        id : (str)
             The :class:`ColorCorrection` id that this reference refers to. If
             ``HALT_ON_ERROR`` is set to ``True``, will raise a ``ValueError``
             if set to a :class:`ColorCorrection` ``id`` value that doesn't
@@ -795,7 +797,7 @@ class ColorCorrectionReference(AscXMLBase):
             will raise a ``ValueError`` exception. If not set, it will simply
             return None.
 
-            Otherwise (if the ``ref`` attribute matches a known
+            Otherwise (if the ``id`` attribute matches a known
             :class:`ColorCorrection` ``id``, the :class:`ColorCorrection` will
             be returned.
 
@@ -803,12 +805,12 @@ class ColorCorrectionReference(AscXMLBase):
 
     members = {}
 
-    def __init__(self, ref):
+    def __init__(self, id):  # pylint: disable=W0622
         super(ColorCorrectionReference, self).__init__()
-        self._ref = None
+        self._id = None
         # Bypass cc id existence checks on first set by calling private
         # method directly.
-        self._set_ref(ref)
+        self._set_id(id)
 
         # While all ColorCorrectionReferences should be under a
         # ColorDecision node, we won't strictly enforce that a
@@ -823,12 +825,12 @@ class ColorCorrectionReference(AscXMLBase):
         return self.resolve_reference()
 
     @property
-    def ref(self):
+    def id(self):  # pylint: disable=C0103
         """Returns the reference id"""
-        return self._ref
+        return self._id
 
-    @ref.setter
-    def ref(self, ref_id):
+    @id.setter
+    def id(self, ref_id):  # pylint: disable=C0103
         """Sets the reference id"""
         if ref_id not in ColorCorrection.members and HALT_ON_ERROR:
             raise ValueError(
@@ -839,34 +841,34 @@ class ColorCorrectionReference(AscXMLBase):
                 )
             )
 
-        self._set_ref(ref_id)
+        self._set_id(ref_id)
 
     # Private Methods =========================================================
 
-    def _set_ref(self, new_ref):
-        """Changes the ref field and updates members dictionary"""
+    def _set_id(self, new_ref):
+        """Changes the id field and updates members dictionary"""
         # The only time it won't be in here is if this is the first time
         # we set it.
-        if self.ref in ColorCorrectionReference.members:
-            ColorCorrectionReference.members[self.ref].remove(self)
+        if self.id in ColorCorrectionReference.members:
+            ColorCorrectionReference.members[self.id].remove(self)
             # If the remaining list is empty, we'll pop it out
-            if not ColorCorrectionReference.members[self.ref]:
-                ColorCorrectionReference.members.pop(self.ref)
+            if not ColorCorrectionReference.members[self.id]:
+                ColorCorrectionReference.members.pop(self.id)
 
-        # Check if this ref is already registered
+        # Check if this id is already registered
         if new_ref in ColorCorrectionReference.members:
             ColorCorrectionReference.members[new_ref].append(self)
         else:
             ColorCorrectionReference.members[new_ref] = [self]
 
-        self._ref = new_ref
+        self._id = new_ref
 
     # Public Methods ==========================================================
 
     def build_element(self):
         """Builds an ElementTree XML element representing this reference"""
         cc_ref_xml = ElementTree.Element('ColorCorrectionRef')
-        cc_ref_xml.attrib = {'ref': self.ref}
+        cc_ref_xml.attrib = {'ref': self.id}
 
         return cc_ref_xml
 
@@ -881,15 +883,15 @@ class ColorCorrectionReference(AscXMLBase):
 
     def resolve_reference(self):
         """Returns the ColorCorrection this reference points to"""
-        if self.ref in ColorCorrection.members:
-            return ColorCorrection.members[self.ref]
+        if self.id in ColorCorrection.members:
+            return ColorCorrection.members[self.id]
         else:
             if HALT_ON_ERROR:
                 raise ValueError(
                     "Cannot resolve ColorCorrectionReference with reference "
                     "id of '{id}' because no ColorCorrection with that id "
                     "can be found.".format(
-                        id=self.ref
+                        id=self.id
                     )
                 )
             else:
@@ -906,7 +908,41 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     This class is a simple container to link a :class:`ColorCorrection` (or
     :class:`ColorCorrectionReference` ) with a :class:`MediaRef` . The
-    :class:`MediaRef` is optional, the ColorCorrection is not.
+    :class:`MediaRef` is optional, the ColorCorrection is not. The
+    ColorCorrection does not need to be provided at initialization time
+    however, as :class:`ColorDecision` provides an XML element parser
+    for deriving one.
+
+    The primary purpose of a ColorDecision node is to associate a
+    ColorCorrection node with one or more items of Media Reference.
+
+    Along with Media Reference, a ColorDecision can contain the normal
+    type of input, viewer and description metadata.
+
+    Additional, it is the only node that can contain ColorCorrectionRef
+    nodes, which link the same ColorCorrection to many different
+    ColorDecisions (and thus, many different items of media reference)
+
+    An example containing a ColorCorrection node:
+    ::
+        <ColorDecision>
+            <MediaRef ref="http://www.theasc.com/foasc-logo2.png"/>
+            <ColorCorrection id="ascpromo">
+                <SOPNode>
+                    <Description>get me outta here</Description>
+                    <Slope>0.9 1.1 1.0</Slope>
+                    <Offset>0.1 -0.01 0.0</Offset>
+                    <Power>1.0 0.99 1.0</Power>
+                </SOPNode>
+            </ColorCorrection>
+        </ColorDecision>
+
+    But it can also contain just a reference:
+    ::
+        <ColorDecision>
+            <MediaRef ref="best/project/ever/jim.0100.dpx"/>
+            <ColorCorrectionRef ref="xf45.x628"/>
+        </ColorDecision>
 
     **Class Attributes:**
 
@@ -917,7 +953,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             :class:`ColorCorrectionReference` Multiple :class:`ColorDecision`
             can , therefore for each reference id key,
             the members dictionary stores a list of
-            :class:`ColorDecision` instances that share that ``ref``
+            :class:`ColorDecision` instances that share that ``id``
             value.
 
     **Attributes:**
@@ -983,6 +1019,32 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             ``element`` attribute. Overrides inherited placeholder method
             from :class:`AscXMLBase` .
 
+        parse_xml_color_correction()
+            Parses a ColorDecision ElementTree Element for a ColorCorrection
+            Element or a ColorCorrectionRef Element.
+
+        parse_xml_color_decision()
+            Parses a ColorDecision ElementTree Element for metadata,
+            then calls parsers for ColorCorrection and MediaRef.
+
+        parse_xml_descs()
+            Parses an ElementTree Element for any Description tags and appends
+            any text they contain to the ``desc``. Inherited from
+            :class:`AscDescBase`
+
+        parse_xml_input_desc()
+            Parses an ElementTree Element to find & add an InputDescription.
+            If none is found, ``input_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
+
+        parse_xml_media_ref()
+            Parses an ColorDecision Element for a MediaRef Element.
+
+        parse_xml_viewing_desc()
+            Parses an ElementTree Element to find & add a ViewingDescription.
+            If none is found, ``viewing_desc`` will remain set to ``None``.
+            Inherited from :class:`AscColorSpaceBase`
+
         reset_members()
             Resets the class level members list.
 
@@ -990,22 +1052,16 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     members = {}
 
-    def __init__(self, cc, media=None):
+    def __init__(self, color_correct=None, media=None):
         """Inits an instance of ColorDecision"""
         super(ColorDecision, self).__init__()
         self.parent = None
-        self._cc = cc
+        self._cc = None
+        self._set_cc(color_correct)
         self._media_ref = media
 
-        self.set_parentage()
-
-        # Need to add the cdl to the dictionary based on the id or ref field
-        # of the child.
-        key = self.cc.ref if self.is_ref else self.cc.id
-        if key in ColorDecision.members:
-            ColorDecision.members[key].append(self)
-        else:
-            ColorDecision.members[key] = [self]
+        if self.cc:
+            self.set_parentage()
 
     # Properties ==============================================================
 
@@ -1017,9 +1073,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     @cc.setter
     def cc(self, new_cc):  # pylint: disable=C0103
         """Sets the contained cc, updates dictionary and parentage"""
-        self._set_id(new_cc)
-        self._cc = new_cc
-        new_cc.parent = self
+        self._set_cc(new_cc)
 
     @property
     def is_ref(self):
@@ -1040,29 +1094,34 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # Private Methods =========================================================
 
-    def _set_id(self, new_cc):
-        """Updates members dictionary"""
-        key = self.cc.ref if self.is_ref else self.cc.id
-        if key in ColorDecision.members:
-            ColorDecision.members[key].remove(self)
-            # If the remaining list is empty, we'll pop it out
-            if not ColorDecision.members[key]:
-                ColorDecision.members.pop(key)
+    def _set_cc(self, new_cc):
+        """Sets cc to new_cc and updates members dictionary"""
+        if self.cc:
+            # If we have a cc, we've already been added to the member's list,
+            # and need to update membership.
+            if self.cc.id in ColorDecision.members:
+                ColorDecision.members[self.cc.id].remove(self)
+                # If the remaining list is empty, we'll pop it out
+                if not ColorDecision.members[self.cc.id]:
+                    ColorDecision.members.pop(self.cc.id)
 
-        if type(new_cc) is ColorCorrectionReference:
-            new_key = new_cc.ref
-        else:
-            new_key = new_cc.id
+        if new_cc:
+            # It's possible to have new_cc be None, in which case we won't
+            # assign this ColorDecision to the member dictionary.
+            #
+            # Check if this id is already registered
+            if new_cc.id in ColorDecision.members:
+                ColorDecision.members[new_cc.id].append(self)
+            else:
+                ColorDecision.members[new_cc.id] = [self]
 
-        # Check if this ref is already registered
-        if new_key in ColorDecision.members:
-            ColorDecision.members[new_key].append(self)
-        else:
-            ColorDecision.members[new_key] = [self]
+            new_cc.parent = self
+
+        self._cc = new_cc
 
     # Public Methods ==========================================================
 
-    def build_element(self):
+    def build_element(self, resolve=False):  # pylint: disable=W0221
         """Builds an ElementTree XML element representing this CC"""
         cd_xml = ElementTree.Element('ColorDecision')
         if self.input_desc:
@@ -1078,9 +1137,87 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         if self.media_ref:
             cd_xml.append(self.media_ref.element)
 
-        cd_xml.append(self.cc.element)
+        # The resolve arg should only be applied to reference color decisions.
+        #
+        # Our behavior for non-reference CDs is the same as our behavior
+        # for non-resolving.
+        if not resolve or not self.is_ref:
+            cd_xml.append(self.cc.element)
+        elif resolve:
+            # We're a reference and we need to be resolved
+            # Note that this will raise an exception if called
+            # when a reference cannot be resolve due to a ColorCorrection
+            # with matching id not existing.
+            cd_xml.append(self.cc.cc.element)
 
         return cd_xml
+
+    # =========================================================================
+
+    def parse_xml_color_correction(self, xml_element):
+        """Parses a Color Decision element to find a ColorCorrection"""
+        cc_elem = xml_element.find('ColorCorrection')
+        if cc_elem is None:
+            # Perhaps we're a ColorCorrectionRef?
+            cc_elem = xml_element.find('ColorCorrectionRef')
+            if cc_elem is None:
+                # No ColorCorrection or CCRef? This is a bad ColorDecision
+                return False
+            else:
+                # Parse the ColorCorrectionRef
+                ref_id = cc_elem.attrib['ref']
+                self.cc = ColorCorrectionReference(ref_id)  # pylint: disable=C0103
+                self.cc.parent = self
+        else:
+            # Parse the ColorCorrection
+            self.cc = parse_cc(cc_elem)
+            self.cc.parent = self
+
+        return True
+
+    # =========================================================================
+
+    def parse_xml_color_decision(self, xml_element):
+        """Parses a Color Decision element and builds a :class:`ColorDecision`
+
+        **Args:**
+            input_file : (<ElementTree.Element>)
+                The ``ElementTree.Element`` object of the ColorDecision
+
+        **Returns:**
+            None
+
+        **Raises:**
+            ValueError:
+                Bad XML formatting can raise ValueError is missing required
+                elements.
+
+        """
+        # Grab our descriptions and add them to the cd.
+        self.parse_xml_descs(xml_element)
+        # See if we have a viewing description.
+        self.parse_xml_viewing_desc(xml_element)
+        # See if we have an input description.
+        self.parse_xml_input_desc(xml_element)
+
+        # Grab our ColorCorrection
+        if not self.parse_xml_color_correction(xml_element):
+            raise ValueError(
+                'ColorDecisions require at least one ColorCorrection or '
+                'ColorCorrectionReference node, but neither was found.'
+            )
+
+        # Grab our MediaRef (if found)
+        self.parse_xml_media_ref(xml_element)
+
+    # =========================================================================
+
+    def parse_xml_media_ref(self, xml_element):
+        """Parses a Color Decision element to find a MediaRef"""
+        media_ref_elem = xml_element.find('MediaRef')
+        if media_ref_elem is not None:
+            ref_uri = media_ref_elem.attrib['ref']
+            self.media_ref = MediaRef(ref_uri=ref_uri)
 
     # =========================================================================
 
@@ -1231,6 +1368,9 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             collections. `input_desc`, `viewing_desc`, `file_in`, and `type`
             will be set to the values of the parent instance.
 
+        parse_xml_color_corrections()
+            Parses an ElementTree element to find & add all ColorCorrection.
+
         parse_xml_descs()
             Parses an ElementTree Element for any Description tags and appends
             any text they contain to the ``desc``. Inherited from
@@ -1325,6 +1465,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return self._file_out
 
     @property
+    def id_list(self):
+        """A list of the ids of fully qualified ColorCorrection children"""
+        current_ids = [i.cc.id for i in self.color_decisions if not i.is_ref]
+        current_ids.extend([i.id for i in self.color_corrections])
+        current_ids.sort()
+        return current_ids
+
+    @property
     def is_ccc(self):
         """True if this collection currently represents .ccc"""
         return self.type == 'ccc'
@@ -1392,15 +1540,45 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     def append_child(self, child):
         """Appends a given child to the correct list of children"""
+        # We need to make sure not to append a ColorDecision or ColorCorrection
+        # if that id attribute already exists as a direct child or a child of a
+        # ColorDecision child.
+        #
+        # This is only possible through the python API- assigning
+        # the same ColorCorrection object to multiple ColorDecisions,
+        # or clearing the member dictionary and creating a second
+        # ColorCorrection with the same id, etc.
+        dup = False
+
         if child.__class__ == ColorCorrection:
-            self._color_corrections.append(child)
+            if child.id in self.id_list:
+                dup = True
+            else:
+                self._color_corrections.append(child)
+
         elif child.__class__ == ColorDecision:
-            self._color_decisions.append(child)
+            if not child.is_ref and child.cc.id in self.id_list:
+                dup = True
+            else:
+                self._color_decisions.append(child)
         else:
+
             raise TypeError("Can only append ColorCorrection and "
                             "ColorDecision objects.")
 
-        child.parent = self
+        if dup:
+            if HALT_ON_ERROR:
+                raise ValueError(
+                    "Attempted to put a ColorDecision with a child "
+                    "ColorCorrection id that duplicates an id of a "
+                    "ColorCorrection that is already a child of "
+                    "this collection or a ColorDecision that is a "
+                    "child of this collection."
+                )
+            return False
+        else:
+            child.parent = self
+            return True
 
     # =========================================================================
 
@@ -1415,7 +1593,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         """Builds an ElementTree XML element representing for ColorCollection"""
         if self.is_ccc:
             return self.build_element_ccc()
-        elif self.is_cdl:  # pragma: no cover
+        elif self.is_cdl:
             return self.build_element_cdl()
 
     # =========================================================================
@@ -1433,16 +1611,78 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         for description in self.desc:
             desc = ElementTree.SubElement(ccc_xml, 'Description')
             desc.text = description
-        for color_correct in self.color_corrections:
-            ccc_xml.append(color_correct.element)
+        if self.color_corrections:
+            for color_correct in self.color_corrections:
+                ccc_xml.append(color_correct.element)
+        if self.color_decisions:
+            # We'll need to extract the ColorCorrections from the
+            # ColorDecisions
+            for color_decision in self.color_decisions:
+                if color_decision.is_ref:
+                    color_correction = color_decision.cc.cc
+                else:
+                    color_correction = color_decision.cc
+
+                # We do one last check to ensure that we actually have a
+                # returned ColorCorrection, as ColorCorrectionRef will
+                # return None if it's an unresolved reference and no
+                # HALT behavior was set.
+                if color_correction:
+                    ccc_xml.append(color_correction.element)
 
         return ccc_xml
 
     # =========================================================================
 
-    def build_element_cdl(self):  # pragma: no cover
+    def build_element_cdl(self):
         """Builds a CDL XML element representing this ColorCollection"""
-        return None
+        cdl_xml = ElementTree.Element('ColorDecisionList')
+        cdl_xml.attrib = {'xmlns': self.xmlns}
+        if self.input_desc:
+            input_desc = ElementTree.SubElement(cdl_xml, 'InputDescription')
+            input_desc.text = self.input_desc
+        if self.viewing_desc:
+            viewing_desc = ElementTree.SubElement(cdl_xml, 'ViewingDescription')
+            viewing_desc.text = self.viewing_desc
+        for description in self.desc:
+            desc = ElementTree.SubElement(cdl_xml, 'Description')
+            desc.text = description
+        if self.color_decisions:
+            for color_decision in self.color_decisions:
+                if color_decision.cc.id in self.id_list:
+                    resolve = False
+                else:
+                    try:
+                        color_correction = color_decision.cc.cc
+                    except ValueError:
+                        # ValueError will be raised if we can't resolve the
+                        # reference. This shouldn't be a game-stopper here.
+                        #
+                        # We'll just add the unresolved reference
+                        resolve = False
+                    else:
+                        resolve = True if color_correction else False
+
+                cdl_xml.append(color_decision.build_element(resolve=resolve))
+
+        if self.color_corrections:
+            # We'll create some temporary ColorDecision instances, and place
+            # the ColorCorrects inside of them.
+            #
+            # We need to store the ColorDecision member dictionary, so that
+            # we can return it to the state it was in prior to us creating
+            # these temporary ColorDecisions
+            color_decisions_members = ColorDecision.members
+
+            for color_correction in self.color_corrections:
+                color_decision = ColorDecision(color_correction)
+                cdl_xml.append(color_decision.element)
+
+            # Now reset the ColorDecision member dictionary to the state it was
+            # in prior to us creating temp ColorDecisions
+            ColorDecision.members = color_decisions_members
+
+        return cdl_xml
 
     # =========================================================================
 
@@ -1528,6 +1768,36 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             cdl = parse_cc(cc_node)
             cdl.parent = self
             self._color_corrections.append(cdl)
+
+        return True
+
+    # =========================================================================
+
+    def parse_xml_color_decisions(self, xml_element):
+        """Parses an ElementTree element to find & add all ColorDecisions.
+
+        **Args:**
+            xml_element : (``xml.etree.ElementTree.Element``)
+                The element to parse for multiple ColorDecision elements. If
+                found, append to our ``color_decisions``.
+
+        **Returns:**
+            (bool)
+                True if found ColorCorrections.
+
+        **Raises:**
+            None
+
+        """
+        cd_nodes = xml_element.findall('ColorDecision')
+        if not cd_nodes:
+            return False
+
+        for cd_node in xml_element.findall('ColorDecision'):
+            color_decision = ColorDecision()
+            color_decision.parse_xml_color_decision(cd_node)
+            color_decision.parent = self
+            self._color_decisions.append(color_decision)
 
         return True
 
@@ -2076,7 +2346,7 @@ class MediaRef(AscXMLBase):
     @staticmethod
     def _split_uri(uri):
         """Splits uri into protocol, base and filename"""
-        if ':' in uri:
+        if '://' in uri:
             protocol = uri.split('://')[0]
             uri = uri.split('://')[1]
         else:
@@ -2088,6 +2358,15 @@ class MediaRef(AscXMLBase):
         return protocol, directory, ref_file
 
     # Public Methods ==========================================================
+
+    def build_element(self):
+        """Builds an ElementTree XML element representing this reference"""
+        media_ref_xml = ElementTree.Element('MediaRef')
+        media_ref_xml.attrib = {'ref': self.ref}
+
+        return media_ref_xml
+
+    # =========================================================================
 
     @classmethod
     def reset_members(cls):
@@ -2580,8 +2859,8 @@ def parse_ale(input_file):  # pylint: disable=R0914
             The filepath to the ALE EDL
 
     **Returns:**
-        [:class:`ColorCorrection`]
-            A list of CDL objects retrieved from the ALE
+        (:class:`ColorCollection`)
+            A collection that contains all found ColorCorrections
 
     **Raises:**
         N/A
@@ -2666,8 +2945,8 @@ def parse_cc(input_file):  # pylint: disable=R0912
             The filepath to the CC or the ``ElementTree.Element`` object.
 
     **Returns:**
-        [:class:`ColorCorrection`]
-            A list of CDL objects retrieved from the CC
+        (:class:`ColorCorrection`)
+            The :class:`ColorCorrection` described within.
 
     **Raises:**
         ValueError:
@@ -2798,7 +3077,7 @@ def parse_cc(input_file):  # pylint: disable=R0912
 
 
 def parse_ccc(input_file):
-    """Parses a .ccc file into a :class:`ColorCorrectionCollection`
+    """Parses a .ccc file into a :class:`ColorCollection` with type 'ccc'
 
     **Args:**
         input_file : (str)
@@ -2827,7 +3106,7 @@ def parse_ccc(input_file):
     root = _remove_xmlns(input_file)
 
     if root.tag != 'ColorCorrectionCollection':
-        # This is not a CC file...
+        # This is not a CCC file...
         raise ValueError('CCC parsed but no ColorCorrectionCollection found')
 
     ccc = ColorCollection()
@@ -2843,11 +3122,69 @@ def parse_ccc(input_file):
     # Add all of our found color corrections. If the parse_xml returns False,
     # (for no CCs found) we raise a value error.
     if not ccc.parse_xml_color_corrections(root):
-        raise ValueError('ColorCorrectionCollections require at least one '
-                         'ColorCorrection node, but no ColorCorrection nodes '
-                         'were found.')
+        raise ValueError(
+            'ColorCorrectionCollections require at least one ColorCorrection '
+            'node, but no ColorCorrection nodes were found.'
+        )
 
     return ccc
+
+# ==============================================================================
+
+
+def parse_cdl(input_file):
+    """Parses a .cdl file into a :class:`ColorCollection` with type 'cdl'
+
+    **Args:**
+        input_file : (str)
+            The filepath to the CDL.
+
+    **Returns:**
+        (:class:`ColorCollection`)
+            A collection of all the found :class:`ColorDecisions` as well
+            as any metadata within the XML
+
+    **Raises:**
+        ValueError:
+            Bad XML formatting can raise ValueError is missing required
+            elements.
+
+    A ColorDecicionList is just that- a list of ColorDecision elements. It does
+    not directly contain any ColorCorrections or Media Ref, only
+    ColorDecisions, but is free to contain as many Description elements as
+    someone adds in.
+
+    It should also contain an InputDescription element, describing the color
+    space and other properties of the incoming image, as well as a
+    ViewingDescription which describes the viewing environment as well
+    as any relevant hardware devices used to view or grade.
+
+    """
+    root = _remove_xmlns(input_file)
+
+    if root.tag != 'ColorDecisionList':
+        # This is not a CDL file...
+        raise ValueError('CDL parsed but no ColorDecisionList found')
+
+    cdl = ColorCollection()
+    cdl.set_to_cdl()
+    cdl.file_in = input_file
+
+    # Grab our descriptions and add them to the ccc.
+    cdl.parse_xml_descs(root)
+    # See if we have a viewing description.
+    cdl.parse_xml_viewing_desc(root)
+    # See if we have an input description.
+    cdl.parse_xml_input_desc(root)
+    # Add all of our found color decisions. If the parse_xml returns False,
+    # (for no CDs found) we raise a value error.
+    if not cdl.parse_xml_color_decisions(root):
+        raise ValueError(
+            'ColorDecisionLists require at least one ColorDecision node, but '
+            'no ColorDecision nodes were found.'
+        )
+
+    return cdl
 
 # ==============================================================================
 
@@ -2860,8 +3197,8 @@ def parse_rnh_cdl(input_file):
             The filepath to the CDL
 
     **Returns:**
-        [:class:`ColorCorrection`]
-            A list with only the single CDL object retrieved from the SS CDL
+        (:class:`ColorCorrection`)
+            The single ColorCorrection object retrieved from the beta CDL
 
     **Raises:**
         N/A
@@ -2912,8 +3249,9 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
             The filepath to the FLEx EDL
 
     **Returns:**
-        [:class:`ColorCorrection`]
-            A list of CDL objects retrieved from the FLEx
+        (:class:`ColorCollection`)
+            A collection that contains all the ColorCorrection objects found
+            within this EDL
 
     **Raises:**
         N/A
@@ -3139,9 +3477,22 @@ def write_cc(cdl):
 
 def write_ccc(cdl):
     """Writes the ColorCollection to a .ccc file"""
+    collection_type = cdl.type
     cdl.set_to_ccc()
     with open(cdl.file_out, 'wb') as cdl_f:
         cdl_f.write(cdl.xml_root)
+    cdl.type = collection_type
+
+# ==============================================================================
+
+
+def write_cdl(cdl):
+    """Writes the ColorCollection to a .cdl file"""
+    collection_type = cdl.type
+    cdl.set_to_cdl()
+    with open(cdl.file_out, 'wb') as cdl_f:
+        cdl_f.write(cdl.xml_root)
+    cdl.type = collection_type
 
 # ==============================================================================
 
@@ -3171,18 +3522,20 @@ INPUT_FORMATS = {
     'ale': parse_ale,
     'ccc': parse_ccc,
     'cc': parse_cc,
-    'cdl': parse_rnh_cdl,
+    'cdl': parse_cdl,
     'flex': parse_flex,
+    'rcdl': parse_rnh_cdl,
 }
 
 OUTPUT_FORMATS = {
     'cc': write_cc,
     'ccc': write_ccc,
-    'cdl': write_rnh_cdl,
+    'cdl': write_cdl,
+    'rcdl': write_rnh_cdl,
 }
 
-COLLECTION_FORMATS = ['ale', 'ccc', 'flex']
-SINGLE_FORMATS = ['cc', 'cdl']
+COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'flex']
+SINGLE_FORMATS = ['cc', 'rcdl']
 
 # ==============================================================================
 

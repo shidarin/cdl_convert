@@ -44,11 +44,6 @@ AscXMLBase
 ColorCollection
 ---------------
 
-.. warning::
-    Functionality described below relating to ``cdl`` type collections
-    is not currently implemented. If you're reading this, you're reading
-    ``develop`` branch documentation.
-
 This class functions as both a ColorDecisionList and a
 ColorCorrectionCollection. It's children can be either ColorDecisions,
 ColorCorrections, or a combination of the two. Despite being able to
@@ -58,6 +53,13 @@ which type of collection you want it to represent.
 Setting the ``type`` of the :class:`ColorCollection` to either ``ccc`` or
 ``cdl`` causes children of the opposite type to be converted into the
 appropriate type when exporting the class.
+
+.. note::
+    ``parse_ale`` and ``parse_flex`` both return as a ``ccc`` at this time,
+    contrary to the documentation below.
+
+    In addition, the inclusion of parent metadata into orphaned children is
+    also a work in progress.
 
 If ``parse_ale`` is used to parse an ``ale`` edl file, the ``ale`` will be
 read into a :class:`ColorCollection` set to ``cdl`` and the children the
@@ -114,7 +116,8 @@ ColorCorrectionReference
 ColorDecision
 -------------
 
-.. note:: This class is a stub and has no functionality yet.
+ColorDecision's are normally found only within :class:`ColorCorrection` but
+this limitation of the ASC CDL schema is not enforced by cdl_convert.
 
 .. autoclass:: cdl_convert.ColorDecision
 
@@ -138,6 +141,9 @@ objects following the rules.
 Where possible when writing filetypes that don't support :class:`MediaRef`,
 the information kept in :class:`MediaRef` will be converted into description
 field metadata and preserved in that way.
+
+.. note::
+    The above metadata preservation is not yet implemented.
 
 :class:`MediaRef` is meant to provide a convenient interface for managing
 and interpreting data stored in CDLs. You can change a broken absolute link
@@ -203,6 +209,16 @@ Parse cc
 
 .. autofunction:: cdl_convert.parse_cc
 
+Parse ccc
+---------
+
+.. autofunction:: cdl_convert.parse_ccc
+
+Parse cdl
+---------
+
+.. autofunction:: cdl_convert.parse_cdl
+
 Parse Rhythm & Hues cdl
 -----------------------
 
@@ -228,6 +244,16 @@ Write cc
 --------
 
 .. autofunction:: cdl_convert.write_cc
+
+Write ccc
+---------
+
+.. autofunction:: cdl_convert.write_ccc
+
+Write cdl
+---------
+
+.. autofunction:: cdl_convert.write_cdl
 
 Write Rhythm & Hues cdl
 -----------------------
