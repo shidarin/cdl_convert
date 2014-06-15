@@ -491,6 +491,70 @@ CDL_ODD_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
 </ColorDecisionList>
 """
 
+CDL_ODD_WRITE_RESOLVED = r"""<?xml version="1.0" encoding="UTF-8"?>
+<ColorDecisionList xmlns="urn:ASC:CDL:v1.01">
+    <Description>CDL description 1</Description>
+    <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
+    <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
+    <ColorDecision>
+        <MediaRef ref="C:\\Windows\File\Path"/>
+        <ColorCorrection id="014_xf_seqGrade_v01">
+            <SOPNode>
+                <Description>Sop description 1</Description>
+                <Description>Sop description 2</Description>
+                <Description>Sop description 3</Description>
+                <Slope>1.014 1.0104 0.62</Slope>
+                <Offset>-0.00315 -0.00124 0.3103</Offset>
+                <Power>1.0 0.9983 1.0</Power>
+            </SOPNode>
+        </ColorCorrection>
+    </ColorDecision>
+    <ColorDecision>
+        <MediaRef ref="relative\windows\path"/>
+        <ColorCorrection id="f51.200">
+            <SOPNode>
+                <Slope>0.2331 0.678669 1.0758</Slope>
+                <Offset>0.031 0.128 -0.096</Offset>
+                <Power>1.8 0.97 0.961</Power>
+            </SOPNode>
+        </ColorCorrection>
+    </ColorDecision>
+    <ColorDecision>
+        <Description>CD description 1</Description>
+        <MediaRef ref="./sameDirectory/loser.####.fbx"/>
+        <ColorCorrectionRef ref="014_xf_seqGrade_v01"/>
+    </ColorDecision>
+    <ColorDecision>
+        <MediaRef ref="../lateralDirectory/file.lives.here.0120.dpx"/>
+        <ColorCorrection id="missingRef">
+            <SOPNode>
+                <Slope>1.0 2.0 1.0</Slope>
+                <Offset>0.0 0.0 0.0</Offset>
+                <Power>1.0 1.0 1.0</Power>
+            </SOPNode>
+        </ColorCorrection>
+    </ColorDecision>
+    <ColorDecision>
+        <MediaRef ref="http://www.google.com/logo.jpg"/>
+        <ColorCorrectionRef ref="alsoMissingRef"/>
+    </ColorDecision>
+    <ColorDecision>
+        <MediaRef ref="serv://proto/uri:area:full?query=result#fragment"/>
+        <ColorCorrection id="burp_200.x15">
+            <SATNode>
+                <Description>I am a lovely sat node</Description>
+                <Saturation>1.01</Saturation>
+            </SATNode>
+        </ColorCorrection>
+    </ColorDecision>
+    <ColorDecision>
+        <Description>Raised2 saturation a little!?! ag... \/Offset</Description>
+        <MediaRef ref="..\.\..\..\..\This\should\not\be\legal\"/>
+        <ColorCorrectionRef ref="f51.200"/>
+    </ColorDecision>
+</ColorDecisionList>
+"""
+
 CDL_ODD_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
     <Description>CDL description 1</Description>
@@ -1112,6 +1176,55 @@ class TestWriteCDLOdd(TestWriteCDLFull):
 
         self.target_xml_root = enc(CDL_ODD_WRITE)
         self.target_xml = enc('\n'.join(CDL_ODD_WRITE.split('\n')[1:]))
+
+class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
+    """Tests an odd write of the CDL file
+
+    This is an integration style test. If parse_cdl stops working, this stops
+    working.
+
+    In this test, we'll create a ColorCorrection that matches the reference
+    id.
+
+    """
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.reset_all()
+
+        # Build our ccc
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(CDL_ODD))
+            self.filename = f.name
+
+        self.cdl = cdl_convert.parse_cdl(self.filename)
+        cc = cdl_convert.ColorCorrection("missingRef")
+        cc.slope = [1.0, 2.0, 1.0]
+
+        self.target_xml_root = enc(CDL_ODD_WRITE_RESOLVED)
+        self.target_xml = enc('\n'.join(CDL_ODD_WRITE_RESOLVED.split('\n')[1:]))
+
+    #==========================================================================
+
+    def testMissingRef(self):
+        """Tests what happens with a missing ref and HALT"""
+        cdl_convert.HALT_ON_ERROR = True
+
+        # We shouldn't stop just because a ref is missing
+        mockOpen = mock.mock_open()
+
+        self.cdl._file_out = 'bobs_big_file.cdl'
+
+        with mock.patch(builtins + '.open', mockOpen, create=True):
+            cdl_convert.write_cdl(self.cdl)
+
+        mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
+
+        mockOpen().write.assert_called_once_with(self.target_xml_root)
+
+        cdl_convert.HALT_ON_ERROR = False
 
 #==============================================================================
 # RUNNER
