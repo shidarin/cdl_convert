@@ -587,13 +587,13 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             None
 
         """
-        from .parse import parse_cc
+        from . import parse
         cc_nodes = xml_element.findall('ColorCorrection')
         if not cc_nodes:
             return False
 
         for cc_node in xml_element.findall('ColorCorrection'):
-            cdl = parse_cc(cc_node)
+            cdl = parse.parse_cc(cc_node)
             cdl.parent = self
             self._color_corrections.append(cdl)
 
