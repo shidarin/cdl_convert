@@ -47,10 +47,6 @@ import os
 import re
 from xml.etree import ElementTree
 
-# cdl_convert imports
-
-from . import collection, correction
-
 # ==============================================================================
 # EXPORTS
 # ==============================================================================
@@ -94,6 +90,8 @@ def parse_ale(input_file):  # pylint: disable=R0914
     shot information.
 
     """
+    from .collection import ColorCollection
+    from .correction import ColorCorrection
     # When we enter a section, we're store the section name
     section = {
         'column': False,
@@ -137,7 +135,7 @@ def parse_ale(input_file):  # pylint: disable=R0914
                     'power': literal_eval(sop[2])
                 }
 
-                cdl = correction.ColorCorrection(cc_id, input_file)
+                cdl = ColorCorrection(cc_id, input_file)
 
                 cdl.sat = sat
                 cdl.slope = sop_values['slope']
@@ -146,7 +144,7 @@ def parse_ale(input_file):  # pylint: disable=R0914
 
                 cdls.append(cdl)
 
-    ccc = collection.ColorCollection()
+    ccc = ColorCollection()
     ccc.file_in = input_file
     ccc.append_children(cdls)
 
@@ -194,6 +192,7 @@ def parse_cc(input_file):  # pylint: disable=R0912
     colorspace and equipment.
 
     """
+    from .correction import ColorCorrection, SatNode, SopNode
     if type(input_file) is str:
         root = _remove_xmlns(input_file)
         file_in = input_file
@@ -210,7 +209,7 @@ def parse_cc(input_file):  # pylint: disable=R0912
     except KeyError:
         raise ValueError('No id found on ColorCorrection')
 
-    cdl = correction.ColorCorrection(cc_id)
+    cdl = ColorCorrection(cc_id)
     if file_in:
         cdl.file_in = file_in
 
@@ -258,11 +257,11 @@ def parse_cc(input_file):  # pylint: disable=R0912
             return found_element
 
     try:
-        sop_xml = find_required(root, correction.SopNode.element_names)
+        sop_xml = find_required(root, SopNode.element_names)
     except ValueError:
         sop_xml = None
     try:
-        sat_xml = find_required(root, correction.SatNode.element_names)
+        sat_xml = find_required(root, SatNode.element_names)
     except ValueError:
         sat_xml = None
 
@@ -321,13 +320,14 @@ def parse_ccc(input_file):
     as any relevant hardware devices used to view or grade.
 
     """
+    from .collection import ColorCollection
     root = _remove_xmlns(input_file)
 
     if root.tag != 'ColorCorrectionCollection':
         # This is not a CCC file...
         raise ValueError('CCC parsed but no ColorCorrectionCollection found')
 
-    ccc = collection.ColorCollection()
+    ccc = ColorCollection()
     ccc.set_to_ccc()
     ccc.file_in = input_file
 
@@ -378,13 +378,14 @@ def parse_cdl(input_file):
     as any relevant hardware devices used to view or grade.
 
     """
+    from .collection import ColorCollection
     root = _remove_xmlns(input_file)
 
     if root.tag != 'ColorDecisionList':
         # This is not a CDL file...
         raise ValueError('CDL parsed but no ColorDecisionList found')
 
-    cdl = collection.ColorCollection()
+    cdl = ColorCollection()
     cdl.set_to_cdl()
     cdl.file_in = input_file
 
@@ -458,6 +459,8 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
     actual input filename, which is far from ideal.
 
     """
+    from .collection import ColorCollection
+    from .correction import ColorCorrection
 
     cdls = []
 
@@ -476,7 +479,7 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
 
         def build_cc(line_id, edl_path, sop_dict, sat_value, title_line):
             """Builds and returns a cc if sop/sat values found"""
-            col_cor = correction.ColorCorrection(line_id, edl_path)
+            col_cor = ColorCorrection(line_id, edl_path)
             if title_line:
                 col_cor.desc = title_line
             if sop_dict:
@@ -551,7 +554,7 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
         cdl = build_cc(cc_id, input_file, sop, sat, title)
         cdls.append(cdl)
 
-    ccc = collection.ColorCollection()
+    ccc = ColorCollection()
     ccc.file_in = input_file
     ccc.append_children(cdls)
 
@@ -585,6 +588,7 @@ def parse_rnh_cdl(input_file):
     ``SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat``
 
     """
+    from .correction import ColorCorrection
 
     with open(input_file, 'r') as cdl_f:
         # We only need to read the first line
@@ -600,7 +604,7 @@ def parse_rnh_cdl(input_file):
 
         sat = line[9]
 
-        cdl = correction.ColorCorrection(filename, input_file)
+        cdl = ColorCorrection(filename, input_file)
 
         cdl.slope = slope
         cdl.offset = offset
