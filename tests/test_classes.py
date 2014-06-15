@@ -32,6 +32,8 @@ import unittest
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert.cdl_convert as cdl_convert
+from cdl_convert.base import AscColorSpaceBase, AscDescBase
+from cdl_convert.correction import ColorNodeBase
 
 #==============================================================================
 # GLOBALS
@@ -62,7 +64,7 @@ class TestAscColorSpaceBase(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        self.node = cdl_convert.AscColorSpaceBase()
+        self.node = AscColorSpaceBase()
 
     #==========================================================================
     # TESTS
@@ -215,7 +217,7 @@ class TestAscDescBase(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        self.node = cdl_convert.AscDescBase()
+        self.node = AscDescBase()
 
     #==========================================================================
     # TESTS
@@ -618,7 +620,7 @@ class TestColorCollection(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.parse_cc')
+    @mock.patch('cdl_convert.parse.parse_cc')
     def testParseXMLColorCorrectionsMultiFound(self, mock_parse):
         """Tests that the method returns True when CCs are found"""
 
@@ -2312,7 +2314,7 @@ class TestColorNodeBase(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        self.node = cdl_convert.ColorNodeBase()
+        self.node = ColorNodeBase()
 
     #==========================================================================
     # TESTS

@@ -38,6 +38,7 @@ import unittest
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert.cdl_convert as cdl_convert
+from cdl_convert.correction import _de_exponent, _sanitize
 
 #==============================================================================
 # TEST CLASSES
@@ -56,7 +57,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
     #==========================================================================
@@ -68,7 +69,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
     #==========================================================================
@@ -80,7 +81,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
     #==========================================================================
@@ -92,7 +93,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
     #==========================================================================
@@ -104,7 +105,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
     #==========================================================================
@@ -116,7 +117,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
 # _sanitize() =================================================================
@@ -127,7 +128,7 @@ class TestSanitize(unittest.TestCase):
 
     def testSpaces(self):
         """Tests that spaces are replaced with underscores"""
-        result = cdl_convert._sanitize('banana apple blueberry')
+        result = _sanitize('banana apple blueberry')
 
         self.assertEqual(
             'banana_apple_blueberry',
@@ -138,7 +139,7 @@ class TestSanitize(unittest.TestCase):
 
     def testUnderscoresOkay(self):
         """Tests that underscores pass through intact"""
-        result = cdl_convert._sanitize('a_b_c')
+        result = _sanitize('a_b_c')
 
         self.assertEqual(
             'a_b_c',
@@ -149,7 +150,7 @@ class TestSanitize(unittest.TestCase):
 
     def testPeriodsOkay(self):
         """Tests that periods pass through intact"""
-        result = cdl_convert._sanitize('a.b.c')
+        result = _sanitize('a.b.c')
 
         self.assertEqual(
             'a.b.c',
@@ -160,7 +161,7 @@ class TestSanitize(unittest.TestCase):
 
     def testLeadingPeriodRemove(self):
         """Tests that leading periods are removed"""
-        result = cdl_convert._sanitize('.abc')
+        result = _sanitize('.abc')
 
         self.assertEqual(
             'abc',
@@ -171,7 +172,7 @@ class TestSanitize(unittest.TestCase):
 
     def testLeadingUnderscoreRemove(self):
         """Tests that leading underscores are removed"""
-        result = cdl_convert._sanitize('_abc')
+        result = _sanitize('_abc')
 
         self.assertEqual(
             'abc',
@@ -182,7 +183,7 @@ class TestSanitize(unittest.TestCase):
 
     def testCommonBadChars(self):
         """Tests that common bad characters are removed"""
-        result = cdl_convert._sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d')
+        result = _sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d')
 
         self.assertEqual(
             'abcd',
@@ -193,7 +194,7 @@ class TestSanitize(unittest.TestCase):
 
     def testEmptyString(self):
         """Tests that sanitize will return and not choke on empty string"""
-        result = cdl_convert._sanitize('')
+        result = _sanitize('')
 
         self.assertEqual(
             '',
