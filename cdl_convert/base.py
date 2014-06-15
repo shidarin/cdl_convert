@@ -38,7 +38,7 @@ SOFTWARE.
 # IMPORTS
 # ==============================================================================
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 # Standard Imports
 from xml.dom import minidom
@@ -47,7 +47,7 @@ import sys
 from xml.etree import ElementTree
 
 # cdl_convert Imports
-import config
+from . import config
 
 # ==============================================================================
 # GLOBALS
