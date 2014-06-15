@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 import codecs
 import os
 import re
@@ -53,7 +53,7 @@ def find_metadata(filepath):
                             metadata_file, re.M)
     status_match = re.search(r"^__status__ = ['\"]([^'\"]*)['\"]",
                              metadata_file, re.M)
-                              
+
     if version_match:
         metadata['version'] = version_match.group(1)
     else:
