@@ -67,18 +67,15 @@ from __future__ import absolute_import, print_function
 
 from argparse import ArgumentParser
 import os
-import sys
 
 # cdl_convert imports
 
 from .collection import ColorCollection
 from . import config
-from .correction import ColorCorrection, SatNode, SopNode
-from .decision import ColorCorrectionRef, ColorDecision, MediaRef
 from .parse import (
     parse_ale, parse_cc, parse_ccc, parse_cdl, parse_flex, parse_rnh_cdl
 )
-from .utils import reset_all, sanity_check
+from .utils import sanity_check
 from .write import write_cc, write_ccc, write_cdl, write_rnh_cdl
 
 # Python 3 compatibility
@@ -95,57 +92,6 @@ except NameError:  # pragma: no cover
 # ==============================================================================
 # GLOBALS
 # ==============================================================================
-
-__author__ = "Sean Wallitsch"
-__copyright__ = "Copyright 2014, Sean Wallitsch"
-__credits__ = ["Sean Wallitsch", ]
-__license__ = "MIT"
-__version__ = "0.6.1"
-__maintainer__ = "Sean Wallitsch"
-__email__ = "shidarin@alphamatte.com"
-__status__ = "Development"
-
-# INPUT_FORMATS and OUTPUT_FORMATS are globals but located in the MAIN section
-# of the file, as they are dispatcher dictionaries that require the functions
-# to be parsed by python before the dictionary can be built.
-
-if sys.version_info[0] >= 3:  # pragma: no cover
-    enc = lambda x: bytes(x, 'UTF-8')  # pylint: disable=C0103
-else:  # pragma: no cover
-    enc = lambda x: x  # pylint: disable=C0103
-
-# ==============================================================================
-# EXPORTS
-# ==============================================================================
-
-__all__ = [
-    'ColorCorrection',
-    'ColorCorrectionRef',
-    'ColorDecision',
-    'MediaRef',
-    'parse_ale',
-    'parse_cc',
-    'parse_ccc',
-    'parse_cdl',
-    'parse_file',
-    'parse_flex',
-    'parse_rnh_cdl',
-    'reset_all',
-    'sanity_check',
-    'SatNode',
-    'SopNode',
-    'write_cc',
-    'write_ccc',
-    'write_cdl',
-    'write_rnh_cdl',
-]
-
-# ==============================================================================
-# MAIN
-# ==============================================================================
-
-# These globals need to be after the parse/write functions but before the
-# parse_args.
 
 INPUT_FORMATS = {
     'ale': parse_ale,
@@ -165,6 +111,19 @@ OUTPUT_FORMATS = {
 
 COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'flex']
 SINGLE_FORMATS = ['cc', 'rcdl']
+
+# ==============================================================================
+# EXPORTS
+# ==============================================================================
+
+__all__ = []
+
+# ==============================================================================
+# MAIN
+# ==============================================================================
+
+# These globals need to be after the parse/write functions but before the
+# parse_args.
 
 # ==============================================================================
 

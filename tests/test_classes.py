@@ -31,7 +31,7 @@ import unittest
 
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
-import cdl_convert.cdl_convert as cdl_convert
+import cdl_convert
 from cdl_convert.base import AscColorSpaceBase, AscDescBase
 from cdl_convert.correction import ColorNodeBase
 
@@ -2412,8 +2412,8 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._reset_cached_properties')
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._change_membership')
+    @mock.patch('cdl_convert.MediaRef._reset_cached_properties')
+    @mock.patch('cdl_convert.MediaRef._change_membership')
     def testDirectorySetString(self, mock_cm, mock_rcp):
         """Tests that directory sets with a string correctly"""
         self.assertEqual(
@@ -2494,8 +2494,8 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._reset_cached_properties')
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._change_membership')
+    @mock.patch('cdl_convert.MediaRef._reset_cached_properties')
+    @mock.patch('cdl_convert.MediaRef._change_membership')
     def testFilenameSetString(self, mock_cm, mock_rcp):
         """Tests that filename sets with a string correctly"""
         self.assertEqual(
@@ -2581,7 +2581,7 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._get_sequences')
+    @mock.patch('cdl_convert.MediaRef._get_sequences')
     def testIsSeq(self, mock_seq):
         """Tests the is_seq property returns is_seq and calls _get_sequences"""
         self.mr._is_seq = 'bob'
@@ -2644,8 +2644,8 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._reset_cached_properties')
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._change_membership')
+    @mock.patch('cdl_convert.MediaRef._reset_cached_properties')
+    @mock.patch('cdl_convert.MediaRef._change_membership')
     def testProtocolSetString(self, mock_cm, mock_rcp):
         """Tests that protocol sets with a string correctly"""
         self.assertEqual(
@@ -2714,8 +2714,8 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._reset_cached_properties')
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._change_membership')
+    @mock.patch('cdl_convert.MediaRef._reset_cached_properties')
+    @mock.patch('cdl_convert.MediaRef._change_membership')
     def testSetRefWithProtocol(self, mock_cm, mock_rcp):
         """Tests that ref sets with a string correctly"""
         self.assertEqual(
@@ -2756,8 +2756,8 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._reset_cached_properties')
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._change_membership')
+    @mock.patch('cdl_convert.MediaRef._reset_cached_properties')
+    @mock.patch('cdl_convert.MediaRef._change_membership')
     def testSetRefNoProtocol(self, mock_cm, mock_rcp):
         """Tests that ref sets with a string correctly"""
         self.assertEqual(
@@ -2806,7 +2806,7 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._get_sequences')
+    @mock.patch('cdl_convert.MediaRef._get_sequences')
     def testSeq(self, mock_gs):
         """Tests the seq attribute makes the correct calls"""
         self.mr._sequences = ['apple', 'banana']
@@ -2833,7 +2833,7 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.MediaRef._get_sequences')
+    @mock.patch('cdl_convert.MediaRef._get_sequences')
     def testSeqs(self, mock_gs):
         """Tests the seqs attribute makes the correct calls"""
         self.mr._sequences = ['apple', 'banana']
