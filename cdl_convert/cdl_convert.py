@@ -1,33 +1,10 @@
 #!/usr/bin/env python
 """
 
-CDL Convert
-==========
+CDL Convert Cdl_Convert
+=======================
 
-Converts between common ASC CDL (http://en.wikipedia.org/wiki/ASC_CDL)
-formats. The American Society of Cinematographers Color Decision List (ASC CDL,
-or CDL for short) is a schema to simplify the process of interchanging color
-data between various programs and facilities.
-
-The ASC has defined schemas for including the 10 basic numbers in 5 different
-formats:
-
-* Avid Log Exchange (ALE)
-* Film Log EDL Exchange (FLEx)
-* CMX EDL
-* XML Color Correction (cc)
-* XML Color Correction Collection (ccc)
-
-Unofficial Formats:
-
-* OCIOCDLTransform, a Foundry Nuke node
-* Space Separated CDL, a Rhythm and Hues cdl format
-
-It is the purpose of CDLConvert to convert ASC CDL information between these
-basic formats to further facilitate the ease of exchange of color data within
-the Film and TV industries.
-
-**CDLConvert is not associated with the American Society of Cinematographers**
+Contains the main() script for using cdl_convert as a script.
 
 ## License
 
@@ -119,12 +96,7 @@ SINGLE_FORMATS = ['cc', 'rcdl']
 __all__ = []
 
 # ==============================================================================
-# MAIN
-# ==============================================================================
-
-# These globals need to be after the parse/write functions but before the
-# parse_args.
-
+# PUBLIC FUNCTIONS
 # ==============================================================================
 
 
@@ -235,6 +207,8 @@ def parse_file(filepath, filetype=None):
 
     return INPUT_FORMATS[filetype](filepath)
 
+# ==============================================================================
+# MAIN
 # ==============================================================================
 
 
