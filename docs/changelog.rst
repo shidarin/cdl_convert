@@ -6,7 +6,8 @@ Version 0.7
 ===========
 
 The biggest change in 0.7 is the addition of collection format support.
-``.ccc``, Color Correction Collections, can now be parsed and saved. ``.ale``
+``.ccc``, Color Correction Collections, can now be parsed and written. ``.cdl``,
+Color Decision Lists, can now be parsed and written. ``.ale``
 and ``.flex`` files now return a collection.
 
 - New script flags:
@@ -17,7 +18,10 @@ and ``.flex`` files now return a collection.
 - Renames :class:`ColorCollectionBase` to :class:`ColorCollection` , since it will be used directly by both ``ccc`` and ``cdl``.
 - Adds ``parse_ccc`` which returns a :class:`ColorCollection` .
 - Adds ``write_ccc`` which writes a :class:`ColorCollection` as a ``ccc`` file.
+- Adds ``parse_cdl`` which returns a :class:`ColorCollection` .
+- Adds ``write_cdl`` which returns a :class:`ColorCollection` as a ``cdl`` file.
 - :class:`ColorCollection` is now a fully functional container class, with many attributes and methods.
+- Added :class:`ColorDecision` , which stores either a :class:`ColorCorrection` or :class:`ColorCorrectionReference` , and an optional :class:`MediaRef`
 - Added :class:`ColorCorrectionReference` , which stores a reference to a :class:`ColorCorrection`
 - Added ``parent`` attribute to :class:`ColorCorrection` .
 - Calling ``sop_node`` or ``sat_node`` on a :class:`ColorCorrection` before attempting to set a SOP or Sat power now works.
