@@ -63,7 +63,11 @@ except NameError:  # pragma: no cover
 # EXPORTS
 # ==============================================================================
 
-__all__ = ['ColorCorrection']
+__all__ = [
+    'ColorCorrection',
+    'SatNode',
+    'SopNode',
+]
 
 # ==============================================================================
 # CLASSES
