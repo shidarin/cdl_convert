@@ -177,18 +177,18 @@ If you don't want to worry about matching the filetype to a parser, just use
 the generic ``parse_file`` function.
 
     >>> cdl.parse_file('./myfirstcdl.cc')
-    <cdl_convert.ColorCorrection object at 0x1004a5590>
+    <cdl_convert.correction.ColorCorrection object at 0x1004a5590>
     >>> collection = cdl.parse_file('/myfirstedl.ccc')
-    <cdl_convert.ColorCollection object at 0x100633b40>,
+    <cdl_convert.collection.ColorCollection object at 0x100633b40>,
     >>> collection.color_corrections
     [
-        <cdl_convert.ColorCorrection object at 0x100633b90>,
-        <cdl_convert.ColorCorrection object at 0x100633c50>,
-        <cdl_convert.ColorCorrection object at 0x100633cd0>,
-        <cdl_convert.ColorCorrection object at 0x100633b50>,
-        <cdl_convert.ColorCorrection object at 0x100633d90>,
-        <cdl_convert.ColorCorrection object at 0x100633b10>,
-        <cdl_convert.ColorCorrection object at 0x100633ad0>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b50>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633d90>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b10>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633ad0>,
     ]
 
 Once you have a :class:`ColorCorrection` from a parser, you'll find that
@@ -240,7 +240,7 @@ converted to floats, while slope and power will also truncate at zero.
     >>> cc.power = (1.01, 1.007)
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
-      File "cdl_convert/cdl_convert.py", line 336, in power
+      File "cdl_convert/correction.py", line 336, in power
         raise ValueError("Power must be set with all three RGB values")
     ValueError: Power must be set with all three RGB values
 
@@ -280,7 +280,7 @@ that we do on SOP values happen for saturation as well.
         >>> cc.power = (-0.01, 1.0, 1.0)
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
-          File "cdl_convert/cdl_convert.py", line 352, in power
+          File "cdl_convert/correction.py", line 352, in power
             raise ValueError("Power values must not be negative")
         ValueError: Power values must not be negative
 
@@ -328,9 +328,9 @@ You can change the id after creation, but it will perform the same check.
     Traceback (most recent call last):
       File "<ipython-input-8-b2b5487dbc63>", line 1, in <module>
         cc2.id = 'cc1'
-      File "cdl_convert/cdl_convert.py", line 362, in id
+      File "cdl_convert/correction.py", line 362, in id
         self._set_id(value)
-      File "cdl_convert/cdl_convert.py", line 430, in _set_id
+      File "cdl_convert/correction.py", line 430, in _set_id
         cc_id=cc_id
     ValueError: Error setting the id to "cc1". This id is already a registered id.
 
@@ -472,13 +472,13 @@ the file on disk. EDL files, ``.ccc`` and ``.cdl`` files all return a single
     <cdl_convert.ColorCollection object at 0x100633b40>,
     >>> collection.color_corrections
     [
-        <cdl_convert.ColorCorrection object at 0x100633b90>,
-        <cdl_convert.ColorCorrection object at 0x100633c50>,
-        <cdl_convert.ColorCorrection object at 0x100633cd0>,
-        <cdl_convert.ColorCorrection object at 0x100633b50>,
-        <cdl_convert.ColorCorrection object at 0x100633d90>,
-        <cdl_convert.ColorCorrection object at 0x100633b10>,
-        <cdl_convert.ColorCorrection object at 0x100633ad0>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b50>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633d90>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b10>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633ad0>,
     ]
 
 When parsing to a :class:`ColorCollection` from disk, the type of file you
@@ -506,12 +506,12 @@ added to the correct child list by calling the ``append_child`` method.
     >>> ccc.append_child(cc)
     >>> ccc.color_corrections
     [
-        <cdl_convert.ColorCorrection object at 0x1004a5590>
+        <cdl_convert.correction.ColorCorrection object at 0x1004a5590>
     ]
     >>> ccc.append_child(cd)
     >>> ccc.color_decisions
     [
-        <cdl_convert.ColorDecision object at 0x1004a5510>
+        <cdl_convert.decision.ColorDecision object at 0x1004a5510>
     ]
 
 ``append_child`` automatically detects which type of child you are attempting to
@@ -520,27 +520,27 @@ append a list of children at once- the list can even contain mixed classes.
 
     >>> list_of_colors
     [
-        <cdl_convert.ColorCorrection object at 0x100633b90>,
-        <cdl_convert.ColorDecision object at 0x100633b10>,
-        <cdl_convert.ColorCorrection object at 0x100633c50>,
-        <cdl_convert.ColorCorrection object at 0x100633b50>,
-        <cdl_convert.ColorDecision object at 0x100633d90>,
-        <cdl_convert.ColorCorrection object at 0x100633cd0>,
-        <cdl_convert.ColorDecision object at 0x100633ad0>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.decision.ColorDecision object at 0x100633b10>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b50>,
+        <cdl_convert.decision.ColorDecision object at 0x100633d90>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.decision.ColorDecision object at 0x100633ad0>,
     ]
     >>> ccc.append_children(list_of_colors)
     >>> ccc.color_corrections
     [
-        <cdl_convert.ColorCorrection object at 0x100633b90>,
-        <cdl_convert.ColorCorrection object at 0x100633c50>,
-        <cdl_convert.ColorCorrection object at 0x100633cd0>,
-        <cdl_convert.ColorCorrection object at 0x100633b50>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b50>,
     ]
     >>> ccc.color_decisions
     [
-        <cdl_convert.ColorDecision object at 0x100633d90>,
-        <cdl_convert.ColorDecision object at 0x100633b10>,
-        <cdl_convert.ColorDecision object at 0x100633ad0>,
+        <cdl_convert.decision.ColorDecision object at 0x100633d90>,
+        <cdl_convert.decision.ColorDecision object at 0x100633b10>,
+        <cdl_convert.decision.ColorDecision object at 0x100633ad0>,
     ]
 
     ``append_child`` and ``append_children`` will fail if you attempt to append
@@ -586,10 +586,10 @@ information:
     'ccc'
     >>> ccc.all_children
     [
-        <cdl_convert.ColorCorrection object at 0x100633b90>,
-        <cdl_convert.ColorCorrection object at 0x100633c50>,
-        <cdl_convert.ColorCorrection object at 0x100633cd0>,
-        <cdl_convert.ColorCorrection object at 0x100633b50>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b50>,
     ]
     >>> dl.input_desc
     'Cineon Log'
@@ -606,9 +606,9 @@ information:
     'cdl'
     >>> dl.all_children
     [
-        <cdl_convert.ColorDecision object at 0x100633d90>,
-        <cdl_convert.ColorDecision object at 0x100633b10>,
-        <cdl_convert.ColorDecision object at 0x100633ad0>,
+        <cdl_convert.decision.ColorDecision object at 0x100633d90>,
+        <cdl_convert.decision.ColorDecision object at 0x100633b10>,
+        <cdl_convert.decision.ColorDecision object at 0x100633ad0>,
     ]
 
 You merge by choosing a 'parent' collection, and calling the
@@ -617,13 +617,13 @@ You merge by choosing a 'parent' collection, and calling the
     >>> merged = ccc.merge_collections([dl])
     >>> merged.all_children
     [
-        <cdl_convert.ColorCorrection object at 0x100633b90>,
-        <cdl_convert.ColorCorrection object at 0x100633c50>,
-        <cdl_convert.ColorCorrection object at 0x100633cd0>,
-        <cdl_convert.ColorCorrection object at 0x100633b50>,
-        <cdl_convert.ColorDecision object at 0x100633d90>,
-        <cdl_convert.ColorDecision object at 0x100633b10>,
-        <cdl_convert.ColorDecision object at 0x100633ad0>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b90>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633c50>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633cd0>,
+        <cdl_convert.correction.ColorCorrection object at 0x100633b50>,
+        <cdl_convert.decision.ColorDecision object at 0x100633d90>,
+        <cdl_convert.decision.ColorDecision object at 0x100633b10>,
+        <cdl_convert.decision.ColorDecision object at 0x100633ad0>,
     ]
 
 .. note::
