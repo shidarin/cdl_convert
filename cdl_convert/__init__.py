@@ -73,7 +73,7 @@ from .parse import (
     parse_cdl, parse_file, parse_flex,
     parse_rnh_cdl
 )
-from .utils import reset_all, sanity_check
+from .utils import sanity_check, to_decimal
 from .write import write_cc, write_ccc, write_cdl, write_rnh_cdl
 
 # ==============================================================================
@@ -110,8 +110,24 @@ __all__ = [
     'sanity_check',
     'SatNode',
     'SopNode',
+    'to_decimal',
     'write_cc',
     'write_ccc',
     'write_cdl',
     'write_rnh_cdl',
 ]
+
+# ==============================================================================
+# PUBLIC FUNCTIONS
+# ==============================================================================
+
+
+def reset_all():
+    """Resets all class level member lists and dictionaries"""
+    # Import these here to avoid cyclic imports
+
+    ColorCorrection.reset_members()
+    ColorCorrectionRef.reset_members()
+    ColorDecision.reset_members()
+    ColorCollection.reset_members()
+    MediaRef.reset_members()

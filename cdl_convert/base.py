@@ -42,13 +42,15 @@ SOFTWARE.
 from __future__ import absolute_import, print_function
 
 # Standard Imports
-from xml.dom import minidom
+from decimal import Decimal
 import re
 import sys
+from xml.dom import minidom
 from xml.etree import ElementTree
 
 # cdl_convert Imports
 from . import config
+from .utils import to_decimal
 
 # ==============================================================================
 # GLOBALS
@@ -384,7 +386,7 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
         """Checks given value for legitimacy.
 
         **Args:**
-            value : (str, float, int)
+            value : (Decimal, str, float, int)
                 Any numeric value to be checked.
 
             name : (str)
@@ -394,8 +396,8 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
                 If false, do not allow negative values.
 
         **Returns:**
-            (float)
-                If value passes all tests, returns value as float.
+            (Decimal)
+                If value passes all tests, returns value as Decimal.
 
         **Raises:**
             TypeError:
@@ -405,20 +407,9 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
                 If negative is False, raised if value given is negative.
 
         """
-        # If given as a string, the string must be convertible to a float
-        if type(value) == str:
-            try:
-                value = float(value)
-            except ValueError:
-                raise TypeError(
-                    'Error setting {name} with value: "{value}". '
-                    'Value is not a number.'.format(
-                        name=name,
-                        value=value
-                    )
-                )
+        value = to_decimal(value, name)
         # If given as a single number, that number must be positive
-        if type(value) in [float, int] and not negative_allow:
+        if not negative_allow:
             if value < 0:
                 if config.HALT_ON_ERROR:
                     raise ValueError(
@@ -429,6 +420,6 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
                         )
                     )
                 else:
-                    value = 0
+                    value = Decimal('0.0')
 
-        return float(value)
+        return value

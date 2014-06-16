@@ -14,6 +14,7 @@ from __future__ import absolute_import, print_function
 
 # Standard Imports
 import datetime
+from decimal import Decimal
 try:
     from unittest import mock
 except ImportError:
@@ -40,7 +41,7 @@ sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert
 from cdl_convert import cdl_convert as main
-from cdl_convert import parse, write
+from cdl_convert import parse, utils, write
 from cdl_convert.correction import _de_exponent, _sanitize
 
 #==============================================================================
@@ -231,10 +232,10 @@ class TestSanityCheck(unittest.TestCase):
 
     def testGoodRun(self):
         """Tests that if no bad values were found, sanity_check returns True"""
-        self.cdl.slope = [1.2, 0.23, 2.487]
-        self.cdl.offset = [-0.87, 0.987, 0.0]
-        self.cdl.power = [2.97, 1.25, 1.0]
-        self.cdl.sat = 2.9999
+        self.cdl.slope = decimalize(1.2, 0.23, 2.487)
+        self.cdl.offset = decimalize(-0.87, 0.987, 0.0)
+        self.cdl.power = decimalize(2.97, 1.25, 1.0)
+        self.cdl.sat = Decimal('2.9999')
 
         self.assertTrue(
             cdl_convert.sanity_check(self.cdl)
@@ -262,7 +263,7 @@ class TestSanityCheck(unittest.TestCase):
 
     def testOffset(self):
         """Tests that a bad slope value is reported"""
-        self.cdl.offset = [-1.01, 1.5, 0.157]
+        self.cdl.offset = decimalize(-1.01, 1.5, 0.157)
 
         self.assertFalse(
             cdl_convert.sanity_check(self.cdl)
@@ -280,7 +281,7 @@ class TestSanityCheck(unittest.TestCase):
 
     def testPower(self):
         """Tests that a bad slope value is reported"""
-        self.cdl.power = [0.1, 3.1, 1.5]
+        self.cdl.power = decimalize(0.1, 3.1, 1.5)
 
         self.assertFalse(
             cdl_convert.sanity_check(self.cdl)
@@ -298,7 +299,7 @@ class TestSanityCheck(unittest.TestCase):
 
     def testSaturation(self):
         """Tests that a bad sat value is reported"""
-        self.cdl.sat = 3.01
+        self.cdl.sat = Decimal('3.01')
 
         self.assertFalse(
             cdl_convert.sanity_check(self.cdl)
@@ -1447,6 +1448,99 @@ class TestTimeCodeSegment(unittest.TestCase):
         self.assertTrue(
             tc.durFrames <= 7200
         )
+
+
+class TestToDecimal(unittest.TestCase):
+    """Some quick tests for ToDecimal"""
+
+    def testString(self):
+        """Tests string conversions"""
+        value = '1.0'
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testStringInt(self):
+        """Tests string conversions"""
+        value = '1'
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal('1.0'),
+            result
+        )
+
+    def testStringAdvanced(self):
+        """Tests string conversions"""
+        value = '1237891273.23162178368123787214849017132897'
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testStringBad(self):
+        """Tests not a number string conversions"""
+        value = 'banana'
+
+        self.assertRaises(
+            TypeError,
+            utils.to_decimal,
+            value
+        )
+
+    def testIntConversion(self):
+        """Tests int conversions"""
+        value = 323628378921398
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value) + '.0'),
+            result
+        )
+
+    def testFloatConversion(self):
+        """Tests basic float conversions"""
+        value = 12739821.3262871
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testFloatConversiontruncated(self):
+        """Tests a truncated float conversions"""
+        value = 28902319032.3267826378126494173828937289739813902179398073
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testUnsupportedType(self):
+        """Tests passing an unsupported type conversions"""
+        value = ('1.0', '2.0')
+
+        self.assertRaises(
+            ValueError,
+            utils.to_decimal,
+            value
+        )
+
+#==============================================================================
+# FUNCTIONS
+#==============================================================================
+
+
+def decimalize(*args):
+    """Converts a list of floats/ints to Decimal list"""
+    return [Decimal(str(i)) for i in args]
 
 #==============================================================================
 # RUNNER

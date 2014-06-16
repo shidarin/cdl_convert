@@ -157,8 +157,8 @@ SatNode
 -------
 
 .. note::
-    This class is meant only to be created by a container CDL format, and thus has
-    the required arg of ``parent`` when instantiating it.
+    This class is meant only to be created by a :class:`ColorCorrection` ,
+    and thus has the required arg of ``parent`` when instantiating it.
 
 .. autoclass:: cdl_convert.correction.SatNode
 
@@ -166,8 +166,8 @@ SopNode
 -------
 
 .. note::
-    This class is meant only to be created by a container CDL format, and thus has
-    the required arg of ``parent`` when instantiating it.
+    This class is meant only to be created by a :class:`ColorCorrection` ,
+    and thus has the required arg of ``parent`` when instantiating it.
 
 .. warning::
     Setting any of the sop node values with a single value as in
@@ -185,12 +185,24 @@ Reset All
 Resets all the class level lists and dictionaries of cdl_convert. Calling this
 is the same as calling each individual ``reset_members`` method.
 
-.. autofunction:: cdl_convert.utils.reset_all
+.. autofunction:: cdl_convert.reset_all
 
 Sanity Check
 ------------
 
 .. autofunction:: cdl_convert.utils.sanity_check
+
+
+To Decimal
+----------
+
+This is the function we use to convert ints, floats and strings to Decimal
+objects. We do NOT attempt to use maximum accuracy on floats passed in,
+as that results in extremely long values more often than not. Better to just
+truncate the float with a string conversion, than attempt to perfectly
+represent with a Decimal.
+
+.. autofunction:: cdl_convert.utils.to_decimal
 
 Parse Functions
 ===============

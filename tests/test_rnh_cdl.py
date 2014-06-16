@@ -12,6 +12,7 @@ mock
 #==============================================================================
 
 # Standard Imports
+from decimal import Decimal
 try:
     from unittest import mock
 except ImportError:
@@ -83,10 +84,10 @@ class TestParseRnHCDLBasic(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        self.slope = (1.329, 0.9833, 1.003)
-        self.offset = (0.011, 0.013, 0.11)
-        self.power = (.993, .998, 1.0113)
-        self.sat = 1.01
+        self.slope = decimalize(1.329, 0.9833, 1.003)
+        self.offset = decimalize(0.011, 0.013, 0.11)
+        self.power = decimalize(.993, .998, 1.0113)
+        self.sat = Decimal('1.01')
 
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
@@ -167,10 +168,10 @@ class TestParseRnHCDLOdd(TestParseRnHCDLBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope = (137829.329, 4327890.9833, 3489031.003)
-        self.offset = (-3424.011, -342789423.013, -4238923.11)
-        self.power = (3271893.993, .0000998, 0.0000000000000000113)
-        self.sat = 1798787.01
+        self.slope = decimalize(137829.329, 4327890.9833, 3489031.003)
+        self.offset = decimalize(-3424.011, -342789423.013, -4238923.11)
+        self.power = decimalize(3271893.993, .0000998, 0.0000000000000000113)
+        self.sat = Decimal('1798787.01')
 
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
@@ -190,10 +191,10 @@ class TestWriteRnHCDLBasic(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        self.slope = [1.329, 0.9833, 1.003]
-        self.offset = [0.011, 0.013, 0.11]
-        self.power = [.993, .998, 1.0113]
-        self.sat = 1.01
+        self.slope = list(decimalize(1.329, 0.9833, 1.003))
+        self.offset = list(decimalize(0.011, 0.013, 0.11))
+        self.power = list(decimalize(.993, .998, 1.0113))
+        self.sat = Decimal('1.01')
 
         self.cdl = cdl_convert.ColorCorrection(
             'uniqueId',
@@ -245,10 +246,10 @@ class TestWriteRnHCDLOdd(TestWriteRnHCDLBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope = [137829.329, 4327890.9833, 3489031.003]
-        self.offset = [-3424.011, -342789423.013, -4238923.11]
-        self.power = [3271893.993, .0000998, 0.0000000000000000113]
-        self.sat = 1798787.01
+        self.slope = list(decimalize(137829.329, 4327890.9833, 3489031.003))
+        self.offset = list(decimalize(-3424.011, -342789423.013, -4238923.11))
+        self.power = list(decimalize(0.993, .0000998, 0.0000000000000000113))
+        self.sat = Decimal('1798787.01')
 
         self.cdl = cdl_convert.ColorCorrection(
             'uniqueId', '../theVeryBestFile.ale'
@@ -284,6 +285,11 @@ def buildCDL(slope, offset, power, sat):
     ss_cdl = ' '.join(values)
 
     return ss_cdl
+
+
+def decimalize(*args):
+    """Converts a list of floats/ints to Decimal list"""
+    return tuple(Decimal(str(i)) for i in args)
 
 #==============================================================================
 # RUNNER

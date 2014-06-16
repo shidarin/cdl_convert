@@ -40,10 +40,9 @@ SOFTWARE.
 
 from __future__ import absolute_import, print_function
 
-# cdl_convert Imports
-from .collection import ColorCollection
-from .correction import ColorCorrection
-from .decision import ColorCorrectionRef, ColorDecision, MediaRef
+# Standard Imports
+
+from decimal import Decimal, InvalidOperation
 
 # ==============================================================================
 # GLOBALS
@@ -61,23 +60,12 @@ except NameError:  # pragma: no cover
 # ==============================================================================
 
 __all__ = [
-    'reset_all',
     'sanity_check',
+    'to_decimal'
 ]
 
 # ==============================================================================
 # PUBLIC FUNCTIONS
-# ==============================================================================
-
-
-def reset_all():
-    """Resets all class level member lists and dictionaries"""
-    ColorCorrection.reset_members()
-    ColorCorrectionRef.reset_members()
-    ColorDecision.reset_members()
-    ColorCollection.reset_members()
-    MediaRef.reset_members()
-
 # ==============================================================================
 
 
@@ -113,6 +101,7 @@ def sanity_check(colcor):
 
     def _check_value(value, minmax, value_type):
         """Checks if a value falls outside of min or max"""
+        value = float(value)  # Decimal doesn't always compare correctly
         if value <= minmax[0] or value >= minmax[1]:
             print(
                 'The ColorCorrection "{id}" was given a {type} value of '
@@ -139,3 +128,63 @@ def sanity_check(colcor):
             sane_values = False
 
     return sane_values
+
+# ==============================================================================
+
+
+def to_decimal(value, name='Value'):
+    """Converts an incoming value to Decimal in the best way
+
+    **Args:**
+        value : (Decimal, str, float, int)
+            Any numeric value to be checked.
+
+        name='Value' : (str)
+            The type of value being checked: slope, offset, etc.
+
+    **Returns:**
+        (Decimal)
+            If value passes all tests, returns value as Decimal.
+
+    **Raises:**
+        TypeError:
+            If value given is not a number.
+
+        ValueError:
+            If given a value that isn't an allowed type.
+
+    """
+    if type(value) is float:
+        # Rather than mess about with float -> Decimal conversion,
+        # it suits our accuracy needs just fine to go straight to string.
+        value = str(value)
+    elif type(value) is int:
+        # If we're giving an int, we need to add a '.0' behind it.
+        value = str(value) + '.0'
+    elif type(value) is Decimal:
+        return value
+    elif type(value) is str:
+        if '.' not in value:
+            value += '.0'
+
+        try:
+            value = Decimal(value)
+        except (InvalidOperation, ValueError):
+            raise TypeError(
+                'Error setting {name} with value: "{value}". '
+                'Value is not a number.'.format(
+                    name=name,
+                    value=value
+                )
+            )
+    else:
+        raise ValueError(
+            '{name} cannot be set directly with objects of type: "{type}". '
+            'Value given: "{value}".'.format(
+                name=name.title(),
+                type=type(value),
+                value=value,
+            )
+        )
+
+    return Decimal(value)

@@ -297,7 +297,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     **Attributes:**
 
-        cc : (:class:`ColorCorrection` | :class:`ColorCorrectionRef`)
+        cc : (:class:`ColorCorrection` , :class:`ColorCorrectionRef`)
             Returns the contained ColorCorrection, even if it's a reference.
 
         desc : [str]

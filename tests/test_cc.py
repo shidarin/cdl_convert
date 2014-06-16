@@ -12,6 +12,7 @@ mock
 #==============================================================================
 
 # Standard Imports
+from decimal import Decimal
 try:
     from unittest import mock
 except ImportError:
@@ -301,13 +302,13 @@ class TestParseCCBasic(unittest.TestCase):
         self.sop_node_desc = [
             'Sop description 1', 'Sop description 2', 'Sop description 3'
         ]
-        self.slope = (1.014, 1.0104, 0.62)
-        self.offset = (-0.00315, -0.00124, 0.3103)
-        self.power = (1.0, 0.9983, 1.0)
+        self.slope = decimalize(1.014, 1.0104, 0.62)
+        self.offset = decimalize(-0.00315, -0.00124, 0.3103)
+        self.power = decimalize(1.0, 0.9983, 1.0)
         self.sat_node_desc = [
             'Sat description 1', 'Sat description 2'
         ]
-        self.sat = 1.09
+        self.sat = Decimal('1.09')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
@@ -440,11 +441,11 @@ class TestParseCCOdd(TestParseCCBasic):
         self.sop_node_desc = [
             'Raised saturation a little!?! ag... \/Offset'
         ]
-        self.slope = (137829.329, 4327890.9833, 3489031.003)
-        self.offset = (-3424.011, -342789423.013, -4238923.11)
-        self.power = (3271893.993, .0000998, 0.0000000000000000113)
+        self.slope = decimalize(137829.329, 4327890.9833, 3489031.003)
+        self.offset = decimalize(-3424.011, -342789423.013, -4238923.11)
+        self.power = decimalize(3271893.993, .0000998, 0.0000000000000000113)
         self.sat_node_desc = []
-        self.sat = 1798787.01
+        self.sat = Decimal('1798787.01')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
@@ -470,11 +471,11 @@ class TestParseCCBasic(TestParseCCBasic):
         self.viewing_desc = None
 
         self.sop_node_desc = []
-        self.slope = (0.2331, 0.678669, 1.0758)
-        self.offset = (0.031, 0.128, -0.096)
-        self.power = (1.8, 0.97, 0.961)
+        self.slope = decimalize(0.2331, 0.678669, 1.0758)
+        self.offset = decimalize(0.031, 0.128, -0.096)
+        self.power = decimalize(1.8, 0.97, 0.961)
         self.sat_node_desc = []
-        self.sat = 1.01
+        self.sat = Decimal('1.01')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
@@ -500,11 +501,11 @@ class TestParseCCBasicOrder(TestParseCCBasic):
         self.viewing_desc = None
 
         self.sop_node_desc = []
-        self.slope = (0.2331, 0.678669, 1.0758)
-        self.offset = (0.031, 0.128, -0.096)
-        self.power = (1.8, 0.97, 0.961)
+        self.slope = decimalize(0.2331, 0.678669, 1.0758)
+        self.offset = decimalize(0.031, 0.128, -0.096)
+        self.power = decimalize(1.8, 0.97, 0.961)
         self.sat_node_desc = []
-        self.sat = 1.01
+        self.sat = Decimal('1.01')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
@@ -530,11 +531,11 @@ class TestParseCCBlankMetadata(TestParseCCBasic):
         self.viewing_desc = None
 
         self.sop_node_desc = []
-        self.slope = (1.014, 1.0104, 0.62)
-        self.offset = (-0.00315, -0.00124, 0.3103)
-        self.power = (1.0, 0.9983, 1.0)
+        self.slope = decimalize(1.014, 1.0104, 0.62)
+        self.offset = decimalize(-0.00315, -0.00124, 0.3103)
+        self.power = decimalize(1.0, 0.9983, 1.0)
         self.sat_node_desc = []
-        self.sat = 1.09
+        self.sat = Decimal('1.09')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
@@ -560,11 +561,11 @@ class TestParseCCNoSop(TestParseCCBasic):
         self.viewing_desc = None
 
         self.sop_node_desc = []
-        self.slope = (1.0, 1.0, 1.0)
-        self.offset = (0.0, 0.0, 0.0)
-        self.power = (1.0, 1.0, 1.0)
+        self.slope = decimalize(1.0, 1.0, 1.0)
+        self.offset = decimalize(0.0, 0.0, 0.0)
+        self.power = decimalize(1.0, 1.0, 1.0)
         self.sat_node_desc = ['I am a lovely sat node']
-        self.sat = 1.01
+        self.sat = Decimal('1.01')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
@@ -593,11 +594,11 @@ class TestParseCCNoSat(TestParseCCBasic):
         self.viewing_desc = None
 
         self.sop_node_desc = []
-        self.slope = (0.2331, 0.678669, 1.0758)
-        self.offset = (0.031, 0.128, -0.096)
-        self.power = (1.8, 0.97, 0.961)
+        self.slope = decimalize(0.2331, 0.678669, 1.0758)
+        self.offset = decimalize(0.031, 0.128, -0.096)
+        self.power = decimalize(1.8, 0.97, 0.961)
         self.sat_node_desc = []
-        self.sat = 1.0
+        self.sat = Decimal('1.0')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
@@ -733,7 +734,7 @@ class TestParseCCExceptions(unittest.TestCase):
         cdl = cdl_convert.parse_cc(self.file)
 
         self.assertEqual(
-            (0.0, 0.678669, 1.0758),
+            decimalize(0.0, 0.678669, 1.0758),
             cdl.slope,
         )
 
@@ -893,6 +894,10 @@ class TestWriteCCNoSat(TestWriteCCFull):
 # FUNCTIONS
 #==============================================================================
 
+
+def decimalize(*args):
+    """Converts a list of floats/ints to Decimal list"""
+    return tuple([Decimal(str(i)) for i in args])
 
 #==============================================================================
 # RUNNER

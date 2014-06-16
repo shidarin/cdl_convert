@@ -121,17 +121,17 @@ Once imported, you have two choices. You can either instantiate a new, blank
 cdl directly, or you can parse a file on disk.
 
 A :class:`ColorCorrection` is created with the 10 required values (RGB values
-for slope, offset and power, and a single float for saturation) set to their
+for slope, offset and power, and a single value for saturation) set to their
 defaults.
 
     >>> cc.slope
-    (1.0, 1.0, 1.0)
+    (Decimal('1.0'), Decimal('1.0'), Decimal('1.0'))
     >>> cc.offset
-    (0.0, 0.0, 0.0)
+    (Decimal('0.0'), Decimal('0.0'), Decimal('0.0'))
     >>> cc.power
-    (1.0, 1.0, 1.0)
+    (Decimal('1.0'), Decimal('1.0'), Decimal('1.0'))
     >>> cc.sat
-    1.0
+    Decimal('1.0')
 
 .. note::
     ``slope``, ``offset``, ``power`` and ``sat`` are convenience properties that
@@ -163,7 +163,7 @@ filename to ``input_file``.
 
     Reset the members list by calling the ``reset_members`` method of
     :class:`ColorCorrection` or reset all class member list and dictionaries
-    with ``reset_all``.
+    with ``cdl_convert.reset_all``.
 
 Parsing a single correction CDL file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -195,15 +195,15 @@ Once you have a :class:`ColorCorrection` from a parser, you'll find that
 whatever values it found on the file now exist on the instance of
 :class:`ColorCorrection`.
 
-    >>> cc = cdl.parse_cc('./xf/015.cc')[0]
+    >>> cc = cdl.parse_cc('./xf/015.cc')
     >>> cc.slope
-    (1.02401, 1.00804, 0.89562)
+    (Decimal('1.02401'), Decimal('1.00804'), Decimal('0.89562'))
     >>> cc.offset
-    (-0.00864, -0.00261, 0.03612)
+    (Decimal('-0.00864'), Decimal('-0.00261'), Decimal('0.03612'))
     >>> cc.power
-    (1.0, 1.0, 1.0)
+    (Decimal('1.0'), Decimal('1.0'), Decimal('1.0'))
     >>> cc.sat
-    1.2
+    Decimal('1.2')
     >>> cc.id
     '015_xf_seqGrade_v01'
     >>> cc.file_in
@@ -225,24 +225,31 @@ Slope, Offset and Power
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Setting the CDL slope, offset and power (SOP) values is as easy as passing them
-any list or tuple with three values. Integers and strings will be automatically
-converted to floats, while slope and power will also truncate at zero.
+any list or tuple with three values. Integers, strings and floats will be
+automatically converted to Decimals, while slope and power will also truncate
+at zero.
 
     >>> cc.slope = ('1.234', 5, 273891.37823)
     >>> cc.slope
-    (1.234, 5.0, 273891.37823)
+    (Decimal('1.234'), Decimal('5.0'), Decimal('273891.37823'))
     >>> cc.offset = (-0.0013, 0.097, 0.001)
     >>> cc.offset
-    (-0.0013, 0.097, 0.001)
+    (Decimal('-0.0013'), Decimal('0.097'), Decimal('0.001'))
     >>> cc.power = (-0.01, 1.0, 1.0)
     >>> cc.power
-    (0.0, 1.0, 1.0)
+    (Decimal('0.0'), Decimal('1.0'), Decimal('1.0'))
     >>> cc.power = (1.01, 1.007)
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
-      File "cdl_convert/correction.py", line 336, in power
-        raise ValueError("Power must be set with all three RGB values")
-    ValueError: Power must be set with all three RGB values
+      File "cdl_convert/correction.py", line 306, in power
+        self.sop_node.power = power_rgb
+      File "cdl_convert/correction.py", line 668, in power
+        value = self._check_setter_value(value, 'power')
+      File "cdl_convert/correction.py", line 767, in _check_setter_value
+        value = self._check_rgb_values(value, name, negative_allow)
+      File "cdl_convert/correction.py", line 709, in _check_rgb_values
+        values=values
+    ValueError: Error setting power with value: "(1.01, 1.007)". Power values given as a list or tuple must have 3 elements, one for each color.
 
 It's also possible to set the SOP values with a single value, and have it
 copy itself across all three colors. Setting SOP values this way mimics how
@@ -250,7 +257,8 @@ color corrections typically start out.
 
     >>> cc.slope = 1.2
     >>> cc.slope
-    (1.2, 1.2, 1.2)
+    (Decimal('1.2'), Decimal('1.2'), Decimal('1.2'))
+
 
 Saturation
 ^^^^^^^^^^
@@ -260,29 +268,37 @@ that we do on SOP values happen for saturation as well.
 
     >>> cc.sat = 1.1
     >>> cc.sat
-    1.1
+    Decimal('1.1')
     >>> cc.sat = '1.2'
     >>> cc.sat
-    1.2
+    Decimal('1.2')
     >>> cc.sat = 1
     >>> cc.sat
-    1.0
+    Decimal('1.0')
     >>> cc.sat = -0.1
     >>> cc.sat
-    0.0
+    Decimal('0.0')
 
 .. warning::
     If it's desired to have negative values raise an exception instead of
-    truncating to zero, set the global module variable ``HALT_ON_ERROR`` to be
-    ``True``.
+    truncating to zero, set the global config module variable ``HALT_ON_ERROR``
+    to be ``True``.
     ::
-        >>> cdl.HALT_ON_ERROR = True
+        >>> cdl.config.HALT_ON_ERROR = True
         >>> cc.power = (-0.01, 1.0, 1.0)
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
-          File "cdl_convert/correction.py", line 352, in power
-            raise ValueError("Power values must not be negative")
-        ValueError: Power values must not be negative
+          File "cdl_convert/correction.py", line 306, in power
+            self.sop_node.power = power_rgb
+          File "cdl_convert/correction.py", line 668, in power
+            value = self._check_setter_value(value, 'power')
+          File "cdl_convert/correction.py", line 767, in _check_setter_value
+            value = self._check_rgb_values(value, name, negative_allow)
+          File "cdl_convert/correction.py", line 720, in _check_rgb_values
+            negative_allow
+          File "cdl_convert/base.py", line 419, in _check_single_value
+            value=value
+        ValueError: Error setting power with value: "-0.01". Values must not be negative
 
 
 Description
