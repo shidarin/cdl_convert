@@ -41,7 +41,7 @@ sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert
 from cdl_convert import cdl_convert as main
-from cdl_convert import parse, write
+from cdl_convert import parse, utils, write
 from cdl_convert.correction import _de_exponent, _sanitize
 
 #==============================================================================
@@ -1447,6 +1447,90 @@ class TestTimeCodeSegment(unittest.TestCase):
 
         self.assertTrue(
             tc.durFrames <= 7200
+        )
+
+
+class TestToDecimal(unittest.TestCase):
+    """Some quick tests for ToDecimal"""
+
+    def testString(self):
+        """Tests string conversions"""
+        value = '1.0'
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testStringInt(self):
+        """Tests string conversions"""
+        value = '1'
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal('1.0'),
+            result
+        )
+
+    def testStringAdvanced(self):
+        """Tests string conversions"""
+        value = '1237891273.23162178368123787214849017132897'
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testStringBad(self):
+        """Tests not a number string conversions"""
+        value = 'banana'
+
+        self.assertRaises(
+            TypeError,
+            utils.to_decimal,
+            value
+        )
+
+    def testIntConversion(self):
+        """Tests int conversions"""
+        value = 323628378921398
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value) + '.0'),
+            result
+        )
+
+    def testFloatConversion(self):
+        """Tests basic float conversions"""
+        value = 12739821.3262871
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testFloatConversiontruncated(self):
+        """Tests a truncated float conversions"""
+        value = 28902319032.3267826378126494173828937289739813902179398073
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testUnsupportedType(self):
+        """Tests passing an unsupported type conversions"""
+        value = ('1.0', '2.0')
+
+        self.assertRaises(
+            ValueError,
+            utils.to_decimal,
+            value
         )
 
 #==============================================================================

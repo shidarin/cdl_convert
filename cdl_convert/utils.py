@@ -150,14 +150,14 @@ def sanity_check(colcor):
 # ==============================================================================
 
 
-def to_decimal(value, name):
+def to_decimal(value, name='Value'):
     """Converts an incoming value to Decimal in the best way
 
     **Args:**
         value : (Decimal, str, float, int)
             Any numeric value to be checked.
 
-        name : (str)
+        name='Value' : (str)
             The type of value being checked: slope, offset, etc.
 
     **Returns:**
@@ -182,6 +182,9 @@ def to_decimal(value, name):
     elif type(value) is Decimal:
         return value
     elif type(value) is str:
+        if '.' not in value:
+            value += '.0'
+
         try:
             value = Decimal(value)
         except (InvalidOperation, ValueError):
