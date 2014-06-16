@@ -386,7 +386,7 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
         """Checks given value for legitimacy.
 
         **Args:**
-            value : (str, float, int)
+            value : (Decimal, str, float, int)
                 Any numeric value to be checked.
 
             name : (str)
@@ -396,8 +396,8 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
                 If false, do not allow negative values.
 
         **Returns:**
-            (float)
-                If value passes all tests, returns value as float.
+            (Decimal)
+                If value passes all tests, returns value as Decimal.
 
         **Raises:**
             TypeError:

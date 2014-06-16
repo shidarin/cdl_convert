@@ -331,12 +331,12 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     @property
     def sat(self):
-        """Returns float value for saturation"""
+        """Returns value for saturation"""
         return self.sat_node.sat
 
     @sat.setter
     def sat(self, sat_value):
-        """Makes sure provided sat value is a positive float"""
+        """Makes sure provided sat value is a positive"""
         self.sat_node.sat = sat_value
 
     # Private Methods =========================================================
@@ -490,7 +490,7 @@ class SatNode(ColorNodeBase):
     @sat.setter
     def sat(self, value):
         """Runs checks and converts saturation value before setting"""
-        # If given as a string, the string must be convertible to a float
+        # If given as a string, the string must be convertible to a Decimal
         if type(value) in [Decimal, float, int, str]:
             try:
                 value = self._check_single_value(value, 'saturation')
@@ -531,7 +531,7 @@ class SopNode(ColorNodeBase):
     Slope, offset and saturation are stored internally as lists, but always
     returned as tuples to prevent index assignment from being successful. This
     protects the user from inadvertently setting a single value in the list
-    to be a non-valid value, which might result in values not being floats or
+    to be a non-valid value, which might result in values not being Decimals or
     even numbers at all.
 
     **Class Attributes:**
@@ -731,8 +731,8 @@ class SopNode(ColorNodeBase):
 
         Ties together _check_single_value and _check_rgb_values
 
-                    **Args:**
-            value : [(str, float, int)] or (str, float, int)
+        **Args:**
+            value : [(Decimal, str, float, int)]
                 A list of three (or one) numeric values to be checked.
 
             name : (str)
@@ -805,7 +805,7 @@ class SopNode(ColorNodeBase):
 
 
 def _de_exponent(notation):
-    """Translates scientific notation into float strings
+    """Translates scientific notation into non-normalized strings
 
      Unlike the methods to quantize a Decimal found on the Decimal FAQ, this
     always works.

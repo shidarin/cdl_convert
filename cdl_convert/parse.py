@@ -539,7 +539,7 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
             elif line.startswith('702'):
                 # ASC SAT
                 # 702 ASC_SAT ######
-                sat = float(line.split()[-1])
+                sat = line.split()[-1]
 
     # We need to dump the last record to the cdl list
     metadata = [i for i in metadata if i != '']
