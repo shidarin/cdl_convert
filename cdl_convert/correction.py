@@ -569,7 +569,7 @@ class SopNode(ColorNodeBase):
             single value, it will be copied over all 3 colors. Any single value
             given can be a Decimal, float, int or numeric string.
 
-            default: (1.0, 1.0, 1.0)
+            default: (Decimal('1.0'), Decimal('1.0'), Decimal('1.0'))
 
         offset : (Decimal, Decimal, Decimal)
             An rgb tuple representing the offset, which raises or lowers the
@@ -578,7 +578,7 @@ class SopNode(ColorNodeBase):
             Any single value given can be a Decimal, float, int or numeric
             string.
 
-            default: (0.0, 0.0, 0.0)
+            default: (Decimal('0.0'), Decimal('0.0'), Decimal('0.0'))
 
         power : (Decimal, Decimal, Decimal)
             An rgb tuple representing the power, which is the only function
@@ -588,7 +588,7 @@ class SopNode(ColorNodeBase):
             with a single value, it will be copied over all 3 colors. Any
             single value given can be a Decimal, float, int or numeric string.
 
-            default: (1.0, 1.0, 1.0)
+            default: (Decimal('1.0'), Decimal('1.0'), Decimal('1.0'))
 
         xml : (str)
             A nicely formatted XML string representing the node. Inherited from
@@ -811,7 +811,7 @@ def _de_exponent(notation):
     always works.
 
     Args:
-        notation : (Decimal|str|int|float)
+        notation : (Decimal, str, int, float)
             Any numeric value that may or may not be normalized.
 
     Raises:
