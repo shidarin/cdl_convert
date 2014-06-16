@@ -49,7 +49,8 @@ and ``.flex`` files now return a collection.
     - :class:`ColorDecision` , :class:`ColorCorrectionRef` and :class:`MediaRef` now live under ``cdl_convert.decision``
     - All parse functions now live under ``cdl_convert.parse``
     - All write functions now live under ``cdl_convert.write``
-    - ``reset_all`` and ``sanity_check`` now live under ``cdl_convert.utils``
+    - ``sanity_check`` now live under ``cdl_convert.utils``
+    - ``reset_all`` now lives under the main module
 
 
 Version 0.6.1

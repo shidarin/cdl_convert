@@ -185,7 +185,7 @@ Reset All
 Resets all the class level lists and dictionaries of cdl_convert. Calling this
 is the same as calling each individual ``reset_members`` method.
 
-.. autofunction:: cdl_convert.utils.reset_all
+.. autofunction:: cdl_convert.reset_all
 
 Sanity Check
 ------------

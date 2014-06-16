@@ -60,30 +60,12 @@ except NameError:  # pragma: no cover
 # ==============================================================================
 
 __all__ = [
-    'reset_all',
     'sanity_check',
     'to_decimal'
 ]
 
 # ==============================================================================
 # PUBLIC FUNCTIONS
-# ==============================================================================
-
-
-def reset_all():
-    """Resets all class level member lists and dictionaries"""
-    # Import these here to avoid cyclic imports
-
-    from .collection import ColorCollection
-    from .correction import ColorCorrection
-    from .decision import ColorCorrectionRef, ColorDecision, MediaRef
-
-    ColorCorrection.reset_members()
-    ColorCorrectionRef.reset_members()
-    ColorDecision.reset_members()
-    ColorCollection.reset_members()
-    MediaRef.reset_members()
-
 # ==============================================================================
 
 

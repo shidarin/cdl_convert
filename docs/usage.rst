@@ -163,7 +163,7 @@ filename to ``input_file``.
 
     Reset the members list by calling the ``reset_members`` method of
     :class:`ColorCorrection` or reset all class member list and dictionaries
-    with ``reset_all``.
+    with ``cdl_convert.reset_all``.
 
 Parsing a single correction CDL file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
