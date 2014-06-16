@@ -433,12 +433,12 @@ class SatNode(ColorNodeBase):
             The parent :class:`ColorCorrection` instance that created this
             instance.
 
-        sat : (float)
+        sat : (Decimal)
             The saturation value (to be applied with Rec 709 coefficients) is
             stored here. Saturation is the last operation to be applied when
             applying a CDL.
 
-            sat can be set with a float, int or numeric string.
+            sat can be set with a Decimal, float, int or numeric string.
 
         xml : (str)
             A nicely formatted XML string representing the node. Inherited from
@@ -562,30 +562,31 @@ class SopNode(ColorNodeBase):
             The parent :class:`ColorCorrection` instance that created this
             instance.
 
-        slope : (float, float, float)
+        slope : (Decimal, Decimal, Decimal)
             An rgb tuple representing the slope, which changes the slope of the
             input without shifting the black level established by the offset.
             These values must be positive. If you set this attribute with a
             single value, it will be copied over all 3 colors. Any single value
-            given can be a float, int or numeric string.
+            given can be a Decimal, float, int or numeric string.
 
             default: (1.0, 1.0, 1.0)
 
-        offset : (float, float, float)
+        offset : (Decimal, Decimal, Decimal)
             An rgb tuple representing the offset, which raises or lowers the
             input brightness while holding the slope constant. If you set this
             attribute with a single value, it will be copied over all 3 colors.
-            Any single value given can be a float, int or numeric string.
+            Any single value given can be a Decimal, float, int or numeric
+            string.
 
             default: (0.0, 0.0, 0.0)
 
-        power : (float, float, float)
+        power : (Decimal, Decimal, Decimal)
             An rgb tuple representing the power, which is the only function
             that changes the response curve of the function. Note that this has
             the opposite response to adjustments than a traditional gamma
             operator. These values must be positive. If you set this attribute
             with a single value, it will be copied over all 3 colors. Any
-            single value given can be a float, int or numeric string.
+            single value given can be a Decimal, float, int or numeric string.
 
             default: (1.0, 1.0, 1.0)
 
@@ -673,7 +674,7 @@ class SopNode(ColorNodeBase):
         """Checks a list or tuple containing 3 values for legitimacy
 
         **Args:**
-            value : [(str, float, int)]
+            value : [(Decimal, str, float, int)]
                 A list of three numeric values to be checked.
 
             name : (str)
@@ -683,9 +684,9 @@ class SopNode(ColorNodeBase):
                 If false, do not allow negative values.
 
         **Returns:**
-            [float, float, float]
+            [Decimal, Decimal, Decimal]
                 If all values pass all tests, returns values as a list of
-                floats.
+                Decimals.
 
         **Raises:**
             TypeError:
@@ -741,9 +742,9 @@ class SopNode(ColorNodeBase):
                 If false, do not allow negative values.
 
         **Returns:**
-            [float, float, float]
+            [Decimal, Decimal, Decimal]
                 If all values pass all tests, returns values as a list of
-                floats.
+                Decimals.
 
         **Raises:**
             TypeError:
@@ -804,7 +805,23 @@ class SopNode(ColorNodeBase):
 
 
 def _de_exponent(notation):
-    """Translates scientific notation into float strings"""
+    """Translates scientific notation into float strings
+
+     Unlike the methods to quantize a Decimal found on the Decimal FAQ, this
+    always works.
+
+    Args:
+        notation : (Decimal|str|int|float)
+            Any numeric value that may or may not be normalized.
+
+    Raises:
+        N/A
+
+    Returns:
+        (str)
+            Returns a quantized value without any scientific notation.
+
+    """
     notation = str(notation).lower()
     if 'e' not in notation:
         return notation
@@ -834,7 +851,25 @@ def _de_exponent(notation):
 
 
 def _sanitize(name):
-    """Removes any characters in string name that aren't alnum or in '_.'"""
+    """Removes any characters in string name that aren't alnum or in '_.
+
+    Any spaces will be replaced with underscores. If a name starts with an
+    underscore or a period it's removed.
+
+    Only alphanumeric characters, or underscores and periods, are allowed.
+
+    Args:
+        name : (str)
+            The name to be sanitized.
+
+    Raises:
+        N/A
+
+    Returns:
+        (str)
+            Sanitized name.
+
+    """
     if not name:
         # If not name, it's probably an empty string, but let's throw back
         # exactly what we got.
