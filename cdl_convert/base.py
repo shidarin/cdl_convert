@@ -42,7 +42,7 @@ SOFTWARE.
 from __future__ import absolute_import, print_function
 
 # Standard Imports
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 import re
 import sys
 from xml.dom import minidom
