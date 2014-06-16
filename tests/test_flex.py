@@ -12,6 +12,7 @@ mock
 #==============================================================================
 
 # Standard Imports
+from decimal import Decimal
 try:
     from unittest import mock
 except ImportError:
@@ -98,10 +99,10 @@ class TestParseFLExBasic(unittest.TestCase):
 
         self.title = "Bob's Big Apple Break, into the big apple! Part 365   H"
 
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
                               'bb94', 'x103', 'line1')
@@ -109,18 +110,18 @@ class TestParseFLExBasic(unittest.TestCase):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (13.329, 4.9334, 348908)
-        self.offset2 = (-3424.0, -34.013, -642389)
-        self.power2 = (37.993, .00009, 0.0000)
-        self.sat2 = 177.01
+        self.slope2 = decimalize(13.329, 4.9334, 348908)
+        self.offset2 = decimalize(-3424.0, -34.013, -642389)
+        self.power2 = decimalize(37.993, 0.0009, 0.0000)
+        self.sat2 = Decimal('177.01')
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
                               'bb94', 'x104', 'line2')
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.7383)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.7383)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
                               'bb94', 'x105', 'line3')
@@ -298,10 +299,10 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
 
         self.title = "Bob's Big Apple Break, into the big apple! Part 365   H"
 
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
                               'bb94', 'x103', 'line1')
@@ -309,18 +310,18 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (13.329, 4.9334, 348908)
-        self.offset2 = (-3424.0, -34.013, -642389)
-        self.power2 = (37.993, .00009, 0.0000)
-        self.sat2 = 177.01
+        self.slope2 = decimalize(13.329, 4.9334, 348908)
+        self.offset2 = decimalize(-3424.0, -34.013, -642389)
+        self.power2 = decimalize(37.993, 0.0009, 0.0000)
+        self.sat2 = Decimal('177.01')
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
                               'bb94', 'x104')
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.7383)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.7383)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
                               'bb94')
@@ -371,27 +372,27 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
 
         self.title = "Bob's Big Apple Break, into the big apple! Part.365   H"
 
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1)
 
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (13.329, 4.9334, 348908)
-        self.offset2 = (-3424.0, -34.013, -642389)
-        self.power2 = (37.993, .00009, 0.0000)
-        self.sat2 = 177.01
+        self.slope2 = decimalize(13.329, 4.9334, 348908)
+        self.offset2 = decimalize(-3424.0, -34.013, -642389)
+        self.power2 = decimalize(37.993, 0.0009, 0.0000)
+        self.sat2 = Decimal('177.01')
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2)
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.7383)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.7383)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3)
 
@@ -441,27 +442,27 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
 
         self.title = ''
 
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1)
 
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (13.329, 4.9334, 348908)
-        self.offset2 = (-3424.0, -34.013, -642389)
-        self.power2 = (37.993, .00009, 0.0000)
-        self.sat2 = 177.01
+        self.slope2 = decimalize(13.329, 4.9334, 348908)
+        self.offset2 = decimalize(-3424.0, -34.013, -642389)
+        self.power2 = decimalize(37.993, 0.0009, 0.0000)
+        self.sat2 = Decimal('177.01')
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2)
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.7383)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.7383)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3)
 
@@ -524,26 +525,26 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
 
         self.title = "Hanky Panky Bromance"
 
-        self.slope1 = (1.0, 1.0, 1.0)
-        self.offset1 = (0.0, 0.0, 0.0)
-        self.power1 = (1.0, 1.0, 1.0)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.0, 1.0, 1.0)
+        self.offset1 = decimalize(0.0, 0.0, 0.0)
+        self.power1 = decimalize(1.0, 1.0, 1.0)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildFLExTake(sat=self.sat1, scene='bb94', take='x103',
                               roll='line1')
 
-        self.slope2 = (1.2, 2.32, 10.82)
-        self.offset2 = (-1.32, 2.32, 0.73)
-        self.power2 = (1.329, 0.9833, 1.003)
-        self.sat2 = 1.0
+        self.slope2 = decimalize(1.2, 2.32, 10.82)
+        self.offset2 = decimalize(-1.32, 2.32, 0.73)
+        self.power2 = decimalize(1.329, 0.9833, 1.003)
+        self.sat2 = Decimal('1.0')
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2,
                               scene='bb94', take='x104', roll='line2')
 
-        self.slope3 = (1.0, 1.0, 1.0)
-        self.offset3 = (0.0, 0.0, 0.0)
-        self.power3 = (1.0, 1.0, 1.0)
-        self.sat3 = 1.0
+        self.slope3 = decimalize(1.0, 1.0, 1.0)
+        self.offset3 = decimalize(0.0, 0.0, 0.0)
+        self.power3 = decimalize(1.0, 1.0, 1.0)
+        self.sat3 = Decimal('1.0')
 
         line3 = buildFLExTake()
 
@@ -693,6 +694,11 @@ def buildFLExTake(slope=None, offset=None, power=None, sat=None, scene=None,
         )
 
     return flex
+
+
+def decimalize(*args):
+    """Converts a list of floats/ints to Decimal list"""
+    return tuple(Decimal(str(i)) for i in args)
 
 #==============================================================================
 # RUNNER

@@ -12,6 +12,7 @@ mock
 #==============================================================================
 
 # Standard Imports
+from decimal import Decimal
 import os
 from random import choice, randrange
 import sys
@@ -92,10 +93,10 @@ class TestParseALEBasic(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildALELine(self.slope1, self.offset1, self.power1, self.sat1,
                              'bb94_x103_line1')
@@ -103,18 +104,18 @@ class TestParseALEBasic(unittest.TestCase):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (137829.329, 4327890.9833, 3489031.003)
-        self.offset2 = (-3424.011, -342789423.013, -4238923.11)
-        self.power2 = (3271893.993, .0000998, 0.0000000000000000113)
-        self.sat2 = 1798787.01
+        self.slope2 = decimalize(137829.329, 4327890.9833, 3489031.003)
+        self.offset2 = decimalize(-3424.011, -342789423.013, -4238923.11)
+        self.power2 = decimalize(3271893.993, .0000998, 0.0000000000000000113)
+        self.sat2 = Decimal('1798787.01')
 
         line2 = buildALELine(self.slope2, self.offset2, self.power2, self.sat2,
                              'bb94_x104_line2')
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.738378233782)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.738378233782)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildALELine(self.slope3, self.offset3, self.power3, self.sat3,
                              'bb94_x105_line3')
@@ -279,10 +280,10 @@ class TestParseALEShort(TestParseALEBasic):
     #==========================================================================
 
     def setUp(self):
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildALELine(self.slope1, self.offset1, self.power1, self.sat1,
                              'bb94_x103_line1', short=True)
@@ -290,18 +291,18 @@ class TestParseALEShort(TestParseALEBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (137829.329, 4327890.9833, 3489031.003)
-        self.offset2 = (-3424.011, -342789423.013, -4238923.11)
-        self.power2 = (3271893.993, .0000998, 0.0000000000000000113)
-        self.sat2 = 1798787.01
+        self.slope2 = decimalize(137829.329, 4327890.9833, 3489031.003)
+        self.offset2 = decimalize(-3424.011, -342789423.013, -4238923.11)
+        self.power2 = decimalize(3271893.993, .0000998, 0.0000000000000000113)
+        self.sat2 = Decimal('1798787.01')
 
         line2 = buildALELine(self.slope2, self.offset2, self.power2, self.sat2,
                              'bb94_x104_line2', short=True)
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.738378233782)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.738378233782)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildALELine(self.slope3, self.offset3, self.power3, self.sat3,
                              'bb94_x105_line3', short=True)
@@ -396,6 +397,11 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
         )
 
     return ale
+
+
+def decimalize(*args):
+    """Converts a list of floats/ints to Decimal list"""
+    return tuple([Decimal(str(i)) for i in args])
 
 #==============================================================================
 # RUNNER

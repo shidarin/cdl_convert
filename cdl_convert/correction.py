@@ -43,6 +43,7 @@ from __future__ import absolute_import, print_function
 
 # Standard Imports
 
+from decimal import Decimal
 import os
 import re
 from xml.etree import ElementTree
@@ -472,7 +473,7 @@ class SatNode(ColorNodeBase):
         super(SatNode, self).__init__()
 
         self._parent = parent
-        self._sat = 1.0
+        self._sat = Decimal('1.0')
 
     # Properties ==============================================================
 
@@ -490,13 +491,13 @@ class SatNode(ColorNodeBase):
     def sat(self, value):
         """Runs checks and converts saturation value before setting"""
         # If given as a string, the string must be convertible to a float
-        if type(value) in [float, int, str]:
+        if type(value) in [Decimal, float, int, str]:
             try:
                 value = self._check_single_value(value, 'saturation')
             except (TypeError, ValueError):
                 raise
             else:
-                self._sat = value
+                self._sat = Decimal(value)
         else:
             raise TypeError(
                 'Saturation cannot be set directly with objects of type: '
@@ -622,9 +623,9 @@ class SopNode(ColorNodeBase):
 
         self._parent = parent
 
-        self._slope = [1.0, 1.0, 1.0]
-        self._offset = [0.0, 0.0, 0.0]
-        self._power = [1.0, 1.0, 1.0]
+        self._slope = [Decimal('1.0')] * 3
+        self._offset = [Decimal('0.0')] * 3
+        self._power = [Decimal('1.0')] * 3
 
     # Properties ==============================================================
 
@@ -753,7 +754,7 @@ class SopNode(ColorNodeBase):
                 raised if value given is negative.
 
         """
-        if type(value) in [float, int, str]:
+        if type(value) in [Decimal, float, int, str]:
             try:
                 value = self._check_single_value(value, name, negative_allow)
             except (TypeError, ValueError):
@@ -804,7 +805,7 @@ class SopNode(ColorNodeBase):
 
 def _de_exponent(notation):
     """Translates scientific notation into float strings"""
-    notation = str(notation)
+    notation = str(notation).lower()
     if 'e' not in notation:
         return notation
 

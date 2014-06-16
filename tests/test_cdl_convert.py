@@ -14,6 +14,7 @@ from __future__ import absolute_import, print_function
 
 # Standard Imports
 import datetime
+from decimal import Decimal
 try:
     from unittest import mock
 except ImportError:
@@ -231,10 +232,10 @@ class TestSanityCheck(unittest.TestCase):
 
     def testGoodRun(self):
         """Tests that if no bad values were found, sanity_check returns True"""
-        self.cdl.slope = [1.2, 0.23, 2.487]
-        self.cdl.offset = [-0.87, 0.987, 0.0]
-        self.cdl.power = [2.97, 1.25, 1.0]
-        self.cdl.sat = 2.9999
+        self.cdl.slope = decimalize(1.2, 0.23, 2.487)
+        self.cdl.offset = decimalize(-0.87, 0.987, 0.0)
+        self.cdl.power = decimalize(2.97, 1.25, 1.0)
+        self.cdl.sat = Decimal('2.9999')
 
         self.assertTrue(
             cdl_convert.sanity_check(self.cdl)
@@ -262,7 +263,7 @@ class TestSanityCheck(unittest.TestCase):
 
     def testOffset(self):
         """Tests that a bad slope value is reported"""
-        self.cdl.offset = [-1.01, 1.5, 0.157]
+        self.cdl.offset = decimalize(-1.01, 1.5, 0.157)
 
         self.assertFalse(
             cdl_convert.sanity_check(self.cdl)
@@ -280,7 +281,7 @@ class TestSanityCheck(unittest.TestCase):
 
     def testPower(self):
         """Tests that a bad slope value is reported"""
-        self.cdl.power = [0.1, 3.1, 1.5]
+        self.cdl.power = decimalize(0.1, 3.1, 1.5)
 
         self.assertFalse(
             cdl_convert.sanity_check(self.cdl)
@@ -298,7 +299,7 @@ class TestSanityCheck(unittest.TestCase):
 
     def testSaturation(self):
         """Tests that a bad sat value is reported"""
-        self.cdl.sat = 3.01
+        self.cdl.sat = Decimal('3.01')
 
         self.assertFalse(
             cdl_convert.sanity_check(self.cdl)
@@ -1447,6 +1448,15 @@ class TestTimeCodeSegment(unittest.TestCase):
         self.assertTrue(
             tc.durFrames <= 7200
         )
+
+#==============================================================================
+# FUNCTIONS
+#==============================================================================
+
+
+def decimalize(*args):
+    """Converts a list of floats/ints to Decimal list"""
+    return [Decimal(str(i)) for i in args]
 
 #==============================================================================
 # RUNNER

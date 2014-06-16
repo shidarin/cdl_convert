@@ -12,6 +12,7 @@ mock
 #==============================================================================
 
 # Standard Imports
+from decimal import Decimal
 try:
     from unittest import mock
 except ImportError:
@@ -1595,11 +1596,12 @@ class TestColorCorrection(unittest.TestCase):
         """Tests setting and getting the offset"""
 
         offset = (-1.3782, 278.32, 0.738378233782)
+        offsetD = tuple([Decimal(str(i)) for i in offset])
 
         self.cc.offset = offset
 
         self.assertEqual(
-            offset,
+            offsetD,
             self.cc.offset
         )
 
@@ -1644,7 +1646,7 @@ class TestColorCorrection(unittest.TestCase):
     def testOffsetBecomesTuple(self):
         """Tests offset is converted to tuple from list"""
 
-        offset = [-1.3782, 278.32, 0.738378233782]
+        offset = [Decimal('-1.3782'), Decimal('278.32'), Decimal('0.738378233782')]
 
         self.cc.offset = offset
 
@@ -1659,11 +1661,12 @@ class TestColorCorrection(unittest.TestCase):
         """Tests setting and getting the power"""
 
         power = (1.3782, 278.32, 0.738378233782)
+        powerD = tuple([Decimal(str(i)) for i in power])
 
         self.cc.power = power
 
         self.assertEqual(
-            power,
+            powerD,
             self.cc.power
         )
 
@@ -1686,7 +1689,7 @@ class TestColorCorrection(unittest.TestCase):
         setPower()
 
         self.assertEqual(
-            (0.0, 278.32, 0.738378233782),
+            (Decimal('0.0'), Decimal('278.32'), Decimal('0.738378233782')),
             self.cc.power
         )
 
@@ -1731,7 +1734,7 @@ class TestColorCorrection(unittest.TestCase):
     def testPowerBecomesTuple(self):
         """Tests power is converted to tuple from list"""
 
-        power = [1.3782, 278.32, 0.738378233782]
+        power = [Decimal('1.3782'), Decimal('278.32'), Decimal('0.738378233782')]
 
         self.cc.power = power
 
@@ -1746,11 +1749,12 @@ class TestColorCorrection(unittest.TestCase):
         """Tests setting and getting the slope"""
 
         slope = (1.3782, 278.32, 0.738378233782)
+        slopeD = tuple([Decimal(str(i)) for i in slope])
 
         self.cc.slope = slope
 
         self.assertEqual(
-            slope,
+            slopeD,
             self.cc.slope
         )
 
@@ -1773,7 +1777,7 @@ class TestColorCorrection(unittest.TestCase):
         setSlope()
 
         self.assertEqual(
-            (0.0, 278.32, 0.738378233782),
+            (Decimal('0.0'), Decimal('278.32'), Decimal('0.738378233782')),
             self.cc.slope
         )
 
@@ -1818,7 +1822,7 @@ class TestColorCorrection(unittest.TestCase):
     def testSlopeBecomesTuple(self):
         """Tests slope is converted to tuple from list"""
 
-        slope = [1.3782, 278.32, 0.738378233782]
+        slope = [Decimal('1.3782'), Decimal('278.32'), Decimal('0.738378233782')]
 
         self.cc.slope = slope
 
@@ -1833,11 +1837,12 @@ class TestColorCorrection(unittest.TestCase):
         """Tests setting and getting saturation"""
 
         sat = 34.3267
+        satD = Decimal(str(sat))
 
         self.cc.sat = sat
 
         self.assertEqual(
-            sat,
+            satD,
             self.cc.sat
         )
 
@@ -1860,9 +1865,10 @@ class TestColorCorrection(unittest.TestCase):
         setSat()
 
         self.assertEqual(
-            0.0,
+            Decimal('0.0'),
             self.cc.sat
         )
+
     #==========================================================================
 
     def testSatSetString(self):
@@ -1877,14 +1883,14 @@ class TestColorCorrection(unittest.TestCase):
 
     #==========================================================================
 
-    def testSatBecomesFloat(self):
-        """Tests that saturation is converted to float from int"""
+    def testSatBecomesDecimal(self):
+        """Tests that saturation is converted to Decimal from int"""
         sat = 3
 
         self.cc.sat = sat
 
         self.assertEqual(
-            float(sat),
+            Decimal(sat),
             self.cc.sat
         )
 
@@ -3277,7 +3283,7 @@ class TestSatNode(unittest.TestCase):
     def testDefault(self):
         """Tests that saturation starts off with a default value of 1.0"""
         self.assertEqual(
-            1.0,
+            Decimal('1.0'),
             self.node.sat
         )
 
@@ -3300,7 +3306,7 @@ class TestSatNode(unittest.TestCase):
         self.node.sat = '12.3'
 
         self.assertEqual(
-            12.3,
+            Decimal('12.3'),
             self.node.sat
         )
 
@@ -3335,7 +3341,7 @@ class TestSatNode(unittest.TestCase):
         setSat()
 
         self.assertEqual(
-            0.0,
+            Decimal('0.0'),
             self.node.sat
         )
 
@@ -3346,7 +3352,7 @@ class TestSatNode(unittest.TestCase):
         self.node.sat = 100.1
 
         self.assertEqual(
-            100.1,
+            Decimal('100.1'),
             self.node.sat
         )
 
@@ -3369,7 +3375,7 @@ class TestSatNode(unittest.TestCase):
         setSat()
 
         self.assertEqual(
-            0.0,
+            Decimal('0.0'),
             self.node.sat
         )
 
@@ -3380,7 +3386,7 @@ class TestSatNode(unittest.TestCase):
         self.node.sat = 2
 
         self.assertEqual(
-            2,
+            Decimal('2.0'),
             self.node.sat
         )
 
@@ -3403,7 +3409,7 @@ class TestSatNode(unittest.TestCase):
         setSat()
 
         self.assertEqual(
-            0.0,
+            Decimal('0.0'),
             self.node.sat
         )
 
@@ -3474,7 +3480,7 @@ class TestSopNode(unittest.TestCase):
     def testSlopeDefault(self):
         """Tests that slope starts off with a default value of 1.0"""
         self.assertEqual(
-            (1.0, 1.0, 1.0),
+            (Decimal('1.0'), Decimal('1.0'), Decimal('1.0')),
             self.node.slope
         )
 
@@ -3497,7 +3503,7 @@ class TestSopNode(unittest.TestCase):
         self.node.slope = '12.3'
 
         self.assertEqual(
-            (12.3, 12.3, 12.3),
+            (Decimal('12.3'), Decimal('12.3'), Decimal('12.3')),
             self.node.slope
         )
 
@@ -3532,7 +3538,7 @@ class TestSopNode(unittest.TestCase):
         setSlope()
 
         self.assertEqual(
-            (0.0, 0.0, 0.0),
+            (Decimal('0.0'), Decimal('0.0'), Decimal('0.0')),
             self.node.slope
         )
 
@@ -3543,7 +3549,7 @@ class TestSopNode(unittest.TestCase):
         self.node.slope = 100.1
 
         self.assertEqual(
-            (100.1, 100.1, 100.1),
+            (Decimal('100.1'), Decimal('100.1'), Decimal('100.1')),
             self.node.slope
         )
 
@@ -3566,7 +3572,7 @@ class TestSopNode(unittest.TestCase):
         setSlope()
 
         self.assertEqual(
-            (0.0, 0.0, 0.0),
+            (Decimal('0.0'), Decimal('0.0'), Decimal('0.0')),
             self.node.slope
         )
 
@@ -3600,7 +3606,7 @@ class TestSopNode(unittest.TestCase):
         setSlope()
 
         self.assertEqual(
-            (0.0, 0.0, 0.0),
+            (Decimal('0.0'), Decimal('0.0'), Decimal('0.0')),
             self.node.slope
         )
 
@@ -3623,7 +3629,7 @@ class TestSopNode(unittest.TestCase):
         setSlope()
 
         self.assertEqual(
-            (0.0, 278.32, 0.738378233782),
+            (Decimal('0.0'), Decimal('278.32'), Decimal('0.738378233782')),
             self.node.slope
         )
 
@@ -3669,11 +3675,12 @@ class TestSopNode(unittest.TestCase):
         """Tests slope is converted to tuple from list"""
 
         slope = [1.3782, 278.32, 0.738378233782]
+        slopeD = tuple([Decimal(str(i)) for i in slope])
 
         self.node.slope = slope
 
         self.assertEqual(
-            tuple(slope),
+            slopeD,
             self.node.slope
         )
 
@@ -3682,7 +3689,7 @@ class TestSopNode(unittest.TestCase):
     def testOffsetDefault(self):
         """Tests that offset starts off with a default value of 1.0"""
         self.assertEqual(
-            (0.0, 0.0, 0.0),
+            (Decimal('0.0'), Decimal('0.0'), Decimal('0.0')),
             self.node.offset
         )
 
@@ -3705,7 +3712,7 @@ class TestSopNode(unittest.TestCase):
         self.node.offset = '12.3'
 
         self.assertEqual(
-            (12.3, 12.3, 12.3),
+            (Decimal('12.3'), Decimal('12.3'), Decimal('12.3')),
             self.node.offset
         )
 
@@ -3728,7 +3735,7 @@ class TestSopNode(unittest.TestCase):
         self.node.offset = '-20'
 
         self.assertEqual(
-            (-20.0, -20.0, -20.0),
+            (Decimal('-20.0'), Decimal('-20.0'), Decimal('-20.0')),
             self.node.offset
         )
 
@@ -3739,7 +3746,7 @@ class TestSopNode(unittest.TestCase):
         self.node.offset = 100.1
 
         self.assertEqual(
-            (100.1, 100.1, 100.1),
+            (Decimal('100.1'), Decimal('100.1'), Decimal('100.1')),
             self.node.offset
         )
 
@@ -3750,7 +3757,7 @@ class TestSopNode(unittest.TestCase):
         self.node.offset = -20.1
 
         self.assertEqual(
-            (-20.1, -20.1, -20.1),
+            (Decimal('-20.1'), Decimal('-20.1'), Decimal('-20.1')),
             self.node.offset
         )
 
@@ -3772,7 +3779,7 @@ class TestSopNode(unittest.TestCase):
         self.node.offset = -20
 
         self.assertEqual(
-            (-20.0, -20.0, -20.0),
+            (Decimal('-20.0'), Decimal('-20.0'), Decimal('-20.0')),
             self.node.offset
         )
 
@@ -3780,10 +3787,12 @@ class TestSopNode(unittest.TestCase):
 
     def testOffsetSetNegative(self):
         """Tests that offset can be set to negative value"""
-        self.node.offset = [-1.3782, 278.32, 0.738378233782]
+        offset = [-1.3782, 278.32, 0.738378233782]
+        self.node.offset = offset
+        offsetD = tuple([Decimal(str(i)) for i in offset])
 
         self.assertEqual(
-            (-1.3782, 278.32, 0.738378233782),
+            offsetD,
             self.node.offset
         )
 
@@ -3829,11 +3838,12 @@ class TestSopNode(unittest.TestCase):
         """Tests offset is converted to tuple from list"""
 
         offset = [1.3782, 278.32, 0.738378233782]
+        offsetD = tuple([Decimal(str(i)) for i in offset])
 
         self.node.offset = offset
 
         self.assertEqual(
-            tuple(offset),
+            offsetD,
             self.node.offset
         )
 
@@ -3842,7 +3852,7 @@ class TestSopNode(unittest.TestCase):
     def testPowerDefault(self):
         """Tests that power starts off with a default value of 1.0"""
         self.assertEqual(
-            (1.0, 1.0, 1.0),
+            (Decimal('1.0'), Decimal('1.0'), Decimal('1.0')),
             self.node.power
         )
 
@@ -3865,7 +3875,7 @@ class TestSopNode(unittest.TestCase):
         self.node.power = '12.3'
 
         self.assertEqual(
-            (12.3, 12.3, 12.3),
+            (Decimal('12.3'), Decimal('12.3'), Decimal('12.3')),
             self.node.power
         )
 
@@ -3900,7 +3910,7 @@ class TestSopNode(unittest.TestCase):
         setPower()
 
         self.assertEqual(
-            (0.0, 0.0, 0.0),
+            (Decimal('0.0'), Decimal('0.0'), Decimal('0.0')),
             self.node.power
         )
 
@@ -3911,7 +3921,7 @@ class TestSopNode(unittest.TestCase):
         self.node.power = 100.1
 
         self.assertEqual(
-            (100.1, 100.1, 100.1),
+            (Decimal('100.1'), Decimal('100.1'), Decimal('100.1')),
             self.node.power
         )
 
@@ -3934,7 +3944,7 @@ class TestSopNode(unittest.TestCase):
         setPower()
 
         self.assertEqual(
-            (0.0, 0.0, 0.0),
+            (Decimal('0.0'), Decimal('0.0'), Decimal('0.0')),
             self.node.power
         )
 
@@ -3968,7 +3978,7 @@ class TestSopNode(unittest.TestCase):
         setPower()
 
         self.assertEqual(
-            (0.0, 0.0, 0.0),
+            (Decimal('0.0'), Decimal('0.0'), Decimal('0.0')),
             self.node.power
         )
 
@@ -3991,7 +4001,7 @@ class TestSopNode(unittest.TestCase):
         setPower()
 
         self.assertEqual(
-            (0.0, 278.32, 0.738378233782),
+            (Decimal('0.0'), Decimal('278.32'), Decimal('0.738378233782')),
             self.node.power
         )
 
@@ -4037,11 +4047,12 @@ class TestSopNode(unittest.TestCase):
         """Tests power is converted to tuple from list"""
 
         power = [1.3782, 278.32, 0.738378233782]
+        powerD = tuple([Decimal(str(i)) for i in power])
 
         self.node.power = power
 
         self.assertEqual(
-            tuple(power),
+            powerD,
             self.node.power
         )
 
