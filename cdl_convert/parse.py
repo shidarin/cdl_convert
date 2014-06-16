@@ -649,7 +649,29 @@ INPUT_FORMATS = {
 
 
 def parse_file(filepath, filetype=None):
-    """Determines & uses the correct parser to use on a CDL file"""
+    """Determines & uses the correct parser to use on a CDL file
+
+    Args:
+        filepath : (str)
+            The filepath to the file. Must exist.
+
+        filetype=None : (str)
+            A file extension corresponding to the CDL type to convert from.
+            If not provided, we'll derive it from the filepath.
+
+            Should not include a '.'
+
+    Raises:
+        N/A
+
+    Returns:
+        :class:`ColorCorrection` or :class:`ColorCollection`
+            Depending on the type of input file, this function will
+            either return a single :class:`ColorCorrection` or a full
+            :class:`ColorCollection` , containing one or more
+            :class:`ColorCorrection` or :class:`ColorDecision`
+
+    """
     if not filetype:
         filetype = os.path.basename(filepath).split('.')[-1].lower()
 
