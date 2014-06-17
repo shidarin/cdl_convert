@@ -7,6 +7,41 @@ CDL Convert Decision
 Contains the ColorDecision class and it's unique child classes,
 ColorCorrectionRef and MediaRef.
 
+## Classes
+
+    ColorCorrectionRef
+
+        This class contains a reference to a ColorCorrection. The reference
+        should be a reference to an existing ColorCorrection, but this is
+        not enforced explicitly unless config.HALT_ON_ERROR is set and you
+        try and retrieve the referenced Correction.
+
+        Should be contained only within a ColorDecision
+
+    ColorDecision
+
+        A simple container format. Requires a ColorCorrection or a
+        ColorCorrectionRef, and may also contain an optional MediaRef. This
+        should only be contained within a ColorCollection.
+
+        ColorDecisions are used to link a ColorCorrection with one or several
+        pieces of reference media, as represented by MediaRef. A single
+        ColorCorrection may be referenced and 'contained' within many different
+        ColorDecisions so that a single ColorCorrection can be linked with many
+        different MediaRefs
+
+    MediaRef
+
+        Contains a single uri path to a peice of reference media. This class
+        contains many attributes and helper methods for dealing with media
+        reference, which should let a user do the following and more:
+
+            * Change refs to be absolute or relative
+            * Change refs to be in a new directory
+            * Determine if a ref exists on disk
+            * Determine if a ref is an image sequence
+            * If a directory, find all files and sequences within.
+
 ## License
 
 The MIT License (MIT)
@@ -57,7 +92,11 @@ from .correction import ColorCorrection
 # EXPORTS
 # ==============================================================================
 
-__all__ = ['ColorCorrectionRef', 'ColorDecision', 'MediaRef']
+__all__ = [
+    'ColorCorrectionRef',
+    'ColorDecision',
+    'MediaRef'
+]
 
 # ==============================================================================
 # CLASSES

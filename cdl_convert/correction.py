@@ -7,6 +7,23 @@ CDL Convert Correction
 Contains the ColorCorrection class, and the ColorNode child classes, SopNode
 and SatNode.
 
+## Classes
+
+    ColorCorrection
+
+        The backbone of cdl_convert, everything comes down to the
+        ColorCorrection, which is the main interface for interacting with the
+        10 ASC CDL numbers. Contains a SatNode and a SopNode.
+
+    SatNode
+
+        Container node with the Sat value, including all the setter behavior.
+
+    SopNode
+
+        Container node for the Slope, Offset and Power values, including all
+        the setter behavior.
+
 ## License
 
 The MIT License (MIT)
