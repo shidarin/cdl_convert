@@ -12,6 +12,7 @@ mock
 #==============================================================================
 
 # Standard Imports
+from decimal import Decimal
 try:
     from unittest import mock
 except ImportError:
@@ -33,7 +34,7 @@ from xml.etree import ElementTree
 
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
-import cdl_convert.cdl_convert as cdl_convert
+import cdl_convert
 
 #==============================================================================
 # GLOBALS
@@ -301,20 +302,20 @@ class TestParseCCBasic(unittest.TestCase):
         self.sop_node_desc = [
             'Sop description 1', 'Sop description 2', 'Sop description 3'
         ]
-        self.slope = (1.014, 1.0104, 0.62)
-        self.offset = (-0.00315, -0.00124, 0.3103)
-        self.power = (1.0, 0.9983, 1.0)
+        self.slope = decimalize(1.014, 1.0104, 0.62)
+        self.offset = decimalize(-0.00315, -0.00124, 0.3103)
+        self.power = decimalize(1.0, 0.9983, 1.0)
         self.sat_node_desc = [
             'Sat description 1', 'Sat description 2'
         ]
-        self.sat = 1.09
+        self.sat = Decimal('1.09')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
             f.write(enc(CC_FULL))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
     #==========================================================================
 
@@ -324,7 +325,7 @@ class TestParseCCBasic(unittest.TestCase):
         os.remove(self.filename)
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -440,18 +441,18 @@ class TestParseCCOdd(TestParseCCBasic):
         self.sop_node_desc = [
             'Raised saturation a little!?! ag... \/Offset'
         ]
-        self.slope = (137829.329, 4327890.9833, 3489031.003)
-        self.offset = (-3424.011, -342789423.013, -4238923.11)
-        self.power = (3271893.993, .0000998, 0.0000000000000000113)
+        self.slope = decimalize(137829.329, 4327890.9833, 3489031.003)
+        self.offset = decimalize(-3424.011, -342789423.013, -4238923.11)
+        self.power = decimalize(3271893.993, .0000998, 0.0000000000000000113)
         self.sat_node_desc = []
-        self.sat = 1798787.01
+        self.sat = Decimal('1798787.01')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
             f.write(enc(CC_ODD))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -470,18 +471,18 @@ class TestParseCCBasic(TestParseCCBasic):
         self.viewing_desc = None
 
         self.sop_node_desc = []
-        self.slope = (0.2331, 0.678669, 1.0758)
-        self.offset = (0.031, 0.128, -0.096)
-        self.power = (1.8, 0.97, 0.961)
+        self.slope = decimalize(0.2331, 0.678669, 1.0758)
+        self.offset = decimalize(0.031, 0.128, -0.096)
+        self.power = decimalize(1.8, 0.97, 0.961)
         self.sat_node_desc = []
-        self.sat = 1.01
+        self.sat = Decimal('1.01')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
             f.write(enc(CC_BASIC))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -500,18 +501,18 @@ class TestParseCCBasicOrder(TestParseCCBasic):
         self.viewing_desc = None
 
         self.sop_node_desc = []
-        self.slope = (0.2331, 0.678669, 1.0758)
-        self.offset = (0.031, 0.128, -0.096)
-        self.power = (1.8, 0.97, 0.961)
+        self.slope = decimalize(0.2331, 0.678669, 1.0758)
+        self.offset = decimalize(0.031, 0.128, -0.096)
+        self.power = decimalize(1.8, 0.97, 0.961)
         self.sat_node_desc = []
-        self.sat = 1.01
+        self.sat = Decimal('1.01')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
             f.write(enc(CC_BASIC_ORDER))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -530,18 +531,18 @@ class TestParseCCBlankMetadata(TestParseCCBasic):
         self.viewing_desc = None
 
         self.sop_node_desc = []
-        self.slope = (1.014, 1.0104, 0.62)
-        self.offset = (-0.00315, -0.00124, 0.3103)
-        self.power = (1.0, 0.9983, 1.0)
+        self.slope = decimalize(1.014, 1.0104, 0.62)
+        self.offset = decimalize(-0.00315, -0.00124, 0.3103)
+        self.power = decimalize(1.0, 0.9983, 1.0)
         self.sat_node_desc = []
-        self.sat = 1.09
+        self.sat = Decimal('1.09')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
             f.write(enc(CC_BLANK_METADATA))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
 #==============================================================================
 
@@ -560,18 +561,18 @@ class TestParseCCNoSop(TestParseCCBasic):
         self.viewing_desc = None
 
         self.sop_node_desc = []
-        self.slope = (1.0, 1.0, 1.0)
-        self.offset = (0.0, 0.0, 0.0)
-        self.power = (1.0, 1.0, 1.0)
+        self.slope = decimalize(1.0, 1.0, 1.0)
+        self.offset = decimalize(0.0, 0.0, 0.0)
+        self.power = decimalize(1.0, 1.0, 1.0)
         self.sat_node_desc = ['I am a lovely sat node']
-        self.sat = 1.01
+        self.sat = Decimal('1.01')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
             f.write(enc(CC_NO_SOP))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
         # We need to call a SOP value to initialize the SOP subnode
         self.cdl.slope
@@ -593,18 +594,18 @@ class TestParseCCNoSat(TestParseCCBasic):
         self.viewing_desc = None
 
         self.sop_node_desc = []
-        self.slope = (0.2331, 0.678669, 1.0758)
-        self.offset = (0.031, 0.128, -0.096)
-        self.power = (1.8, 0.97, 0.961)
+        self.slope = decimalize(0.2331, 0.678669, 1.0758)
+        self.offset = decimalize(0.031, 0.128, -0.096)
+        self.power = decimalize(1.8, 0.97, 0.961)
         self.sat_node_desc = []
-        self.sat = 1.0
+        self.sat = Decimal('1.0')
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
             f.write(enc(CC_NO_SAT))
             self.filename = f.name
 
-        self.cdl = cdl_convert.parse_cc(self.filename)[0]
+        self.cdl = cdl_convert.parse_cc(self.filename)
 
         # We need to call a SAT value to initialize the SAT subnode
         self.cdl.sat
@@ -625,7 +626,7 @@ class TestParseCCExceptions(unittest.TestCase):
     #==========================================================================
 
     def tearDown(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         if self.file:
             os.remove(self.file)
 
@@ -692,7 +693,7 @@ class TestParseCCExceptions(unittest.TestCase):
             f.write(enc(CC_BLANK_ID))
             self.file = f.name
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
@@ -700,9 +701,9 @@ class TestParseCCExceptions(unittest.TestCase):
             self.file
         )
 
-        cdl_convert.HALT_ON_ERROR = False
+        cdl_convert.config.HALT_ON_ERROR = False
 
-        cdl = cdl_convert.parse_cc(self.file)[0]
+        cdl = cdl_convert.parse_cc(self.file)
 
         self.assertEqual(
             '001',
@@ -719,7 +720,7 @@ class TestParseCCExceptions(unittest.TestCase):
             f.write(enc(CC_NEGATIVE_SLOPE))
             self.file = f.name
 
-        cdl_convert.HALT_ON_ERROR = True
+        cdl_convert.config.HALT_ON_ERROR = True
 
         self.assertRaises(
             ValueError,
@@ -727,13 +728,13 @@ class TestParseCCExceptions(unittest.TestCase):
             self.file
         )
 
-        cdl_convert.HALT_ON_ERROR = False
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.reset_all()
 
-        cdl = cdl_convert.parse_cc(self.file)[0]
+        cdl = cdl_convert.parse_cc(self.file)
 
         self.assertEqual(
-            (0.0, 0.678669, 1.0758),
+            decimalize(0.0, 0.678669, 1.0758),
             cdl.slope,
         )
 
@@ -748,7 +749,7 @@ class TestWriteCCFull(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("014_xf_seqGrade_v01", '')
         self.cdl.desc = [
             'CC description 1', 'CC description 2', 'CC description 3',
@@ -775,8 +776,10 @@ class TestWriteCCFull(unittest.TestCase):
     #==========================================================================
 
     def tearDown(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
+    #==========================================================================
+    # TESTS
     #==========================================================================
 
     def test_root_xml(self):
@@ -804,11 +807,13 @@ class TestWriteCCFull(unittest.TestCase):
             self.cdl.element.tag
         )
 
+    #==========================================================================
+
     def test_write(self):
         """Tests writing the cc itself"""
         mockOpen = mock.mock_open()
 
-        self.cdl._files['file_out'] = 'bobs_big_file.cc'
+        self.cdl._file_out = 'bobs_big_file.cc'
 
         with mock.patch(builtins + '.open', mockOpen, create=True):
             cdl_convert.write_cc(self.cdl)
@@ -826,7 +831,7 @@ class TestWriteCCOdd(TestWriteCCFull):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("f55.100", '')
         self.cdl.desc = [
             'Raised saturation1 a little!?! ag... \/Offset',
@@ -857,7 +862,7 @@ class TestWriteCCNoSop(TestWriteCCFull):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("burp_200.x15", '')
 
         self.cdl.sat = 1.0128109381
@@ -875,7 +880,7 @@ class TestWriteCCNoSat(TestWriteCCFull):
     #==========================================================================
 
     def setUp(self):
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("burp_300.x35", '')
 
         self.cdl.slope = (1.233321, 0.678669, 1.0758)
@@ -889,6 +894,10 @@ class TestWriteCCNoSat(TestWriteCCFull):
 # FUNCTIONS
 #==============================================================================
 
+
+def decimalize(*args):
+    """Converts a list of floats/ints to Decimal list"""
+    return tuple([Decimal(str(i)) for i in args])
 
 #==============================================================================
 # RUNNER

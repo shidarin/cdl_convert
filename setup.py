@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 import codecs
 import os
 import re
@@ -22,7 +22,7 @@ import re
 #       python setup.py sdist bdist_wheel upload
 
 here = os.path.abspath(os.path.dirname(__file__))
-main_file = os.path.join(here, 'cdl_convert', 'cdl_convert.py')
+main_file = os.path.join(here, 'cdl_convert', '__init__.py')
 
 # Read the version number from a source file.
 # Why read it, and not import?
@@ -53,7 +53,7 @@ def find_metadata(filepath):
                             metadata_file, re.M)
     status_match = re.search(r"^__status__ = ['\"]([^'\"]*)['\"]",
                              metadata_file, re.M)
-                              
+
     if version_match:
         metadata['version'] = version_match.group(1)
     else:

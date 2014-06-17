@@ -12,6 +12,7 @@ mock
 #==============================================================================
 
 # Standard Imports
+from decimal import Decimal
 import os
 from random import choice, randrange
 import sys
@@ -29,7 +30,7 @@ import unittest
 
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
-import cdl_convert.cdl_convert as cdl_convert
+import cdl_convert
 from tests.test_cdl_convert import TimeCodeSegment
 
 #==============================================================================
@@ -56,11 +57,11 @@ AUDIO_FORMAT\t48khz
 FPS\t24
 
 Column
-Start\tEnd\tHandle Length\tAvid Clip Name\tASC_SAT\tASC_SOP\tScan Filename\tTotal Frame Count
+Start\tEnd\tHandle Length\tAvid Clip Name\tASC_SAT\tASC_SOP\tScan Filename
 
 Data
 """
-ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\t{frames}\n"
+ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\n"
 
 # misc ========================================================================
 
@@ -92,10 +93,10 @@ class TestParseALEBasic(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildALELine(self.slope1, self.offset1, self.power1, self.sat1,
                              'bb94_x103_line1')
@@ -103,18 +104,18 @@ class TestParseALEBasic(unittest.TestCase):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (137829.329, 4327890.9833, 3489031.003)
-        self.offset2 = (-3424.011, -342789423.013, -4238923.11)
-        self.power2 = (3271893.993, .0000998, 0.0000000000000000113)
-        self.sat2 = 1798787.01
+        self.slope2 = decimalize(137829.329, 4327890.9833, 3489031.003)
+        self.offset2 = decimalize(-3424.011, -342789423.013, -4238923.11)
+        self.power2 = decimalize(3271893.993, .0000998, 0.0000000000000000113)
+        self.sat2 = Decimal('1798787.01')
 
         line2 = buildALELine(self.slope2, self.offset2, self.power2, self.sat2,
                              'bb94_x104_line2')
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.738378233782)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.738378233782)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildALELine(self.slope3, self.offset3, self.power3, self.sat3,
                              'bb94_x105_line3')
@@ -126,10 +127,10 @@ class TestParseALEBasic(unittest.TestCase):
             f.write(enc(self.file))
             self.filename = f.name
 
-        cdls = cdl_convert.parse_ale(self.filename)
-        self.cdl1 = cdls[0]
-        self.cdl2 = cdls[1]
-        self.cdl3 = cdls[2]
+        self.cdls = cdl_convert.parse_ale(self.filename)
+        self.cdl1 = self.cdls.color_corrections[0]
+        self.cdl2 = self.cdls.color_corrections[1]
+        self.cdl3 = self.cdls.color_corrections[2]
 
     #==========================================================================
 
@@ -139,10 +140,37 @@ class TestParseALEBasic(unittest.TestCase):
         os.remove(self.filename)
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
+    #==========================================================================
+
+    def testCollection(self):
+        """Tests that we were returned a ColorCollection"""
+        self.assertEqual(
+            cdl_convert.ColorCollection,
+            self.cdls.__class__
+        )
+
+    #==========================================================================
+
+    def testFileIn(self):
+        """Tests that file_in has been set on the collection correctly"""
+        self.assertEqual(
+            self.filename,
+            self.cdls.file_in
+        )
+
+    #==========================================================================
+
+    def testType(self):
+        """Test that the type of the collection is set to ccc"""
+        self.assertEqual(
+            'ccc',
+            self.cdls.type
+        )
+
     #==========================================================================
 
     def testId(self):
@@ -252,10 +280,10 @@ class TestParseALEShort(TestParseALEBasic):
     #==========================================================================
 
     def setUp(self):
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildALELine(self.slope1, self.offset1, self.power1, self.sat1,
                              'bb94_x103_line1', short=True)
@@ -263,18 +291,18 @@ class TestParseALEShort(TestParseALEBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (137829.329, 4327890.9833, 3489031.003)
-        self.offset2 = (-3424.011, -342789423.013, -4238923.11)
-        self.power2 = (3271893.993, .0000998, 0.0000000000000000113)
-        self.sat2 = 1798787.01
+        self.slope2 = decimalize(137829.329, 4327890.9833, 3489031.003)
+        self.offset2 = decimalize(-3424.011, -342789423.013, -4238923.11)
+        self.power2 = decimalize(3271893.993, .0000998, 0.0000000000000000113)
+        self.sat2 = Decimal('1798787.01')
 
         line2 = buildALELine(self.slope2, self.offset2, self.power2, self.sat2,
                              'bb94_x104_line2', short=True)
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.738378233782)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.738378233782)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildALELine(self.slope3, self.offset3, self.power3, self.sat3,
                              'bb94_x105_line3', short=True)
@@ -286,10 +314,10 @@ class TestParseALEShort(TestParseALEBasic):
             f.write(enc(self.file))
             self.filename = f.name
 
-        cdls = cdl_convert.parse_ale(self.filename)
-        self.cdl1 = cdls[0]
-        self.cdl2 = cdls[1]
-        self.cdl3 = cdls[2]
+        self.cdls = cdl_convert.parse_ale(self.filename)
+        self.cdl1 = self.cdls.color_corrections[0]
+        self.cdl2 = self.cdls.color_corrections[1]
+        self.cdl3 = self.cdls.color_corrections[2]
 
 #==============================================================================
 # FUNCTIONS
@@ -365,11 +393,15 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
             powerR=power[0],
             powerG=power[1],
             powerB=power[2],
-            filename=filename,
-            frames=tc.durFrames
+            filename=filename
         )
 
     return ale
+
+
+def decimalize(*args):
+    """Converts a list of floats/ints to Decimal list"""
+    return tuple([Decimal(str(i)) for i in args])
 
 #==============================================================================
 # RUNNER

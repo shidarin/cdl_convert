@@ -12,6 +12,7 @@ mock
 #==============================================================================
 
 # Standard Imports
+from decimal import Decimal
 try:
     from unittest import mock
 except ImportError:
@@ -38,7 +39,7 @@ import unittest
 
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
-import cdl_convert.cdl_convert as cdl_convert
+import cdl_convert
 
 #==============================================================================
 # GLOBALS
@@ -98,10 +99,10 @@ class TestParseFLExBasic(unittest.TestCase):
 
         self.title = "Bob's Big Apple Break, into the big apple! Part 365   H"
 
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
                               'bb94', 'x103', 'line1')
@@ -109,18 +110,18 @@ class TestParseFLExBasic(unittest.TestCase):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (13.329, 4.9334, 348908)
-        self.offset2 = (-3424.0, -34.013, -642389)
-        self.power2 = (37.993, .00009, 0.0000)
-        self.sat2 = 177.01
+        self.slope2 = decimalize(13.329, 4.9334, 348908)
+        self.offset2 = decimalize(-3424.0, -34.013, -642389)
+        self.power2 = decimalize(37.993, 0.0009, 0.0000)
+        self.sat2 = Decimal('177.01')
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
                               'bb94', 'x104', 'line2')
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.7383)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.7383)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
                               'bb94', 'x105', 'line3')
@@ -133,9 +134,9 @@ class TestParseFLExBasic(unittest.TestCase):
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
-        self.cdl1 = self.cdls[0]
-        self.cdl2 = self.cdls[1]
-        self.cdl3 = self.cdls[2]
+        self.cdl1 = self.cdls.all_children[0]
+        self.cdl2 = self.cdls.all_children[1]
+        self.cdl3 = self.cdls.all_children[2]
 
     #==========================================================================
 
@@ -145,12 +146,38 @@ class TestParseFLExBasic(unittest.TestCase):
         os.remove(self.filename)
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
     #==========================================================================
 
+    def testCollection(self):
+        """Tests that we were returned a ColorCollection"""
+        self.assertEqual(
+            cdl_convert.ColorCollection,
+            self.cdls.__class__
+        )
+
+    #==========================================================================
+
+    def testFileIn(self):
+        """Tests that file_in has been set on the collection correctly"""
+        self.assertEqual(
+            self.filename,
+            self.cdls.file_in
+        )
+
+    #==========================================================================
+
+    def testType(self):
+        """Test that the type of the collection is set to ccc"""
+        self.assertEqual(
+            'ccc',
+            self.cdls.type
+        )
+
+    #==========================================================================
     def testId(self):
         """Tests that filenames were parsed correctly"""
 
@@ -257,7 +284,7 @@ class TestParseFLExBasic(unittest.TestCase):
         for i in range(3):
             self.assertEqual(
                 [self.title, ],
-                self.cdls[i].desc
+                self.cdls.all_children[i].desc
             )
 
 
@@ -272,10 +299,10 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
 
         self.title = "Bob's Big Apple Break, into the big apple! Part 365   H"
 
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1,
                               'bb94', 'x103', 'line1')
@@ -283,18 +310,18 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (13.329, 4.9334, 348908)
-        self.offset2 = (-3424.0, -34.013, -642389)
-        self.power2 = (37.993, .00009, 0.0000)
-        self.sat2 = 177.01
+        self.slope2 = decimalize(13.329, 4.9334, 348908)
+        self.offset2 = decimalize(-3424.0, -34.013, -642389)
+        self.power2 = decimalize(37.993, 0.0009, 0.0000)
+        self.sat2 = Decimal('177.01')
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2,
                               'bb94', 'x104')
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.7383)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.7383)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3,
                               'bb94')
@@ -307,9 +334,9 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
-        self.cdl1 = self.cdls[0]
-        self.cdl2 = self.cdls[1]
-        self.cdl3 = self.cdls[2]
+        self.cdl1 = self.cdls.all_children[0]
+        self.cdl2 = self.cdls.all_children[1]
+        self.cdl3 = self.cdls.all_children[2]
 
     #==========================================================================
     # TESTS
@@ -345,27 +372,27 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
 
         self.title = "Bob's Big Apple Break, into the big apple! Part.365   H"
 
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1)
 
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (13.329, 4.9334, 348908)
-        self.offset2 = (-3424.0, -34.013, -642389)
-        self.power2 = (37.993, .00009, 0.0000)
-        self.sat2 = 177.01
+        self.slope2 = decimalize(13.329, 4.9334, 348908)
+        self.offset2 = decimalize(-3424.0, -34.013, -642389)
+        self.power2 = decimalize(37.993, 0.0009, 0.0000)
+        self.sat2 = Decimal('177.01')
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2)
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.7383)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.7383)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3)
 
@@ -377,9 +404,9 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
-        self.cdl1 = self.cdls[0]
-        self.cdl2 = self.cdls[1]
-        self.cdl3 = self.cdls[2]
+        self.cdl1 = self.cdls.all_children[0]
+        self.cdl2 = self.cdls.all_children[1]
+        self.cdl3 = self.cdls.all_children[2]
 
     #==========================================================================
     # TESTS
@@ -415,27 +442,27 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
 
         self.title = ''
 
-        self.slope1 = (1.329, 0.9833, 1.003)
-        self.offset1 = (0.011, 0.013, 0.11)
-        self.power1 = (.993, .998, 1.0113)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildFLExTake(self.slope1, self.offset1, self.power1, self.sat1)
 
         # Note that there are limits to the floating point precision here.
         # Python will not parse numbers exactly with numbers with more
         # significant whole and decimal digits
-        self.slope2 = (13.329, 4.9334, 348908)
-        self.offset2 = (-3424.0, -34.013, -642389)
-        self.power2 = (37.993, .00009, 0.0000)
-        self.sat2 = 177.01
+        self.slope2 = decimalize(13.329, 4.9334, 348908)
+        self.offset2 = decimalize(-3424.0, -34.013, -642389)
+        self.power2 = decimalize(37.993, 0.0009, 0.0000)
+        self.sat2 = Decimal('177.01')
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2, self.sat2)
 
-        self.slope3 = (1.2, 2.32, 10.82)
-        self.offset3 = (-1.3782, 278.32, 0.7383)
-        self.power3 = (1.329, 0.9833, 1.003)
-        self.sat3 = 0.99
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.7383)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
 
         line3 = buildFLExTake(self.slope3, self.offset3, self.power3, self.sat3)
 
@@ -447,9 +474,9 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
-        self.cdl1 = self.cdls[0]
-        self.cdl2 = self.cdls[1]
-        self.cdl3 = self.cdls[2]
+        self.cdl1 = self.cdls.all_children[0]
+        self.cdl2 = self.cdls.all_children[1]
+        self.cdl3 = self.cdls.all_children[2]
 
     #==========================================================================
     # TESTS
@@ -483,7 +510,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
         for i in range(3):
             self.assertEqual(
                 [],
-                self.cdls[i].desc
+                self.cdls.all_children[i].desc
             )
 
 
@@ -498,26 +525,26 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
 
         self.title = "Hanky Panky Bromance"
 
-        self.slope1 = (1.0, 1.0, 1.0)
-        self.offset1 = (0.0, 0.0, 0.0)
-        self.power1 = (1.0, 1.0, 1.0)
-        self.sat1 = 1.01
+        self.slope1 = decimalize(1.0, 1.0, 1.0)
+        self.offset1 = decimalize(0.0, 0.0, 0.0)
+        self.power1 = decimalize(1.0, 1.0, 1.0)
+        self.sat1 = Decimal('1.01')
 
         line1 = buildFLExTake(sat=self.sat1, scene='bb94', take='x103',
                               roll='line1')
 
-        self.slope2 = (1.2, 2.32, 10.82)
-        self.offset2 = (-1.32, 2.32, 0.73)
-        self.power2 = (1.329, 0.9833, 1.003)
-        self.sat2 = 1.0
+        self.slope2 = decimalize(1.2, 2.32, 10.82)
+        self.offset2 = decimalize(-1.32, 2.32, 0.73)
+        self.power2 = decimalize(1.329, 0.9833, 1.003)
+        self.sat2 = Decimal('1.0')
 
         line2 = buildFLExTake(self.slope2, self.offset2, self.power2,
                               scene='bb94', take='x104', roll='line2')
 
-        self.slope3 = (1.0, 1.0, 1.0)
-        self.offset3 = (0.0, 0.0, 0.0)
-        self.power3 = (1.0, 1.0, 1.0)
-        self.sat3 = 1.0
+        self.slope3 = decimalize(1.0, 1.0, 1.0)
+        self.offset3 = decimalize(0.0, 0.0, 0.0)
+        self.power3 = decimalize(1.0, 1.0, 1.0)
+        self.sat3 = Decimal('1.0')
 
         line3 = buildFLExTake()
 
@@ -529,9 +556,9 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
             self.filename = f.name
 
         self.raw_cdls = cdl_convert.parse_flex(self.filename)
-        self.cdls = self.raw_cdls[:]
-        self.cdl1 = self.cdls[0]
-        self.cdl2 = self.cdls[1]
+        self.cdls = self.raw_cdls.all_children
+        self.cdl1 = self.raw_cdls.all_children[0]
+        self.cdl2 = self.raw_cdls.all_children[1]
         self.cdl3 = cdl_convert.ColorCorrection(
             'bb94_x105_line3', self.filename
         )
@@ -542,12 +569,50 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
     # TESTS
     #==========================================================================
 
+    def testCollection(self):
+        """Tests that we were returned a ColorCollection"""
+        self.assertEqual(
+            cdl_convert.ColorCollection,
+            self.raw_cdls.__class__
+        )
+
+    #==========================================================================
+
+    def testFileIn(self):
+        """Tests that file_in has been set on the collection correctly"""
+        self.assertEqual(
+            self.filename,
+            self.raw_cdls.file_in
+        )
+
+    #==========================================================================
+
+    def testType(self):
+        """Test that the type of the collection is set to ccc"""
+        self.assertEqual(
+            'ccc',
+            self.raw_cdls.type
+        )
+
+    #==========================================================================
+
+    def testDescription(self):
+        """Tests that the descriptions have been parsed correctly"""
+
+        for i in range(3):
+            self.assertEqual(
+                [self.title, ],
+                self.cdls[i].desc
+            )
+
+    #==========================================================================
+
     def testOnlyTwoCDLsReturned(self):
         """Tests that with no SOP or SAT value, only 2 lines will become cdls"""
 
         self.assertEqual(
             2,
-            len(self.raw_cdls)
+            len(self.raw_cdls.all_children)
         )
 
 #==============================================================================
@@ -629,6 +694,11 @@ def buildFLExTake(slope=None, offset=None, power=None, sat=None, scene=None,
         )
 
     return flex
+
+
+def decimalize(*args):
+    """Converts a list of floats/ints to Decimal list"""
+    return tuple(Decimal(str(i)) for i in args)
 
 #==============================================================================
 # RUNNER

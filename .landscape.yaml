@@ -4,8 +4,6 @@ strictness: veryhigh
 max-line-length: 120
 ignore-paths:
     - setup.py
-    - cdl_convert/__init__.py
     - docs
     - tests
-ignore-patterns:
 autodetect: yes

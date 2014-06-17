@@ -29,6 +29,7 @@ different formats:
 -  CMX EDL
 -  XML Color Correction (cc)
 -  XML Color Correction Collection (ccc)
+-  XML Color Decision List (cdl)
 
 Unofficial Formats:
 
@@ -38,6 +39,9 @@ Unofficial Formats:
 It is the purpose of ``cdl_convert`` to convert ASC CDL information between
 these basic formats to further facilitate the ease of exchange of color
 data within the Film and TV industries.
+
+``cdl_convert`` supports parsing ALE, FLEx, CC, CCC, CDL and RCDL. We can write
+out CC, CCC, CDL and RCDL.
 
 **cdl_convert is not associated with the American Society of
 Cinematographers**
@@ -64,54 +68,58 @@ the ``-o`` flag.::
 
     $ cdl_convert ./di_v001.flex -o cc,cdl
 
-Sometimes it might be nessicary to disable cdl_convert's auto-detection of the
-input file format. This can be done with the ``-i`` flag.::
-
-    $ cdl_convert ./ca102_x34.cdl -i cdl -o cc
-
-In this case, ``.cdl`` could have indicated either a space separated cdl, or an XML
-cdl. ``cdl_convert`` does it's best to try and guess which one the file is, but
-if you're running into trouble, it might help to indicate to ``cdl_convert``
-what the input file type is.
 
 Changelog
 ---------
 
-*New in version 0.6.1:*
+*New in version 0.7:*
 
-- Added ``AscXMLBase`` class for nodes that can be represented by XML to inherit.
-- Suppressed scientific notation from being written out when writing files. Should now write out as close as Python accuracy allows, and the same number of digits.
-- ``write_cc`` now writes out 100% correct XML using ElementTree.
-- Added tests for ``write_cc``, which **brings our coverage to 100%**
+The biggest change in 0.7 is the addition of collection format support.
+``.ccc``, Color Correction Collections, can now be parsed and written. ``.cdl``,
+Color Decision Lists, can now be parsed and written. ``.ale``
+and ``.flex`` files now return a collection.
 
-*New in version 0.6:*
-
-- Adds much greater ASC CDL XML compliance with the addition of many classes that represent node concepts in the CDL XML schema.
-- Moves ``viewing_desc`` and ``input_desc`` attributes and methods into the base class ``AscColorSpaceBase``.
-- Moved ``desc`` attribute and methods into the base class ``AscDescBase``.
-- Adds ``ColorCollectionBase`` class for a basis of all collection type nodes (``ColorCorrectionCollection`` , ``ColorDecisionList`` , etc).
-- Adds ``MediaRef`` class which represents the MediaRef node of a ColorDecision. This class allows convenient handling of files given as media reference.
-- Adds ``HALT_ON_ERROR`` module variable which determines certain exception handling behavior. Exceptions that can normally be handled with default behavior (such as negative Slope or Power values) will be dealt with silently instead of stopping the program. Negative Slope and Power values, for example, will clip to 0.0.
-- ``ColorCorrection`` (formally ``AscCdl``) class changes:
-    - Renames ``AscCdl`` to ``ColorCorrection`` .
-    - Adds class level member dictionary, which allows lookup of a ``ColorCorrection`` instance by the unique ID.
-    - ``ColorCorrection`` objects now require a unique ID to be instantiated.
-    - Removes ``metadata`` attribute of ``ColorCorrection`` .
-    - Moves SOP and SAT operations out of ``ColorCorrection`` into their own classes, which are based on ``ColorNodeBase`` . The ``SatNode`` and ``SopNode`` classes are still meant to be children of ``ColorCorrection``.
-    - Added ``sop_node`` and ``sat_node`` attributes to access the child ``SatNode`` and ``SopNode`` .
-    - Removed ``metadata`` attribute, splitting it into the inherited attributes of ``input_desc``, ``viewing_desc`` and ``desc``.
-    - ``desc`` attribute is now fully fleshed out as a list of all encountered description fields.
-    - Renamed ``cc_id`` field to ``id``, shadowing the built in ``id`` within the class.
-    - Slope, Offset and Power now return as a tuple instead of a list to prevent index assignment, appending and extending.
-- ``parse_cc`` should now parse a much greater variety of ``.cc`` files more accurately.
-    - Now supports infinite Description fields
-    - Now supports Viewing and Input Description fields
-    - Significantly simplifies the function.
-- ``parse_flex`` has been significantly simplified.
-- Test Suite broken up into sub-modules.
-- Adds PyPy support.
-- Adds ReadTheDocs
-- Adds docs to build
+- New script flags:
+    - Adds ``--check`` flag to script, which checks all parsed :class:`ColorCorrects` for sane values, and prints warnings to shell
+    - Adds ``-d``, ``--destination`` flag to the script, which allows user to specify the output directory converted files will be written to.
+    - Adds ``--no-ouput`` flag to the script, which goes through the entire conversion process but doesn't actually write anything to disk. Useful for troubleshooting, especially when combined with ``--check``
+    - Adds ``--halt`` flag to the script, which halts on errors that can be resolved safely (such as negative slope or power values)
+- Renames :class:`ColorCollectionBase` to :class:`ColorCollection` , since it will be used directly by both ``ccc`` and ``cdl``.
+- Adds ``parse_ccc`` which returns a :class:`ColorCollection` .
+- Adds ``write_ccc`` which writes a :class:`ColorCollection` as a ``ccc`` file.
+- Adds ``parse_cdl`` which returns a :class:`ColorCollection` .
+- Adds ``write_cdl`` which returns a :class:`ColorCollection` as a ``cdl`` file.
+- :class:`ColorCollection` is now a fully functional container class, with many attributes and methods.
+- Added :class:`ColorDecision` , which stores either a :class:`ColorCorrection` or :class:`ColorCorrectionRef` , and an optional :class:`MediaRef`
+- Added :class:`ColorCorrectionRef` , which stores a reference to a :class:`ColorCorrection`
+- Added ``parent`` attribute to :class:`ColorCorrection` .
+- Calling ``sop_node`` or ``sat_node`` on a :class:`ColorCorrection` before attempting to set a SOP or Sat power now works.
+- :class:`ColorCorrection` ``cdl_file`` init argument renamed to ``input_file``, which is now optional and able to be set after init.
+- ``parse_cc`` and ``parse_rnh_cdl`` now only yield a single :class:`ColorCorrection` , not a single member list.
+- Added dev-requirements.txt (contains ``mock``)
+- All ``determine_dest`` methods now take a second ``directory`` argument, which determines the output directory.
+- Adds ``sanity_check`` function which prints values which might be unusual to stdout.
+- ``parse_cdl`` and ``write_cdl`` renamed to ``parse_rnh_cdl`` and ``write_rnh_cdl`` respectively.
+- ``member_reset`` methods:
+    - :class:`ColorCorrection` now has a ``reset_members`` method, which resets the class level member's dictionary.
+    - :class:`MediaRef` also has a ``reset_members`` method, as does :class:`ColorCollection`
+    - ``reset_all`` function calls all of the above ``reset_members`` methods at once.
+- Renamed ``cdl_file`` argument:
+    - ``parse_cc`` ``cdl_file`` arg renamed to ``input_file`` and now accepts a either a raw string or an ``ElementTree`` ``Element`` as ``input_file``.
+    - ``parse_rnh_cdl`` ``cdl_file`` arg renamed to ``input_file``.
+    - ``parse_ale`` ``edl_file`` arg renamed to ``input_file``.
+    - ``parse_flex`` ``edl_file`` arg renamed to ``input_file``.
+- Python Structure Refactoring
+    - Moved ``HALT_ON_ERROR`` into the ``config`` module, which should now be referenced and set by importing the entire ``config`` module, and referencing or setting ``config.HALT_ON_ERROR``
+    - Script functionality remains in ``cdl_convert.cdl_convert``, but everything else has been moved out.
+    - :class:`AscColorSpaceBase` , :class:`AscDescBase` , :class:`AscXMLBase` and :class:`ColorNodeBase` now live under ``cdl_convert.base``
+    - :class:`ColorCollection` now lives in ``cdl_convert.collection``
+    - :class:`ColorCorrection` , :class:`SatNode` and :class:`SopNode` now live under ``cdl_convert.correction``
+    - :class:`ColorDecision` , :class:`ColorCorrectionRef` and :class:`MediaRef` now live under ``cdl_convert.decision``
+    - All parse functions now live under ``cdl_convert.parse``
+    - All write functions now live under ``cdl_convert.write``
+    - ``sanity_check`` now live under ``cdl_convert.utils``
+    - ``reset_all`` now lives under the main module
 
 Installation
 ------------
@@ -121,8 +129,8 @@ Installing is as simple as using pip:::
     $ pip install cdl_convert
 
 If you don't want to bother with a pip style install, you can alternatively
-grab `cdl_convert/cdl_convert.py`_, As this file is the script and all the
-functions and classes needed.
+grab the entire `cdl_convert`_ directory, then set up a shortcut to call
+``cdl_convert/cdl_convert.py``
 
 GitHub, Bug Reporting and Support
 ---------------------------------
@@ -143,7 +151,7 @@ Frequently Asked Questions
     ``cdl_convert`` works in Python 2.6 through 3.4 and PyPy. A full test suite
     runs continuous integration through `Travis-ci.org`_, coverage through
     `coveralls.io`_, and code quality checked with `landscape.io`_. **Code is**
-    `PEP-8`_ **compliant**, with docstrings following `google code`_ docstring
+    :pep:`8` **compliant**, with docstrings following `google code`_ docstring
     standards.
 
 - Why don't you support format *X*?
@@ -152,13 +160,14 @@ Frequently Asked Questions
     and create a request for the format? If creating a request for a format it
     helps immensely to have a sample of that format.
 
-- Why are all the parsers and writers functions, instead of methods on the ColorCorrection class?
-    This seemed the current best approach for it's place in the script converter
-    that forms a backbone of this project right now. It's very possible that in
-    the future, ColorCorrection will contain methods for converting its values
-    to a string object ready for writing. It's unlikely that ColorCorrection
-    will contain methods for parsing, as different cdl formats can contain
-    multiple cdls.
+- Why the underscore?
+    ``cdl_convert`` started as a simple script to convert from one format to
+    another. As such, it wasn't named with the standards that one would usually
+    use for a python module. By the time the project became big enough, was on
+    PyPI, etc, it was too spread out on the web, in too many places to make
+    changing easy. In the end, I opted to keep it. At some point,
+    ``cdl_convert`` might migrate into a larger, more generic film & tv
+    python module, which will be named properly.
 
 Contributing
 ------------
@@ -192,7 +201,7 @@ Submitting Code
 
 Before generating a pull request, make sure to run the test suite:::
 
-    $ python setup.py tests
+    $ python setup.py test
 
 If the tests fail, note which tests are failing, how they would have been
 affected by your code. Always assume you broke something rather than that the
@@ -237,7 +246,7 @@ License
 .. _ASC CDL: http://en.wikipedia.org/wiki/ASC_CDL
 .. _American Society of Cinematographers: http://www.theasc.com/
 .. _Foundry Nuke: http://www.thefoundry.co.uk/nuke/
-.. _cdl_convert/cdl_convert.py: http://github.com/shidarin/cdl_convert/blob/master/cdl_convert/cdl_convert.py
+.. _cdl_convert: http://github.com/shidarin/cdl_convert/blob/master/cdl_convert/cdl_convert.py
 .. _GitHub: http://github.com/shidarin/cdl_convert
 .. _PyPI: http://pypi.python.org/pypi/cdl_convert
 .. _issues: http://github.com/shidarin/cdl_convert/issues

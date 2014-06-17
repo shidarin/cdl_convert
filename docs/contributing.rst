@@ -74,7 +74,7 @@ Run the tests!
 
 Before you submit a pull request, please run the entire test suite via
 ::
-    $ python setup.py tests
+    $ python setup.py test
 
 If the tests are failing, it's likely that you accidentally broke something.
 Note which tests are failing, and how your code might have affected them. If
@@ -105,7 +105,7 @@ file the diff on that pull request is functionally unreadable and will be
 **rejected**. Whitespace cleanups need to be in their own pull request.
 
 Keep your pull requests limited to a single issue
---------------------------------------------------
+-------------------------------------------------
 
 Pull requests should be as small/atomic as possible. Large, wide-sweeping
 changes in a pull request will be **rejected**, with comments to isolate the

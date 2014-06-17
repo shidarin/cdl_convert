@@ -10,9 +10,11 @@ mock
 #==============================================================================
 # IMPORTS
 #==============================================================================
+from __future__ import absolute_import, print_function
 
 # Standard Imports
 import datetime
+from decimal import Decimal
 try:
     from unittest import mock
 except ImportError:
@@ -37,7 +39,10 @@ import unittest
 
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
-import cdl_convert.cdl_convert as cdl_convert
+import cdl_convert
+from cdl_convert import cdl_convert as main
+from cdl_convert import parse, utils, write
+from cdl_convert.correction import _de_exponent, _sanitize
 
 #==============================================================================
 # TEST CLASSES
@@ -56,7 +61,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
     #==========================================================================
@@ -68,7 +73,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
     #==========================================================================
@@ -80,7 +85,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
     #==========================================================================
@@ -92,7 +97,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
     #==========================================================================
@@ -104,7 +109,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
     #==========================================================================
@@ -116,7 +121,7 @@ class TestDeExponent(unittest.TestCase):
 
         self.assertEqual(
             value_string,
-            cdl_convert._de_exponent(value)
+            _de_exponent(value)
         )
 
 # _sanitize() =================================================================
@@ -127,7 +132,7 @@ class TestSanitize(unittest.TestCase):
 
     def testSpaces(self):
         """Tests that spaces are replaced with underscores"""
-        result = cdl_convert._sanitize('banana apple blueberry')
+        result = _sanitize('banana apple blueberry')
 
         self.assertEqual(
             'banana_apple_blueberry',
@@ -138,7 +143,7 @@ class TestSanitize(unittest.TestCase):
 
     def testUnderscoresOkay(self):
         """Tests that underscores pass through intact"""
-        result = cdl_convert._sanitize('a_b_c')
+        result = _sanitize('a_b_c')
 
         self.assertEqual(
             'a_b_c',
@@ -149,7 +154,7 @@ class TestSanitize(unittest.TestCase):
 
     def testPeriodsOkay(self):
         """Tests that periods pass through intact"""
-        result = cdl_convert._sanitize('a.b.c')
+        result = _sanitize('a.b.c')
 
         self.assertEqual(
             'a.b.c',
@@ -160,7 +165,7 @@ class TestSanitize(unittest.TestCase):
 
     def testLeadingPeriodRemove(self):
         """Tests that leading periods are removed"""
-        result = cdl_convert._sanitize('.abc')
+        result = _sanitize('.abc')
 
         self.assertEqual(
             'abc',
@@ -171,7 +176,7 @@ class TestSanitize(unittest.TestCase):
 
     def testLeadingUnderscoreRemove(self):
         """Tests that leading underscores are removed"""
-        result = cdl_convert._sanitize('_abc')
+        result = _sanitize('_abc')
 
         self.assertEqual(
             'abc',
@@ -182,7 +187,7 @@ class TestSanitize(unittest.TestCase):
 
     def testCommonBadChars(self):
         """Tests that common bad characters are removed"""
-        result = cdl_convert._sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d')
+        result = _sanitize('a@$#b!)(*$%&^c`/\\"\';:<>,d')
 
         self.assertEqual(
             'abcd',
@@ -193,11 +198,117 @@ class TestSanitize(unittest.TestCase):
 
     def testEmptyString(self):
         """Tests that sanitize will return and not choke on empty string"""
-        result = cdl_convert._sanitize('')
+        result = _sanitize('')
 
         self.assertEqual(
             '',
             result
+        )
+
+# sanity_check() ==============================================================
+
+
+class TestSanityCheck(unittest.TestCase):
+    """Tests the sanity check function"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.stdout = sys.stdout
+        sys.stdout = StringIO()
+        self.cdl = cdl_convert.ColorCorrection('uniqueId', 'banana.cc')
+
+    #==========================================================================
+
+    def tearDown(self):
+        sys.stdout = self.stdout
+        cdl_convert.reset_all()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testGoodRun(self):
+        """Tests that if no bad values were found, sanity_check returns True"""
+        self.cdl.slope = decimalize(1.2, 0.23, 2.487)
+        self.cdl.offset = decimalize(-0.87, 0.987, 0.0)
+        self.cdl.power = decimalize(2.97, 1.25, 1.0)
+        self.cdl.sat = Decimal('2.9999')
+
+        self.assertTrue(
+            cdl_convert.sanity_check(self.cdl)
+        )
+
+    #==========================================================================
+
+    def testSlope(self):
+        """Tests that a bad slope value is reported"""
+        self.cdl.slope = [0.1, 3.1, 1.5]
+
+        self.assertFalse(
+            cdl_convert.sanity_check(self.cdl)
+        )
+
+        self.assertEqual(
+            'The ColorCorrection "uniqueId" was given a Slope value of '
+            '"0.1", which might be incorrect.\n'
+            'The ColorCorrection "uniqueId" was given a Slope value of '
+            '"3.1", which might be incorrect.\n',
+            sys.stdout.getvalue()
+        )
+
+    #==========================================================================
+
+    def testOffset(self):
+        """Tests that a bad slope value is reported"""
+        self.cdl.offset = decimalize(-1.01, 1.5, 0.157)
+
+        self.assertFalse(
+            cdl_convert.sanity_check(self.cdl)
+        )
+
+        self.assertEqual(
+            'The ColorCorrection "uniqueId" was given a Offset value of '
+            '"-1.01", which might be incorrect.\n'
+            'The ColorCorrection "uniqueId" was given a Offset value of '
+            '"1.5", which might be incorrect.\n',
+            sys.stdout.getvalue()
+        )
+
+    #==========================================================================
+
+    def testPower(self):
+        """Tests that a bad slope value is reported"""
+        self.cdl.power = decimalize(0.1, 3.1, 1.5)
+
+        self.assertFalse(
+            cdl_convert.sanity_check(self.cdl)
+        )
+
+        self.assertEqual(
+            'The ColorCorrection "uniqueId" was given a Power value of '
+            '"0.1", which might be incorrect.\n'
+            'The ColorCorrection "uniqueId" was given a Power value of '
+            '"3.1", which might be incorrect.\n',
+            sys.stdout.getvalue()
+        )
+
+    #==========================================================================
+
+    def testSaturation(self):
+        """Tests that a bad sat value is reported"""
+        self.cdl.sat = Decimal('3.01')
+
+        self.assertFalse(
+            cdl_convert.sanity_check(self.cdl)
+        )
+
+        self.assertEqual(
+            'The ColorCorrection "uniqueId" was given a Saturation value of '
+            '"3.01", which might be incorrect.\n',
+            sys.stdout.getvalue()
         )
 
 # parse_args() ================================================================
@@ -212,11 +323,15 @@ class TestParseArgs(unittest.TestCase):
 
     def setUp(self):
         self.sysargv = sys.argv
+        self.stdout = sys.stdout
+        sys.stdout = StringIO()
 
     #==========================================================================
 
     def tearDown(self):
+        sys.stdout = self.stdout
         sys.argv = self.sysargv
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
@@ -227,7 +342,7 @@ class TestParseArgs(unittest.TestCase):
 
         sys.argv = ['scriptname', 'inputFile.txt']
 
-        args = cdl_convert.parse_args()
+        args = main.parse_args()
 
         self.assertEqual(
             'inputFile.txt',
@@ -241,7 +356,7 @@ class TestParseArgs(unittest.TestCase):
 
         sys.argv = ['scriptname', 'inputFile', '-i', 'ALE']
 
-        args = cdl_convert.parse_args()
+        args = main.parse_args()
 
         self.assertEqual(
             'ale',
@@ -257,7 +372,7 @@ class TestParseArgs(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            cdl_convert.parse_args
+            main.parse_args
         )
 
     #==========================================================================
@@ -267,7 +382,7 @@ class TestParseArgs(unittest.TestCase):
 
         sys.argv = ['scriptname', 'inputFile', '-o', 'CDL']
 
-        args = cdl_convert.parse_args()
+        args = main.parse_args()
 
         self.assertEqual(
             ['cdl'],
@@ -281,7 +396,7 @@ class TestParseArgs(unittest.TestCase):
 
         sys.argv = ['scriptname', 'inputFile', '-o', 'CDL,CC']
 
-        args = cdl_convert.parse_args()
+        args = main.parse_args()
 
         self.assertEqual(
             ['cdl', 'cc'],
@@ -297,7 +412,7 @@ class TestParseArgs(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            cdl_convert.parse_args
+            main.parse_args
         )
 
     #==========================================================================
@@ -309,7 +424,7 @@ class TestParseArgs(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            cdl_convert.parse_args
+            main.parse_args
         )
 
     #==========================================================================
@@ -319,12 +434,169 @@ class TestParseArgs(unittest.TestCase):
 
         sys.argv = ['scriptname', 'inputFile']
 
-        args = cdl_convert.parse_args()
+        args = main.parse_args()
 
         self.assertEqual(
             ['cc'],
             args.output
         )
+
+    #==========================================================================
+
+    def testHaltOnError(self):
+        """Tests that providing the --halt flag triggers HALT_ON_ERROR"""
+        self.assertFalse(
+            cdl_convert.config.HALT_ON_ERROR
+        )
+
+        sys.argv = ['scriptname', 'inputFile', '--halt']
+
+        main.parse_args()
+
+        self.assertTrue(
+            cdl_convert.config.HALT_ON_ERROR
+        )
+
+        cdl_convert.config.HALT_ON_ERROR = False
+
+    #==========================================================================
+
+    def testSanityCheck(self):
+        """Tests the sanity check --check flag to be set"""
+
+        sys.argv = ['scriptname', 'inputFile', '--check']
+
+        args = main.parse_args()
+
+        self.assertTrue(
+            args.check
+        )
+
+    #==========================================================================
+
+    def testNoOutput(self):
+        """Tests that --no-output was picked up correctly"""
+
+        sys.argv = ['scriptname', 'inputFile', '--no-output']
+
+        args = main.parse_args()
+
+        self.assertTrue(
+            args.no_output
+        )
+
+    #==========================================================================
+
+    def testNoDestination(self):
+        """Tests that no destination defaults to ./converted"""
+
+        sys.argv = ['scriptname', 'inputFile']
+
+        args = main.parse_args()
+
+        self.assertEqual(
+            './converted/',
+            args.destination
+        )
+
+    #==========================================================================
+
+    def testCustomDestination(self):
+        """Tests that destination flag works"""
+
+        sys.argv = ['scriptname', 'inputFile', '-d', '/best/folder/']
+
+        args = main.parse_args()
+
+        self.assertEqual(
+            '/best/folder/',
+            args.destination
+        )
+
+# parse_args() ================================================================
+
+
+class TestParseFile(unittest.TestCase):
+    """Tests ParseFile, a convenience function"""
+
+    def setUp(self):
+        self.stored_inputs = parse.INPUT_FORMATS
+
+    def tearDown(self):
+        parse.INPUT_FORMATS = self.stored_inputs
+        cdl_convert.reset_all()
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_ale')
+    def test_ale(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.ale'
+        parse.INPUT_FORMATS['ale'] = mockParse
+
+        parse.parse_file(filepath)
+
+        mockParse.assert_called_once_with('blah.ale')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_ccc')
+    def test_ccc(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.ccc'
+        parse.INPUT_FORMATS['ccc'] = mockParse
+
+        parse.parse_file(filepath)
+
+        mockParse.assert_called_once_with('blah.ccc')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_cc')
+    def test_cc(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.cc'
+        parse.INPUT_FORMATS['cc'] = mockParse
+
+        parse.parse_file(filepath)
+
+        mockParse.assert_called_once_with('blah.cc')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_cdl')
+    def test_cdl(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.cdl'
+        parse.INPUT_FORMATS['cdl'] = mockParse
+
+        parse.parse_file(filepath)
+
+        mockParse.assert_called_once_with('blah.cdl')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_flex')
+    def test_flex(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.flex'
+        parse.INPUT_FORMATS['flex'] = mockParse
+
+        parse.parse_file(filepath)
+
+        mockParse.assert_called_once_with('blah.flex')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_rnh_cdl')
+    def test_rnh_cdl(self, mockParse):
+        """Tests that the parser is called correctly"""
+        filepath = 'blah.cdl'
+        parse.INPUT_FORMATS['rcdl'] = mockParse
+
+        parse.parse_file(filepath, 'rcdl')
+
+        mockParse.assert_called_once_with('blah.cdl')
 
 # main() ======================================================================
 
@@ -339,51 +611,81 @@ class TestMain(unittest.TestCase):
     def setUp(self):
         # Note that the file doesn't really need to exist for our test purposes
         self.cdl = cdl_convert.ColorCorrection(
-            id='uniqueId', cdl_file='../testcdl.flex'
+            id='uniqueId', input_file='../testcdl.flex'
         )
-        self.inputFormats = cdl_convert.INPUT_FORMATS
-        self.outputFormats = cdl_convert.OUTPUT_FORMATS
+        self.ccc = cdl_convert.ColorCollection(input_file='../testcdl.flex')
+        self.inputFormats = parse.INPUT_FORMATS
+        self.outputFormats = write.OUTPUT_FORMATS
+        self.makedirs = os.makedirs
+        self.mockMakeDirs = mock.MagicMock('os.makedirs')
         self.sysargv = sys.argv
         self.stdout = sys.stdout
         sys.stdout = StringIO()
+        os.makedirs = self.mockMakeDirs
 
     #==========================================================================
 
     def tearDown(self):
-        cdl_convert.INPUT_FORMATS = self.inputFormats
-        cdl_convert.OUTPUT_FORMATS = self.outputFormats
+        parse.INPUT_FORMATS = self.inputFormats
+        write.OUTPUT_FORMATS = self.outputFormats
         sys.argv = self.sysargv
         sys.stdout = self.stdout
+        os.makedirs = self.makedirs
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
-        cdl_convert.ColorCorrection.members = {}
+        cdl_convert.reset_all()
 
     #==========================================================================
     # TESTS
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.parse_cc')
     @mock.patch('os.path.abspath')
     def testGettingAbsolutePath(self, abspath, mockParse):
         """Tests that we make sure to get the absolute path"""
 
-        abspath.return_value = 'file.flex'
+        abspath.return_value = 'file.cc'
         mockParse.return_value = None
-        sys.argv = ['scriptname', 'file.flex']
+        sys.argv = ['scriptname', 'file.cc']
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['flex'] = mockParse
-        cdl_convert.INPUT_FORMATS = mockInputs
+        mockInputs['cc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
 
-        cdl_convert.main()
+        main.main()
 
-        abspath.assert_called_once_with('file.flex')
+        file_call = mock.call('file.cc')
+        dest_call = mock.call('./converted/')
+
+        abspath.assert_has_calls([file_call, dest_call])
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.parse_cc')
     @mock.patch('os.path.abspath')
-    def testDerivingInputType(self, abspath, mockParse):
+    def testCustomDestinationPath(self, abspath, mockParse):
+        """Tests that we make sure to get the absolute path for dest"""
+
+        abspath.return_value = 'file.cc'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.cc', '-d', '/best/path/ever/']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        main.main()
+
+        file_call = mock.call('file.cc')
+        dest_call = mock.call('/best/path/ever/')
+
+        abspath.assert_has_calls([file_call, dest_call])
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeFlex(self, abspath, mockParse):
         """Tests that input type will be derived from file extension"""
 
         abspath.return_value = 'file.flex'
@@ -392,15 +694,91 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['flex'] = mockParse
-        cdl_convert.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
-        cdl_convert.main()
+        main.main()
 
         mockParse.assert_called_once_with('file.flex')
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.parse_ale')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeAle(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.ale'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.ale']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['ale'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        main.main()
+
+        mockParse.assert_called_once_with('file.ale')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_ccc')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeCCC(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.ccc'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.ccc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['ccc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        main.main()
+
+        mockParse.assert_called_once_with('file.ccc')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_cc')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeCC(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.cc'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.cc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        main.main()
+
+        mockParse.assert_called_once_with('file.cc')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_rnh_cdl')
+    @mock.patch('os.path.abspath')
+    def testDerivingInputTypeCDL(self, abspath, mockParse):
+        """Tests that input type will be derived from file extension"""
+
+        abspath.return_value = 'file.cdl'
+        mockParse.return_value = None
+        sys.argv = ['scriptname', 'file.cdl']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cdl'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        main.main()
+
+        mockParse.assert_called_once_with('file.cdl')
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testDerivingInputTypeCased(self, abspath, mockParse):
         """Tests that input type will be derived from file extension"""
@@ -411,15 +789,15 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['flex'] = mockParse
-        cdl_convert.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
-        cdl_convert.main()
+        main.main()
 
         mockParse.assert_called_once_with('file.fLEx')
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.parse_flex')
     @mock.patch('os.path.abspath')
     def testOverrideInputType(self, abspath, mockParse):
         """Tests that overriding the input type happens when provided"""
@@ -430,94 +808,360 @@ class TestMain(unittest.TestCase):
 
         mockInputs = dict(self.inputFormats)
         mockInputs['flex'] = mockParse
-        cdl_convert.INPUT_FORMATS = mockInputs
+        parse.INPUT_FORMATS = mockInputs
 
-        cdl_convert.main()
+        main.main()
 
         mockParse.assert_called_once_with('file.cc')
 
     #==========================================================================
 
-    @mock.patch('os.path.dirname')
-    @mock.patch('cdl_convert.cdl_convert.write_cc')
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
-    @mock.patch('os.path.abspath')
-    def testDetermineDestCalled(self, abspath, mockParse, mockWrite, dirname):
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_rnh_cdl')
+    def testDetermineDestCalled(self, mockParse, mockWrite):
         """Tests that we try and write a converted file"""
 
-        abspath.return_value = 'file.flex'
-        dirname.return_value = ''  # determine_dest method calls to get dirname
-        mockParse.return_value = [self.cdl, ]
-        sys.argv = ['scriptname', 'file.flex', '-o', 'cc']
+        mockParse.return_value = self.cdl
+        sys.argv = ['scriptname', 'file.cdl', '-i', 'rcdl', '-o', 'cc']
+
+        destination_dir = os.path.abspath('./converted/')
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['flex'] = mockParse
-        cdl_convert.INPUT_FORMATS = mockInputs
+        mockInputs['rcdl'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWrite
-        cdl_convert.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
-        cdl_convert.main()
+        main.main()
 
         self.assertEqual(
-            'uniqueId.cc',
+            os.path.join(destination_dir, 'uniqueId.cc'),
             self.cdl.file_out
         )
 
+    #==========================================================================
+
+    @mock.patch('cdl_convert.write_ccc')
+    @mock.patch('cdl_convert.parse_rnh_cdl')
+    def testDetermineDestCalledCollection(self, mockParse, mockWrite):
+        """Tests that we try and write a converted collection file"""
+
+        mockParse.return_value = self.ccc
+        sys.argv = ['scriptname', 'file.flex', '-o', 'ccc']
+
+        destination_dir = os.path.abspath('./converted/')
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['ccc'] = mockWrite
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main()
+
+        self.assertEqual(
+            os.path.join(destination_dir, 'testcdl.ccc'),
+            self.ccc.file_out
+        )
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.write_cc')
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.cdl_convert.sanity_check')
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testSanityCheckCalled(self, abspath, mockParse, mockWrite, mockSanity):
+        """Tests that --check calls sanity check"""
+
+        abspath.return_value = 'file.cc'
+        mockParse.return_value = self.cdl
+        sys.argv = ['scriptname', 'file.cc', '--check']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main()
+
+        mockSanity.assert_called_once_with(self.cdl)
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.cdl_convert.sanity_check')
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testSanityCheckCollectionCalled(
+            self, abspath, mockParse, mockWrite, mockSanity
+    ):
+        """Tests that --check calls sanity check with collection"""
+
+        abspath.return_value = 'file.flex'
+        mockParse.return_value = self.ccc
+        cdl2 = cdl_convert.ColorCorrection('45')
+        cdl3 = cdl_convert.ColorCorrection('100')
+        self.ccc.append_children([self.cdl, cdl2, cdl3])
+        sys.argv = ['scriptname', 'file.flex', '--check']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['flex'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main()
+
+        self.assertEqual(
+            [mock.call(self.cdl), mock.call(cdl2), mock.call(cdl3)],
+            mockSanity.call_args_list
+        )
+
+        self.assertEqual(
+            [mock.call(self.cdl), mock.call(cdl2), mock.call(cdl3)],
+            mockWrite.call_args_list
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.sanity_check')
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_flex')
+    @mock.patch('os.path.abspath')
+    def testSanityCheckNotCalled(self, abspath, mockParse, mockWrite, mockSanity):
+        """Tests that sanity check is not called without --check"""
+
+        abspath.return_value = 'file.cc'
+        mockParse.return_value = self.cdl
+        sys.argv = ['scriptname', 'file.cc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main()
+
+        self.assertFalse(
+            mockSanity.called
+        )
+
+    #==========================================================================
+
+    @mock.patch('os.path.exists')
+    @mock.patch('cdl_convert.ColorCorrection.determine_dest')
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_flex')
+    def testNoOutput(self, mockParse, mockWrite, mockDest, mockPathExists):
+        """Tests that we don't write a converted file"""
+
+        # We'll set the path exists return value to equal false, so that
+        # normally a new directory would be created.
+        mockPathExists.return_value = False
+
+        self.mockMakeDirs.reset_mock()
+
+        mockParse.return_value = self.cdl
+        sys.argv = ['scriptname', 'file.cc', '-d', '/fakepath', '--no-output']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWrite
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main()
+
+        # Because we have no output selected, a new directory should NOT
+        # be created, but path exists should have still been called.
+        mockPathExists.assert_called_with('/fakepath')
+        self.assertFalse(
+            self.mockMakeDirs.called
+        )
+
+        mockParse.assert_called_once_with(os.path.join(os.getcwd(), 'file.cc'))
+        # Determine dest should have set a file_out
+        mockDest.assert_called_once_with('cc', '/fakepath')
+        # But the write should never have been called.
+        self.assertFalse(
+            mockWrite.called
+        )
+
+    #==========================================================================
+
+    @mock.patch('os.path.exists')
+    @mock.patch('cdl_convert.ColorCollection.determine_dest')
+    @mock.patch('cdl_convert.write_ccc')
+    @mock.patch('cdl_convert.parse_flex')
+    def testNoOutputCollection(self, mockParse, mockWrite, mockDest, mockPathExists):
+        """Tests that we don't write a converted collection file"""
+
+        mockPathExists.return_value = True
+
+        self.mockMakeDirs.reset_mock()
+
+        mockParse.return_value = self.cdl
+        sys.argv = [
+            'scriptname',
+            'file.cc',
+            '-o',
+            'ccc',
+            '-d',
+            '/fakepath',
+            '--no-output'
+        ]
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['ccc'] = mockWrite
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main()
+
+        # Because we have no output selected, a new directory should NOT
+        # be created, but path exists should have still been called.
+        mockPathExists.assert_called_with('/fakepath')
+        self.assertFalse(
+            self.mockMakeDirs.called
+        )
+
+        mockParse.assert_called_once_with(os.path.join(os.getcwd(), 'file.cc'))
+        # Determine dest should have set a file_out
+        mockDest.assert_called_once_with('/fakepath')
+        # But the write should never have been called.
+        self.assertFalse(
+            mockWrite.called
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_rnh_cdl')
     @mock.patch('os.path.abspath')
     def testWriteCalled(self, abspath, mockParse, mockWrite):
         """Tests that we try and write a converted file"""
 
-        abspath.return_value = 'file.flex'
-        mockParse.return_value = [self.cdl, ]
-        sys.argv = ['scriptname', 'file.flex', '-o', 'cc']
+        abspath.return_value = 'file.cdl'
+        mockParse.return_value = self.cdl
+        sys.argv = ['scriptname', 'file.cdl', '-i', 'rcdl', '-o', 'cc']
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['flex'] = mockParse
-        cdl_convert.INPUT_FORMATS = mockInputs
+        mockInputs['rcdl'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWrite
-        cdl_convert.OUTPUT_FORMATS = mockOutputs
+        write.OUTPUT_FORMATS = mockOutputs
 
-        cdl_convert.main()
+        main.main()
 
         mockWrite.assert_called_once_with(self.cdl)
 
+    #==========================================================================
+
+    @mock.patch('cdl_convert.write_ccc')
+    @mock.patch('cdl_convert.parse_rnh_cdl')
+    @mock.patch('os.path.abspath')
+    def testWriteCollectionCalled(self, abspath, mockParse, mockWrite):
+        """Tests that we try and write a converted collection file"""
+
+        abspath.return_value = 'file.cdl'
+        mockParse.return_value = self.cdl
+        sys.argv = ['scriptname', 'file.cdl', '-i', 'rcdl', '-o', 'ccc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['rcdl'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['ccc'] = mockWrite
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main()
+
+        self.assertTrue(
+            mockWrite.called
+        )
+
+        self.assertEqual(
+            [self.cdl],
+            mockWrite.call_args_list[0][0][0].all_children
+        )
 
     #==========================================================================
 
-    @mock.patch('cdl_convert.cdl_convert.write_cdl')
-    @mock.patch('cdl_convert.cdl_convert.write_cc')
-    @mock.patch('cdl_convert.cdl_convert.parse_flex')
+    @mock.patch('cdl_convert.write_rnh_cdl')
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_ccc')
     @mock.patch('os.path.abspath')
-    def testMultipleWritesCalled(self, abspath, mockParse, mockWriteCC,
-                                 mockWriteCDL):
+    def testMultipleOutputWritesCalled(self, abspath, mockParse, mockWriteCC,
+                                       mockWriteCDL):
         """Tests that we try and write a converted file"""
 
-        abspath.return_value = 'file.flex'
-        mockParse.return_value = [self.cdl, ]
-        sys.argv = ['scriptname', 'file.flex', '-o', 'cc,cdl']
+        abspath.return_value = 'file.ccc'
+        mockParse.return_value.color_corrections = [self.cdl, ]
+        sys.argv = ['scriptname', 'file.ccc', '-o', 'cc,rcdl']
 
         mockInputs = dict(self.inputFormats)
-        mockInputs['flex'] = mockParse
-        cdl_convert.INPUT_FORMATS = mockInputs
+        mockInputs['ccc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
 
         mockOutputs = dict(self.outputFormats)
         mockOutputs['cc'] = mockWriteCC
-        mockOutputs['cdl'] = mockWriteCDL
-        cdl_convert.OUTPUT_FORMATS = mockOutputs
+        mockOutputs['rcdl'] = mockWriteCDL
+        write.OUTPUT_FORMATS = mockOutputs
 
-        cdl_convert.main()
+        main.main()
 
         mockWriteCC.assert_called_once_with(self.cdl)
         mockWriteCDL.assert_called_once_with(self.cdl)
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.write_cc')
+    @mock.patch('cdl_convert.parse_ccc')
+    @mock.patch('os.path.abspath')
+    def testMultipleWritesFromCollectionCalled(
+            self, abspath, mockParse, mockWriteCC
+    ):
+        """Tests that we try and write a converted file"""
+
+        abspath.return_value = 'file.ccc'
+        mockParse.return_value.color_corrections = [
+            self.cdl, self.cdl, self.cdl
+        ]
+        sys.argv = ['scriptname', 'file.ccc', '-o', 'cc']
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['ccc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cc'] = mockWriteCC
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main()
+
+        mockWriteCC.assert_has_calls(
+            [mock.call(self.cdl), mock.call(self.cdl), mock.call(self.cdl)]
+        )
 
 # Test Classes ================================================================
 
@@ -804,6 +1448,99 @@ class TestTimeCodeSegment(unittest.TestCase):
         self.assertTrue(
             tc.durFrames <= 7200
         )
+
+
+class TestToDecimal(unittest.TestCase):
+    """Some quick tests for ToDecimal"""
+
+    def testString(self):
+        """Tests string conversions"""
+        value = '1.0'
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testStringInt(self):
+        """Tests string conversions"""
+        value = '1'
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal('1.0'),
+            result
+        )
+
+    def testStringAdvanced(self):
+        """Tests string conversions"""
+        value = '1237891273.23162178368123787214849017132897'
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testStringBad(self):
+        """Tests not a number string conversions"""
+        value = 'banana'
+
+        self.assertRaises(
+            TypeError,
+            utils.to_decimal,
+            value
+        )
+
+    def testIntConversion(self):
+        """Tests int conversions"""
+        value = 323628378921398
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value) + '.0'),
+            result
+        )
+
+    def testFloatConversion(self):
+        """Tests basic float conversions"""
+        value = 12739821.3262871
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testFloatConversiontruncated(self):
+        """Tests a truncated float conversions"""
+        value = 28902319032.3267826378126494173828937289739813902179398073
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal(str(value)),
+            result
+        )
+
+    def testUnsupportedType(self):
+        """Tests passing an unsupported type conversions"""
+        value = ('1.0', '2.0')
+
+        self.assertRaises(
+            ValueError,
+            utils.to_decimal,
+            value
+        )
+
+#==============================================================================
+# FUNCTIONS
+#==============================================================================
+
+
+def decimalize(*args):
+    """Converts a list of floats/ints to Decimal list"""
+    return [Decimal(str(i)) for i in args]
 
 #==============================================================================
 # RUNNER
