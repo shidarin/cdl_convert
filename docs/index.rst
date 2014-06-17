@@ -37,8 +37,8 @@ different formats:
 -  Film Log EDL Exchange (FLEx)
 -  CMX EDL
 -  XML Color Correction (cc)
--  XML Color Decision List (cdl)
 -  XML Color Correction Collection (ccc)
+-  XML Color Decision List (cdl)
 
 Unofficial Formats:
 
@@ -48,6 +48,9 @@ Unofficial Formats:
 It is the purpose of ``cdl_convert`` to convert ASC CDL information between
 these basic formats to further facilitate the ease of exchange of color
 data within the Film and TV industries.
+
+``cdl_convert`` supports parsing ALE, FLEx, CC, CCC, CDL and RCDL. We can write
+out CC, CCC, CDL and RCDL.
 
 **cdl_convert is not associated with the American Society of
 Cinematographers**
@@ -98,6 +101,8 @@ Table of Contents
    :maxdepth: 2
 
    usage
+   usage_cc
+   usage_ccc
    installation
    changelog
    support
