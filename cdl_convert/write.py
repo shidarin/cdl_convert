@@ -6,6 +6,24 @@ CDL Convert Write
 
 Functions for writing different types of cdls.
 
+## Public Functions
+
+    write_cc()
+        Writes a given ColorCorrection to disk. ``file_out`` should already be
+        set on the ColorCorrection.
+
+    write_ccc()
+        Writes a given ColorCollection to disk. ``file_out`` should already be
+        set on the ColorCollection.
+
+    write_cdl()
+        Writes a given ColorCollection to disk. ``file_out`` should already be
+        set on the ColorCollection.
+
+    write_rnh_cdl()
+        Writes a given ColorCorrection to disk. ``file_out`` should already be
+        set on the ColorCorrection.
+
 ## License
 
 The MIT License (MIT)

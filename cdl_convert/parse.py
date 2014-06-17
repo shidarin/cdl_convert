@@ -6,6 +6,37 @@ CDL Convert Parse
 
 Contains parser functions for converting files to cdl_convert objects.
 
+## Public Functions
+
+    parse_ale()
+        Parses an ALE EDL file into a ColorCollection set to ccc.
+
+    parse_cc()
+        Parses an XML CC file into a ColorCorrection.
+
+    parse_ccc()
+        Parses an XML CCC file into a ColorCollection set to ccc.
+
+    parse_cdl
+        Parses an XML CDL file into a ColorCollection set to cdl.
+
+    parse_file()
+        Determines which parse function to call based on file extension (or
+        provided ext arg) and calls that function. Returns result.
+
+    parse_flex()
+        Parses a FLEx EDL into a ColorCollection set to ccc.
+
+    parse_rnh_cdl
+        Parses a Rhythm & Hues Space Separated cdl file, which is based on a
+        very early ASC CDL spec, into a single ColorCorrection.
+
+## GLOBALS
+
+    INPUT_FORMATS
+        A dictionary whose keys are file extensions and values are the above
+        functions. Used by ``parse_file()`` to determine what parser to call.
+
 ## License
 
 The MIT License (MIT)
@@ -60,6 +91,7 @@ __all__ = [
     'parse_cc',
     'parse_ccc',
     'parse_cdl',
+    'parse_file',
     'parse_flex',
     'parse_rnh_cdl'
 ]

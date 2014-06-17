@@ -4,7 +4,16 @@
 CDL Convert Utils
 =================
 
-Contains basic utility functions for cdl_convert
+Contains basic utility functions for cdl_convert.
+
+## Public Functions
+
+    sanity_check()
+        Checks the color values of a given ColorCorrection to see if they fall
+        within 'sane' values.
+
+    to_decimal()
+        Converts floats, ints, and strings to Decimal() in a predictable way.
 
 ## License
 
