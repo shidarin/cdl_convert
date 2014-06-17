@@ -1,6 +1,6 @@
-*****************************
-Python API: Color Collections
-*****************************
+*****************
+Color Collections
+*****************
 
 Once installed with pip, importing ``cdl_convert`` works like importing any
 other python module.

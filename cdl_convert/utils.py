@@ -145,7 +145,7 @@ def to_decimal(value, name='Value'):
     """Converts an incoming value to Decimal in the best way
 
     **Args:**
-        value : (Decimal, str, float, int)
+        value : (Decimal|str|float|int)
             Any numeric value to be checked.
 
         name='Value' : (str)

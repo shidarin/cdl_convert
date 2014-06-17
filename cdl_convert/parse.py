@@ -191,7 +191,7 @@ def parse_cc(input_file):  # pylint: disable=R0912
     """Parses a .cc file for ASC CDL information
 
     **Args:**
-        input_file : (str, <ElementTree.Element>)
+        input_file : (str|<ElementTree.Element>)
             The filepath to the CC or the ``ElementTree.Element`` object.
 
     **Returns:**

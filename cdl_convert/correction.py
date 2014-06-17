@@ -113,7 +113,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     **Class Attributes:**
 
-        members : {str: :class`ColorCorrection`}
+        members : {str: :class`ColorCorrection` }
             All instanced :class:`ColorCorrection` are added to this member
             dictionary, with their unique id being the key and the
             :class:`ColorCorrection` being the value.
@@ -691,7 +691,7 @@ class SopNode(ColorNodeBase):
         """Checks a list or tuple containing 3 values for legitimacy
 
         **Args:**
-            value : [(Decimal, str, float, int)]
+            value : [(Decimal|str|float|int)]
                 A list of three numeric values to be checked.
 
             name : (str)
@@ -749,7 +749,7 @@ class SopNode(ColorNodeBase):
         Ties together _check_single_value and _check_rgb_values
 
         **Args:**
-            value : [(Decimal, str, float, int)]
+            value : [(Decimal|str|float|int)]
                 A list of three (or one) numeric values to be checked.
 
             name : (str)
@@ -828,7 +828,7 @@ def _de_exponent(notation):
     always works.
 
     Args:
-        notation : (Decimal, str, int, float)
+        notation : (Decimal|str|int|float)
             Any numeric value that may or may not be normalized.
 
     Raises:

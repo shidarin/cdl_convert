@@ -122,7 +122,7 @@ class ColorCorrectionRef(AscXMLBase):
 
     **Class Attributes:**
 
-        members : {str: [:class`ColorCorrectionRef`]}
+        members : {str: [:class`ColorCorrectionRef` ]}
             All instanced :class:`ColorCorrectionRef` are added to this
             member dictionary. Multiple :class:`ColorCorrectionRef` can
             share the same reference id, therefore for each reference id key,
@@ -324,7 +324,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     **Class Attributes:**
 
-        members : {str: [:class`ColorDecision`]}
+        members : {str: [ :class`ColorDecision` ]}
             All instanced :class:`ColorDecision` are added to this
             member dictionary. The key is the id or reference id of the
             contained :class:`ColorCorrection` or
@@ -639,7 +639,7 @@ class MediaRef(AscXMLBase):
 
     **Class Attributes:**
 
-        members : {str: [:class:`MediaRef`]}
+        members : {str: [ :class:`MediaRef` ]}
             All instances of :class:`MediaRef` are added to this class level
             members dictionary, with the key being the full reference URI.
             Since it's possible that multiple :class:`MediaRef` point to the

@@ -1,6 +1,6 @@
-*********************************
-Python API: ColorCorrection Usage
-*********************************
+*********************
+ColorCorrection Usage
+*********************
 
 Once installed with pip, importing ``cdl_convert`` works like importing any
 other python module.

@@ -82,7 +82,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     **Class Attributes:**
 
-        members : [ :class`ColorCollection`]
+        members : [ :class`ColorCollection` ]
             All instanced :class:`ColorCollection` are added to this member
             list. Unlike the :class:`ColorCorrection` member's dictionary,
             :class:`ColorCollection` do not need any unique values to exist.
