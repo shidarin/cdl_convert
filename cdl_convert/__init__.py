@@ -17,6 +17,7 @@ formats:
 * CMX EDL
 * XML Color Correction (cc)
 * XML Color Correction Collection (ccc)
+* XML Color Decision List (cdl)
 
 Unofficial Formats:
 
@@ -26,6 +27,9 @@ Unofficial Formats:
 It is the purpose of CDLConvert to convert ASC CDL information between these
 basic formats to further facilitate the ease of exchange of color data within
 the Film and TV industries.
+
+`cdl_convert` supports parsing ALE, FLEx, CC, CCC, CDL and RCDL. We can write
+out CC, CCC, CDL and RCDL.
 
 **CDLConvert is not associated with the American Society of Cinematographers**
 

@@ -29,6 +29,7 @@ different formats:
 -  CMX EDL
 -  XML Color Correction (cc)
 -  XML Color Correction Collection (ccc)
+-  XML Color Decision List (cdl)
 
 Unofficial Formats:
 
@@ -38,6 +39,9 @@ Unofficial Formats:
 It is the purpose of ``cdl_convert`` to convert ASC CDL information between
 these basic formats to further facilitate the ease of exchange of color
 data within the Film and TV industries.
+
+``cdl_convert`` supports parsing ALE, FLEx, CC, CCC, CDL and RCDL. We can write
+out CC, CCC, CDL and RCDL.
 
 **cdl_convert is not associated with the American Society of
 Cinematographers**
@@ -64,15 +68,6 @@ the ``-o`` flag.::
 
     $ cdl_convert ./di_v001.flex -o cc,cdl
 
-Sometimes it might be nessicary to disable cdl_convert's auto-detection of the
-input file format. This can be done with the ``-i`` flag.::
-
-    $ cdl_convert ./ca102_x34.cdl -i cdl -o cc
-
-In this case, ``.cdl`` could have indicated either a space separated cdl, or an XML
-cdl. ``cdl_convert`` does it's best to try and guess which one the file is, but
-if you're running into trouble, it might help to indicate to ``cdl_convert``
-what the input file type is.
 
 Changelog
 ---------
@@ -121,8 +116,8 @@ Installing is as simple as using pip:::
     $ pip install cdl_convert
 
 If you don't want to bother with a pip style install, you can alternatively
-grab `cdl_convert/cdl_convert.py`_, As this file is the script and all the
-functions and classes needed.
+grab the entire `cdl_convert`_ directory, then set up a shortcut to call
+``cdl_convert/cdl_convert.py``
 
 GitHub, Bug Reporting and Support
 ---------------------------------
@@ -143,7 +138,7 @@ Frequently Asked Questions
     ``cdl_convert`` works in Python 2.6 through 3.4 and PyPy. A full test suite
     runs continuous integration through `Travis-ci.org`_, coverage through
     `coveralls.io`_, and code quality checked with `landscape.io`_. **Code is**
-    `PEP-8`_ **compliant**, with docstrings following `google code`_ docstring
+    :pep:`8` **compliant**, with docstrings following `google code`_ docstring
     standards.
 
 - Why don't you support format *X*?
@@ -152,13 +147,14 @@ Frequently Asked Questions
     and create a request for the format? If creating a request for a format it
     helps immensely to have a sample of that format.
 
-- Why are all the parsers and writers functions, instead of methods on the ColorCorrection class?
-    This seemed the current best approach for it's place in the script converter
-    that forms a backbone of this project right now. It's very possible that in
-    the future, ColorCorrection will contain methods for converting its values
-    to a string object ready for writing. It's unlikely that ColorCorrection
-    will contain methods for parsing, as different cdl formats can contain
-    multiple cdls.
+- Why the underscore?
+    ``cdl_convert`` started as a simple script to convert from one format to
+    another. As such, it wasn't named with the standards that one would usually
+    use for a python module. By the time the project became big enough, was on
+    PyPI, etc, it was too spread out on the web, in too many places to make
+    changing easy. In the end, I opted to keep it. At some point,
+    ``cdl_convert`` might migrate into a larger, more generic film & tv
+    python module, which will be named properly.
 
 Contributing
 ------------
@@ -237,7 +233,7 @@ License
 .. _ASC CDL: http://en.wikipedia.org/wiki/ASC_CDL
 .. _American Society of Cinematographers: http://www.theasc.com/
 .. _Foundry Nuke: http://www.thefoundry.co.uk/nuke/
-.. _cdl_convert/cdl_convert.py: http://github.com/shidarin/cdl_convert/blob/master/cdl_convert/cdl_convert.py
+.. _cdl_convert: http://github.com/shidarin/cdl_convert/blob/master/cdl_convert/cdl_convert.py
 .. _GitHub: http://github.com/shidarin/cdl_convert
 .. _PyPI: http://pypi.python.org/pypi/cdl_convert
 .. _issues: http://github.com/shidarin/cdl_convert/issues
