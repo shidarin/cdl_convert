@@ -4,7 +4,17 @@
 CDL Convert Cdl_Convert
 =======================
 
-Contains the main() script for using cdl_convert as a script.
+Contains the script functions for using cdl_convert as a script.
+
+## Public Functions
+
+    parse_args()
+        Uses argparse to parse the command line args provided to cdl_convert.
+
+    main()
+        Main script runner, this calls parse_args, determines the input and
+        output extensions, calls the correct parser and determines how to
+        fulfill the output requested.
 
 ## License
 

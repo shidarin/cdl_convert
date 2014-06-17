@@ -5,7 +5,54 @@ CDL Convert Base
 ================
 
 Contains base classes containing methods and attributes shared between many
-CDL classes.
+CDL classes. The classes listed here should only be used for inheritance by
+more fully realized classes.
+
+## Classes
+
+    AscColorSpaceBase
+
+        Contains attributes and methods for input colorspace description and
+        viewing colorspace descriptions. Methods are parse methods for
+        parsing an ElementTree element and retrieving the Input Description
+        and Viewing Description if present.
+
+    AscDescBase
+
+        Contains attributes and methods for generic description entries.
+        Methods are parse methods for parsing an ElementTree element and
+        retrieving all Description entries within.
+
+        The ``desc`` attribute has specific setting behavior as follows:
+            * If set with `None`, ``desc`` will be set to an empty list.
+            * If set with a list or tuple, ``desc`` will become a list of that
+                list or tuple.
+            * If set with a straight value (such as a string) that value is
+                appended to the end of the current ``desc`` list.
+
+    AscXMLBase
+
+        Base class for nodes which need to be represented as ElementTree
+        XML Elements. This class contains several attributes and methods to
+        facilitate this:
+
+            * An ``element`` attribute which will return the
+                ElementTree Element
+            * An ``xml`` attribute which returns the built element as a
+                pretty formatted string.
+            * An ``xml_root`` attribute which returns the same built element
+                as above, but with the required XML header. This XML string
+                is ready to be printed.
+
+        All of these attributes depend on the ``build_element`` method, which
+        must be overridden by classes which inherit this class if the above
+        attributes are to work. The ``build_element`` must return an
+        ElementTree Element.
+
+    ColorNodeBase
+
+        A base class for Sop and Sat nodes, some basic color value checking
+        functionality is included here.
 
 ## License
 
@@ -274,8 +321,8 @@ class AscXMLBase(object):
     **Public Methods:**
 
         build_element()
-            A placeholder method to be overriden by inheriting classes, calling
-            it will always return None.
+            A placeholder method to be overridden by inheriting classes,
+            calling it will always return None.
 
     """
     def __init__(self):

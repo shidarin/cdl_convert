@@ -7,6 +7,13 @@ CDL Convert Collection
 Contains the ColorCollection class, which acts as both
 ColorCorrectionCollection and ColorDecisionList.
 
+## Classes
+
+    ColorCollection
+        Collection format for both ColorCorrections and ColorDecisions. This
+        class can export both ColorCorrectionCollection and ColorDecisionList
+        formats.
+
 ## License
 
 The MIT License (MIT)

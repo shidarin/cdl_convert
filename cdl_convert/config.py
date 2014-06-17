@@ -6,6 +6,23 @@ CDL Convert Config
 
 Contains simple configuration parameters.
 
+## GLOBALS
+
+    HALT_ON_ERROR
+        Parameter to be used globally to determine if common exceptions should
+        be handled by default behavior or raise. Setting this to True causes
+        exceptions to be raised.
+
+        Default: False
+
+    COLLECTION_FORMATS
+        List containing all the formats which are represented by
+        ColorCollection.
+
+    SINGLE_FORMATS
+        List containing all the formats which are represented by a single
+        ColorCorrection.
+
 ## License
 
 The MIT License (MIT)

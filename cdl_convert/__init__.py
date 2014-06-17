@@ -33,6 +33,12 @@ out CC, CCC, CDL and RCDL.
 
 **CDLConvert is not associated with the American Society of Cinematographers**
 
+## Public Functions
+
+    reset_all()
+        Resets all the class level memberships lists and dictionaries. This
+        effectively resets the entire module.
+
 ## License
 
 The MIT License (MIT)
