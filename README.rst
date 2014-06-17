@@ -68,7 +68,6 @@ the ``-o`` flag.::
 
     $ cdl_convert ./di_v001.flex -o cc,cdl
 
-
 Changelog
 ---------
 
@@ -80,29 +79,29 @@ Color Decision Lists, can now be parsed and written. ``.ale``
 and ``.flex`` files now return a collection.
 
 - New script flags:
-    - Adds ``--check`` flag to script, which checks all parsed :class:`ColorCorrects` for sane values, and prints warnings to shell
+    - Adds ``--check`` flag to script, which checks all parsed `ColorCorrects` for sane values, and prints warnings to shell
     - Adds ``-d``, ``--destination`` flag to the script, which allows user to specify the output directory converted files will be written to.
     - Adds ``--no-ouput`` flag to the script, which goes through the entire conversion process but doesn't actually write anything to disk. Useful for troubleshooting, especially when combined with ``--check``
     - Adds ``--halt`` flag to the script, which halts on errors that can be resolved safely (such as negative slope or power values)
-- Renames :class:`ColorCollectionBase` to :class:`ColorCollection` , since it will be used directly by both ``ccc`` and ``cdl``.
-- Adds ``parse_ccc`` which returns a :class:`ColorCollection` .
-- Adds ``write_ccc`` which writes a :class:`ColorCollection` as a ``ccc`` file.
-- Adds ``parse_cdl`` which returns a :class:`ColorCollection` .
-- Adds ``write_cdl`` which returns a :class:`ColorCollection` as a ``cdl`` file.
-- :class:`ColorCollection` is now a fully functional container class, with many attributes and methods.
-- Added :class:`ColorDecision` , which stores either a :class:`ColorCorrection` or :class:`ColorCorrectionRef` , and an optional :class:`MediaRef`
-- Added :class:`ColorCorrectionRef` , which stores a reference to a :class:`ColorCorrection`
-- Added ``parent`` attribute to :class:`ColorCorrection` .
-- Calling ``sop_node`` or ``sat_node`` on a :class:`ColorCorrection` before attempting to set a SOP or Sat power now works.
-- :class:`ColorCorrection` ``cdl_file`` init argument renamed to ``input_file``, which is now optional and able to be set after init.
-- ``parse_cc`` and ``parse_rnh_cdl`` now only yield a single :class:`ColorCorrection` , not a single member list.
+- Renames `ColorCollectionBase` to `ColorCollection` , since it will be used directly by both ``ccc`` and ``cdl``.
+- Adds ``parse_ccc`` which returns a `ColorCollection` .
+- Adds ``write_ccc`` which writes a `ColorCollection` as a ``ccc`` file.
+- Adds ``parse_cdl`` which returns a `ColorCollection` .
+- Adds ``write_cdl`` which returns a `ColorCollection` as a ``cdl`` file.
+- `ColorCollection` is now a fully functional container class, with many attributes and methods.
+- Added `ColorDecision` , which stores either a `ColorCorrection` or `ColorCorrectionRef` , and an optional `MediaRef`
+- Added `ColorCorrectionRef` , which stores a reference to a `ColorCorrection`
+- Added ``parent`` attribute to `ColorCorrection` .
+- Calling ``sop_node`` or ``sat_node`` on a `ColorCorrection` before attempting to set a SOP or Sat power now works.
+- `ColorCorrection` ``cdl_file`` init argument renamed to ``input_file``, which is now optional and able to be set after init.
+- ``parse_cc`` and ``parse_rnh_cdl`` now only yield a single `ColorCorrection` , not a single member list.
 - Added dev-requirements.txt (contains ``mock``)
 - All ``determine_dest`` methods now take a second ``directory`` argument, which determines the output directory.
 - Adds ``sanity_check`` function which prints values which might be unusual to stdout.
 - ``parse_cdl`` and ``write_cdl`` renamed to ``parse_rnh_cdl`` and ``write_rnh_cdl`` respectively.
 - ``member_reset`` methods:
-    - :class:`ColorCorrection` now has a ``reset_members`` method, which resets the class level member's dictionary.
-    - :class:`MediaRef` also has a ``reset_members`` method, as does :class:`ColorCollection`
+    - `ColorCorrection` now has a ``reset_members`` method, which resets the class level member's dictionary.
+    - `MediaRef` also has a ``reset_members`` method, as does `ColorCollection`
     - ``reset_all`` function calls all of the above ``reset_members`` methods at once.
 - Renamed ``cdl_file`` argument:
     - ``parse_cc`` ``cdl_file`` arg renamed to ``input_file`` and now accepts a either a raw string or an ``ElementTree`` ``Element`` as ``input_file``.
@@ -112,10 +111,10 @@ and ``.flex`` files now return a collection.
 - Python Structure Refactoring
     - Moved ``HALT_ON_ERROR`` into the ``config`` module, which should now be referenced and set by importing the entire ``config`` module, and referencing or setting ``config.HALT_ON_ERROR``
     - Script functionality remains in ``cdl_convert.cdl_convert``, but everything else has been moved out.
-    - :class:`AscColorSpaceBase` , :class:`AscDescBase` , :class:`AscXMLBase` and :class:`ColorNodeBase` now live under ``cdl_convert.base``
-    - :class:`ColorCollection` now lives in ``cdl_convert.collection``
-    - :class:`ColorCorrection` , :class:`SatNode` and :class:`SopNode` now live under ``cdl_convert.correction``
-    - :class:`ColorDecision` , :class:`ColorCorrectionRef` and :class:`MediaRef` now live under ``cdl_convert.decision``
+    - `AscColorSpaceBase` , `AscDescBase` , `AscXMLBase` and `ColorNodeBase` now live under ``cdl_convert.base``
+    - `ColorCollection` now lives in ``cdl_convert.collection``
+    - `ColorCorrection` , `SatNode` and `SopNode` now live under ``cdl_convert.correction``
+    - `ColorDecision` , `ColorCorrectionRef` and `MediaRef` now live under ``cdl_convert.decision``
     - All parse functions now live under ``cdl_convert.parse``
     - All write functions now live under ``cdl_convert.write``
     - ``sanity_check`` now live under ``cdl_convert.utils``
@@ -151,7 +150,7 @@ Frequently Asked Questions
     ``cdl_convert`` works in Python 2.6 through 3.4 and PyPy. A full test suite
     runs continuous integration through `Travis-ci.org`_, coverage through
     `coveralls.io`_, and code quality checked with `landscape.io`_. **Code is**
-    :pep:`8` **compliant**, with docstrings following `google code`_ docstring
+    pep 8 **compliant**, with docstrings following `google code`_ docstring
     standards.
 
 - Why don't you support format *X*?
