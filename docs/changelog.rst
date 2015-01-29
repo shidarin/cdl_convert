@@ -2,6 +2,11 @@
 Changelog
 #########
 
+Version 0.7.1
+=============
+
+- Fixed bug where ALE's without 'Scan Filename' fields could not parse correctly.
+
 Version 0.7
 ===========
 
