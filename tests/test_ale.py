@@ -57,11 +57,11 @@ AUDIO_FORMAT\t48khz
 FPS\t24
 
 Column
-Start\tEnd\tHandle Length\tAvid Clip Name\tASC_SAT\tASC_SOP\tScan Filename
+Start\tEnd\tHandle Length\tAvid Clip Name\tASC_SAT\tASC_SOP\tName
 
 Data
 """
-ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\n"
+ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{name}\n"
 
 # misc ========================================================================
 
@@ -379,6 +379,7 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
         )
     else:
         ale = ALE_LINE_SHORT.format(
+            name=filename,
             tcIn=tc.start,
             tcOut=tc.end,
             handleLen=randrange(1, 32),
@@ -393,7 +394,6 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
             powerR=power[0],
             powerG=power[1],
             powerB=power[2],
-            filename=filename
         )
 
     return ale

@@ -155,7 +155,13 @@ def parse_ale(input_file):  # pylint: disable=R0914
 
                 sat = cdl_data[ale_indexes['ASC_SAT']]
                 sop = cdl_data[ale_indexes['ASC_SOP']]
-                cc_id = cdl_data[ale_indexes['Scan Filename']]
+                try:
+                    cc_id = cdl_data[ale_indexes['Scan Filename']]
+                except KeyError:
+                    # Scan Filename is usually more descriptive, but we can
+                    # fall back on the always present 'Name' field if
+                    # Scan Filename is missing.
+                    cc_id = cdl_data[ale_indexes['Name']]
 
                 # Determine slope, offset and power from sop
                 # sop should look like:
