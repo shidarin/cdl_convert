@@ -21,7 +21,7 @@ Contains the script functions for using cdl_convert as a script.
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2014 Sean Wallitsch
+Copyright (c) 2015 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -137,6 +137,13 @@ def parse_args():
              "flagged. Note that depending on the look, these still might "  # pylint: disable=C0330
              "be correct values."  # pylint: disable=C0330
     )
+    parser.add_argument(
+        "--single",
+        action='store_true',
+        help="only write a single color decision per file when given collection"
+             "formats. This means that a single input CDL will export multiple"
+             "CDL files, one per color decision."
+    )
 
     args = parser.parse_args()
 
@@ -249,7 +256,7 @@ def main():  # pylint: disable=R0912
 
         # Writing
         for ext in args.output:
-            if ext in config.SINGLE_FORMATS:
+            if ext in config.SINGLE_FORMATS or args.single:
                 if filetype_in in config.COLLECTION_FORMATS:
                     for color_correct in color_decisions.color_corrections:
                         write_single_file(color_correct, ext)

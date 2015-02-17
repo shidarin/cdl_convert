@@ -94,6 +94,11 @@ function, see :doc:`usage` for a walkthrough.
     ``members`` to ensure that no two :class:`ColorCorrection` share the same
     ``id`` , as this is required by the specification.
 
+    If the ``id`` does match an already created ``id`` and ``HALT_ON_ERROR`` is
+    not set, the ``id`` assignment will go forward, appending the duplicate
+    number to the back of the ``id``. So the 2nd instance of 'sh100cc' will
+    become 'sh100cc001'.
+
     Reset the members dictionary by either calling the ``reset_members`` method
     on :class:`ColorCorrection` or by reseting all cdl_convert member
     lists and dictionaries with the ``reset_all`` function.

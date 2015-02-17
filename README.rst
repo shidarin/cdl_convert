@@ -71,6 +71,11 @@ the ``-o`` flag.::
 Changelog
 ---------
 
+*New in version 0.8:*
+
+- Added ``--single`` flag. When provided with an output collection format, each color correction in the input will be exported to it's own collection.
+- Giving a ColorCorrection a non-duplicate ID now works unless the ``--halt`` flag is given. This means that incoming collections that contain duplicate IDs will not fail out.
+
 *New in version 0.7.1:*
 
 - Fixed bug where ALE's without 'Scan Filename' fields could not parse correctly.
@@ -225,7 +230,7 @@ License
     The MIT License (MIT)
 
     | cdl_convert
-    | Copyright (c) 2014 Sean Wallitsch
+    | Copyright (c) 2015 Sean Wallitsch
     | http://github.com/shidarin/cdl_convert/
 
     Permission is hereby granted, free of charge, to any person obtaining a copy

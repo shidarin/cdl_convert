@@ -54,6 +54,9 @@ filename to ``input_file``.
     ``members`` to ensure that no two :class:`ColorCorrection` share the same
     ``id`` , as this is required by the specification.
 
+    Giving duplicate ``id`` will result in a number being appended to the back,
+    unless ``HALT_ON_ERROR`` is set, in which case it will fail.
+
     Reset the members list by calling the ``reset_members`` method of
     :class:`ColorCorrection` or reset all class member list and dictionaries
     with ``cdl_convert.reset_all``.
@@ -242,6 +245,12 @@ You can change the id after creation, but it will perform the same check.
       File "cdl_convert/correction.py", line 430, in _set_id
         cc_id=cc_id
     ValueError: Error setting the id to "cc1". This id is already a registered id.
+
+A ValueError is only raised if ``HALT_ON_ERROR`` is set. If ``HALT_ON_ERROR``
+is not set (default), a number will be appended to the non-duplicate ID.
+
+So if you already have a ColorCorrection with the id of 'sh100cc', the second
+ColorCorrection you set to have that id will actually set to 'sh100cc001'.
 
 At the current time, ``file_out`` cannot be set directly. ``file_out`` is
 determined by using the class method ``determine_dest``, which takes a

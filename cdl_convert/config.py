@@ -28,7 +28,7 @@ Contains simple configuration parameters.
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2014 Sean Wallitsch
+Copyright (c) 2015 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -70,6 +70,7 @@ SOFTWARE.
 #       exist.
 #   If attempting to set a ColorCorrectionRef to a ColorCorrection whose
 #       id doesn't exist. (Other than first creation)
+#   If a ColorCorrection is given a duplicate ID
 HALT_ON_ERROR = False
 
 COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'flex']

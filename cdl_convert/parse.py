@@ -42,7 +42,7 @@ Contains parser functions for converting files to cdl_convert objects.
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2014 Sean Wallitsch
+Copyright (c) 2015 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

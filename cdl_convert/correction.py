@@ -29,7 +29,7 @@ and SatNode.
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2014 Sean Wallitsch
+Copyright (c) 2015 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -236,12 +236,21 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         # Each ID should be unique
         id = _sanitize(id)
         if id in ColorCorrection.members.keys():
-            raise ValueError(
-                'Error initiating id to "{id}". This id is already a '
-                'registered id.'.format(
-                    id=id
+            if config.HALT_ON_ERROR:
+                raise ValueError(
+                    'Error initiating id to "{id}". This id is already a '
+                    'registered id.'.format(
+                        id=id
+                    )
                 )
-            )
+            else:
+                id = '{id}{num:0>3}'.format(
+                    id=id,
+                    num=len(
+                        [cc for cc in ColorCorrection.members
+                         if cc.startswith(id)]
+                    )
+                )
         elif not id:
             if config.HALT_ON_ERROR:
                 raise ValueError('Blank id given to ColorCorrection.')
