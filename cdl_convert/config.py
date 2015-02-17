@@ -70,6 +70,7 @@ SOFTWARE.
 #       exist.
 #   If attempting to set a ColorCorrectionRef to a ColorCorrection whose
 #       id doesn't exist. (Other than first creation)
+#   If a ColorCorrection is given a duplicate ID
 HALT_ON_ERROR = False
 
 COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'flex']

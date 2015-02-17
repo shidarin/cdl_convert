@@ -1484,11 +1484,25 @@ class TestColorCorrection(unittest.TestCase):
     def testIdNonUniqueIdOnInit(self):
         """Tests that exception raised when initializing a non-unique id."""
 
+        cdl_convert.config.HALT_ON_ERROR = True
+
         self.assertRaises(
             ValueError,
             cdl_convert.ColorCorrection,
             'uniqueId',
             'file'
+        )
+
+        cdl_convert.config.HALT_ON_ERROR = False
+
+        try:
+            cc = cdl_convert.ColorCorrection('uniqueId', 'file')
+        except ValueError:
+            self.fail("Non-unique ID was not accepted!")
+
+        self.assertEqual(
+            'uniqueId001',
+            cc.id
         )
 
     #==========================================================================

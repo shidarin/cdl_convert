@@ -62,6 +62,7 @@ Changelog
 *New in version 0.8:*
 
 - Added `--single` flag. When provided with an output collection format, each color correction in the input will be exported to it's own collection.
+- Giving a :class:`ColorCorrection` a non-duplicate ID now works unless the ``--halt`` flag is given. This means that incoming collections that contain duplicate IDs will not fail out.
 
 *New in version 0.7.1:*
 
