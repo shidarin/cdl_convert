@@ -44,7 +44,7 @@ out CC, CCC, CDL and RCDL.
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2014 Sean Wallitsch
+Copyright (c) 2015 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -91,7 +91,7 @@ from .write import write_cc, write_ccc, write_cdl, write_rnh_cdl
 # ==============================================================================
 
 __author__ = "Sean Wallitsch"
-__copyright__ = "Copyright 2014, Sean Wallitsch"
+__copyright__ = "Copyright 2015, Sean Wallitsch"
 __credits__ = ["Sean Wallitsch", ]
 __license__ = "MIT"
 __version__ = "0.7.1"
