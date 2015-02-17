@@ -62,6 +62,9 @@ from __future__ import absolute_import, print_function
 
 import sys
 
+# Local Imports
+from .collection import ColorCollection
+
 # ==============================================================================
 # GLOBALS
 # ==============================================================================
@@ -82,10 +85,24 @@ __all__ = [
     'write_rnh_cdl',
 ]
 
+# ==============================================================================
+# PRIVATE FUNCTIONS
+# ==============================================================================
+
+
+def _temp_container(cdl):
+    """Builds a temporary collection container for a single cdl file."""
+    temp_cdl = ColorCollection()
+    orig_parent = cdl.parent
+    temp_cdl.append_child(cdl)
+    cdl.parent = orig_parent  # Restore original parentage away from temp cdl
+    temp_cdl._file_out = cdl.file_out
+    return temp_cdl
 
 # ==============================================================================
 # PUBLIC FUNCTIONS
 # ==============================================================================
+
 
 def write_cc(cdl):
     """Writes the ColorCorrection to a .cc file"""
@@ -97,6 +114,9 @@ def write_cc(cdl):
 
 def write_ccc(cdl):
     """Writes the ColorCollection to a .ccc file"""
+    if not isinstance(cdl, ColorCollection):
+        cdl = _temp_container(cdl)
+
     collection_type = cdl.type
     cdl.set_to_ccc()
     with open(cdl.file_out, 'wb') as cdl_f:
@@ -108,6 +128,9 @@ def write_ccc(cdl):
 
 def write_cdl(cdl):
     """Writes the ColorCollection to a .cdl file"""
+    if not isinstance(cdl, ColorCollection):
+        cdl = _temp_container(cdl)
+
     collection_type = cdl.type
     cdl.set_to_cdl()
     with open(cdl.file_out, 'wb') as cdl_f:
