@@ -60,9 +60,9 @@ will enable a dry run mode and allow you to spot odd values before running.
 Full help is available using the standard ``--help`` command:
 ::
     $ cdl_convert --help
-    usage: cdl_convert.py [-h] [-i INPUT] [-o OUTPUT] [-d DESTINATION] [--halt]
-                          [--no-output] [--check]
-                          input_file
+    usage: cdl_convert [-h] [-i INPUT] [-o OUTPUT] [-d DESTINATION] [--halt]
+                       [--no-output] [--check] [--single]
+                       input_file
 
     positional arguments:
       input_file            the file to be converted
@@ -97,3 +97,6 @@ Full help is available using the standard ``--help`` command:
                             for Slope, Power and Saturation. For offset, any value
                             over 1 and under -1 is flagged. Note that depending on
                             the look, these still might be correct values.
+      --single              only write a single color decision per file when given
+                            collection formats. This means that a single input CDL
+                            will export multipleCDL files, one per color decision.

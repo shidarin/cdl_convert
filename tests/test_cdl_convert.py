@@ -474,6 +474,19 @@ class TestParseArgs(unittest.TestCase):
 
     #==========================================================================
 
+    def testSingle(self):
+        """Tests that the single fileout --single flag is caught"""
+
+        sys.argv = ['scriptname', 'inputFile', '--single']
+
+        args = main.parse_args()
+
+        self.assertTrue(
+            args.single
+        )
+
+    #==========================================================================
+
     def testNoOutput(self):
         """Tests that --no-output was picked up correctly"""
 
@@ -866,6 +879,126 @@ class TestMain(unittest.TestCase):
         self.assertEqual(
             os.path.join(destination_dir, 'testcdl.ccc'),
             self.ccc.file_out
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.write_cdl')
+    @mock.patch('cdl_convert.parse_cdl')
+    def testSingleCollectionExport(self, mockParse, mockWrite):
+        """Tests that with single export we export multiple times."""
+
+        cc1 = cdl_convert.ColorCorrection(
+            id='cc1', input_file='../cc1.cc'
+        )
+        cc2 = cdl_convert.ColorCorrection(
+            id='cc2', input_file='../cc2.cc'
+        )
+        cc3 = cdl_convert.ColorCorrection(
+            id='cc3', input_file='../cc3.cc'
+        )
+        self.ccc.append_children([cc1, cc2, cc3])
+        mockParse.return_value = self.ccc
+
+        sys.argv = ['scriptname', 'file.cdl', '-o', 'cdl', '--single']
+
+        destination_dir = os.path.abspath('./converted/')
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['cdl'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['cdl'] = mockWrite
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main()
+
+        # Check that write was called three times, once for each child cc
+        calls = [
+            mock.call(cc1),
+            mock.call(cc2),
+            mock.call(cc3)
+        ]
+        try:
+            mockWrite.assert_has_calls(calls)
+        except AssertionError:
+            self.fail("Was not given a call for every child cc!")
+
+        # Check that after writing, our parent is still set to the original ccc
+        self.assertEqual(
+            cc1.parent,
+            self.ccc
+        )
+
+        self.assertEqual(
+            cc2.parent,
+            self.ccc
+        )
+
+        self.assertEqual(
+            cc3.parent,
+            self.ccc
+        )
+
+    #==========================================================================
+
+    @mock.patch('cdl_convert.write_ccc')
+    @mock.patch('cdl_convert.parse_ccc')
+    def testSingleCollectionExportCCC(self, mockParse, mockWrite):
+        """Tests that with single export we export multiple times."""
+
+        cc1 = cdl_convert.ColorCorrection(
+            id='cc1', input_file='../cc1.cc'
+        )
+        cc2 = cdl_convert.ColorCorrection(
+            id='cc2', input_file='../cc2.cc'
+        )
+        cc3 = cdl_convert.ColorCorrection(
+            id='cc3', input_file='../cc3.cc'
+        )
+        self.ccc.append_children([cc1, cc2, cc3])
+        mockParse.return_value = self.ccc
+
+        sys.argv = ['scriptname', 'file.ccc', '-o', 'ccc', '--single']
+
+        destination_dir = os.path.abspath('./converted/')
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs['ccc'] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs['ccc'] = mockWrite
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main()
+
+        # Check that write was called three times, once for each child cc
+        calls = [
+            mock.call(cc1),
+            mock.call(cc2),
+            mock.call(cc3)
+        ]
+        try:
+            mockWrite.assert_has_calls(calls)
+        except AssertionError:
+            self.fail("Was not given a call for every child cc!")
+
+        # Check that after writing, our parent is still set to the original ccc
+        self.assertEqual(
+            cc1.parent,
+            self.ccc
+        )
+
+        self.assertEqual(
+            cc2.parent,
+            self.ccc
+        )
+
+        self.assertEqual(
+            cc3.parent,
+            self.ccc
         )
 
     #==========================================================================

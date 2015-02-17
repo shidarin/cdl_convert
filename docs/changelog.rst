@@ -2,6 +2,12 @@
 Changelog
 #########
 
+
+Version 0.8
+===========
+
+- Added `--single` flag. When provided with an output collection format, each color correction in the input will be exported to it's own collection.
+
 Version 0.7.1
 =============
 

@@ -71,6 +71,10 @@ the ``-o`` flag.::
 Changelog
 ---------
 
+*New in version 0.8:*
+
+- Added `--single` flag. When provided with an output collection format, each color correction in the input will be exported to it's own collection.
+
 *New in version 0.7.1:*
 
 - Fixed bug where ALE's without 'Scan Filename' fields could not parse correctly.
