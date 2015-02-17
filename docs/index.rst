@@ -58,6 +58,10 @@ Cinematographers**
 Changelog
 =========
 
+*New in version 0.7.1:*
+
+- Fixed bug where ALE's without 'Scan Filename' fields could not parse correctly.
+
 *New in version 0.7:*
 
 The biggest change in 0.7 is the addition of collection format support.
