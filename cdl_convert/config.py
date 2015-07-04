@@ -73,7 +73,7 @@ SOFTWARE.
 #   If a ColorCorrection is given a duplicate ID
 HALT_ON_ERROR = False
 
-COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'flex']
+COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'edl', 'flex']
 SINGLE_FORMATS = ['cc', 'rcdl']
 
 # ==============================================================================

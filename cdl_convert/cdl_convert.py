@@ -140,8 +140,8 @@ def parse_args():
     parser.add_argument(
         "--single",
         action='store_true',
-        help="only write a single color decision per file when given collection"
-             "formats. This means that a single input CDL will export multiple"
+        help="only write a single color decision per file when given collection "
+             "formats. This means that a single input CDL will export multiple "
              "CDL files, one per color decision."
     )
 
