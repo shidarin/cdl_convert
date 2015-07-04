@@ -71,6 +71,13 @@ the ``-o`` flag.::
 Changelog
 ---------
 
+*New in version 0.9:*
+
+- Added ability to parse CMX EDLs
+- Fixed a script bug where a collection format containing color decisions will not have those color decisions exported as individual color corrections.
+- Added a cdl_convert.py stub file to the package root level, which will allow running of the cdl_convert script without installation. Due to relative imports in the python code, it was no longer possible to call cdl_convert/cdl_convert.py directly.
+- The script, when run directly from cdl_convert.py, will now write errors to stderror correctly, and exit with a status of 1.
+
 *New in version 0.8:*
 
 - Added ``--single`` flag. When provided with an output collection format, each color correction in the input will be exported to it's own collection.
