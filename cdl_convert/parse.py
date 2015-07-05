@@ -80,7 +80,7 @@ from xml.etree import ElementTree
 
 # cdl_convert imports
 
-from . import collection, correction
+from . import config, collection, correction
 
 # ==============================================================================
 # EXPORTS
@@ -247,7 +247,10 @@ def parse_cc(input_file):  # pylint: disable=R0912
     try:
         cc_id = root.attrib['id']
     except KeyError:
-        raise ValueError('No id found on ColorCorrection')
+        if config.HALT_ON_ERROR:
+            raise ValueError('No id found on ColorCorrection')
+        else:
+            cc_id = None
 
     cdl = correction.ColorCorrection(cc_id)
     if file_in:

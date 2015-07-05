@@ -635,17 +635,17 @@ class TestParseCCExceptions(unittest.TestCase):
     #==========================================================================
 
     def testNoId(self):
-        """Tests that not finding an id attrib raises ValueError"""
+        """Tests that not finding an id attrib works"""
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
             f.write(enc(CC_NO_ID))
             self.file = f.name
 
-        self.assertRaises(
-            ValueError,
-            cdl_convert.parse_cc,
-            self.file
+        cc = cdl_convert.parse_cc(self.file)
+        self.assertEqual(
+            '001',
+            cc.id
         )
 
     #==========================================================================
