@@ -252,9 +252,7 @@ def main():  # pylint: disable=R0912
                 for color_correct in color_decisions.color_corrections:
                     sanity_check(color_correct)
                 for decision in color_decisions.color_decisions:
-                    if decision.is_ref:
-                        sanity_check(decision.cc.cc)
-                    else:
+                    if not decision.is_ref:
                         sanity_check(decision.cc)
             else:
                 sanity_check(color_decisions)
@@ -266,9 +264,7 @@ def main():  # pylint: disable=R0912
                     for color_correct in color_decisions.color_corrections:
                         write_single_file(color_correct, ext)
                     for decision in color_decisions.color_decisions:
-                        if decision.is_ref:
-                            write_single_file(decision.cc.cc, ext)
-                        else:
+                        if not decision.is_ref:
                             write_single_file(decision.cc, ext)
                 else:
                     write_single_file(color_decisions, ext)
