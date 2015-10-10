@@ -31,7 +31,7 @@ import unittest
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert
-from tests.test_cdl_convert import TimeCodeSegment
+from test_cdl_convert import TimeCodeSegment
 
 #==============================================================================
 # GLOBALS
