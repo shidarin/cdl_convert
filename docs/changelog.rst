@@ -7,6 +7,7 @@ Version 0.9
 
 - Added ability to parse CMX EDLs
 - Fixed a script bug where a collection format containing color decisions will not have those color decisions exported as individual color corrections.
+- Fixed a bug where we weren't reading line endings correctly in certain situations.
 - Added a cdl_convert.py stub file to the package root level, which will allow running of the cdl_convert script without installation. Due to relative imports in the python code, it was no longer possible to call cdl_convert/cdl_convert.py directly.
 - The script, when run directly from cdl_convert.py, will now write errors to stderror correctly, and exit with a status of 1.
 
