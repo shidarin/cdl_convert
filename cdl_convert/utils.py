@@ -174,6 +174,7 @@ def to_decimal(value, name='Value'):
         return value
     elif type(value) is str:
         if '.' not in value:
+            value = value.strip()
             value += '.0'
 
         try:

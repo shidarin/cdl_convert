@@ -1,27 +1,10 @@
 #!/usr/bin/env python
 """
 
-CDL Convert Config
-================
+CDL Convert
+=======================
 
-Contains simple configuration parameters.
-
-## GLOBALS
-
-    HALT_ON_ERROR
-        Parameter to be used globally to determine if common exceptions should
-        be handled by default behavior or raise. Setting this to True causes
-        exceptions to be raised.
-
-        Default: False
-
-    COLLECTION_FORMATS
-        List containing all the formats which are represented by
-        ColorCollection.
-
-    SINGLE_FORMATS
-        List containing all the formats which are represented by a single
-        ColorCorrection.
+Stub file for script execution of cdl_convert without installing.
 
 ## License
 
@@ -52,32 +35,37 @@ SOFTWARE.
 """
 
 # ==============================================================================
-# GLOBALS
+# IMPORTS
 # ==============================================================================
 
-# HALT_ON_ERROR is the exception handling variable for exceptions that can
-# be handled silently.
-#
-# If we begin to get more config options, this will be moved into a singleton
-# config class.
-#
-# Used in the following places:
-#   Slope, power and sat values can't be negative and will truncate to 0.0
-#   If id given to ColorCorrection is blank, will set to number of CCs
-#   When determining if a non-existent directory referenced by MediaRef
-#       contains an image sequence, will just return False.
-#   If attempting to retrieve a referenced ColorCorrection whose id doesn't
-#       exist.
-#   If attempting to set a ColorCorrectionRef to a ColorCorrection whose
-#       id doesn't exist. (Other than first creation)
-#   If a ColorCorrection is given a duplicate ID
-HALT_ON_ERROR = False
+from __future__ import print_function
 
-COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'edl', 'flex']
-SINGLE_FORMATS = ['cc', 'rcdl']
+# Standard Imports
+
+import sys
+
+# cdl_convert imports
+
+from cdl_convert.cdl_convert import main
 
 # ==============================================================================
-# EXPORTS
+# PRIVATE FUNCTIONS
 # ==============================================================================
 
-__all__ = ['HALT_ON_ERROR']
+
+def _print_error(*objs):
+    print(*objs, file=sys.stderr)
+
+# ==============================================================================
+# EXECUTION
+# ==============================================================================
+
+if __name__ == '__main__':  # pragma: no cover
+    try:
+        main()
+    except Exception as err:  # pylint: disable=W0703
+        import traceback
+        _print_error('Unexpected error encountered:')
+        _print_error(err)
+        _print_error(traceback.format_exc())
+        exit(1)

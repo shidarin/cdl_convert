@@ -140,8 +140,8 @@ def parse_args():
     parser.add_argument(
         "--single",
         action='store_true',
-        help="only write a single color decision per file when given collection"
-             "formats. This means that a single input CDL will export multiple"
+        help="only write a single color decision per file when given collection "
+             "formats. This means that a single input CDL will export multiple "
              "CDL files, one per color decision."
     )
 
@@ -251,6 +251,9 @@ def main():  # pylint: disable=R0912
             if filetype_in in config.COLLECTION_FORMATS:
                 for color_correct in color_decisions.color_corrections:
                     sanity_check(color_correct)
+                for decision in color_decisions.color_decisions:
+                    if not decision.is_ref:
+                        sanity_check(decision.cc)
             else:
                 sanity_check(color_decisions)
 
@@ -260,6 +263,9 @@ def main():  # pylint: disable=R0912
                 if filetype_in in config.COLLECTION_FORMATS:
                     for color_correct in color_decisions.color_corrections:
                         write_single_file(color_correct, ext)
+                    for decision in color_decisions.color_decisions:
+                        if not decision.is_ref:
+                            write_single_file(decision.cc, ext)
                 else:
                     write_single_file(color_decisions, ext)
             else:
@@ -279,13 +285,3 @@ def main():  # pylint: disable=R0912
                     collection = ColorCollection(input_file=filepath)
                     collection.append_child(color_decisions)
                     write_collection_file(collection, ext)
-
-if __name__ == '__main__':  # pragma: no cover
-    try:
-        main()
-    except Exception as err:  # pylint: disable=W0703
-        import traceback
-        print('Unexpected error encountered:')
-        print(err)
-        print(traceback.format_exc())
-        raw_input('Press enter key to exit')

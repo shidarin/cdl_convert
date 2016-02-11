@@ -80,7 +80,7 @@ from xml.etree import ElementTree
 
 # cdl_convert imports
 
-from . import collection, correction
+from . import config, collection, correction
 
 # ==============================================================================
 # EXPORTS
@@ -91,6 +91,7 @@ __all__ = [
     'parse_cc',
     'parse_ccc',
     'parse_cdl',
+    'parse_cmx',
     'parse_file',
     'parse_flex',
     'parse_rnh_cdl'
@@ -137,7 +138,7 @@ def parse_ale(input_file):  # pylint: disable=R0914
 
     cdls = []
 
-    with open(input_file, 'r') as edl:
+    with open(input_file, 'rU') as edl:
         lines = edl.readlines()
         for line in lines:
             if line.startswith('Column'):
@@ -246,7 +247,10 @@ def parse_cc(input_file):  # pylint: disable=R0912
     try:
         cc_id = root.attrib['id']
     except KeyError:
-        raise ValueError('No id found on ColorCorrection')
+        if config.HALT_ON_ERROR:
+            raise ValueError('No id found on ColorCorrection')
+        else:
+            cc_id = None
 
     cdl = correction.ColorCorrection(cc_id)
     if file_in:
@@ -445,6 +449,81 @@ def parse_cdl(input_file):
 # ==============================================================================
 
 
+def parse_cmx(input_file):  # pylint: disable=R0912,R0914
+    """Parses a CMX EDL file for ASC CDL information.
+
+    **Args:**
+        input_file : (str)
+            The filepath to the CMX EDL
+
+    **Returns:**
+        (:class:`ColorCollection`)
+            A collection that contains all the ColorCorrection objects found
+            within this EDL
+
+    **Raises:**
+        N/A
+
+    001  DS0010.bg1 V     C     00:08:07:23 00:08:16:10 01:00:00:00 01:00:08:11
+    *ASC_SOP (1.45 1.22 1.15)(-0.14 -0.11 -0.11)(1.00 1.00 1.00)
+    *ASC_SAT 0.773000
+
+    """
+    cdls = []
+
+    with open(input_file, 'rU') as edl:
+        lines = edl.readlines()
+
+    filename = os.path.basename(input_file).split('.')[0]
+
+    def parse_cmx_clip(cmx_tuple):
+        """Parses a three line cmx clip tuple."""
+        if len(cmx_tuple) != 3:
+            print(cmx_tuple)
+            return
+        title = cmx_tuple[0].split()[1]
+
+        sop = re.match(
+            r'^\*ASC_SOP \(([\d\. -]+)\)\(([\d\. -]+)\)\(([\d\. -]+)\)',
+            cmx_tuple[1]
+        )
+        if not sop:
+            print(cmx_tuple)
+            return
+        else:
+            cc = correction.ColorCorrection(title, filename)
+
+        cc.desc = cmx_tuple[0].strip()
+
+        cc.slope = sop.group(1).split()
+        cc.offset = sop.group(2).split()
+        cc.power = sop.group(3).split()
+
+        cc.sat = cmx_tuple[2].split()[1]
+
+        return cc
+
+    for i, line in enumerate(lines):
+        if line != '\n':
+            # We only care about newlines when reading CMX, because
+            # we use those to kick off parsing the next take.
+            continue
+        if i + 3 <= len(lines):
+            cc = parse_cmx_clip(lines[i + 1:i + 4])
+        else:
+            continue
+
+        cdls.append(cc)
+
+    ccc = collection.ColorCollection()
+    ccc.file_in = input_file
+    ccc.append_children(cdls)
+
+    return ccc
+
+# ==============================================================================
+
+
 def parse_flex(input_file):  # pylint: disable=R0912,R0914
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
 
@@ -499,7 +578,7 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
 
     cdls = []
 
-    with open(input_file, 'r') as edl:
+    with open(input_file, 'rU') as edl:
         lines = edl.readlines()
 
         filename = os.path.basename(input_file).split('.')[0]
@@ -624,7 +703,7 @@ def parse_rnh_cdl(input_file):
 
     """
 
-    with open(input_file, 'r') as cdl_f:
+    with open(input_file, 'rU') as cdl_f:
         # We only need to read the first line
         line = cdl_f.readline()
         line = line.split()
@@ -673,6 +752,7 @@ INPUT_FORMATS = {
     'ccc': parse_ccc,
     'cc': parse_cc,
     'cdl': parse_cdl,
+    'edl': parse_cmx,
     'flex': parse_flex,
     'rcdl': parse_rnh_cdl,
 }
