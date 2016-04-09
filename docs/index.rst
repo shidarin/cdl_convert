@@ -58,6 +58,10 @@ Cinematographers**
 Changelog
 =========
 
+*New in version 0.9.1:*
+
+- Fixed a bug where ALE's with blank lines would not convert correctly.
+
 *New in version 0.9:*
 
 - Added ability to parse CMX EDLs
