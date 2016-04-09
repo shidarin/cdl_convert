@@ -141,7 +141,10 @@ def parse_ale(input_file):  # pylint: disable=R0914
     with open(input_file, 'rU') as edl:
         lines = edl.readlines()
         for line in lines:
-            if line.startswith('Column'):
+            if not line.strip():
+                # Skip entirely blank lines
+                continue
+            elif line.startswith('Column'):
                 section['column'] = True
                 continue
             elif line.startswith('Data'):
