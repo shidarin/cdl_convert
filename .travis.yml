@@ -11,8 +11,9 @@ install:
   - pip install argparse
   - pip install mock
   - pip install coveralls
+  - pip install setuptools
 # command to run tests, e.g. python setup.py test
-script: coverage run --source=cdl_convert tests/__init__.py
+script: coverage run --source cdl_convert setup.py test
 # command to run after tests have completed
 after_success:
   coveralls
