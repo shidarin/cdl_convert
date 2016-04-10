@@ -6,7 +6,7 @@ import sys
 
 if sys.hexversion >= 0x20700f0:  # 2.7.0 (final release)
     install_requires = []
-elif sys.hexversion < 0x20600f0:  # 2.6.0 (final release)
+elif 0x20600f0 <= sys.hexversion < 0x20700f0:  # 2.6.0 (final release)
     install_requires = ['argparse']
 else:
     raise RuntimeError(
