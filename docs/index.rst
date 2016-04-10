@@ -58,9 +58,12 @@ Cinematographers**
 Changelog
 =========
 
-*New in version 0.9.1:*
+*New in version 0.9.2:*
 
 - Fixed a bug where ALE's with blank lines would not convert correctly.
+- Fixed a bug that was preventing ``cdl_convert`` from being correctly installed in Python 2.6
+- Fixed continuous integration testing.
+- No longer officially supporting Python 3.2, as I've had to remove it from our CI builds. It should still work just fine though, but we won't be running CI against it.
 
 *New in version 0.9:*
 
