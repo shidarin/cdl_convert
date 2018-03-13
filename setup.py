@@ -150,9 +150,10 @@ setup(
     # List run-time dependencies here.  These will be installed by pip when
     #  your project is installed.
     install_requires=[
+        'OpenTimelineIO==0.7.dev0'
     ],
     dependency_links=[
-        'git+git://github.com/PixarAnimationStudios/OpenTimelineIO.git@v0.7'
+        'git+git://github.com/PixarAnimationStudios/OpenTimelineIO.git@v0.7#egg=OpenTimelineIO-0.7.dev0'
     ],
 
     # Testing

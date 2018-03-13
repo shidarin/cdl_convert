@@ -8,7 +8,7 @@ Pip Install
 Using pip is the preferred method of installation, as it installs cdl_convert
 both as a python module and a script.
 ::
-    $ pip install cdl_convert
+    $ pip install cdl_convert --process-dependency-links
 
 Script Only Installation
 ========================

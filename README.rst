@@ -154,7 +154,7 @@ Installation
 
 Installing is as simple as using pip:::
 
-    $ pip install cdl_convert
+    $ pip install cdl_convert --process-dependency-links
 
 If you don't want to bother with a pip style install, you can alternatively
 grab the entire `cdl_convert`_ directory, then set up a shortcut to call
