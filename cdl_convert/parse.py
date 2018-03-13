@@ -472,51 +472,30 @@ def parse_cmx(input_file):  # pylint: disable=R0912,R0914
     *ASC_SAT 0.773000
 
     """
-    cdls = []
-
-    with open(input_file, 'rU') as edl:
-        lines = edl.readlines()
-
-    filename = os.path.basename(input_file).split('.')[0]
-
-    def parse_cmx_clip(cmx_tuple):
-        """Parses a three line cmx clip tuple."""
-        if len(cmx_tuple) != 3:
-            print(cmx_tuple)
-            return
-        title = cmx_tuple[0].split()[1]
-
-        sop = re.match(
-            r'^\*ASC_SOP \(([\d\. -]+)\)\(([\d\. -]+)\)\(([\d\. -]+)\)',
-            cmx_tuple[1]
+    try:
+        import opentimelineio as otio
+    except ImportError:
+        raise RuntimeError(
+            "Cannot import OpenTimelineIO. OpenTimelineIO is required for "
+            "parsing of CMX EDL files. Please install OpenTimelineIO from "
+            "https://github.com/PixarAnimationStudios/OpenTimelineIO"
         )
-        if not sop:
-            print(cmx_tuple)
-            return
-        else:
+    cdls = []
+    edl = otio.adapters.read_from_file(input_file)
+    filename = os.path.basename(input_file).split('.')[0]
+    for track in edl.tracks:
+        for clip in track.data['children']:
+            title = clip.name
             cc = correction.ColorCorrection(title, filename)
-
-        cc.desc = cmx_tuple[0].strip()
-
-        cc.slope = sop.group(1).split()
-        cc.offset = sop.group(2).split()
-        cc.power = sop.group(3).split()
-
-        cc.sat = cmx_tuple[2].split()[1]
-
-        return cc
-
-    for i, line in enumerate(lines):
-        if line != '\n':
-            # We only care about newlines when reading CMX, because
-            # we use those to kick off parsing the next take.
-            continue
-        if i + 3 <= len(lines):
-            cc = parse_cmx_clip(lines[i + 1:i + 4])
-        else:
-            continue
-
-        cdls.append(cc)
+            try:
+                cdl = clip.metadata['cdl']
+            except KeyError:
+                continue
+            cc.slope = cdl['asc_sop']['slope']
+            cc.power = cdl['asc_sop']['power']
+            cc.offset = cdl['asc_sop']['offset']
+            cc.sat = cdl['asc_sat']
+            cdls.append(cc)
 
     ccc = collection.ColorCollection()
     ccc.file_in = input_file
