@@ -445,9 +445,7 @@ class TestParseArgs(unittest.TestCase):
 
     def testHaltOnError(self):
         """Tests that providing the --halt flag triggers HALT_ON_ERROR"""
-        self.assertFalse(
-            cdl_convert.config.HALT_ON_ERROR
-        )
+        cdl_convert.config.HALT_ON_ERROR = False
 
         sys.argv = ['scriptname', 'inputFile', '--halt']
 
