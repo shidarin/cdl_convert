@@ -291,7 +291,7 @@ class TestParseCCBasic(unittest.TestCase):
     #==========================================================================
 
     def setUp(self):
-        self.id = "014_xf_seqGrade_v01"
+        self.cdl_test_id = "014_xf_seqGrade_v01"
         self.desc = [
             'CC description 1', 'CC description 2', 'CC description 3',
             'CC description 4', 'CC description 5'
@@ -334,7 +334,7 @@ class TestParseCCBasic(unittest.TestCase):
     def testId(self):
         """Tests that id was set to id attrib"""
         self.assertEqual(
-            self.id,
+            self.cdl_test_id,
             self.cdl.id
         )
 
@@ -430,7 +430,7 @@ class TestParseCCOdd(TestParseCCBasic):
     #==========================================================================
 
     def setUp(self):
-        self.id = "f55.100"  # This will have been _sanitized()
+        self.cdl_test_id = "f55.100"  # This will have been _sanitized()
         self.desc = [
             'Raised saturation a little!?! ag... \/Offset',
             'Raised saturation a little!?! ag... \/Offset',
@@ -465,7 +465,7 @@ class TestParseCCBasic(TestParseCCBasic):
     #==========================================================================
 
     def setUp(self):
-        self.id = "f51.200"
+        self.cdl_test_id = "f51.200"
         self.desc = []
         self.input_desc = None
         self.viewing_desc = None
@@ -495,7 +495,7 @@ class TestParseCCBasicOrder(TestParseCCBasic):
     #==========================================================================
 
     def setUp(self):
-        self.id = "f54.112"
+        self.cdl_test_id = "f54.112"
         self.desc = []
         self.input_desc = None
         self.viewing_desc = None
@@ -525,7 +525,7 @@ class TestParseCCBlankMetadata(TestParseCCBasic):
     #==========================================================================
 
     def setUp(self):
-        self.id = "burp_100.x12"
+        self.cdl_test_id = "burp_100.x12"
         self.desc = []
         self.input_desc = None
         self.viewing_desc = None
@@ -555,7 +555,7 @@ class TestParseCCNoSop(TestParseCCBasic):
     #==========================================================================
 
     def setUp(self):
-        self.id = "burp_200.x15"
+        self.cdl_test_id = "burp_200.x15"
         self.desc = []
         self.input_desc = None
         self.viewing_desc = None
@@ -588,7 +588,7 @@ class TestParseCCNoSat(TestParseCCBasic):
     #==========================================================================
 
     def setUp(self):
-        self.id = "burp_300.x35"
+        self.cdl_test_id = "burp_300.x35"
         self.desc = []
         self.input_desc = None
         self.viewing_desc = None
