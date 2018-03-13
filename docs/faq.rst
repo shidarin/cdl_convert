@@ -6,7 +6,7 @@ Python 2 & 3 Support
 ====================
 
 - What versions of Python does ``cdl_convert`` support?
-    ``cdl_convert`` works in Python 2.6 through 3.4 and PyPy. A full test suite
+    ``cdl_convert`` works in Python 2.7 through 3.4 and PyPy. A full test suite
     runs continuous integration through `Travis-ci.org`_, coverage through
     `coveralls.io`_, and code quality checked with `landscape.io`_. **Code is**
     :pep:`8` **compliant**, with docstrings following `google code`_ docstring

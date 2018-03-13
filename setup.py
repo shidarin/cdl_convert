@@ -4,16 +4,6 @@ import os
 import re
 import sys
 
-if sys.hexversion >= 0x20700f0:  # 2.7.0 (final release)
-    install_requires = []
-elif 0x20600f0 <= sys.hexversion < 0x20700f0:  # 2.6.0 (final release)
-    install_requires = ['argparse']
-else:
-    raise RuntimeError(
-        "cdl_convert requires python 2.6 or greater. Current python version "
-        "is '%s'" % sys.version
-    )
-
 # Instructions for setting up a dist of cdl_convert
 #
 # Recommended to create a new clone of a fresh master before doing this,
@@ -134,7 +124,6 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.1',
@@ -160,7 +149,9 @@ setup(
 
     # List run-time dependencies here.  These will be installed by pip when your
     # project is installed.
-    install_requires=install_requires,
+    install_requires=[
+
+    ],
 
     # Testing
     test_suite='nose.collector',
