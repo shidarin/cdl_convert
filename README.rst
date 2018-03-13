@@ -43,6 +43,11 @@ data within the Film and TV industries.
 ``cdl_convert`` supports parsing ALE, FLEx, CC, CCC, CDL CMX EDL and RCDL.
 We can write out CC, CCC, CDL and RCDL.
 
+The only requirement of ``cdl_convert`` is Pixar's `OpenTimelineIO`_ project
+for reading EDLs. This dependency was added because OTIO does a much better
+job of parsing EDLs than we do, so a much larger range of compatibility was
+added.
+
 **cdl_convert is not associated with the American Society of
 Cinematographers**
 
@@ -153,7 +158,9 @@ Installing is as simple as using pip:::
 
 If you don't want to bother with a pip style install, you can alternatively
 grab the entire `cdl_convert`_ directory, then set up a shortcut to call
-``cdl_convert/cdl_convert.py``
+``cdl_convert/cdl_convert.py``.
+
+Note you will need to install `OpenTimelineIO`_ to parse EDLs.
 
 GitHub, Bug Reporting and Support
 ---------------------------------
@@ -278,6 +285,7 @@ License
 .. _PEP-8: http://legacy.python.org/dev/peps/pep-0008/
 .. _google code: http://google-styleguide.googlecode.com/svn/trunk/pyguide.html#Comments
 .. _landscape.io: http://landscape.io/
+.. _OpenTimelineIO: https://github.com/PixarAnimationStudios/OpenTimelineIO
 
 .. |PyPI Version| image:: https://badge.fury.io/py/cdl_convert.png
    :target: http://badge.fury.io/py/cdl_convert

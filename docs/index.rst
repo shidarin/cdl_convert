@@ -52,6 +52,11 @@ data within the Film and TV industries.
 ``cdl_convert`` supports parsing ALE, FLEx, CC, CCC, CDL and RCDL. We can write
 out CC, CCC, CDL and RCDL.
 
+The only requirement of ``cdl_convert`` is Pixar's `OpenTimelineIO`_ project
+for reading EDLs. This dependency was added because OTIO does a much better
+job of parsing EDLs than we do, so a much larger range of compatibility was
+added.
+
 **cdl_convert is not associated with the American Society of
 Cinematographers**
 
@@ -157,6 +162,7 @@ Indices and tables
 .. _ASC CDL: http://en.wikipedia.org/wiki/ASC_CDL
 .. _American Society of Cinematographers: http://www.theasc.com/
 .. _Foundry Nuke: http://www.thefoundry.co.uk/nuke/
+.. _OpenTimelineIO: https://github.com/PixarAnimationStudios/OpenTimelineIO
 
 .. |PyPI Version| image:: https://badge.fury.io/py/cdl_convert.png
    :target: http://badge.fury.io/py/cdl_convert

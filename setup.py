@@ -147,10 +147,12 @@ setup(
     # simple. Or you can use find_packages.
     packages=['cdl_convert'],
 
-    # List run-time dependencies here.  These will be installed by pip when your
-    # project is installed.
+    # List run-time dependencies here.  These will be installed by pip when
+    #  your project is installed.
     install_requires=[
-
+    ],
+    dependency_links=[
+        'git+git://github.com/PixarAnimationStudios/OpenTimelineIO.git@v0.7'
     ],
 
     # Testing
