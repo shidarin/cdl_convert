@@ -912,7 +912,7 @@ def _sanitize(name):
     # _ is an underscore
     # Put them together, negate them by leading with an ^
     # and our compiler will mark every non alnum, non ., _ character
-    pattern = re.compile(r'[^a-zA-Z0-9\._]+')
+    pattern = re.compile(r'[^a-zA-Z0-9\._-]+')
     # Then we sub them with nothing
     fixed = pattern.sub('', name)
 

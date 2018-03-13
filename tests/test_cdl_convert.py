@@ -163,6 +163,17 @@ class TestSanitize(unittest.TestCase):
 
     #==========================================================================
 
+    def testDashesOkay(self):
+        """Tests that dashes pass through intact"""
+        result = _sanitize('a-b-c')
+
+        self.assertEqual(
+            'a-b-c',
+            result
+        )
+
+    #==========================================================================
+
     def testLeadingPeriodRemove(self):
         """Tests that leading periods are removed"""
         result = _sanitize('.abc')
