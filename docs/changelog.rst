@@ -2,6 +2,23 @@
 Changelog
 #########
 
+Version 0.9.2
+=============
+
+- Fixed a bug where ALE's with blank lines would not convert correctly.
+- Fixed a bug that was preventing ``cdl_convert`` from being correctly installed in Python 2.6
+- Fixed continuous integration testing.
+- No longer officially supporting Python 3.2, as I've had to remove it from our CI builds. It should still work just fine though, but we won't be running CI against it.
+
+Version 0.9
+===========
+
+- Added ability to parse CMX EDLs
+- Fixed a script bug where a collection format containing color decisions will not have those color decisions exported as individual color corrections.
+- Fixed a bug where we weren't reading line endings correctly in certain situations.
+- Added a cdl_convert.py stub file to the package root level, which will allow running of the cdl_convert script without installation. Due to relative imports in the python code, it was no longer possible to call cdl_convert/cdl_convert.py directly.
+- The script, when run directly from cdl_convert.py, will now write errors to stderror correctly, and exit with a status of 1.
+
 
 Version 0.8
 ===========

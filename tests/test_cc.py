@@ -215,11 +215,11 @@ CC_FULL_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
         <Offset>-0.00315 -0.00124 0.3103</Offset>
         <Power>1.0 0.9983 1.0</Power>
     </SOPNode>
-    <SATNode>
+    <SatNode>
         <Description>Sat description 1</Description>
         <Description>Sat description 2</Description>
         <Saturation>1.09</Saturation>
-    </SATNode>
+    </SatNode>
 </ColorCorrection>
 """
 
@@ -236,18 +236,18 @@ CC_ODD_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
         <Offset>-3424.011 -342789423.013 -4238923.11</Offset>
         <Power>3271893.993 0.0000998 0.0000000000000000113</Power>
     </SOPNode>
-    <SATNode>
+    <SatNode>
         <Saturation>1798787.01</Saturation>
-    </SATNode>
+    </SatNode>
 </ColorCorrection>
 """
 
 CC_NO_SOP_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrection id="burp_200.x15">
-    <SATNode>
+    <SatNode>
         <Description>I am a lovely sat node</Description>
         <Saturation>1.0128109381</Saturation>
-    </SATNode>
+    </SatNode>
 </ColorCorrection>
 """
 
@@ -635,17 +635,17 @@ class TestParseCCExceptions(unittest.TestCase):
     #==========================================================================
 
     def testNoId(self):
-        """Tests that not finding an id attrib raises ValueError"""
+        """Tests that not finding an id attrib works"""
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
             f.write(enc(CC_NO_ID))
             self.file = f.name
 
-        self.assertRaises(
-            ValueError,
-            cdl_convert.parse_cc,
-            self.file
+        cc = cdl_convert.parse_cc(self.file)
+        self.assertEqual(
+            '001',
+            cc.id
         )
 
     #==========================================================================

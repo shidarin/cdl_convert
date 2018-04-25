@@ -75,12 +75,13 @@ from __future__ import absolute_import, print_function
 
 from ast import literal_eval
 import os
+import sys
 import re
 from xml.etree import ElementTree
 
 # cdl_convert imports
 
-from . import collection, correction
+from . import config, collection, correction
 
 # ==============================================================================
 # EXPORTS
@@ -138,10 +139,13 @@ def parse_ale(input_file):  # pylint: disable=R0914
 
     cdls = []
 
-    with open(input_file, 'r') as edl:
+    with open(input_file, 'rU') as edl:
         lines = edl.readlines()
         for line in lines:
-            if line.startswith('Column'):
+            if not line.strip():
+                # Skip entirely blank lines
+                continue
+            elif line.startswith('Column'):
                 section['column'] = True
                 continue
             elif line.startswith('Data'):
@@ -247,7 +251,10 @@ def parse_cc(input_file):  # pylint: disable=R0912
     try:
         cc_id = root.attrib['id']
     except KeyError:
-        raise ValueError('No id found on ColorCorrection')
+        if config.HALT_ON_ERROR:
+            raise ValueError('No id found on ColorCorrection')
+        else:
+            cc_id = None
 
     cdl = correction.ColorCorrection(cc_id)
     if file_in:
@@ -297,6 +304,10 @@ def parse_cc(input_file):  # pylint: disable=R0912
             return found_element
 
     try:
+        desc_xml = find_required(root, ['Description'])
+    except ValueError:
+        desc_xml = None
+    try:
         sop_xml = find_required(root, correction.SopNode.element_names)
     except ValueError:
         sop_xml = None
@@ -304,6 +315,14 @@ def parse_cc(input_file):  # pylint: disable=R0912
         sat_xml = find_required(root, correction.SatNode.element_names)
     except ValueError:
         sat_xml = None
+
+    if cc_id is None:
+        if config.MISSING_ID_FROM_DESC_IF_AVAILABLE:
+            if desc_xml is not None:
+                try:
+                    cdl.id = '_'.join(desc_xml.text.split())
+                except ValueError, v:
+                    raise(ValueError, "Description based naming collided. Please fix cc's to have unique ids or descriptions")
 
     if sop_xml is None and sat_xml is None:
         raise ValueError(
@@ -468,20 +487,23 @@ def parse_cmx(input_file):  # pylint: disable=R0912,R0914
     """
     cdls = []
 
-    with open(input_file, 'rb') as edl:
-        lines = edl.readlines()
+    with open(input_file, 'rU') as edl:
+
+        lines = '\n'.join(edl.readlines())
+    lines = lines.replace('\n\n', '\n')
 
     filename = os.path.basename(input_file).split('.')[0]
 
     def parse_cmx_clip(cmx_tuple):
+
         """Parses a three line cmx clip tuple."""
         if len(cmx_tuple) != 3:
             print(cmx_tuple)
             return
-        title = cmx_tuple[0].split()[1]
+        title = cmx_tuple[0].split(': ')[1]
 
         sop = re.match(
-            r'^\*ASC_SOP \(([\d\. -]+)\)\(([\d\. -]+)\)\(([\d\. -]+)\)',
+            r'^ASC_SOP \(([\d\. -]+)\)\(([\d\. -]+)\)\(([\d\. -]+)\)',
             cmx_tuple[1]
         )
         if not sop:
@@ -500,17 +522,123 @@ def parse_cmx(input_file):  # pylint: disable=R0912,R0914
 
         return cc
 
-    for i, line in enumerate(lines):
-        if line != '\r\n':
-            # We only care about newlines when reading CMX, because
-            # we use those to kick off parsing the next take.
-            continue
-        if i + 3 <= len(lines):
-            cc = parse_cmx_clip(lines[i + 1:i + 4])
+
+    '''
+    Trailing whitespace can be a sneaky devil in cleanup operations
+    '''
+    whitespace_cleaner = re.compile(r'([\s\S]*?)[\t ]*\n')
+    lines = whitespace_cleaner.sub(r'\1\n', lines)
+    lines = lines + '\n'
+
+    '''
+    We'll try to pre-clean an EDL away from several of the standard types of aberrations between
+    the various EDL formatting types because no one cares to follow a standard.
+    Some EDL's have ASC_SOP lines split by a new-line and asterisk, so we're hoping to rescue those,
+    and remove other types of lines that are useless to us as well increase the possibility of hitting
+    a regex-malforming problem (like the word LOC appearing in a VFX note for example)
+    '''
+    def replace_newline(match):
+        if '\n' in match.group(0):
+            return (match.group(0).replace('\n', '')+'\n')
+        else:
+            return match.group(0)
+    
+    split_ascsop_finder = re.compile(r'(ASC_SOP[\s\S]*?)[ ]*?\([\s\S]*?\)[\s\S]*?\([\s\S]*?\)[\s\S]*?\([\s\S]*?\)')
+    lines = split_ascsop_finder.sub(replace_newline, lines)
+    
+    '''
+    An empty ASC_SOP or ASC_SAT line doesnt parse well and should be replaced with a null op so that
+    we retain the event even if the data is useless
+    '''
+    print(lines)
+    print("cleaning")
+    null_ascsop = 'ASC_SOP (1.0000 1.0000 1.0000)(1.0000 1.0000 1.0000)(1.0000 1.0000 1.0000)\n'
+    null_ascsat = 'ASC_SAT 1\n'
+    null_ascsop_finder = re.compile(r'ASC_SOP *?\n')
+    null_ascsat_finder = re.compile(r'ASC_SAT *?\n')
+    lines = null_ascsop_finder.sub(null_ascsop , lines)
+    lines = null_ascsat_finder.sub(null_ascsat , lines)
+        
+    print("cleaned")
+    print(lines)
+    edl_block_finder = re.compile(r'(?<=\n)(\d+?[ ][\s\S]*?)(?=(([\n]\d+?[ ])|(\Z)))')
+    edl_blocks = edl_block_finder.findall(lines)
+    new_edl_blocks = []
+    for block in edl_blocks:
+        print(block)
+        block = block[0]
+        reordered_block = []
+        block_lines = block.split('\n')
+        reordered_block.append(block_lines[0])
+        if 'FROM CLIP NAME:' or 'LOC:' in block:
+            for block_line in block_lines:
+                if 'FROM CLIP NAME:' in block_line or 'LOC:' in block_line:
+                    reordered_block.append(block_line)
+        else:
+            clip_namer = re.compile(r'\d*\s*(\S*)(?=\s*)')
+            clip_name = clip_namer.findall(block_lines[0])[0]
+            block_line = 'FROM CLIP NAME: %s\n' % clip_name
+            reordered_block.append(block_line)
+        if 'ASC_SOP' in block:
+            for block_line in block_lines:
+                if 'ASC_SOP' in block_line:
+                    reordered_block.append(block_line)
+        else:
+            asc_sop_default = 'ASC_SOP (1.0 1.0 1.0)(0.0 0.0 0.0)(1.0 1.0 1.0)'
+            reordered_block.append(asc_sop_default)
+        if 'ASC_SAT' in block:
+            for block_line in block_lines:
+                if 'ASC_SAT' in block_line:
+                    reordered_block.append(block_line)
+        else:
+            asc_sat_default = 'ASC_SAT 1.0'
+            reordered_block.append(asc_sat_default)
+        for block_line in block_lines:
+            if block_line not in reordered_block:
+                reordered_block.append(block_line)
+        new_block = '\n'.join(reordered_block)
+        new_edl_blocks.append(new_block)
+    lines = '\n'.join(new_edl_blocks)
+
+    lines = lines.replace('* ', '').replace('*', '')
+    lines = re.sub('\nSOURCE FILE:.*', '', lines)
+    lines = re.sub('\nSOURCE.*', '', lines)
+    lines = re.sub('\nREEL:.*', '', lines)
+    lines = re.sub('\nDescript:.*', '', lines)
+    lines = re.sub('\n.*[=].*', '', lines)
+
+
+    '''
+    We sort of need to fail if we don't have any information; That is, if the number of
+    clip naming type entries does not correspond with the number of ASC type entries.
+    '''
+    declaration_matcher = re.compile(r'((FROM CLIP NAME:[\s\S]*?)|(LOC: [\s\S]*?))((?!ASC)[\s\S])*')
+    if len(declaration_matcher.findall(lines) * 2) != len(re.findall(r'ASC', lines)):
+        sys.exit("Inequal amounts of 'FROM CLIP NAME'|'LOC', 'ASC', 'SAT' lines - Exiting")
+
+    '''This regex will avoid caring about extra stuff between
+    the important lines we care about as long as the important
+    lines we care about are in the right order'''
+    cc_matcher = re.compile(r'((\A)|(\n+\d+.*))([\s\S]+?)(((FROM CLIP NAME:.*[\s\S]*?)|(LOC:.*[\s\S]*?)))((?!ASC)[\s\S]*?)(((ASC_(SOP|SAT).+)))([\s\S]+?)(((ASC_(SOP|SAT).+)))')
+    clip_entries = cc_matcher.findall(lines)
+    for entry in clip_entries:
+        clip = None
+        sop = None
+        sat = None
+        i = 0
+        for group in entry:
+            if ('FROM' in group or 'LOC' in group) and clip is None:
+                clip = group
+            if group == 'SOP':
+                sop = entry[i - 1]
+            if group == 'SAT':
+                sat = entry[i - 1]
+            i += 1
+        if clip is not None and sop is not None and sat is not None:
+            colorCorrect = parse_cmx_clip((clip, sop, sat))
+            cdls.append(colorCorrect)
         else:
             continue
-
-        cdls.append(cc)
 
     ccc = collection.ColorCollection()
     ccc.file_in = input_file
@@ -575,7 +703,7 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
 
     cdls = []
 
-    with open(input_file, 'r') as edl:
+    with open(input_file, 'rU') as edl:
         lines = edl.readlines()
 
         filename = os.path.basename(input_file).split('.')[0]
@@ -700,7 +828,7 @@ def parse_rnh_cdl(input_file):
 
     """
 
-    with open(input_file, 'r') as cdl_f:
+    with open(input_file, 'rU') as cdl_f:
         # We only need to read the first line
         line = cdl_f.readline()
         line = line.split()

@@ -72,6 +72,7 @@ SOFTWARE.
 #       id doesn't exist. (Other than first creation)
 #   If a ColorCorrection is given a duplicate ID
 HALT_ON_ERROR = False
+MISSING_ID_FROM_DESC_IF_AVAILABLE = True
 
 COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'edl', 'flex']
 SINGLE_FORMATS = ['cc', 'rcdl']

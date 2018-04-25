@@ -1606,6 +1606,16 @@ class TestToDecimal(unittest.TestCase):
             result
         )
 
+    def testStringIntWithSpaces(self):
+        """Tests string conversions"""
+        value = ' 1 '
+
+        result = utils.to_decimal(value)
+        self.assertEqual(
+            Decimal('1.0'),
+            result
+        )
+
     def testStringAdvanced(self):
         """Tests string conversions"""
         value = '1237891273.23162178368123787214849017132897'

@@ -2,6 +2,17 @@ from setuptools import setup
 import codecs
 import os
 import re
+import sys
+
+if sys.hexversion >= 0x20700f0:  # 2.7.0 (final release)
+    install_requires = []
+elif 0x20600f0 <= sys.hexversion < 0x20700f0:  # 2.6.0 (final release)
+    install_requires = ['argparse']
+else:
+    raise RuntimeError(
+        "cdl_convert requires python 2.6 or greater. Current python version "
+        "is '%s'" % sys.version
+    )
 
 # Instructions for setting up a dist of cdl_convert
 #
@@ -149,11 +160,11 @@ setup(
 
     # List run-time dependencies here.  These will be installed by pip when your
     # project is installed.
-    install_requires=['argparse'],
+    install_requires=install_requires,
 
     # Testing
     test_suite='nose.collector',
-    tests_require=['nose'],
+    tests_require=['nose', 'mock'],
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these

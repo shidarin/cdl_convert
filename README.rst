@@ -11,7 +11,7 @@ CDL Convert
 - **Docs:** http://cdl-convert.readthedocs.org/
 - **GitHub:** https://github.com/shidarin/cdl_convert
 - **PyPI:** https://pypi.python.org/pypi/cdl_convert
-- **Python Versions:** 2.6-3.4, PyPy
+- **Python Versions:** 2.6-3.5, PyPy & PyPy3
 
 Introduction
 ------------
@@ -40,8 +40,8 @@ It is the purpose of ``cdl_convert`` to convert ASC CDL information between
 these basic formats to further facilitate the ease of exchange of color
 data within the Film and TV industries.
 
-``cdl_convert`` supports parsing ALE, FLEx, CC, CCC, CDL and RCDL. We can write
-out CC, CCC, CDL and RCDL.
+``cdl_convert`` supports parsing ALE, FLEx, CC, CCC, CDL CMX EDL and RCDL.
+We can write out CC, CCC, CDL and RCDL.
 
 **cdl_convert is not associated with the American Society of
 Cinematographers**
@@ -70,6 +70,21 @@ the ``-o`` flag.::
 
 Changelog
 ---------
+
+*New in version 0.9.2:*
+
+- Fixed a bug where ALE's with blank lines would not convert correctly.
+- Fixed a bug that was preventing ``cdl_convert`` from being correctly installed in Python 2.6
+- Fixed continuous integration testing.
+- No longer officially supporting Python 3.2, as I've had to remove it from our CI builds. It should still work just fine though, but we won't be running CI against it.
+
+*New in version 0.9:*
+
+- Added ability to parse CMX EDLs
+- Fixed a script bug where a collection format containing color decisions will not have those color decisions exported as individual color corrections.
+- Fixed a bug where we weren't reading line endings correctly in certain situations.
+- Added a cdl_convert.py stub file to the package root level, which will allow running of the cdl_convert script without installation. Due to relative imports in the python code, it was no longer possible to call cdl_convert/cdl_convert.py directly.
+- The script, when run directly from cdl_convert.py, will now write errors to stderror correctly, and exit with a status of 1.
 
 *New in version 0.8:*
 

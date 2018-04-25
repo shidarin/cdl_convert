@@ -31,7 +31,7 @@ import unittest
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert
-from tests.test_cdl_convert import TimeCodeSegment
+from test_cdl_convert import TimeCodeSegment
 
 #==============================================================================
 # GLOBALS
@@ -308,6 +308,54 @@ class TestParseALEShort(TestParseALEBasic):
                              'bb94_x105_line3', short=True)
 
         self.file = ALE_HEADER_SHORT + line1 + line2 + line3
+
+        # Build our ale
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+            f.write(enc(self.file))
+            self.filename = f.name
+
+        self.cdls = cdl_convert.parse_ale(self.filename)
+        self.cdl1 = self.cdls.color_corrections[0]
+        self.cdl2 = self.cdls.color_corrections[1]
+        self.cdl3 = self.cdls.color_corrections[2]
+
+
+class TestParseALEShortAndBlankLines(TestParseALEBasic):
+    """Tests basic parsing of a shortened ALE with line breaks"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        self.slope1 = decimalize(1.329, 0.9833, 1.003)
+        self.offset1 = decimalize(0.011, 0.013, 0.11)
+        self.power1 = decimalize(.993, .998, 1.0113)
+        self.sat1 = Decimal('1.01')
+
+        line1 = buildALELine(self.slope1, self.offset1, self.power1, self.sat1,
+                             'bb94_x103_line1', short=True)
+
+        # Note that there are limits to the floating point precision here.
+        # Python will not parse numbers exactly with numbers with more
+        # significant whole and decimal digits
+        self.slope2 = decimalize(137829.329, 4327890.9833, 3489031.003)
+        self.offset2 = decimalize(-3424.011, -342789423.013, -4238923.11)
+        self.power2 = decimalize(3271893.993, .0000998, 0.0000000000000000113)
+        self.sat2 = Decimal('1798787.01')
+
+        line2 = buildALELine(self.slope2, self.offset2, self.power2, self.sat2,
+                             'bb94_x104_line2', short=True)
+
+        self.slope3 = decimalize(1.2, 2.32, 10.82)
+        self.offset3 = decimalize(-1.3782, 278.32, 0.738378233782)
+        self.power3 = decimalize(1.329, 0.9833, 1.003)
+        self.sat3 = Decimal('0.99')
+
+        line3 = buildALELine(self.slope3, self.offset3, self.power3, self.sat3,
+                             'bb94_x105_line3', short=True)
+
+        self.file = ALE_HEADER_SHORT.replace('Column', 'Column\n\n').replace('Data', 'Data\n\n') + line1 + line2 + line3
 
         # Build our ale
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:

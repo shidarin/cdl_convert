@@ -537,7 +537,7 @@ class SatNode(ColorNodeBase):
 
     def build_element(self):
         """Builds an ElementTree XML Element representing this SatNode"""
-        sat = ElementTree.Element('SATNode')
+        sat = ElementTree.Element('SatNode')
         for description in self.desc:
             desc = ElementTree.SubElement(sat, 'Description')
             desc.text = description

@@ -2,17 +2,19 @@ language: python
 python:
   - "2.6"
   - "2.7"
-  - "3.2"
   - "3.3"
   - "3.4"
+  - "3.5"
   - "pypy"
+  - "pypy3"
 # command to install dependencies
 install:
   - pip install argparse
   - pip install mock
   - pip install coveralls
+  - pip install setuptools
 # command to run tests, e.g. python setup.py test
-script: coverage run --source=cdl_convert tests/__init__.py
+script: coverage run --source cdl_convert setup.py test
 # command to run after tests have completed
 after_success:
   coveralls

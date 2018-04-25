@@ -2,10 +2,6 @@
 API Reference
 #############
 
-.. note::
-    All code for the following lives under cdl_convert.cdl_convert, and is
-    imported into the local space of cdl_convert.
-
 Classes
 =======
 
@@ -238,6 +234,11 @@ Parse cdl
 ---------
 
 .. autofunction:: cdl_convert.parse.parse_cdl
+
+Parse cmx
+---------
+
+.. autofunction:: cdl_convert.parse.parse_cmx
 
 Parse file
 ----------
