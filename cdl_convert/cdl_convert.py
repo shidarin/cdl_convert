@@ -144,6 +144,13 @@ def parse_args():
              "formats. This means that a single input CDL will export multiple "
              "CDL files, one per color decision."
     )
+    parser.add_argument(
+        "--nuke-support",
+        action='store_true',
+        dest='nuke_support',
+        help="change the output format of Saturation XML element to comply "
+             "with The Foundry's Nuke OCIO implementation."
+    )
 
     args = parser.parse_args()
 
@@ -184,6 +191,9 @@ def parse_args():
 
     if args.halt:
         config.HALT_ON_ERROR = True
+
+    if args.nuke_support:
+        config.NUKE_SATNODE_SUPPORT = True
 
     return args
 
