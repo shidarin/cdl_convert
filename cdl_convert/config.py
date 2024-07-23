@@ -76,6 +76,8 @@ HALT_ON_ERROR = False
 COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'edl', 'flex']
 SINGLE_FORMATS = ['cc', 'rcdl']
 
+NUKE_SATNODE_SUPPORT = False
+
 # ==============================================================================
 # EXPORTS
 # ==============================================================================

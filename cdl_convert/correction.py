@@ -143,7 +143,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             Filepath this :class:`ColorCorrection` will be written to.
 
         has_sat : (bool)
-            Returns True if SOP values are set
+            Returns True if Saturation value is set
 
         has_sop : (bool)
             Returns True if SOP values are set
@@ -537,7 +537,8 @@ class SatNode(ColorNodeBase):
 
     def build_element(self):
         """Builds an ElementTree XML Element representing this SatNode"""
-        sat = ElementTree.Element('SATNode')
+        sat_elem_label = 'SatNode' if config.NUKE_SATNODE_SUPPORT else 'SATNode'
+        sat = ElementTree.Element(sat_elem_label)
         for description in self.desc:
             desc = ElementTree.SubElement(sat, 'Description')
             desc.text = description
