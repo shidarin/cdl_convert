@@ -47,22 +47,9 @@ SOFTWARE.
 # IMPORTS
 # ==============================================================================
 
-from __future__ import absolute_import, print_function
-
 # Standard Imports
 
 from decimal import Decimal, InvalidOperation
-
-# ==============================================================================
-# GLOBALS
-# ==============================================================================
-
-# Python 3 Compatibility
-
-try:
-    xrange
-except NameError:  # pragma: no cover
-    xrange = range  # pylint: disable=W0622, C0103
 
 # ==============================================================================
 # EXPORTS
@@ -125,7 +112,7 @@ def sanity_check(colcor):
             return True
 
     if colcor.has_sop:
-        for i in xrange(3):
+        for i in range(3):
             slope = _check_value(colcor.slope[i], (0.1, 3.0), 'Slope')
             offset = _check_value(colcor.offset[i], (-1.0, 1.0), 'Offset')
             power = _check_value(colcor.power[i], (0.1, 3.0), 'Power')

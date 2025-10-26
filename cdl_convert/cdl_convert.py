@@ -48,8 +48,6 @@ SOFTWARE.
 # IMPORTS
 # ==============================================================================
 
-from __future__ import absolute_import, print_function
-
 # Standard Imports
 
 from argparse import ArgumentParser
@@ -60,17 +58,6 @@ import os
 from . import config, parse, write
 from .collection import ColorCollection
 from .utils import sanity_check
-
-# Python 3 compatibility
-
-try:
-    xrange
-except NameError:  # pragma: no cover
-    xrange = range  # pylint: disable=W0622, C0103
-try:
-    raw_input
-except NameError:  # pragma: no cover
-    raw_input = input  # pylint: disable=W0622, C0103
 
 # ==============================================================================
 # EXPORTS
@@ -166,7 +153,7 @@ def parse_args():
         # TODO: Define and add a new argparse type as described in:
         # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
         output_types = args.output.split(',')
-        for i in xrange(len(output_types)):
+        for i in range(len(output_types)):
             if output_types[i].lower() not in write.OUTPUT_FORMATS.keys():
                 raise ValueError(
                     "The output format: {output} is not supported".format(

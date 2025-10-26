@@ -523,15 +523,7 @@ CCC_BAD_TAG = """<?xml version="1.0" encoding="UTF-8"?>
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
-if sys.version_info[0] >= 3:
-    enc = lambda x: bytes(x, 'UTF-8')
-else:
-    enc = lambda x: x
-
-if sys.version_info[0] >= 3:
-    builtins = 'builtins'
-else:
-    builtins = '__builtin__'
+builtins = 'builtins'
 
 #==============================================================================
 # TEST CLASSES
@@ -566,7 +558,7 @@ class TestParseCCCFull(unittest.TestCase):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CCC_FULL))
+            f.write(CCC_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.node = cdl_convert.parse_ccc(self.filename)
@@ -664,7 +656,7 @@ class TestParseCCCOdd(TestParseCCCFull):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CCC_ODD))
+            f.write(CCC_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.node = cdl_convert.parse_ccc(self.filename)
@@ -694,7 +686,7 @@ class TestParseCCCExceptions(unittest.TestCase):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CCC_BAD_TAG))
+            f.write(CCC_BAD_TAG.encode("utf-8"))
             self.filename = f.name
 
         self.assertRaises(
@@ -714,7 +706,7 @@ class TestParseCCCExceptions(unittest.TestCase):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(emptyCCC))
+            f.write(emptyCCC.encode("utf-8"))
             self.filename = f.name
 
         self.assertRaises(
@@ -738,13 +730,13 @@ class TestWriteCCCFull(unittest.TestCase):
     def setUp(self):
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CCC_FULL))
+            f.write(CCC_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.ccc = cdl_convert.parse_ccc(self.filename)
 
-        self.target_xml_root = enc(CCC_FULL_WRITE)
-        self.target_xml = enc('\n'.join(CCC_FULL_WRITE.split('\n')[1:]))
+        self.target_xml_root = CCC_FULL_WRITE
+        self.target_xml = '\n'.join(CCC_FULL_WRITE.split('\n')[1:])
 
     #==========================================================================
 
@@ -794,7 +786,7 @@ class TestWriteCCCFull(unittest.TestCase):
 
         mockOpen.assert_called_once_with('bobs_big_file.ccc', 'wb')
 
-        mockOpen().write.assert_called_once_with(self.target_xml_root)
+        mockOpen().write.assert_called_once_with(self.target_xml_root.encode('utf-8'))
 
 
 class TestWriteCCCFullAsCDL(TestWriteCCCFull):
@@ -811,14 +803,14 @@ class TestWriteCCCFullAsCDL(TestWriteCCCFull):
     def setUp(self):
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CCC_FULL))
+            f.write(CCC_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.ccc = cdl_convert.parse_ccc(self.filename)
         self.ccc.set_to_cdl()
 
-        self.target_xml_root = enc(CCC_FULL_WRITE_CDL)
-        self.target_xml = enc('\n'.join(CCC_FULL_WRITE_CDL.split('\n')[1:]))
+        self.target_xml_root = CCC_FULL_WRITE_CDL
+        self.target_xml = '\n'.join(CCC_FULL_WRITE_CDL.split('\n')[1:])
 
     #==========================================================================
 
@@ -842,7 +834,7 @@ class TestWriteCCCFullAsCDL(TestWriteCCCFull):
 
         mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
 
-        mockOpen().write.assert_called_once_with(self.target_xml_root)
+        mockOpen().write.assert_called_once_with(self.target_xml_root.encode('utf-8'))
 
 
 class TestWriteCCCOdd(TestWriteCCCFull):
@@ -861,13 +853,13 @@ class TestWriteCCCOdd(TestWriteCCCFull):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CCC_ODD))
+            f.write(CCC_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.ccc = cdl_convert.parse_ccc(self.filename)
 
-        self.target_xml_root = enc(CCC_ODD_WRITE)
-        self.target_xml = enc('\n'.join(CCC_ODD_WRITE.split('\n')[1:]))
+        self.target_xml_root = CCC_ODD_WRITE
+        self.target_xml = '\n'.join(CCC_ODD_WRITE.split('\n')[1:])
 
 
 class TestWriteCCCOddAsCDL(TestWriteCCCFullAsCDL):
@@ -884,14 +876,14 @@ class TestWriteCCCOddAsCDL(TestWriteCCCFullAsCDL):
     def setUp(self):
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CCC_ODD))
+            f.write(CCC_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.ccc = cdl_convert.parse_ccc(self.filename)
         self.ccc.set_to_cdl()
 
-        self.target_xml_root = enc(CCC_ODD_WRITE_CDL)
-        self.target_xml = enc('\n'.join(CCC_ODD_WRITE_CDL.split('\n')[1:]))
+        self.target_xml_root = CCC_ODD_WRITE_CDL
+        self.target_xml = '\n'.join(CCC_ODD_WRITE_CDL.split('\n')[1:])
 
 #==============================================================================
 # RUNNER

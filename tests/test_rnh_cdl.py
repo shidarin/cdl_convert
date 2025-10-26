@@ -61,15 +61,7 @@ CC_CLOSE = "</ColorCorrection>\n"
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
-if sys.version_info[0] >= 3:
-    enc = lambda x: bytes(x, 'UTF-8')
-else:
-    enc = lambda x: x
-
-if sys.version_info[0] >= 3:
-    builtins = 'builtins'
-else:
-    builtins = '__builtin__'
+builtins = 'builtins'
 
 #==============================================================================
 # TEST CLASSES
@@ -93,7 +85,7 @@ class TestParseRnHCDLBasic(unittest.TestCase):
 
         # Build our cdl
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_rnh_cdl(self.filename)
@@ -177,7 +169,7 @@ class TestParseRnHCDLOdd(TestParseRnHCDLBasic):
 
         # Build our cdl
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_rnh_cdl(self.filename)
@@ -232,7 +224,7 @@ class TestWriteRnHCDLBasic(unittest.TestCase):
     def testContent(self):
         """Tests that write_rnh_cdl wrote the correct CDL"""
         handle = self.mockOpen()
-        handle.write.assert_called_once_with(enc(self.file))
+        handle.write.assert_called_once_with(self.file.encode("utf-8"))
 
 
 class TestWriteRnHCDLOdd(TestWriteRnHCDLBasic):

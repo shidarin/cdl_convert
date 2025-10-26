@@ -266,15 +266,7 @@ CC_NO_SAT_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
-if sys.version_info[0] >= 3:
-    enc = lambda x: bytes(x, 'UTF-8')
-else:
-    enc = lambda x: x
-
-if sys.version_info[0] >= 3:
-    builtins = 'builtins'
-else:
-    builtins = '__builtin__'
+builtins = 'builtins'
 
 #==============================================================================
 # TEST CLASSES
@@ -312,7 +304,7 @@ class TestParseCCBasic(unittest.TestCase):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CC_FULL))
+            f.write(CC_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
@@ -432,14 +424,14 @@ class TestParseCCOdd(TestParseCCBasic):
     def setUp(self):
         self.cdl_test_id = "f55.100"  # This will have been _sanitized()
         self.desc = [
-            'Raised saturation a little!?! ag... \/Offset',
-            'Raised saturation a little!?! ag... \/Offset',
+            r'Raised saturation a little!?! ag... \/Offset',
+            r'Raised saturation a little!?! ag... \/Offset',
         ]
-        self.input_desc = 'METAL VIEWER!!! \/\/'
+        self.input_desc = r'METAL VIEWER!!! \/\/'
         self.viewing_desc = 'WOOD VIEWER!? ////'
 
         self.sop_node_desc = [
-            'Raised saturation a little!?! ag... \/Offset'
+            r'Raised saturation a little!?! ag... \/Offset'
         ]
         self.slope = decimalize(137829.329, 4327890.9833, 3489031.003)
         self.offset = decimalize(-3424.011, -342789423.013, -4238923.11)
@@ -449,7 +441,7 @@ class TestParseCCOdd(TestParseCCBasic):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CC_ODD))
+            f.write(CC_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
@@ -479,7 +471,7 @@ class TestParseCCBasic(TestParseCCBasic):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CC_BASIC))
+            f.write(CC_BASIC.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
@@ -509,7 +501,7 @@ class TestParseCCBasicOrder(TestParseCCBasic):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CC_BASIC_ORDER))
+            f.write(CC_BASIC_ORDER.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
@@ -539,7 +531,7 @@ class TestParseCCBlankMetadata(TestParseCCBasic):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CC_BLANK_METADATA))
+            f.write(CC_BLANK_METADATA.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
@@ -569,7 +561,7 @@ class TestParseCCNoSop(TestParseCCBasic):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CC_NO_SOP))
+            f.write(CC_NO_SOP.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
@@ -602,7 +594,7 @@ class TestParseCCNoSat(TestParseCCBasic):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CC_NO_SAT))
+            f.write(CC_NO_SAT.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
@@ -639,7 +631,7 @@ class TestParseCCExceptions(unittest.TestCase):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CC_NO_ID))
+            f.write(CC_NO_ID.encode("utf-8"))
             self.file = f.name
 
         cc = cdl_convert.parse_cc(self.file)
@@ -657,7 +649,7 @@ class TestParseCCExceptions(unittest.TestCase):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(xml))
+            f.write(xml.encode("utf-8"))
             self.file = f.name
 
         self.assertRaises(
@@ -674,7 +666,7 @@ class TestParseCCExceptions(unittest.TestCase):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(xml))
+            f.write(xml.encode("utf-8"))
             self.file = f.name
 
         self.assertRaises(
@@ -690,7 +682,7 @@ class TestParseCCExceptions(unittest.TestCase):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CC_BLANK_ID))
+            f.write(CC_BLANK_ID.encode("utf-8"))
             self.file = f.name
 
         cdl_convert.config.HALT_ON_ERROR = True
@@ -717,7 +709,7 @@ class TestParseCCExceptions(unittest.TestCase):
 
         # Build our cc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CC_NEGATIVE_SLOPE))
+            f.write(CC_NEGATIVE_SLOPE.encode("utf-8"))
             self.file = f.name
 
         cdl_convert.config.HALT_ON_ERROR = True
@@ -770,8 +762,8 @@ class TestWriteCCFull(unittest.TestCase):
             'Sat description 1', 'Sat description 2'
         ]
 
-        self.target_xml_root = enc(CC_FULL_WRITE)
-        self.target_xml = enc('\n'.join(CC_FULL_WRITE.split('\n')[1:]))
+        self.target_xml_root = CC_FULL_WRITE
+        self.target_xml = '\n'.join(CC_FULL_WRITE.split('\n')[1:])
 
     #==========================================================================
 
@@ -820,7 +812,7 @@ class TestWriteCCFull(unittest.TestCase):
 
         mockOpen.assert_called_once_with('bobs_big_file.cc', 'wb')
 
-        mockOpen().write.assert_called_once_with(self.target_xml_root)
+        mockOpen().write.assert_called_once_with(self.target_xml_root.encode('utf-8'))
 
 
 class TestWriteCCOdd(TestWriteCCFull):
@@ -834,24 +826,24 @@ class TestWriteCCOdd(TestWriteCCFull):
         cdl_convert.reset_all()
         self.cdl = cdl_convert.ColorCorrection("f55.100", '')
         self.cdl.desc = [
-            'Raised saturation1 a little!?! ag... \/Offset',
-            'Raised saturation2 a little!?! ag... \/Offset',
+            'Raised saturation1 a little!?! ag... \\/Offset',
+            'Raised saturation2 a little!?! ag... \\/Offset',
         ]
-        self.cdl.input_desc = 'METAL VIEWER!!! \/\/'
+        self.cdl.input_desc = 'METAL VIEWER!!! \\/\\/'
         self.cdl.viewing_desc = 'WOOD VIEWER!? ////'
 
         self.cdl.slope = (137829.329, 4327890.9833, 3489031.003)
         self.cdl.offset = (-3424.011, -342789423.013, -4238923.11)
         self.cdl.power = (3271893.993, .0000998, 0.0000000000000000113)
         self.cdl.sop_node.desc = [
-            'Raised saturation a little!?! ag... \/Offset'
+            'Raised saturation a little!?! ag... \\/Offset'
         ]
 
         self.cdl.sat = 1798787.01
         self.cdl.sat_node.desc = []
 
-        self.target_xml_root = enc(CC_ODD_WRITE)
-        self.target_xml = enc('\n'.join(CC_ODD_WRITE.split('\n')[1:]))
+        self.target_xml_root = CC_ODD_WRITE
+        self.target_xml = '\n'.join(CC_ODD_WRITE.split('\n')[1:])
 
 
 class TestWriteCCNoSop(TestWriteCCFull):
@@ -868,8 +860,8 @@ class TestWriteCCNoSop(TestWriteCCFull):
         self.cdl.sat = 1.0128109381
         self.cdl.sat_node.desc = ['I am a lovely sat node']
 
-        self.target_xml_root = enc(CC_NO_SOP_WRITE)
-        self.target_xml = enc('\n'.join(CC_NO_SOP_WRITE.split('\n')[1:]))
+        self.target_xml_root = CC_NO_SOP_WRITE
+        self.target_xml = '\n'.join(CC_NO_SOP_WRITE.split('\n')[1:])
 
 
 class TestWriteCCNoSat(TestWriteCCFull):
@@ -887,8 +879,8 @@ class TestWriteCCNoSat(TestWriteCCFull):
         self.cdl.offset = (0.031, 0.128, -0.096)
         self.cdl.power = (1.8, 0.97, 0.961)
 
-        self.target_xml_root = enc(CC_NO_SAT_WRITE)
-        self.target_xml = enc('\n'.join(CC_NO_SAT_WRITE.split('\n')[1:]))
+        self.target_xml_root = CC_NO_SAT_WRITE
+        self.target_xml = '\n'.join(CC_NO_SAT_WRITE.split('\n')[1:])
 
 #==============================================================================
 # FUNCTIONS

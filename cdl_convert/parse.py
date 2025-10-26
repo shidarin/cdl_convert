@@ -69,7 +69,7 @@ SOFTWARE.
 # IMPORTS
 # ==============================================================================
 
-from __future__ import absolute_import, print_function
+
 
 # Standard Imports
 
@@ -138,7 +138,7 @@ def parse_ale(input_file):  # pylint: disable=R0914
 
     cdls = []
 
-    with open(input_file, 'rU') as edl:
+    with open(input_file, 'r') as edl:
         lines = edl.readlines()
         for line in lines:
             if not line.strip():
@@ -560,7 +560,7 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
 
     cdls = []
 
-    with open(input_file, 'rU') as edl:
+    with open(input_file, 'r') as edl:
         lines = edl.readlines()
 
         filename = os.path.basename(input_file).split('.')[0]
@@ -685,7 +685,7 @@ def parse_rnh_cdl(input_file):
 
     """
 
-    with open(input_file, 'rU') as cdl_f:
+    with open(input_file, 'r') as cdl_f:
         # We only need to read the first line
         line = cdl_f.readline()
         line = line.split()

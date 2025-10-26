@@ -628,15 +628,7 @@ CDL_BAD_TAG = """<?xml version="1.0" encoding="UTF-8"?>
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
-if sys.version_info[0] >= 3:
-    enc = lambda x: bytes(x, 'UTF-8')
-else:
-    enc = lambda x: x
-
-if sys.version_info[0] >= 3:
-    builtins = 'builtins'
-else:
-    builtins = '__builtin__'
+builtins = 'builtins'
 
 #==============================================================================
 # TEST CLASSES
@@ -717,7 +709,7 @@ class TestParseCDLFull(unittest.TestCase):
 
         # Build our cdl
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CDL_FULL))
+            f.write(CDL_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.node = cdl_convert.parse_cdl(self.filename)
@@ -922,7 +914,7 @@ class TestParseCDLOdd(TestParseCDLFull):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CDL_ODD))
+            f.write(CDL_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.node = cdl_convert.parse_cdl(self.filename)
@@ -952,7 +944,7 @@ class TestParseCDLExceptions(unittest.TestCase):
 
         # Build our cdl
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CDL_BAD_TAG))
+            f.write(CDL_BAD_TAG.encode("utf-8"))
             self.filename = f.name
 
         self.assertRaises(
@@ -972,7 +964,7 @@ class TestParseCDLExceptions(unittest.TestCase):
 
         # Build our cdl
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(emptyCDL))
+            f.write(emptyCDL.encode('utf-8'))
             self.filename = f.name
 
         self.assertRaises(
@@ -995,7 +987,7 @@ class TestParseCDLExceptions(unittest.TestCase):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(emptyCDL))
+            f.write(emptyCDL.encode('utf-8'))
             self.filename = f.name
 
         self.assertRaises(
@@ -1018,13 +1010,13 @@ class TestWriteCDLFull(unittest.TestCase):
     def setUp(self):
         # Build our cdl
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CDL_FULL))
+            f.write(CDL_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cdl(self.filename)
 
-        self.target_xml_root = enc(CDL_FULL_WRITE)
-        self.target_xml = enc('\n'.join(CDL_FULL_WRITE.split('\n')[1:]))
+        self.target_xml_root = CDL_FULL_WRITE
+        self.target_xml = '\n'.join(CDL_FULL_WRITE.split('\n')[1:])
 
     #==========================================================================
 
@@ -1074,7 +1066,7 @@ class TestWriteCDLFull(unittest.TestCase):
 
         mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
 
-        mockOpen().write.assert_called_once_with(self.target_xml_root)
+        mockOpen().write.assert_called_once_with(self.target_xml_root.encode("utf-8"))
 
 
 class TestWriteCDLFullAsCCC(TestWriteCDLFull):
@@ -1093,14 +1085,14 @@ class TestWriteCDLFullAsCCC(TestWriteCDLFull):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CDL_FULL))
+            f.write(CDL_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cdl(self.filename)
         self.cdl.set_to_ccc()
 
-        self.target_xml_root = enc(CDL_FULL_WRITE_CCC)
-        self.target_xml = enc('\n'.join(CDL_FULL_WRITE_CCC.split('\n')[1:]))
+        self.target_xml_root = (CDL_FULL_WRITE_CCC)
+        self.target_xml = ('\n'.join(CDL_FULL_WRITE_CCC.split('\n')[1:]))
 
     #==========================================================================
 
@@ -1124,7 +1116,7 @@ class TestWriteCDLFullAsCCC(TestWriteCDLFull):
 
         mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
 
-        mockOpen().write.assert_called_once_with(self.target_xml_root)
+        mockOpen().write.assert_called_once_with(self.target_xml_root.encode("utf-8"))
 
 
 class TestWriteCDLOddAsCCC(TestWriteCDLFullAsCCC):
@@ -1143,14 +1135,14 @@ class TestWriteCDLOddAsCCC(TestWriteCDLFullAsCCC):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CDL_ODD))
+            f.write(CDL_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cdl(self.filename)
         self.cdl.set_to_ccc()
 
-        self.target_xml_root = enc(CDL_ODD_WRITE_CCC)
-        self.target_xml = enc('\n'.join(CDL_ODD_WRITE_CCC.split('\n')[1:]))
+        self.target_xml_root = CDL_ODD_WRITE_CCC
+        self.target_xml = '\n'.join(CDL_ODD_WRITE_CCC.split('\n')[1:])
 
 
 class TestWriteCDLOdd(TestWriteCDLFull):
@@ -1169,13 +1161,13 @@ class TestWriteCDLOdd(TestWriteCDLFull):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CDL_ODD))
+            f.write(CDL_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cdl(self.filename)
 
-        self.target_xml_root = enc(CDL_ODD_WRITE)
-        self.target_xml = enc('\n'.join(CDL_ODD_WRITE.split('\n')[1:]))
+        self.target_xml_root = CDL_ODD_WRITE
+        self.target_xml = '\n'.join(CDL_ODD_WRITE.split('\n')[1:])
 
 class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
     """Tests an odd write of the CDL file
@@ -1196,15 +1188,15 @@ class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
 
         # Build our ccc
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(CDL_ODD))
+            f.write(CDL_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cdl(self.filename)
         cc = cdl_convert.ColorCorrection("missingRef")
         cc.slope = [1.0, 2.0, 1.0]
 
-        self.target_xml_root = enc(CDL_ODD_WRITE_RESOLVED)
-        self.target_xml = enc('\n'.join(CDL_ODD_WRITE_RESOLVED.split('\n')[1:]))
+        self.target_xml_root = CDL_ODD_WRITE_RESOLVED
+        self.target_xml = '\n'.join(CDL_ODD_WRITE_RESOLVED.split('\n')[1:])
 
     #==========================================================================
 
@@ -1222,7 +1214,7 @@ class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
 
         mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
 
-        mockOpen().write.assert_called_once_with(self.target_xml_root)
+        mockOpen().write.assert_called_once_with(self.target_xml_root.encode("utf-8"))
 
         cdl_convert.config.HALT_ON_ERROR = False
 

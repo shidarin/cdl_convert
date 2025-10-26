@@ -10,7 +10,7 @@ mock
 #==============================================================================
 # IMPORTS
 #==============================================================================
-from __future__ import absolute_import, print_function
+
 
 # Standard Imports
 import datetime
@@ -21,10 +21,7 @@ except ImportError:
     import mock
 import os
 from random import randrange
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 import sys
 import unittest
 

@@ -68,15 +68,7 @@ ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {sl
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
-if sys.version_info[0] >= 3:
-    enc = lambda x: bytes(x, 'UTF-8')
-else:
-    enc = lambda x: x
-
-if sys.version_info[0] >= 3:
-    builtins = 'builtins'
-else:
-    builtins = '__builtin__'
+builtins = 'builtins'
 
 #==============================================================================
 # TEST CLASSES
@@ -124,7 +116,7 @@ class TestParseALEBasic(unittest.TestCase):
 
         # Build our ale
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_ale(self.filename)
@@ -311,7 +303,7 @@ class TestParseALEShort(TestParseALEBasic):
 
         # Build our ale
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_ale(self.filename)
@@ -359,7 +351,7 @@ class TestParseALEShortAndBlankLines(TestParseALEBasic):
 
         # Build our ale
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_ale(self.filename)

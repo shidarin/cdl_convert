@@ -20,10 +20,7 @@ except ImportError:
 import os
 from random import choice
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 import sys
 import tempfile
 import unittest
@@ -71,15 +68,7 @@ FLEX_702 = "702 ASC_SAT {sat}\n"
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
-if sys.version_info[0] >= 3:
-    enc = lambda x: bytes(x, 'UTF-8')
-else:
-    enc = lambda x: x
-
-if sys.version_info[0] >= 3:
-    builtins = 'builtins'
-else:
-    builtins = '__builtin__'
+builtins = 'builtins'
 
 #==============================================================================
 # TEST CLASSES
@@ -130,7 +119,7 @@ class TestParseFLExBasic(unittest.TestCase):
 
         # Build our ale
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
@@ -330,7 +319,7 @@ class TestParseFLExMissingNames(TestParseFLExBasic):
 
         # Build our ale
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
@@ -400,7 +389,7 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
 
         # Build our ale
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
@@ -470,7 +459,7 @@ class TestParseFLExNoTitle(TestParseFLExBasic):
 
         # Build our ale
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.cdls = cdl_convert.parse_flex(self.filename)
@@ -552,7 +541,7 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
 
         # Build our ale
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(enc(self.file))
+            f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.raw_cdls = cdl_convert.parse_flex(self.filename)

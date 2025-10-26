@@ -56,23 +56,12 @@ SOFTWARE.
 # IMPORTS
 # ==============================================================================
 
-from __future__ import absolute_import, print_function
-
 # Standard Imports
 
 import sys
 
 # Local Imports
 from .collection import ColorCollection
-
-# ==============================================================================
-# GLOBALS
-# ==============================================================================
-
-if sys.version_info[0] >= 3:  # pragma: no cover
-    enc = lambda x: bytes(x, 'UTF-8')  # pylint: disable=C0103
-else:  # pragma: no cover
-    enc = lambda x: x  # pylint: disable=C0103
 
 # ==============================================================================
 # EXPORTS
@@ -107,7 +96,7 @@ def _temp_container(cdl):
 def write_cc(cdl):
     """Writes the ColorCorrection to a .cc file"""
     with open(cdl.file_out, 'wb') as cdl_f:
-        cdl_f.write(cdl.xml_root)
+        cdl_f.write(cdl.xml_root.encode('utf-8'))
 
 # ==============================================================================
 
@@ -120,7 +109,7 @@ def write_ccc(cdl):
     collection_type = cdl.type
     cdl.set_to_ccc()
     with open(cdl.file_out, 'wb') as cdl_f:
-        cdl_f.write(cdl.xml_root)
+        cdl_f.write(cdl.xml_root.encode('utf-8'))
     cdl.type = collection_type
 
 # ==============================================================================
@@ -134,7 +123,7 @@ def write_cdl(cdl):
     collection_type = cdl.type
     cdl.set_to_cdl()
     with open(cdl.file_out, 'wb') as cdl_f:
-        cdl_f.write(cdl.xml_root)
+        cdl_f.write(cdl.xml_root.encode('utf-8'))
     cdl.type = collection_type
 
 # ==============================================================================
@@ -152,7 +141,7 @@ def write_rnh_cdl(cdl):
     ss_cdl = ' '.join(values)
 
     with open(cdl.file_out, 'wb') as cdl_f:
-        cdl_f.write(enc(ss_cdl))
+        cdl_f.write(ss_cdl.encode('utf-8'))
 
 # ==============================================================================
 # GLOBALS

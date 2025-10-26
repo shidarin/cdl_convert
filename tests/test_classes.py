@@ -40,15 +40,7 @@ from cdl_convert.correction import ColorNodeBase
 # GLOBALS
 #==============================================================================
 
-if sys.version_info[0] >= 3:
-    enc = lambda x: bytes(x, 'UTF-8')
-else:
-    enc = lambda x: x
-
-if sys.version_info[0] >= 3:
-    builtins = 'builtins'
-else:
-    builtins = '__builtin__'
+builtins = 'builtins'
 
 #==============================================================================
 # TEST CLASSES
@@ -1243,23 +1235,9 @@ class TestMultipleCollections(unittest.TestCase):
             self.node.viewing_desc,
             merged.viewing_desc
         )
-        # We need different behaviors for these list comparisons across all
-        # the different python versions...
-        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-            self.assertEqual(
-                len(self.node.all_children + self.node2.all_children),
-                len(merged.all_children)
-            )
-        elif sys.version_info[0] >= 3:
-            self.assertCountEqual(
-                self.node.all_children + self.node2.all_children,
-                merged.all_children
-            )
-        else:
-            self.assertItemsEqual(
-                self.node.all_children + self.node2.all_children,
-                merged.all_children
-            )
+        self.assertCountEqual(
+            self.node.all_children + self.node2.all_children,
+            merged.all_children)
         self.assertEqual(
             self.node.type,
             merged.type
@@ -1314,23 +1292,9 @@ class TestMultipleCollections(unittest.TestCase):
             self.node.viewing_desc,
             merged.viewing_desc
         )
-        # We need different behaviors for these list comparisons across all
-        # the different python versions...
-        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-            self.assertEqual(
-                len(self.node.all_children + self.node2.all_children),
-                len(merged.all_children)
-            )
-        elif sys.version_info[0] >= 3:
-            self.assertCountEqual(
-                self.node.all_children + self.node2.all_children,
-                merged.all_children
-            )
-        else:
-            self.assertItemsEqual(
-                self.node.all_children + self.node2.all_children,
-                merged.all_children
-            )
+        self.assertCountEqual(
+            self.node.all_children + self.node2.all_children,
+            merged.all_children)
         self.assertEqual(
             self.node.type,
             merged.type
@@ -1354,23 +1318,9 @@ class TestMultipleCollections(unittest.TestCase):
             self.node2.viewing_desc,
             merged.viewing_desc
         )
-        # We need different behaviors for these list comparisons across all
-        # the different python versions...
-        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-            self.assertEqual(
-                len(self.node.all_children + self.node2.all_children),
-                len(merged.all_children)
-            )
-        elif sys.version_info[0] >= 3:
-            self.assertCountEqual(
-                self.node.all_children + self.node2.all_children,
-                merged.all_children
-            )
-        else:
-            self.assertItemsEqual(
-                self.node.all_children + self.node2.all_children,
-                merged.all_children
-            )
+        self.assertCountEqual(
+            self.node.all_children + self.node2.all_children,
+            merged.all_children)
         self.assertEqual(
             self.node2.type,
             merged.type
@@ -2051,7 +2001,7 @@ class TestColorCorrectionReference(unittest.TestCase):
     def testBuildElement(self):
         """Tests that build element works correctly"""
         self.assertEqual(
-            b'<ColorCorrectionRef ref="uniqueId"/>\n',
+            '<ColorCorrectionRef ref="uniqueId"/>\n',
             self.ccr.xml
         )
 

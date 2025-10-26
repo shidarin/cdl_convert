@@ -56,7 +56,7 @@ SOFTWARE.
 # IMPORTS
 # ==============================================================================
 
-from __future__ import absolute_import, print_function
+
 
 # Standard Imports
 
@@ -70,12 +70,7 @@ from xml.etree import ElementTree
 from .base import AscColorSpaceBase, AscDescBase, AscXMLBase, ColorNodeBase
 from . import config
 
-# Python 3 compatibility
 
-try:
-    xrange
-except NameError:  # pragma: no cover
-    xrange = range  # pylint: disable=W0622, C0103
 
 # ==============================================================================
 # EXPORTS
@@ -738,7 +733,7 @@ class SopNode(ColorNodeBase):
 
         values = list(values)
 
-        for i in xrange(len(values)):
+        for i in range(len(values)):
             try:
                 values[i] = self._check_single_value(
                     values[i],

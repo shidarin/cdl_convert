@@ -86,8 +86,6 @@ SOFTWARE.
 # IMPORTS
 # ==============================================================================
 
-from __future__ import absolute_import, print_function
-
 # Standard Imports
 from decimal import Decimal
 import re
@@ -98,15 +96,6 @@ from xml.etree import ElementTree
 # cdl_convert Imports
 from . import config
 from .utils import to_decimal
-
-# ==============================================================================
-# GLOBALS
-# ==============================================================================
-
-if sys.version_info[0] >= 3:  # pragma: no cover
-    enc = lambda x: bytes(x, 'UTF-8')  # pylint: disable=C0103
-else:  # pragma: no cover
-    enc = lambda x: x  # pylint: disable=C0103
 
 # ==============================================================================
 # EXPORTS
@@ -340,8 +329,8 @@ class AscXMLBase(object):
         """A nicely formatted XML string representing the node"""
         # We'll take the xml_root attrib, which is ready to write, and just
         # remove the first line, which is the xml version and encoding.
-        dom_string = self.xml_root.split(enc('\n'))
-        return enc('\n').join(dom_string[1:])
+        dom_string = self.xml_root.split('\n')
+        return '\n'.join(dom_string[1:])
 
     @property
     def xml_root(self):
@@ -349,12 +338,7 @@ class AscXMLBase(object):
         xml_string = ElementTree.tostring(self.element, 'UTF-8')
         dom_xml = minidom.parseString(xml_string)
         dom_string = dom_xml.toprettyxml(indent="    ", encoding='UTF-8')
-        # Fix for ugly dom formatting prior to 2.7, taken from:
-        # http://stackoverflow.com/questions/749796/pretty-printing-xml-in-python
-        if sys.version_info[0] < 3 and sys.version_info[1] < 7:  # pragma: no cover pylint: disable=E0012
-            text_re = re.compile(r'>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)
-            dom_string = text_re.sub(r'>\g<1></', dom_string)
-        return dom_string
+        return dom_string.decode('utf-8')
 
     # Public Methods ==========================================================
 
