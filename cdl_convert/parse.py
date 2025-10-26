@@ -74,7 +74,7 @@ SOFTWARE.
 # Standard Imports
 
 from ast import literal_eval
-import os
+from pathlib import Path
 import re
 from xml.etree import ElementTree
 
@@ -294,10 +294,8 @@ def parse_cc(input_file):  # pylint: disable=R0912
         # element might never have been triggered.
         if found_element is None:
             raise ValueError(
-                'The ColorCorrection element could not be parsed because the '
-                'XML is missing required elements: {elems}'.format(
-                    elems=str(names)
-                )
+                f'The ColorCorrection element could not be parsed because the '
+                f'XML is missing required elements: {str(names)}'
             )
         else:
             return found_element
@@ -482,7 +480,7 @@ def parse_cmx(input_file):  # pylint: disable=R0912,R0914
         )
     cdls = []
     edl = otio.adapters.read_from_file(input_file)
-    filename = os.path.basename(input_file).split('.')[0]
+    filename = Path(input_file).stem
     for track in edl.tracks:
         for clip in track.data['children']:
             title = clip.name
@@ -563,7 +561,7 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
     with open(input_file, 'r') as edl:
         lines = edl.readlines()
 
-        filename = os.path.basename(input_file).split('.')[0]
+        filename = Path(input_file).stem
 
         title = None
         # Metadata will store, in order, the various scene, take, reel fields
@@ -691,7 +689,7 @@ def parse_rnh_cdl(input_file):
         line = line.split()
 
         # The filename without extension will become the id
-        filename = os.path.basename(input_file).split('.')[0]
+        filename = Path(input_file).stem
 
         slope = [line[0], line[1], line[2]]
         offset = [line[3], line[4], line[5]]
@@ -769,6 +767,6 @@ def parse_file(filepath, filetype=None):
 
     """
     if not filetype:
-        filetype = os.path.basename(filepath).split('.')[-1].lower()
+        filetype = Path(filepath).suffix[1:].lower()  # Remove the leading dot
 
     return INPUT_FORMATS[filetype](filepath)

@@ -15,6 +15,7 @@ mock
 # Standard Imports
 import datetime
 from decimal import Decimal
+from pathlib import Path
 try:
     from unittest import mock
 except ImportError:
@@ -659,11 +660,9 @@ class TestMain(unittest.TestCase):
     #==========================================================================
 
     @mock.patch('cdl_convert.parse_cc')
-    @mock.patch('os.path.abspath')
-    def testGettingAbsolutePath(self, abspath, mockParse):
-        """Tests that we make sure to get the absolute path"""
+    def testGettingAbsolutePath(self, mockParse):
+        """Tests that we resolve paths to absolute paths"""
 
-        abspath.return_value = 'file.cc'
         mockParse.return_value = None
         sys.argv = ['scriptname', 'file.cc']
 
@@ -673,21 +672,21 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
-        file_call = mock.call('file.cc')
-        dest_call = mock.call('./converted/')
-
-        abspath.assert_has_calls([file_call, dest_call])
+        # Verify that the parse function is called with an absolute path
+        expected_path = Path('file.cc').resolve()
+        mockParse.assert_called_once_with(expected_path)
 
     #==========================================================================
 
+    @mock.patch('pathlib.Path.mkdir')
+    @mock.patch('pathlib.Path.exists')
     @mock.patch('cdl_convert.parse_cc')
-    @mock.patch('os.path.abspath')
-    def testCustomDestinationPath(self, abspath, mockParse):
-        """Tests that we make sure to get the absolute path for dest"""
+    def testCustomDestinationPath(self, mockParse, mockExists, mockMkdir):
+        """Tests that we resolve paths and create destination directories"""
 
-        abspath.return_value = 'file.cc'
         mockParse.return_value = None
-        sys.argv = ['scriptname', 'file.cc', '-d', '/best/path/ever/']
+        mockExists.return_value = False  # Directory doesn't exist
+        sys.argv = ['scriptname', 'file.cc', '-d', '/tmp/test/path/']
 
         mockInputs = dict(self.inputFormats)
         mockInputs['cc'] = mockParse
@@ -695,19 +694,19 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
-        file_call = mock.call('file.cc')
-        dest_call = mock.call('/best/path/ever/')
-
-        abspath.assert_has_calls([file_call, dest_call])
+        # Verify that mkdir was called to create the directory
+        mockMkdir.assert_called_once_with(parents=True, exist_ok=True)
+        
+        # Verify parse was called with resolved path
+        expected_path = Path('file.cc').resolve()
+        mockParse.assert_called_once_with(expected_path)
 
     #==========================================================================
 
     @mock.patch('cdl_convert.parse_flex')
-    @mock.patch('os.path.abspath')
-    def testDerivingInputTypeFlex(self, abspath, mockParse):
+    def testDerivingInputTypeFlex(self, mockParse):
         """Tests that input type will be derived from file extension"""
 
-        abspath.return_value = 'file.flex'
         mockParse.return_value = None
         sys.argv = ['scriptname', 'file.flex']
 
@@ -717,16 +716,16 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
-        mockParse.assert_called_once_with('file.flex')
+        # Expect the resolved path, not just the filename
+        expected_path = Path('file.flex').resolve()
+        mockParse.assert_called_once_with(expected_path)
 
     #==========================================================================
 
     @mock.patch('cdl_convert.parse_ale')
-    @mock.patch('os.path.abspath')
-    def testDerivingInputTypeAle(self, abspath, mockParse):
+    def testDerivingInputTypeAle(self, mockParse):
         """Tests that input type will be derived from file extension"""
 
-        abspath.return_value = 'file.ale'
         mockParse.return_value = None
         sys.argv = ['scriptname', 'file.ale']
 
@@ -736,16 +735,16 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
-        mockParse.assert_called_once_with('file.ale')
+        # Expect the resolved path, not just the filename
+        expected_path = Path('file.ale').resolve()
+        mockParse.assert_called_once_with(expected_path)
 
     #==========================================================================
 
     @mock.patch('cdl_convert.parse_ccc')
-    @mock.patch('os.path.abspath')
-    def testDerivingInputTypeCCC(self, abspath, mockParse):
+    def testDerivingInputTypeCCC(self, mockParse):
         """Tests that input type will be derived from file extension"""
 
-        abspath.return_value = 'file.ccc'
         mockParse.return_value = None
         sys.argv = ['scriptname', 'file.ccc']
 
@@ -755,16 +754,16 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
-        mockParse.assert_called_once_with('file.ccc')
+        # Expect the resolved path, not just the filename
+        expected_path = Path('file.ccc').resolve()
+        mockParse.assert_called_once_with(expected_path)
 
     #==========================================================================
 
     @mock.patch('cdl_convert.parse_cc')
-    @mock.patch('os.path.abspath')
-    def testDerivingInputTypeCC(self, abspath, mockParse):
+    def testDerivingInputTypeCC(self, mockParse):
         """Tests that input type will be derived from file extension"""
 
-        abspath.return_value = 'file.cc'
         mockParse.return_value = None
         sys.argv = ['scriptname', 'file.cc']
 
@@ -774,16 +773,16 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
-        mockParse.assert_called_once_with('file.cc')
+        # Expect the resolved path, not just the filename
+        expected_path = Path('file.cc').resolve()
+        mockParse.assert_called_once_with(expected_path)
 
     #==========================================================================
 
     @mock.patch('cdl_convert.parse_rnh_cdl')
-    @mock.patch('os.path.abspath')
-    def testDerivingInputTypeCDL(self, abspath, mockParse):
+    def testDerivingInputTypeCDL(self, mockParse):
         """Tests that input type will be derived from file extension"""
 
-        abspath.return_value = 'file.cdl'
         mockParse.return_value = None
         sys.argv = ['scriptname', 'file.cdl']
 
@@ -793,16 +792,16 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
-        mockParse.assert_called_once_with('file.cdl')
+        # Expect the resolved path, not just the filename
+        expected_path = Path('file.cdl').resolve()
+        mockParse.assert_called_once_with(expected_path)
 
     #==========================================================================
 
     @mock.patch('cdl_convert.parse_flex')
-    @mock.patch('os.path.abspath')
-    def testDerivingInputTypeCased(self, abspath, mockParse):
+    def testDerivingInputTypeCased(self, mockParse):
         """Tests that input type will be derived from file extension"""
 
-        abspath.return_value = 'file.fLEx'
         mockParse.return_value = None
         sys.argv = ['scriptname', 'file.fLEx']
 
@@ -812,16 +811,16 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
-        mockParse.assert_called_once_with('file.fLEx')
+        # Expect the resolved path, not just the filename
+        expected_path = Path('file.fLEx').resolve()
+        mockParse.assert_called_once_with(expected_path)
 
     #==========================================================================
 
     @mock.patch('cdl_convert.parse_flex')
-    @mock.patch('os.path.abspath')
-    def testOverrideInputType(self, abspath, mockParse):
+    def testOverrideInputType(self, mockParse):
         """Tests that overriding the input type happens when provided"""
 
-        abspath.return_value = 'file.cc'
         mockParse.return_value = None
         sys.argv = ['scriptname', 'file.cc', '-i', 'flex']
 
@@ -831,7 +830,9 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
-        mockParse.assert_called_once_with('file.cc')
+        # Expect the resolved path, not just the filename
+        expected_path = Path('file.cc').resolve()
+        mockParse.assert_called_once_with(expected_path)
 
     #==========================================================================
 
@@ -855,8 +856,9 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
+        expected_path = Path(destination_dir) / 'uniqueId.cc'
         self.assertEqual(
-            os.path.join(destination_dir, 'uniqueId.cc'),
+            expected_path,
             self.cdl.file_out
         )
 
@@ -882,8 +884,9 @@ class TestMain(unittest.TestCase):
 
         main.main()
 
+        expected_path = Path(destination_dir) / 'testcdl.ccc'
         self.assertEqual(
-            os.path.join(destination_dir, 'testcdl.ccc'),
+            expected_path,
             self.ccc.file_out
         )
 
@@ -1099,7 +1102,7 @@ class TestMain(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('os.path.exists')
+    @mock.patch('pathlib.Path.exists')
     @mock.patch('cdl_convert.ColorCorrection.determine_dest')
     @mock.patch('cdl_convert.write_cc')
     @mock.patch('cdl_convert.parse_flex')
@@ -1127,14 +1130,15 @@ class TestMain(unittest.TestCase):
 
         # Because we have no output selected, a new directory should NOT
         # be created, but path exists should have still been called.
-        mockPathExists.assert_called_with('/fakepath')
+        mockPathExists.assert_called_with()
         self.assertFalse(
             self.mockMakeDirs.called
         )
 
-        mockParse.assert_called_once_with(os.path.join(os.getcwd(), 'file.cc'))
+        expected_path = Path('file.cc').resolve()
+        mockParse.assert_called_once_with(expected_path)
         # Determine dest should have set a file_out
-        mockDest.assert_called_once_with('cc', '/fakepath')
+        mockDest.assert_called_once_with('cc', Path('/fakepath'))
         # But the write should never have been called.
         self.assertFalse(
             mockWrite.called
@@ -1142,7 +1146,7 @@ class TestMain(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('os.path.exists')
+    @mock.patch('pathlib.Path.exists')
     @mock.patch('cdl_convert.ColorCollection.determine_dest')
     @mock.patch('cdl_convert.write_ccc')
     @mock.patch('cdl_convert.parse_flex')
@@ -1176,14 +1180,15 @@ class TestMain(unittest.TestCase):
 
         # Because we have no output selected, a new directory should NOT
         # be created, but path exists should have still been called.
-        mockPathExists.assert_called_with('/fakepath')
+        mockPathExists.assert_called_with()
         self.assertFalse(
             self.mockMakeDirs.called
         )
 
-        mockParse.assert_called_once_with(os.path.join(os.getcwd(), 'file.cc'))
+        expected_path = Path('file.cc').resolve()
+        mockParse.assert_called_once_with(expected_path)
         # Determine dest should have set a file_out
-        mockDest.assert_called_once_with('/fakepath')
+        mockDest.assert_called_once_with(Path('/fakepath'))
         # But the write should never have been called.
         self.assertFalse(
             mockWrite.called

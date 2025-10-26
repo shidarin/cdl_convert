@@ -61,7 +61,7 @@ SOFTWARE.
 # Standard Imports
 
 from decimal import Decimal
-import os
+from pathlib import Path
 import re
 from xml.etree import ElementTree
 
@@ -221,7 +221,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         super(ColorCorrection, self).__init__()
 
         # File Attributes
-        self._file_in = os.path.abspath(input_file) if input_file else None
+        self._file_in = Path(input_file).resolve() if input_file else None
         self._file_out = None
 
         # If we're under a ColorCorrectionCollection or ColorDecision node:
@@ -233,19 +233,11 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         if id in ColorCorrection.members.keys():
             if config.HALT_ON_ERROR:
                 raise ValueError(
-                    'Error initiating id to "{id}". This id is already a '
-                    'registered id.'.format(
-                        id=id
-                    )
+                    f'Error initiating id to "{id}". This id is already a '
+                    f'registered id.'
                 )
             else:
-                id = '{id}{num:0>3}'.format(
-                    id=id,
-                    num=len(
-                        [cc for cc in ColorCorrection.members
-                         if cc.startswith(id)]
-                    )
-                )
+                id = f'{id}{len([cc for cc in ColorCorrection.members if cc.startswith(id)]):0>3}'
         elif not id:
             if config.HALT_ON_ERROR:
                 raise ValueError('Blank id given to ColorCorrection.')
@@ -273,7 +265,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def file_in(self, value):
         """Sets the file_in to the absolute path of file"""
         if value:
-            self._file_in = os.path.abspath(value)
+            self._file_in = Path(value).resolve()
 
     @property
     def file_out(self):
@@ -368,10 +360,8 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         # Check if this id is already registered
         if cc_id in ColorCorrection.members.keys():
             raise ValueError(
-                'Error setting the id to "{cc_id}". This id is already a '
-                'registered id.'.format(
-                    cc_id=cc_id
-                )
+                f'Error setting the id to "{cc_id}". This id is already a '
+                f'registered id.'
             )
         else:
             # Clear the current id from the dictionary
@@ -409,9 +399,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def determine_dest(self, output, directory):
         """Determines the destination file and sets it on the color correct"""
 
-        filename = "{id}.{ext}".format(id=self.id, ext=output)
+        filename = f"{self.id}.{output}"
 
-        self._file_out = os.path.join(directory, filename)
+        self._file_out = Path(directory) / filename
 
     # =========================================================================
 
@@ -521,11 +511,8 @@ class SatNode(ColorNodeBase):
                 self._sat = Decimal(value)
         else:
             raise TypeError(
-                'Saturation cannot be set directly with objects of type: '
-                '"{type}". Value given: "{value}".'.format(
-                    type=type(value),
-                    value=value,
-                )
+                f'Saturation cannot be set directly with objects of type: '
+                f'"{type(value)}". Value given: "{value}".'
             )
 
     # Public Methods ==========================================================
@@ -722,13 +709,9 @@ class SopNode(ColorNodeBase):
             assert len(values) == 3
         except AssertionError:
             raise ValueError(
-                'Error setting {name} with value: "{values}". '
-                '{name_upper} values given as a list or tuple must have 3 '
-                'elements, one for each color.'.format(
-                    name=name,
-                    name_upper=name.title(),
-                    values=values
-                )
+                f'Error setting {name} with value: "{values}". '
+                f'{name.title()} values given as a list or tuple must have 3 '
+                f'elements, one for each color.'
             )
 
         values = list(values)
@@ -792,12 +775,8 @@ class SopNode(ColorNodeBase):
                 set_value = value
         else:
             raise TypeError(
-                '{name} cannot be set directly with objects of type: "{type}".'
-                ' Value given: "{value}".'.format(
-                    name=name.title(),
-                    type=type(value),
-                    value=value,
-                )
+                f'{name.title()} cannot be set directly with objects of type: "{type(value)}".'
+                f' Value given: "{value}".'
             )
 
         return set_value
@@ -813,11 +792,7 @@ class SopNode(ColorNodeBase):
             desc.text = description
         for i, grade in enumerate([self.slope, self.offset, self.power]):
             op_node = ElementTree.SubElement(sop, fields[i])
-            op_node.text = '{valueR} {valueG} {valueB}'.format(
-                valueR=_de_exponent(grade[0]),
-                valueG=_de_exponent(grade[1]),
-                valueB=_de_exponent(grade[2])
-            )
+            op_node.text = f'{_de_exponent(grade[0])} {_de_exponent(grade[1])} {_de_exponent(grade[2])}'
         return sop
 
 # ==============================================================================

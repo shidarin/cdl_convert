@@ -78,7 +78,7 @@ SOFTWARE.
 
 # Standard Imports
 
-import os
+from pathlib import Path
 import re
 from xml.etree import ElementTree
 
@@ -214,11 +214,9 @@ class ColorCorrectionRef(AscXMLBase):
         """Sets the reference id"""
         if ref_id not in ColorCorrection.members and config.HALT_ON_ERROR:
             raise ValueError(
-                "Reference id '{id}' does not match any existing "
-                "ColorCorrection id in ColorCorrection.members "
-                "dictionary.".format(
-                    id=ref_id
-                )
+                f"Reference id '{ref_id}' does not match any existing "
+                f"ColorCorrection id in ColorCorrection.members "
+                f"dictionary."
             )
 
         self._set_id(ref_id)
@@ -268,9 +266,9 @@ class ColorCorrectionRef(AscXMLBase):
         else:
             if config.HALT_ON_ERROR:
                 raise ValueError(
-                    "Cannot resolve ColorCorrectionRef with reference "
-                    "id of '{id}' because no ColorCorrection with that id "
-                    "can be found.".format(id=self.id)
+                    f"Cannot resolve ColorCorrectionRef with reference "
+                    f"id of '{self.id}' because no ColorCorrection with that id "
+                    f"can be found."
                 )
             else:
                 return None
@@ -691,7 +689,7 @@ class MediaRef(AscXMLBase):
             normally be a :class:`ColorDecision` , but that is not enforced.
 
         path : (str)
-            The directory joined with the filename via os.path.join(), if
+            The directory joined with the filename via pathlib Path, if
             there is no filename, path is identical to ``directory``. If there
             is no protocol, ``path`` is identicial to ``ref``.
 
@@ -780,15 +778,13 @@ class MediaRef(AscXMLBase):
             self._reset_cached_properties()
         else:
             raise TypeError(
-                'Directory must be set with a string, not {type}'.format(
-                    type=type(value)
-                )
+                f'Directory must be set with a string, not {type(value)}'
             )
 
     @property
     def exists(self):
-        """Convenience property for os.path.exists"""
-        return os.path.exists(self.path)
+        """Convenience property for Path.exists()"""
+        return Path(self.path).exists()
 
     @property
     def filename(self):
@@ -805,20 +801,18 @@ class MediaRef(AscXMLBase):
             self._reset_cached_properties()
         else:
             raise TypeError(
-                'Filename must be set with a string, not {type}'.format(
-                    type=type(value)
-                )
+                f'Filename must be set with a string, not {type(value)}'
             )
 
     @property
     def is_abs(self):
         """Returns True if path is an absolute path"""
-        return os.path.abspath(self.path)
+        return Path(self.path).is_absolute()
 
     @property
     def is_dir(self):
         """Returns True if path points to a directory"""
-        return os.path.isdir(self.path)
+        return Path(self.path).is_dir()
 
     @property
     def is_seq(self):
@@ -830,7 +824,15 @@ class MediaRef(AscXMLBase):
     @property
     def path(self):
         """Returns the path without any uri protocol"""
-        return os.path.join(self._dir, self._filename)
+        # Use os here to preserve the relative paths
+        import os
+        if self._filename:
+            if self._dir:
+                return os.path.join(self._dir, self._filename)
+            else:
+                return self._filename
+        else:
+            return self._dir if self._dir else '.'
 
     @property
     def protocol(self):
@@ -852,16 +854,14 @@ class MediaRef(AscXMLBase):
             self._reset_cached_properties()
         else:
             raise TypeError(
-                'Protocol must be set with a string, not {type}'.format(
-                    type=type(value)
-                )
+                f'Protocol must be set with a string, not {type(value)}'
             )
 
     @property
     def ref(self):
         """Returns the reference uri"""
         if self._protocol:
-            prefix = "{proto}://".format(proto=self._protocol)
+            prefix = f"{self._protocol}://"
         else:
             prefix = ''
         return prefix + self.path
@@ -876,9 +876,7 @@ class MediaRef(AscXMLBase):
             self._reset_cached_properties()
         else:
             raise TypeError(
-                'URI must be set with a string, not {type}'.format(
-                    type=type(uri)
-                )
+                f'URI must be set with a string, not {type(uri)}'
             )
 
     @property
@@ -955,14 +953,14 @@ class MediaRef(AscXMLBase):
             # It doesn't exist, so we can't tell if it's a sequence
             if config.HALT_ON_ERROR:
                 raise ValueError(
-                    'Cannot determine if non-existent directory {dir} '
-                    'contains an image sequence.'.format(dir=self.path)
+                    f'Cannot determine if non-existent directory {self.path} '
+                    f'contains an image sequence.'
                 )
             else:
                 self._is_seq = False
                 self._sequences = []
         elif self.is_dir and self.exists:
-            file_list = os.listdir(self.path)
+            file_list = [f.name for f in Path(self.path).iterdir() if f.is_file()]
             files = [f for f in file_list if match.search(f)]
             if not files:
                 self._is_seq = False
@@ -1012,8 +1010,12 @@ class MediaRef(AscXMLBase):
         else:
             protocol = ''
 
-        directory = os.path.split(uri)[0]
-        ref_file = os.path.split(uri)[1]
+        # Use os.path.split to preserve original path format (including ./ prefix)
+        import os
+        directory, ref_file = os.path.split(uri)
+        
+        # Don't modify empty directory - let it stay empty
+        # This preserves the original path format
 
         return protocol, directory, ref_file
 

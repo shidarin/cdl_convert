@@ -444,11 +444,8 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
             if value < 0:
                 if config.HALT_ON_ERROR:
                     raise ValueError(
-                        'Error setting {name} with value: "{value}". '
-                        'Values must not be negative'.format(
-                            name=name,
-                            value=value
-                        )
+                        f'Error setting {name} with value: "{value}". '
+                        f'Values must not be negative'
                     )
                 else:
                     value = Decimal('0.0')

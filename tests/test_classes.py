@@ -18,6 +18,7 @@ try:
 except ImportError:
     import mock
 import os
+from pathlib import Path
 import sys
 import unittest
 
@@ -565,26 +566,21 @@ class TestColorCollection(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('os.path.abspath')
-    def testFileInRead(self, mockPath):
-        """Tests that file in returns what's passed through"""
-        mockPath.return_value = 'bananaphone.ccc'
+    def testFileInRead(self):
+        """Tests that file in returns the resolved path"""
         self.node = cdl_convert.ColorCollection(input_file='mybestfile.ccc')
 
-        mockPath.assert_called_once_with('mybestfile.ccc')
-
+        # Should return the resolved absolute path
+        expected_path = Path('mybestfile.ccc').resolve()
         self.assertEqual(
-            'bananaphone.ccc',
+            expected_path,
             self.node.file_in
         )
 
     #==========================================================================
 
-    @mock.patch('os.path.abspath')
-    def testFileInRead(self, mockPath):
-        """Tests that file in returns what's passed through"""
-        mockPath.return_value = 'bananaphone.ccc'
-
+    def testFileInRead(self):
+        """Tests that file in returns the resolved path"""
         self.assertEqual(
             None,
             self.node.file_in
@@ -592,10 +588,10 @@ class TestColorCollection(unittest.TestCase):
 
         self.node.file_in = 'mybestfile.ccc'
 
-        mockPath.assert_called_once_with('mybestfile.ccc')
-
+        # Should return the resolved absolute path
+        expected_path = Path('mybestfile.ccc').resolve()
         self.assertEqual(
-            'bananaphone.ccc',
+            expected_path,
             self.node.file_in
         )
 
@@ -662,19 +658,18 @@ class TestColorCollection(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('os.path.abspath')
-    def testDetermineDest(self, mockPath):
+    def testDetermineDest(self):
         """Tests that determine destination is calculated correctly"""
-        mockPath.return_value = '/this/is/a/path/bananaphone.ccc'
         self.node = cdl_convert.ColorCollection(input_file='mybestfile.ccc')
         self.node.type = 'cdl'
 
-        mockPath.assert_called_once_with('mybestfile.ccc')
-
         self.node.determine_dest('./converted/')
 
+        # The file_out should be based on the resolved input file path
+        expected_stem = Path('mybestfile.ccc').resolve().stem
+        expected_out = Path(f'converted/{expected_stem}.cdl')
         self.assertEqual(
-            './converted/bananaphone.cdl',
+            expected_out,
             self.node.file_out
         )
 
@@ -701,7 +696,7 @@ class TestColorCollection(unittest.TestCase):
         self.node.determine_dest('./converted/')
 
         self.assertEqual(
-            './converted/color_collection_003.ccc',
+            Path('converted/color_collection_003.ccc'),
             self.node.file_out
         )
 
@@ -1404,7 +1399,7 @@ class TestColorCorrection(unittest.TestCase):
     def testFileInReturn(self):
         """Tests that calling ColorCorrection.fileIn returns the file given"""
         self.assertEqual(
-            os.path.abspath('../testcdl.cc'),
+            Path('../testcdl.cc').resolve(),
             self.cc.file_in
         )
 
@@ -1864,11 +1859,10 @@ class TestColorCorrection(unittest.TestCase):
         """Tests that determine destination is calculated correctly"""
         self.cc.determine_dest('cdl', '/bobsBestDirectory')
 
-        dir = os.path.abspath('/bobsBestDirectory')
-        filename = os.path.join(dir, 'uniqueId.cdl')
+        expected_path = Path('/bobsBestDirectory') / 'uniqueId.cdl'
 
         self.assertEqual(
-            filename,
+            expected_path,
             self.cc.file_out
         )
 
@@ -2427,7 +2421,7 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('os.path.exists')
+    @mock.patch('pathlib.Path.exists')
     def testExists(self, mock_exists):
         """Tests that exists returns correct information"""
         mock_exists.return_value = True
@@ -2436,9 +2430,7 @@ class TestMediaRefProperties(unittest.TestCase):
             self.mr.exists
         )
 
-        mock_exists.assert_called_once_with(
-            os.path.join(self.directory, self.filename)
-        )
+        mock_exists.assert_called_once_with()
 
         mock_exists.return_value = False
 
@@ -2509,7 +2501,7 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('os.path.abspath')
+    @mock.patch('pathlib.Path.is_absolute')
     def testIsAbs(self, mock_abs):
         """Tests the is_abs property"""
         mock_abs.return_value = True
@@ -2518,9 +2510,7 @@ class TestMediaRefProperties(unittest.TestCase):
             self.mr.is_abs
         )
 
-        mock_abs.assert_called_once_with(
-            os.path.join(self.directory, self.filename)
-        )
+        mock_abs.assert_called_once_with()
 
         mock_abs.return_value = False
 
@@ -2530,7 +2520,7 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('os.path.isdir')
+    @mock.patch('pathlib.Path.is_dir')
     def testIsDir(self, mock_dir):
         """Tests the is_dir property"""
         mock_dir.return_value = True
@@ -2539,9 +2529,7 @@ class TestMediaRefProperties(unittest.TestCase):
             self.mr.is_dir
         )
 
-        mock_dir.assert_called_once_with(
-            os.path.join(self.directory, self.filename)
-        )
+        mock_dir.assert_called_once_with()
 
         mock_dir.return_value = False
 
@@ -3007,14 +2995,23 @@ class TestMediaRefGetSequences(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('os.listdir')
-    @mock.patch('os.path.exists')
-    @mock.patch('os.path.isdir')
-    def testDirExists(self, mock_dir, mock_exists, mock_listdir):
+    @mock.patch('pathlib.Path.iterdir')
+    @mock.patch('pathlib.Path.exists')
+    @mock.patch('pathlib.Path.is_dir')
+    def testDirExists(self, mock_dir, mock_exists, mock_iterdir):
         """Tests parsing a directory for files"""
         mock_dir.return_value = True
         mock_exists.return_value = True
-        mock_listdir.return_value = self.files
+        
+        # Mock Path objects for the files
+        mock_files = []
+        for filename in self.files:
+            mock_file = mock.Mock()
+            mock_file.name = filename
+            mock_file.is_file.return_value = True
+            mock_files.append(mock_file)
+        
+        mock_iterdir.return_value = mock_files
 
         self.assertEqual(
             self.is_seq,
@@ -3037,7 +3034,7 @@ class TestMediaRefGetSequences(unittest.TestCase):
             self.mr.seqs
         )
 
-        mock_listdir.assert_called_once_with(self.mr.path)
+        mock_iterdir.assert_called_once_with()
 
     #==========================================================================
 

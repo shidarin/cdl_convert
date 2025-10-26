@@ -100,12 +100,8 @@ def sanity_check(colcor):
         value = float(value)  # Decimal doesn't always compare correctly
         if value <= minmax[0] or value >= minmax[1]:
             print(
-                'The ColorCorrection "{id}" was given a {type} value of '
-                '"{value}", which might be incorrect.'.format(
-                    id=colcor.id,
-                    type=value_type,
-                    value=value
-                )
+                f'The ColorCorrection "{colcor.id}" was given a {value_type} value of '
+                f'"{value}", which might be incorrect.'
             )
             return False
         else:
@@ -168,20 +164,13 @@ def to_decimal(value, name='Value'):
             value = Decimal(value)
         except (InvalidOperation, ValueError):
             raise TypeError(
-                'Error setting {name} with value: "{value}". '
-                'Value is not a number.'.format(
-                    name=name,
-                    value=value
-                )
+                f'Error setting {name} with value: "{value}". '
+                f'Value is not a number.'
             )
     else:
         raise ValueError(
-            '{name} cannot be set directly with objects of type: "{type}". '
-            'Value given: "{value}".'.format(
-                name=name.title(),
-                type=type(value),
-                value=value,
-            )
+            f'{name.title()} cannot be set directly with objects of type: "{type(value)}". '
+            f'Value given: "{value}".'
         )
 
     return Decimal(value)

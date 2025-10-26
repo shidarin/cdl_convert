@@ -14,6 +14,7 @@ mock
 # Standard Imports
 from decimal import Decimal
 import os
+from pathlib import Path
 from random import choice, randrange
 import sys
 import tempfile
@@ -150,7 +151,7 @@ class TestParseALEBasic(unittest.TestCase):
     def testFileIn(self):
         """Tests that file_in has been set on the collection correctly"""
         self.assertEqual(
-            self.filename,
+            Path(self.filename).resolve(),
             self.cdls.file_in
         )
 

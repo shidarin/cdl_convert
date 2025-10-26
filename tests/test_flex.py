@@ -18,6 +18,7 @@ try:
 except ImportError:
     import mock
 import os
+from pathlib import Path
 from random import choice
 
 from io import StringIO
@@ -153,7 +154,7 @@ class TestParseFLExBasic(unittest.TestCase):
     def testFileIn(self):
         """Tests that file_in has been set on the collection correctly"""
         self.assertEqual(
-            self.filename,
+            Path(self.filename).resolve(),
             self.cdls.file_in
         )
 
@@ -570,7 +571,7 @@ class TestParseFLExMissingSopSat(TestParseFLExBasic):
     def testFileIn(self):
         """Tests that file_in has been set on the collection correctly"""
         self.assertEqual(
-            self.filename,
+            Path(self.filename).resolve(),
             self.raw_cdls.file_in
         )
 

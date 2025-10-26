@@ -51,7 +51,7 @@ SOFTWARE.
 # Standard Imports
 
 from argparse import ArgumentParser
-import os
+from pathlib import Path
 
 # cdl_convert imports
 
@@ -83,14 +83,14 @@ def parse_args():
         help="specify the filetype to convert from. Use when CDLConvert "
              "cannot determine the filetype automatically. Supported input "  # pylint: disable=C0330
              "formats are: "  # pylint: disable=C0330
-             "{inputs}".format(inputs=str(parse.INPUT_FORMATS.keys()))  # pylint: disable=C0330
+             f"{str(parse.INPUT_FORMATS.keys())}"  # pylint: disable=C0330
     )
     parser.add_argument(
         "-o",
         "--output",
         help="specify the filetype to convert to, comma separated lists are "
              "accepted. Defaults to a .cc XML. Supported output formats are: "  # pylint: disable=C0330
-             "{outputs}".format(outputs=str(write.OUTPUT_FORMATS.keys()))  # pylint: disable=C0330
+             f"{str(write.OUTPUT_FORMATS.keys())}"  # pylint: disable=C0330
     )
     parser.add_argument(
         "-d",
@@ -137,9 +137,7 @@ def parse_args():
     if args.input:
         if args.input.lower() not in parse.INPUT_FORMATS:
             raise ValueError(
-                "The input format: {input} is not supported".format(
-                    input=args.input
-                )
+                f"The input format: {args.input} is not supported"
             )
         else:
             args.input = args.input.lower()
@@ -156,9 +154,7 @@ def parse_args():
         for i in range(len(output_types)):
             if output_types[i].lower() not in write.OUTPUT_FORMATS.keys():
                 raise ValueError(
-                    "The output format: {output} is not supported".format(
-                        output=output_types[i]
-                    )
+                    f"The output format: {output_types[i]} is not supported"
                 )
             else:
                 output_types[i] = output_types[i].lower()
@@ -186,23 +182,21 @@ def main():  # pylint: disable=R0912
     if args.no_output:
         print("Dry run initiated, no files will be written.")
 
-    filepath = os.path.abspath(args.input_file)
-    destination_dir = os.path.abspath(args.destination)
+    filepath = Path(args.input_file).resolve()
+    destination_dir = Path(args.destination).resolve()
 
-    if not os.path.exists(destination_dir):
+    if not destination_dir.exists():
         print(
-            "Destination directory {dir} does not exist.".format(
-                dir=destination_dir
-            )
+            f"Destination directory {destination_dir} does not exist."
         )
         if not args.no_output:
             print("Creating destination directory.")
-            os.makedirs(destination_dir)
+            destination_dir.mkdir(parents=True, exist_ok=True)
         else:
             print("--no-output argument provided. Skipping directory creation")
 
     if not args.input:
-        filetype_in = os.path.basename(filepath).split('.')[-1].lower()
+        filetype_in = filepath.suffix[1:].lower()  # Remove the leading dot
     else:
         filetype_in = args.input
 
@@ -212,10 +206,7 @@ def main():  # pylint: disable=R0912
         """Writes a single color correction file"""
         cdl.determine_dest(ext, destination_dir)
         print(
-            "Writing cdl {id} to {path}".format(
-                id=cdl.id,
-                path=cdl.file_out
-            )
+            f"Writing cdl {cdl.id} to {cdl.file_out}"
         )
         if not args.no_output:
             write.OUTPUT_FORMATS[ext](cdl)
@@ -225,9 +216,7 @@ def main():  # pylint: disable=R0912
         col.type = ext
         col.determine_dest(destination_dir)
         print(
-            "Writing collection to {path}".format(
-                path=col.file_out
-            )
+            f"Writing collection to {col.file_out}"
         )
         if not args.no_output:
             write.OUTPUT_FORMATS[ext](col)

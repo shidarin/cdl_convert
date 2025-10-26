@@ -50,7 +50,7 @@ SOFTWARE.
 
 # Standard Imports
 
-import os
+from pathlib import Path
 from xml.etree import ElementTree
 
 # cdl_convert imports
@@ -244,7 +244,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
         self._color_corrections = []
         self._color_decisions = []
-        self._file_in = os.path.abspath(input_file) if input_file else None
+        self._file_in = Path(input_file).resolve() if input_file else None
         self._file_out = None
         self._type = 'ccc'
         self._xmlns = "urn:ASC:CDL:v1.01"
@@ -291,7 +291,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def file_in(self, value):
         """Sets the file_in to the absolute path of file"""
         if value:
-            self._file_in = os.path.abspath(value)
+            self._file_in = Path(value).resolve()
 
     @property
     def file_out(self):
@@ -347,12 +347,9 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                 # We need to make sure each member is of the correct class.
                 if color.__class__ != color_class:
                     raise TypeError(
-                        "ColorCollection().{list_name} cannot be set to "
-                        "provided list because not all members of that list "
-                        "are of the {class_name} class.".format(
-                            list_name=list_name,
-                            class_name=color_class.__name__
-                        )
+                        f"ColorCollection().{list_name} cannot be set to "
+                        f"provided list because not all members of that list "
+                        f"are of the {color_class.__name__} class."
                     )
             return list(set(values))
         elif values.__class__ == color_class:
@@ -361,13 +358,9 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             return [values]
         else:
             raise TypeError(
-                "ColorCollection().{list_name} cannot be set to item "
-                "of type '{type}'. Please set {list_name} with a "
-                "list containing only members of class {class_name}.".format(
-                    list_name=list_name,
-                    type=type(values),
-                    class_name=color_class.__name__
-                )
+                f"ColorCollection().{list_name} cannot be set to item "
+                f"of type '{type(values)}'. Please set {list_name} with a "
+                f"list containing only members of class {color_class.__name__}."
             )
 
     # Public Methods ==========================================================
@@ -536,15 +529,13 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def determine_dest(self, directory):
         """Determines the destination file and sets it on the cdl"""
         if self.file_in:
-            filename = os.path.splitext(os.path.basename(self.file_in))[0]
+            filename = Path(self.file_in).stem
         else:
-            filename = 'color_collection_{id}'.format(
-                id=str(ColorCollection.members.index(self)).rjust(3, '0')
-            )
+            filename = f'color_collection_{str(ColorCollection.members.index(self)).rjust(3, "0")}'
 
-        filename = "{file_in}.{ext}".format(file_in=filename, ext=self.type)
+        filename = f"{filename}.{self.type}"
 
-        self._file_out = os.path.join(directory, filename)
+        self._file_out = Path(directory) / filename
 
     # =========================================================================
 

@@ -18,6 +18,7 @@ try:
 except ImportError:
     import mock
 import os
+from pathlib import Path
 import sys
 import tempfile
 import unittest
@@ -580,7 +581,7 @@ class TestParseCCCFull(unittest.TestCase):
     def test_file_in(self):
         """Tests that the input_file has been set to the file in value"""
         self.assertEqual(
-            self.filename,
+            Path(self.filename).resolve(),
             self.node.file_in
         )
 
