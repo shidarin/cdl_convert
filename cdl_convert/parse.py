@@ -255,7 +255,7 @@ def parse_cc(input_file: Union[str, Path, ElementTree.Element]) -> correction.Co
     try:
         cc_id = root.attrib['id']
     except KeyError:
-        if config.HALT_ON_ERROR:
+        if config.config.halt_on_error:
             raise ParseError(
                 'Missing required "id" attribute on ColorCorrection element. '
                 'ASC CDL ColorCorrection elements must have an "id" attribute for identification.'

@@ -683,7 +683,7 @@ class TestParseCCExceptions(unittest.TestCase):
             f.write(CC_BLANK_ID.encode("utf-8"))
             self.file = f.name
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
@@ -691,7 +691,7 @@ class TestParseCCExceptions(unittest.TestCase):
             self.file
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         cdl = cdl_convert.parse_cc(self.file)
 
@@ -710,7 +710,7 @@ class TestParseCCExceptions(unittest.TestCase):
             f.write(CC_NEGATIVE_SLOPE.encode("utf-8"))
             self.file = f.name
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
@@ -718,7 +718,7 @@ class TestParseCCExceptions(unittest.TestCase):
             self.file
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
         cdl_convert.reset_all()
 
         cdl = cdl_convert.parse_cc(self.file)

@@ -4,24 +4,21 @@
 CDL Convert Config
 ================
 
-Contains simple configuration parameters.
+Contains type-safe configuration parameters using modern Python features.
 
 ## GLOBALS
 
-    HALT_ON_ERROR
-        Parameter to be used globally to determine if common exceptions should
-        be handled by default behavior or raise. Setting this to True causes
-        exceptions to be raised.
+    config
+        Global configuration instance. Access settings via config.halt_on_error,
+        config.collection_formats, etc.
 
-        Default: False
+## CLASSES
 
-    COLLECTION_FORMATS
-        List containing all the formats which are represented by
-        ColorCollection.
+    CDLFormat
+        Enum containing all supported CDL format types.
 
-    SINGLE_FORMATS
-        List containing all the formats which are represented by a single
-        ColorCorrection.
+    Config
+        Type-safe configuration dataclass containing all global settings.
 
 ## License
 
@@ -52,32 +49,104 @@ SOFTWARE.
 """
 
 # ==============================================================================
-# GLOBALS
+# IMPORTS
 # ==============================================================================
 
-# HALT_ON_ERROR is the exception handling variable for exceptions that can
-# be handled silently.
-#
-# If we begin to get more config options, this will be moved into a singleton
-# config class.
-#
-# Used in the following places:
-#   Slope, power and sat values can't be negative and will truncate to 0.0
-#   If id given to ColorCorrection is blank, will set to number of CCs
-#   When determining if a non-existent directory referenced by MediaRef
-#       contains an image sequence, will just return False.
-#   If attempting to retrieve a referenced ColorCorrection whose id doesn't
-#       exist.
-#   If attempting to set a ColorCorrectionRef to a ColorCorrection whose
-#       id doesn't exist. (Other than first creation)
-#   If a ColorCorrection is given a duplicate ID
-HALT_ON_ERROR = False
+from dataclasses import dataclass
+from enum import Enum
+from typing import FrozenSet
 
-COLLECTION_FORMATS = ['ale', 'ccc', 'cdl', 'edl', 'flex']
-SINGLE_FORMATS = ['cc', 'rcdl']
+# ==============================================================================
+# ENUMS
+# ==============================================================================
+
+
+class CDLFormat(Enum):
+    """Supported CDL format types."""
+    ALE = "ale"
+    CC = "cc"
+    CCC = "ccc"
+    CDL = "cdl"
+    EDL = "edl"
+    FLEX = "flex"
+    RCDL = "rcdl"
+
+
+# ==============================================================================
+# CONFIGURATION
+# ==============================================================================
+
+
+@dataclass
+class Config:
+    """Type-safe configuration for CDL Convert.
+    
+    This class contains all global configuration settings with proper type hints
+    and validation.
+    
+    Attributes:
+        halt_on_error: If True, exceptions are raised instead of being handled
+                      with default behavior. Used for strict validation mode.
+        collection_formats: Set of formats that represent ColorCollection objects.
+        single_formats: Set of formats that represent single ColorCorrection objects.
+    """
+    halt_on_error: bool = False
+    collection_formats: FrozenSet[CDLFormat] = frozenset({
+        CDLFormat.ALE,
+        CDLFormat.CCC,
+        CDLFormat.CDL,
+        CDLFormat.EDL,
+        CDLFormat.FLEX
+    })
+    single_formats: FrozenSet[CDLFormat] = frozenset({
+        CDLFormat.CC,
+        CDLFormat.RCDL
+    })
+    
+    def is_collection_format(self, format_type: str) -> bool:
+        """Check if a format string represents a collection format.
+        
+        Args:
+            format_type: Format string to check (e.g., 'ccc', 'cdl')
+            
+        Returns:
+            True if the format is a collection format, False otherwise.
+        """
+        try:
+            fmt = CDLFormat(format_type.lower())
+            return fmt in self.collection_formats
+        except ValueError:
+            return False
+    
+    def is_single_format(self, format_type: str) -> bool:
+        """Check if a format string represents a single correction format.
+        
+        Args:
+            format_type: Format string to check (e.g., 'cc', 'rcdl')
+            
+        Returns:
+            True if the format is a single format, False otherwise.
+        """
+        try:
+            fmt = CDLFormat(format_type.lower())
+            return fmt in self.single_formats
+        except ValueError:
+            return False
+
+
+# ==============================================================================
+# GLOBAL INSTANCE
+# ==============================================================================
+
+# Global configuration instance
+config = Config()
 
 # ==============================================================================
 # EXPORTS
 # ==============================================================================
 
-__all__ = ['HALT_ON_ERROR']
+__all__ = [
+    'CDLFormat',
+    'Config', 
+    'config',
+]

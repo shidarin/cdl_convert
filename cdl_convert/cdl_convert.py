@@ -167,7 +167,7 @@ def parse_args():
         args.destination = './converted/'
 
     if args.halt:
-        config.HALT_ON_ERROR = True
+        config.config.halt_on_error = True
 
     return args
 
@@ -225,7 +225,7 @@ def main():  # pylint: disable=R0912
     if color_decisions:
         # Sanity Check
         if args.check:
-            if filetype_in in config.COLLECTION_FORMATS:
+            if config.config.is_collection_format(filetype_in):
                 for color_correct in color_decisions.color_corrections:
                     sanity_check(color_correct)
                 for decision in color_decisions.color_decisions:
@@ -236,8 +236,8 @@ def main():  # pylint: disable=R0912
 
         # Writing
         for ext in args.output:
-            if ext in config.SINGLE_FORMATS or args.single:
-                if filetype_in in config.COLLECTION_FORMATS:
+            if config.config.is_single_format(ext) or args.single:
+                if config.config.is_collection_format(filetype_in):
                     for color_correct in color_decisions.color_corrections:
                         write_single_file(color_correct, ext)
                     for decision in color_decisions.color_decisions:
@@ -246,7 +246,7 @@ def main():  # pylint: disable=R0912
                 else:
                     write_single_file(color_decisions, ext)
             else:
-                if filetype_in in config.COLLECTION_FORMATS:
+                if config.config.is_collection_format(filetype_in):
                     # If we read a collection type, color_decisions is
                     # already a ColorCollection.
                     write_collection_file(color_decisions, ext)

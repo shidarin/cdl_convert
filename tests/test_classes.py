@@ -726,7 +726,7 @@ class TestCollectionChildMethods(unittest.TestCase):
     def tearDown(self):
         # Empty out the members dictionary
         cdl_convert.reset_all()
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
     #==========================================================================
     # TESTS
@@ -821,7 +821,7 @@ class TestCollectionChildMethods(unittest.TestCase):
             self.node.color_corrections
         )
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
@@ -849,7 +849,7 @@ class TestCollectionChildMethods(unittest.TestCase):
             self.node.color_decisions
         )
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
@@ -881,7 +881,7 @@ class TestCollectionChildMethods(unittest.TestCase):
             self.node.all_children
         )
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
@@ -1426,7 +1426,7 @@ class TestColorCorrection(unittest.TestCase):
     def testIdNonUniqueIdOnInit(self):
         """Tests that exception raised when initializing a non-unique id."""
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
@@ -1435,7 +1435,7 @@ class TestColorCorrection(unittest.TestCase):
             'file'
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         try:
             cc = cdl_convert.ColorCorrection('uniqueId', 'file')
@@ -1482,7 +1482,7 @@ class TestColorCorrection(unittest.TestCase):
             cdl2.id
         )
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
@@ -1491,7 +1491,7 @@ class TestColorCorrection(unittest.TestCase):
             'file'
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
     #==========================================================================
 
@@ -1633,14 +1633,14 @@ class TestColorCorrection(unittest.TestCase):
         def setPower():
             self.cc.power = [-1.3782, 278.32, 0.738378233782]
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setPower
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setPower()
 
@@ -1721,14 +1721,14 @@ class TestColorCorrection(unittest.TestCase):
         def setSlope():
             self.cc.slope = [-1.3782, 278.32, 0.738378233782]
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setSlope
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setSlope()
 
@@ -1809,14 +1809,14 @@ class TestColorCorrection(unittest.TestCase):
         def setSat():
             self.cc.sat = -376.23
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setSat
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setSat()
 
@@ -1886,7 +1886,7 @@ class TestColorCorrectionReference(unittest.TestCase):
         # We need to clear the ColorCorrection member dictionary so we don't
         # have to worry about non-unique ids.
         cdl_convert.reset_all()
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
     #==========================================================================
     # TESTS
@@ -1908,7 +1908,7 @@ class TestColorCorrectionReference(unittest.TestCase):
 
     def testCCHalt(self):
         """Tests trying to get a CC reference with Halt set"""
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         def getCC():
             self.ccr_bad.cc
@@ -1970,7 +1970,7 @@ class TestColorCorrectionReference(unittest.TestCase):
         def setRef():
             self.ccr.id = 'blahblahblah'
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
@@ -2335,16 +2335,18 @@ class TestMediaRefProperties(unittest.TestCase):
     #==========================================================================
 
     def testSeqDefaults(self):
-        """Tests that seq attributes start at None"""
-        self.assertEqual(
-            None,
-            self.mr._is_seq
-        )
-
-        self.assertEqual(
-            None,
-            self.mr._sequences
-        )
+        """Tests that seq attributes start uninitialized and return proper defaults"""
+        # Before accessing sequence properties, _sequence_info should be None
+        self.assertIsNone(self.mr._sequence_info)
+        
+        # Accessing is_seq should initialize _sequence_info and return False for non-sequences
+        self.assertFalse(self.mr.is_seq)
+        
+        # After initialization, _sequence_info should exist
+        self.assertIsNotNone(self.mr._sequence_info)
+        
+        # seqs should return empty list for non-sequences
+        self.assertEqual([], self.mr.seqs)
 
     #==========================================================================
 
@@ -2364,7 +2366,7 @@ class TestMediaRefProperties(unittest.TestCase):
             self.mr.directory
         )
 
-        self.mr._dir = 'burp'
+        self.mr.directory = 'burp'
 
         self.assertEqual(
             'burp',
@@ -2444,7 +2446,7 @@ class TestMediaRefProperties(unittest.TestCase):
             self.mr.filename
         )
 
-        self.mr._filename = 'burp'
+        self.mr.filename = 'burp'
 
         self.assertEqual(
             'burp',
@@ -2539,10 +2541,12 @@ class TestMediaRefProperties(unittest.TestCase):
     @mock.patch('cdl_convert.MediaRef._get_sequences')
     def testIsSeq(self, mock_seq):
         """Tests the is_seq property returns is_seq and calls _get_sequences"""
-        self.mr._is_seq = 'bob'
+        # Set up a mock sequence info to test caching behavior
+        from cdl_convert.decision import SequenceInfo
+        self.mr._sequence_info = SequenceInfo(is_sequence=True, sequences=['test'])
 
         self.assertEqual(
-            'bob',
+            True,
             self.mr.is_seq
         )
 
@@ -2550,12 +2554,11 @@ class TestMediaRefProperties(unittest.TestCase):
             mock_seq.called
         )
 
-        self.mr._is_seq = None
+        # Reset to None to test lazy loading
+        self.mr._sequence_info = None
 
-        self.assertEqual(
-            None,
-            self.mr.is_seq
-        )
+        # This should trigger _get_sequences call
+        _ = self.mr.is_seq
 
         mock_seq.assert_called_once_with()
 
@@ -2590,7 +2593,7 @@ class TestMediaRefProperties(unittest.TestCase):
             self.mr.protocol
         )
 
-        self.mr._protocol = 'burp'
+        self.mr.protocol = 'burp'
 
         self.assertEqual(
             'burp',
@@ -2764,17 +2767,21 @@ class TestMediaRefProperties(unittest.TestCase):
     @mock.patch('cdl_convert.MediaRef._get_sequences')
     def testSeq(self, mock_gs):
         """Tests the seq attribute makes the correct calls"""
-        self.mr._sequences = ['apple', 'banana']
+        from cdl_convert.decision import SequenceInfo
+        self.mr._sequence_info = SequenceInfo(is_sequence=True, sequences=['apple', 'banana'])
 
         self.assertEqual(
             'apple',
             self.mr.seq
         )
 
-        mock_gs.assert_called_once_with()
-        mock_gs.reset_mock()
+        # Should not call _get_sequences since we have cached data
+        self.assertFalse(
+            mock_gs.called
+        )
 
-        self.mr._is_seq = False
+        # Test non-sequence case
+        self.mr._sequence_info = SequenceInfo(is_sequence=False, sequences=[])
 
         self.assertEqual(
             None,
@@ -2791,17 +2798,21 @@ class TestMediaRefProperties(unittest.TestCase):
     @mock.patch('cdl_convert.MediaRef._get_sequences')
     def testSeqs(self, mock_gs):
         """Tests the seqs attribute makes the correct calls"""
-        self.mr._sequences = ['apple', 'banana']
+        from cdl_convert.decision import SequenceInfo
+        self.mr._sequence_info = SequenceInfo(is_sequence=True, sequences=['apple', 'banana'])
 
         self.assertEqual(
             ['apple', 'banana'],
             self.mr.seqs
         )
 
-        mock_gs.assert_called_once_with()
-        mock_gs.reset_mock()
+        # Should not call _get_sequences since we have cached data
+        self.assertFalse(
+            mock_gs.called
+        )
 
-        self.mr._is_seq = False
+        # Test non-sequence case
+        self.mr._sequence_info = SequenceInfo(is_sequence=False, sequences=[])
 
         self.assertEqual(
             [],
@@ -2860,7 +2871,7 @@ class TestMediaRefChangeMembership(unittest.TestCase):
             cdl_convert.MediaRef.members
         )
 
-        self.mr._filename = 'goodbye'
+        self.mr._ref_info.filename = 'goodbye'
         self.mr._change_membership(old_ref='hello')
 
         self.assertEqual(
@@ -2879,7 +2890,7 @@ class TestMediaRefChangeMembership(unittest.TestCase):
             cdl_convert.MediaRef.members
         )
 
-        self.mr._filename = 'goodbye'
+        self.mr._ref_info.filename = 'goodbye'
         self.mr._change_membership(old_ref='hello')
 
         self.assertEqual(
@@ -2898,7 +2909,7 @@ class TestMediaRefChangeMembership(unittest.TestCase):
             cdl_convert.MediaRef.members
         )
 
-        self.mr._filename = 'goodbye'
+        self.mr._ref_info.filename = 'goodbye'
         self.mr._change_membership(old_ref='hello')
 
         self.assertEqual(
@@ -2912,7 +2923,7 @@ class TestMediaRefChangeMembership(unittest.TestCase):
         """Tests that we don't fail just because we're not in the dict"""
         cdl_convert.reset_all()
 
-        self.mr._filename = 'goodbye'
+        self.mr._ref_info.filename = 'goodbye'
         self.mr._change_membership(old_ref='hello')
 
         self.assertEqual(
@@ -2967,7 +2978,7 @@ class TestMediaRefGetSequences(unittest.TestCase):
         """Tests a single file for being a sequence"""
         mock_dir.return_value = False
 
-        self.mr._filename = self.file
+        self.mr.filename = self.file
 
         self.assertEqual(
             self.is_seq,
@@ -3042,14 +3053,14 @@ class TestMediaRefGetSequences(unittest.TestCase):
         mock_dir.return_value = True
         mock_exists.return_value = False
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             self.mr._get_sequences
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         self.assertEqual(
             False,
@@ -3287,14 +3298,14 @@ class TestSatNode(unittest.TestCase):
         def setSat():
             self.node.sat = '-20'
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setSat
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setSat()
 
@@ -3321,14 +3332,14 @@ class TestSatNode(unittest.TestCase):
         def setSat():
             self.node.sat = -20.1
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setSat
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setSat()
 
@@ -3355,14 +3366,14 @@ class TestSatNode(unittest.TestCase):
         def setSat():
             self.node.sat = -20
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setSat
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setSat()
 
@@ -3484,14 +3495,14 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = '-20'
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setSlope
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setSlope()
 
@@ -3518,14 +3529,14 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = -20.1
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setSlope
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setSlope()
 
@@ -3552,14 +3563,14 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = -20
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setSlope
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setSlope()
 
@@ -3575,14 +3586,14 @@ class TestSopNode(unittest.TestCase):
         def setSlope():
             self.node.slope = [-1.3782, 278.32, 0.738378233782]
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setSlope
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setSlope()
 
@@ -3856,14 +3867,14 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = '-20'
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setPower
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setPower()
 
@@ -3890,14 +3901,14 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = -20.1
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setPower
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setPower()
 
@@ -3924,14 +3935,14 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = -20
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setPower
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setPower()
 
@@ -3947,14 +3958,14 @@ class TestSopNode(unittest.TestCase):
         def setPower():
             self.node.power = [-1.3782, 278.32, 0.738378233782]
 
-        cdl_convert.config.HALT_ON_ERROR = True
+        cdl_convert.config.config.halt_on_error = True
 
         self.assertRaises(
             ValueError,
             setPower
         )
 
-        cdl_convert.config.HALT_ON_ERROR = False
+        cdl_convert.config.config.halt_on_error = False
 
         setPower()
 
@@ -4013,6 +4024,454 @@ class TestSopNode(unittest.TestCase):
             powerD,
             self.node.power
         )
+
+#==============================================================================
+# DATACLASS TESTS
+#==============================================================================
+
+
+class TestColorValues(unittest.TestCase):
+    """Tests the ColorValues dataclass"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.reset_all()
+
+    def tearDown(self):
+        cdl_convert.reset_all()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testDefaultValues(self):
+        """Tests ColorValues default values are unity"""
+        from cdl_convert.correction import ColorValues
+        cv = ColorValues()
+        
+        self.assertEqual(
+            (Decimal('1.0'), Decimal('1.0'), Decimal('1.0')),
+            cv.slope
+        )
+        self.assertEqual(
+            (Decimal('0.0'), Decimal('0.0'), Decimal('0.0')),
+            cv.offset
+        )
+        self.assertEqual(
+            (Decimal('1.0'), Decimal('1.0'), Decimal('1.0')),
+            cv.power
+        )
+        self.assertEqual(
+            Decimal('1.0'),
+            cv.saturation
+        )
+        self.assertTrue(cv.is_unity())
+
+    #==========================================================================
+
+    def testCustomValues(self):
+        """Tests ColorValues with custom values"""
+        from cdl_convert.correction import ColorValues
+        cv = ColorValues(
+            slope=(Decimal('1.2'), Decimal('1.1'), Decimal('1.0')),
+            offset=(Decimal('0.1'), Decimal('-0.05'), Decimal('0.0')),
+            power=(Decimal('0.9'), Decimal('1.0'), Decimal('1.1')),
+            saturation=Decimal('1.2')
+        )
+        
+        self.assertEqual(
+            (Decimal('1.2'), Decimal('1.1'), Decimal('1.0')),
+            cv.slope
+        )
+        self.assertEqual(
+            (Decimal('0.1'), Decimal('-0.05'), Decimal('0.0')),
+            cv.offset
+        )
+        self.assertEqual(
+            (Decimal('0.9'), Decimal('1.0'), Decimal('1.1')),
+            cv.power
+        )
+        self.assertEqual(
+            Decimal('1.2'),
+            cv.saturation
+        )
+        self.assertFalse(cv.is_unity())
+
+    #==========================================================================
+
+    def testValidationBadSlopeLength(self):
+        """Tests ColorValues validation fails with wrong slope length"""
+        from cdl_convert.correction import ColorValues
+        
+        def createBadColorValues():
+            ColorValues(slope=(Decimal('1.0'), Decimal('1.0')))  # Only 2 values
+        
+        self.assertRaises(
+            ValueError,
+            createBadColorValues
+        )
+
+    #==========================================================================
+
+    def testValidationNegativeSlope(self):
+        """Tests ColorValues validation with negative slope values"""
+        from cdl_convert.correction import ColorValues
+        
+        cdl_convert.config.config.halt_on_error = True
+        
+        def createBadColorValues():
+            ColorValues(slope=(Decimal('-1.0'), Decimal('1.0'), Decimal('1.0')))
+        
+        self.assertRaises(
+            ValueError,
+            createBadColorValues
+        )
+        
+        cdl_convert.config.config.halt_on_error = False
+
+    #==========================================================================
+
+    def testValidationNegativeSaturation(self):
+        """Tests ColorValues validation with negative saturation"""
+        from cdl_convert.correction import ColorValues
+        
+        cdl_convert.config.config.halt_on_error = True
+        
+        def createBadColorValues():
+            ColorValues(saturation=Decimal('-1.0'))
+        
+        self.assertRaises(
+            ValueError,
+            createBadColorValues
+        )
+        
+        cdl_convert.config.config.halt_on_error = False
+
+    #==========================================================================
+
+    def testToUnity(self):
+        """Tests ColorValues to_unity method"""
+        from cdl_convert.correction import ColorValues
+        cv = ColorValues(
+            slope=(Decimal('1.2'), Decimal('1.1'), Decimal('1.0')),
+            saturation=Decimal('1.2')
+        )
+        
+        unity = cv.to_unity()
+        self.assertTrue(unity.is_unity())
+        self.assertEqual(
+            (Decimal('1.0'), Decimal('1.0'), Decimal('1.0')),
+            unity.slope
+        )
+        self.assertEqual(
+            Decimal('1.0'),
+            unity.saturation
+        )
+
+
+class TestColorCorrectionDataclassIntegration(unittest.TestCase):
+    """Tests ColorCorrection integration with ColorValues dataclass"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.reset_all()
+        self.cc = cdl_convert.ColorCorrection('test_cc')
+
+    def tearDown(self):
+        cdl_convert.reset_all()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testGetColorValues(self):
+        """Tests getting color values as ColorValues dataclass"""
+        from cdl_convert.correction import ColorValues
+        
+        cv = self.cc.get_color_values()
+        self.assertIsInstance(cv, ColorValues)
+        self.assertTrue(cv.is_unity())
+
+    #==========================================================================
+
+    def testSetColorValues(self):
+        """Tests setting color values from ColorValues dataclass"""
+        from cdl_convert.correction import ColorValues
+        
+        new_values = ColorValues(
+            slope=(Decimal('1.2'), Decimal('1.1'), Decimal('1.0')),
+            offset=(Decimal('0.1'), Decimal('-0.05'), Decimal('0.0')),
+            power=(Decimal('0.9'), Decimal('1.0'), Decimal('1.1')),
+            saturation=Decimal('1.2')
+        )
+        
+        self.cc.set_color_values(new_values)
+        
+        self.assertEqual(new_values.slope, self.cc.slope)
+        self.assertEqual(new_values.offset, self.cc.offset)
+        self.assertEqual(new_values.power, self.cc.power)
+        self.assertEqual(new_values.saturation, self.cc.sat)
+
+    #==========================================================================
+
+    def testIsUnity(self):
+        """Tests ColorCorrection is_unity method"""
+        self.assertTrue(self.cc.is_unity())
+        
+        self.cc.slope = (Decimal('1.2'), Decimal('1.0'), Decimal('1.0'))
+        self.assertFalse(self.cc.is_unity())
+
+    #==========================================================================
+
+    def testRoundTripColorValues(self):
+        """Tests getting and setting color values maintains consistency"""
+        from cdl_convert.correction import ColorValues
+        
+        # Set some non-unity values
+        self.cc.slope = (Decimal('1.2'), Decimal('1.1'), Decimal('1.0'))
+        self.cc.offset = (Decimal('0.1'), Decimal('-0.05'), Decimal('0.0'))
+        self.cc.power = (Decimal('0.9'), Decimal('1.0'), Decimal('1.1'))
+        self.cc.sat = Decimal('1.2')
+        
+        # Get as dataclass
+        cv = self.cc.get_color_values()
+        
+        # Create new CC and set from dataclass
+        cc2 = cdl_convert.ColorCorrection('test_cc2')
+        cc2.set_color_values(cv)
+        
+        # Verify they match
+        self.assertEqual(self.cc.slope, cc2.slope)
+        self.assertEqual(self.cc.offset, cc2.offset)
+        self.assertEqual(self.cc.power, cc2.power)
+        self.assertEqual(self.cc.sat, cc2.sat)
+
+
+class TestMediaRefInfo(unittest.TestCase):
+    """Tests the MediaRefInfo dataclass"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.reset_all()
+
+    def tearDown(self):
+        cdl_convert.reset_all()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testDefaultValues(self):
+        """Tests MediaRefInfo default values"""
+        from cdl_convert.decision import MediaRefInfo
+        mri = MediaRefInfo()
+        
+        self.assertEqual('', mri.protocol)
+        self.assertEqual('', mri.directory)
+        self.assertEqual('', mri.filename)
+        self.assertEqual('.', mri.to_uri())
+
+    #==========================================================================
+
+    def testCustomValues(self):
+        """Tests MediaRefInfo with custom values"""
+        from cdl_convert.decision import MediaRefInfo
+        mri = MediaRefInfo(
+            protocol='http',
+            directory='/path/to/files',
+            filename='image.jpg'
+        )
+        
+        self.assertEqual('http', mri.protocol)
+        self.assertEqual('/path/to/files', mri.directory)
+        self.assertEqual('image.jpg', mri.filename)
+
+    #==========================================================================
+
+    def testToUriWithProtocol(self):
+        """Tests MediaRefInfo to_uri with protocol"""
+        from cdl_convert.decision import MediaRefInfo
+        mri = MediaRefInfo(
+            protocol='http',
+            directory='example.com/path',
+            filename='file.jpg'
+        )
+        
+        self.assertEqual('http://example.com/path/file.jpg', mri.to_uri())
+
+    #==========================================================================
+
+    def testToUriNoProtocol(self):
+        """Tests MediaRefInfo to_uri without protocol"""
+        from cdl_convert.decision import MediaRefInfo
+        mri = MediaRefInfo(
+            directory='path/to/files',
+            filename='image.jpg'
+        )
+        
+        self.assertEqual('path/to/files/image.jpg', mri.to_uri())
+
+    #==========================================================================
+
+    def testToUriNoFilename(self):
+        """Tests MediaRefInfo to_uri with directory only"""
+        from cdl_convert.decision import MediaRefInfo
+        mri = MediaRefInfo(
+            protocol='file',
+            directory='/path/to/directory'
+        )
+        
+        self.assertEqual('file:///path/to/directory', mri.to_uri())
+
+
+class TestSequenceInfo(unittest.TestCase):
+    """Tests the SequenceInfo dataclass"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.reset_all()
+
+    def tearDown(self):
+        cdl_convert.reset_all()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testDefaultValues(self):
+        """Tests SequenceInfo default values"""
+        from cdl_convert.decision import SequenceInfo
+        si = SequenceInfo()
+        
+        self.assertFalse(si.is_sequence)
+        self.assertEqual([], si.sequences)
+
+    #==========================================================================
+
+    def testCustomValues(self):
+        """Tests SequenceInfo with custom values"""
+        from cdl_convert.decision import SequenceInfo
+        sequences = ['image.####.jpg', 'other.####.exr']
+        si = SequenceInfo(is_sequence=True, sequences=sequences)
+        
+        self.assertTrue(si.is_sequence)
+        self.assertEqual(sequences, si.sequences)
+        self.assertEqual(2, len(si.sequences))
+
+    #==========================================================================
+
+    def testPostInitNoneSequences(self):
+        """Tests SequenceInfo __post_init__ with None sequences"""
+        from cdl_convert.decision import SequenceInfo
+        si = SequenceInfo(is_sequence=True, sequences=None)
+        
+        self.assertTrue(si.is_sequence)
+        self.assertEqual([], si.sequences)
+
+
+class TestMediaRefDataclassIntegration(unittest.TestCase):
+    """Tests MediaRef integration with dataclasses"""
+
+    #==========================================================================
+    # SETUP & TEARDOWN
+    #==========================================================================
+
+    def setUp(self):
+        cdl_convert.reset_all()
+
+    def tearDown(self):
+        cdl_convert.reset_all()
+
+    #==========================================================================
+    # TESTS
+    #==========================================================================
+
+    def testMediaRefUsesDataclass(self):
+        """Tests MediaRef uses MediaRefInfo dataclass internally"""
+        from cdl_convert.decision import MediaRefInfo
+        
+        mr = cdl_convert.MediaRef('http://example.com/path/file.jpg')
+        
+        self.assertTrue(hasattr(mr, '_ref_info'))
+        self.assertIsInstance(mr._ref_info, MediaRefInfo)
+
+    #==========================================================================
+
+    def testMediaRefPropertiesFromDataclass(self):
+        """Tests MediaRef properties work with dataclass"""
+        mr = cdl_convert.MediaRef('http://example.com/path/file.jpg')
+        
+        self.assertEqual('http', mr.protocol)
+        self.assertEqual('example.com/path', mr.directory)
+        self.assertEqual('file.jpg', mr.filename)
+
+    #==========================================================================
+
+    def testMediaRefSequenceInfoCaching(self):
+        """Tests MediaRef uses SequenceInfo for caching"""
+        from cdl_convert.decision import SequenceInfo
+        
+        mr = cdl_convert.MediaRef('test.jpg')
+        
+        # Initially None
+        self.assertIsNone(mr._sequence_info)
+        
+        # Access triggers lazy loading
+        is_seq = mr.is_seq
+        
+        # Now should have SequenceInfo
+        self.assertIsInstance(mr._sequence_info, SequenceInfo)
+        self.assertEqual(is_seq, mr._sequence_info.is_sequence)
+
+    #==========================================================================
+
+    def testMediaRefPropertyChangesUpdateDataclass(self):
+        """Tests changing MediaRef properties updates internal dataclass"""
+        mr = cdl_convert.MediaRef('http://example.com/path/file.jpg')
+        
+        # Change protocol
+        mr.protocol = 'https'
+        self.assertEqual('https', mr._ref_info.protocol)
+        self.assertEqual('https', mr.protocol)
+        
+        # Change directory
+        mr.directory = 'newpath'
+        self.assertEqual('newpath', mr._ref_info.directory)
+        self.assertEqual('newpath', mr.directory)
+        
+        # Change filename
+        mr.filename = 'newfile.jpg'
+        self.assertEqual('newfile.jpg', mr._ref_info.filename)
+        self.assertEqual('newfile.jpg', mr.filename)
+
+    #==========================================================================
+
+    def testMediaRefUriReconstruction(self):
+        """Tests MediaRef URI reconstruction through dataclass"""
+        mr = cdl_convert.MediaRef('http://example.com/path/file.jpg')
+        
+        # Verify original URI
+        self.assertEqual('http://example.com/path/file.jpg', mr.ref)
+        
+        # Change components and verify URI updates
+        mr.protocol = 'https'
+        mr.directory = 'newpath'
+        mr.filename = 'newfile.jpg'
+        
+        self.assertEqual('https://newpath/newfile.jpg', mr.ref)
+
 
 #==============================================================================
 # RUNNER

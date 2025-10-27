@@ -400,7 +400,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             )
 
         if dup:
-            if config.HALT_ON_ERROR:
+            if config.config.halt_on_error:
                 raise ValidationError(
                     "Attempted to put a ColorDecision with a child "
                     "ColorCorrection id that duplicates an id of a "

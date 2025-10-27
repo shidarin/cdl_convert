@@ -78,6 +78,7 @@ SOFTWARE.
 
 # Standard Imports
 
+from dataclasses import dataclass
 from pathlib import Path
 import re
 from typing import Dict, List, Optional, Union, Any, Tuple
@@ -91,13 +92,77 @@ from .correction import ColorCorrection
 from .exceptions import ValidationError, ParseError
 
 # ==============================================================================
+# DATACLASSES
+# ==============================================================================
+
+
+@dataclass
+class MediaRefInfo:
+    """Data structure for parsed media reference URI components.
+    
+    This dataclass provides a clean way to store the components of a parsed
+    media reference URI, making it easier to work with protocol, directory,
+    and filename components separately.
+    
+    Attributes:
+        protocol: URI protocol (e.g., 'http', 'file') without '://'
+        directory: Directory path component
+        filename: Filename component
+    """
+    protocol: str = ''
+    directory: str = ''
+    filename: str = ''
+    
+    def to_uri(self) -> str:
+        """Reconstruct the full URI from components."""
+        if self.protocol:
+            prefix = f"{self.protocol}://"
+        else:
+            prefix = ''
+        
+        # Use os.path.join to preserve original path format
+        import os
+        if self.filename:
+            if self.directory:
+                path = os.path.join(self.directory, self.filename)
+            else:
+                path = self.filename
+        else:
+            path = self.directory if self.directory else '.'
+            
+        return prefix + path
+
+
+@dataclass
+class SequenceInfo:
+    """Data structure for image sequence information.
+    
+    This dataclass stores information about detected image sequences,
+    including the sequence pattern and whether sequences were found.
+    
+    Attributes:
+        is_sequence: True if sequences were detected
+        sequences: List of sequence patterns with # padding
+    """
+    is_sequence: bool = False
+    sequences: List[str] = None
+    
+    def __post_init__(self) -> None:
+        """Initialize sequences list if None."""
+        if self.sequences is None:
+            self.sequences = []
+
+
+# ==============================================================================
 # EXPORTS
 # ==============================================================================
 
 __all__ = [
     'ColorCorrectionRef',
-    'ColorDecision',
-    'MediaRef'
+    'ColorDecision', 
+    'MediaRef',
+    'MediaRefInfo',
+    'SequenceInfo'
 ]
 
 # ==============================================================================
@@ -214,7 +279,7 @@ class ColorCorrectionRef(AscXMLBase):
     @id.setter
     def id(self, ref_id: str) -> None:  # pylint: disable=C0103
         """Sets the reference id"""
-        if ref_id not in ColorCorrection.members and config.HALT_ON_ERROR:
+        if ref_id not in ColorCorrection.members and config.config.halt_on_error:
             raise ValidationError(
                 f"Reference id '{ref_id}' does not match any existing "
                 f"ColorCorrection id in ColorCorrection.members "
@@ -266,7 +331,7 @@ class ColorCorrectionRef(AscXMLBase):
         if self.id in ColorCorrection.members:
             return ColorCorrection.members[self.id]
         else:
-            if config.HALT_ON_ERROR:
+            if config.config.halt_on_error:
                 raise ValidationError(
                     f"Cannot resolve ColorCorrectionRef with reference "
                     f"id of '{self.id}' because no ColorCorrection with that id "
@@ -752,17 +817,11 @@ class MediaRef(AscXMLBase):
 
     def __init__(self, ref_uri: str, parent: Optional['ColorDecision'] = None) -> None:
         super(MediaRef, self).__init__()
-        self._protocol: str
-        self._dir: str
-        self._filename: str
-        self._protocol, self._dir, self._filename = self._split_uri(ref_uri)
+        self._ref_info = MediaRefInfo(*self._split_uri(ref_uri))
         self.parent: Optional['ColorDecision'] = parent
 
-        # If we're a directory, we can contain one or more sequences, but we
-        # won't do the work to figure that out until is_seq, seq, and seqs are
-        # called for.
-        self._is_seq: Optional[bool] = None
-        self._sequences: Optional[List[str]] = None
+        # Cache for sequence information - computed lazily
+        self._sequence_info: Optional[SequenceInfo] = None
 
         self._change_membership()
 
@@ -771,14 +830,14 @@ class MediaRef(AscXMLBase):
     @property
     def directory(self) -> str:
         """Returns the directory the uri points to"""
-        return self._dir
+        return self._ref_info.directory
 
     @directory.setter
     def directory(self, value: str) -> None:
         """Checks directory for type and resets cached properties"""
         if type(value) is str:
             old_ref = self.ref
-            self._dir = value
+            self._ref_info.directory = value
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
@@ -794,14 +853,14 @@ class MediaRef(AscXMLBase):
     @property
     def filename(self) -> str:
         """Returns the filename the uri points to, if any"""
-        return self._filename
+        return self._ref_info.filename
 
     @filename.setter
     def filename(self, value: str) -> None:
         """Checks filename for type and resets cached properties"""
         if type(value) is str:
             old_ref = self.ref
-            self._filename = value
+            self._ref_info.filename = value
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
@@ -822,27 +881,27 @@ class MediaRef(AscXMLBase):
     @property
     def is_seq(self) -> bool:
         """Returns True if path is to an image sequence"""
-        if self._is_seq is None:
+        if self._sequence_info is None:
             self._get_sequences()
-        return self._is_seq
+        return self._sequence_info.is_sequence if self._sequence_info else False
 
     @property
     def path(self) -> str:
         """Returns the path without any uri protocol"""
         # Use os here to preserve the relative paths
         import os
-        if self._filename:
-            if self._dir:
-                return os.path.join(self._dir, self._filename)
+        if self._ref_info.filename:
+            if self._ref_info.directory:
+                return os.path.join(self._ref_info.directory, self._ref_info.filename)
             else:
-                return self._filename
+                return self._ref_info.filename
         else:
-            return self._dir if self._dir else '.'
+            return self._ref_info.directory if self._ref_info.directory else '.'
 
     @property
     def protocol(self) -> str:
         """Returns the protocol of the uri, if any"""
-        return self._protocol
+        return self._ref_info.protocol
 
     @protocol.setter
     def protocol(self, value: str) -> None:
@@ -852,7 +911,7 @@ class MediaRef(AscXMLBase):
             if value.endswith('://'):
                 value = value[:-3]
             old_ref = self.ref
-            self._protocol = value
+            self._ref_info.protocol = value
             self._change_membership(old_ref=old_ref)
             # We probably don't need to reset the cached properties, but we
             # will just to be safe.
@@ -865,18 +924,14 @@ class MediaRef(AscXMLBase):
     @property
     def ref(self) -> str:
         """Returns the reference uri"""
-        if self._protocol:
-            prefix = f"{self._protocol}://"
-        else:
-            prefix = ''
-        return prefix + self.path
+        return self._ref_info.to_uri()
 
     @ref.setter
     def ref(self, uri: str) -> None:
         """Sets the reference uri and resets all cached properties"""
         if type(uri) is str:
             old_ref = self.ref
-            self._protocol, self._dir, self._filename = self._split_uri(uri)
+            self._ref_info = MediaRefInfo(*self._split_uri(uri))
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
@@ -887,22 +942,22 @@ class MediaRef(AscXMLBase):
     @property
     def seq(self) -> Optional[str]:
         """Returns first found sequence with frames as # padding"""
-        if self._is_seq is None:
+        if self._sequence_info is None:
             self._get_sequences()
-        elif not self._is_seq:
+        if not self._sequence_info or not self._sequence_info.is_sequence:
             return None
 
-        return self._sequences[0]
+        return self._sequence_info.sequences[0] if self._sequence_info.sequences else None
 
     @property
     def seqs(self) -> List[str]:
         """Returns all found sequences with frames as # padding"""
-        if self._is_seq is None:
+        if self._sequence_info is None:
             self._get_sequences()
-        elif not self._is_seq:
+        if not self._sequence_info or not self._sequence_info.is_sequence:
             return []
 
-        return self._sequences
+        return self._sequence_info.sequences
 
     # Private Methods =========================================================
 
@@ -956,20 +1011,18 @@ class MediaRef(AscXMLBase):
 
         if self.is_dir and not self.exists:
             # It doesn't exist, so we can't tell if it's a sequence
-            if config.HALT_ON_ERROR:
+            if config.config.halt_on_error:
                 raise ValidationError(
                     f'Cannot determine if non-existent directory {self.path} '
                     f'contains an image sequence.'
                 )
             else:
-                self._is_seq = False
-                self._sequences = []
+                self._sequence_info = SequenceInfo(is_sequence=False, sequences=[])
         elif self.is_dir and self.exists:
             file_list = [f.name for f in Path(self.path).iterdir() if f.is_file()]
             files = [f for f in file_list if match.search(f)]
             if not files:
-                self._is_seq = False
-                self._sequences = []
+                self._sequence_info = SequenceInfo(is_sequence=False, sequences=[])
             else:
                 seqs = []
                 for image in files:
@@ -978,31 +1031,29 @@ class MediaRef(AscXMLBase):
                     filename = found.group(1) + padding + found.group(3)
                     if filename not in seqs:
                         seqs.append(filename)
-                self._is_seq = True
-                self._sequences = seqs
+                self._sequence_info = SequenceInfo(is_sequence=True, sequences=seqs)
         else:
             found = match.search(self.filename)
             if found:
                 padding = '#' * len(found.group(2))
-                self._is_seq = True
-                self._sequences = [found.group(1) + padding + found.group(3)]
+                self._sequence_info = SequenceInfo(
+                    is_sequence=True, 
+                    sequences=[found.group(1) + padding + found.group(3)]
+                )
             else:
                 # We'll finally check for %d style padding
                 match = re.compile(re_exp_percent)
                 found = match.search(self.filename)
                 if found:
-                    self._is_seq = True
-                    self._sequences = [self.filename]
+                    self._sequence_info = SequenceInfo(is_sequence=True, sequences=[self.filename])
                 else:
-                    self._is_seq = False
-                    self._sequences = []
+                    self._sequence_info = SequenceInfo(is_sequence=False, sequences=[])
 
     # =========================================================================
 
     def _reset_cached_properties(self) -> None:
         """Resets cached attributes back to init values"""
-        self._is_seq = None
-        self._sequences = None
+        self._sequence_info = None
 
     # =========================================================================
 

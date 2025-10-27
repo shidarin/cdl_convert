@@ -444,7 +444,7 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
         # If given as a single number, that number must be positive
         if not negative_allow:
             if value < 0:
-                if config.HALT_ON_ERROR:
+                if config.config.halt_on_error:
                     raise ValidationError(
                         f'Invalid {name} value: "{value}". '
                         f'{name.title()} values must be non-negative (>= 0).'

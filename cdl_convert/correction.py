@@ -60,6 +60,7 @@ SOFTWARE.
 
 # Standard Imports
 
+from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 import re
@@ -75,11 +76,80 @@ from .exceptions import ValidationError
 
 
 # ==============================================================================
+# DATACLASSES
+# ==============================================================================
+
+
+@dataclass
+class ColorValues:
+    """Modern data structure for color correction values.
+    
+    Attributes:
+        slope: RGB slope values as a tuple of Decimals
+        offset: RGB offset values as a tuple of Decimals  
+        power: RGB power values as a tuple of Decimals
+        saturation: Saturation value as a Decimal
+
+    """
+    slope: Tuple[Decimal, Decimal, Decimal] = (Decimal('1.0'), Decimal('1.0'), Decimal('1.0'))
+    offset: Tuple[Decimal, Decimal, Decimal] = (Decimal('0.0'), Decimal('0.0'), Decimal('0.0'))
+    power: Tuple[Decimal, Decimal, Decimal] = (Decimal('1.0'), Decimal('1.0'), Decimal('1.0'))
+    saturation: Decimal = Decimal('1.0')
+    
+    def __post_init__(self) -> None:
+        """Validate values after initialization."""
+        self._validate_values()
+    
+    def _validate_values(self) -> None:
+        """Validate color correction values."""
+        # Validate RGB tuples have exactly 3 values
+        for name, values in [('slope', self.slope), ('offset', self.offset), ('power', self.power)]:
+            if len(values) != 3:
+                raise ValidationError(
+                    f'Invalid {name} values: expected 3 RGB values, got {len(values)}. '
+                    f'Provided values: {values}. '
+                    f'{name.title()} must specify exactly 3 values for Red, Green, and Blue channels.'
+                )
+        
+        # Validate that slope and power values are non-negative
+        for name, values in [('slope', self.slope), ('power', self.power)]:
+            for i, value in enumerate(values):
+                if value < 0:
+                    if config.config.halt_on_error:
+                        channel = ['Red', 'Green', 'Blue'][i]
+                        raise ValidationError(
+                            f'Invalid {name} value for {channel} channel: {value}. '
+                            f'{name.title()} values must be non-negative (>= 0).'
+                        )
+        
+        # Validate saturation is non-negative
+        if self.saturation < 0:
+            if config.config.halt_on_error:
+                raise ValidationError(
+                    f'Invalid saturation value: {self.saturation}. '
+                    f'Saturation must be non-negative (>= 0).'
+                )
+    
+    def to_unity(self) -> 'ColorValues':
+        """Return a ColorValues instance with unity/identity values."""
+        return ColorValues()
+    
+    def is_unity(self) -> bool:
+        """Check if all values are at unity/identity (no correction applied)."""
+        unity = self.to_unity()
+        return (self.slope == unity.slope and 
+                self.offset == unity.offset and 
+                self.power == unity.power and 
+                self.saturation == unity.saturation)
+
+
+# ==============================================================================
 # EXPORTS
 # ==============================================================================
 
 __all__ = [
     'ColorCorrection',
+    'ColorValues',
     'SatNode',
     'SopNode',
 ]
@@ -233,7 +303,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         # Each ID should be unique
         id = _sanitize(id)
         if id in ColorCorrection.members.keys():
-            if config.HALT_ON_ERROR:
+            if config.config.halt_on_error:
                 existing_ids = list(ColorCorrection.members.keys())
                 raise ValidationError(
                     f'Duplicate ColorCorrection ID: "{id}" is already registered. '
@@ -242,7 +312,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             else:
                 id = f'{id}{len([cc for cc in ColorCorrection.members if cc.startswith(id)]):0>3}'
         elif not id:
-            if config.HALT_ON_ERROR:
+            if config.config.halt_on_error:
                 raise ValidationError(
                     'Empty ColorCorrection ID provided. '
                     'ColorCorrections require a non-empty ID for identification.'
@@ -379,6 +449,38 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             ColorCorrection.members[self._id] = self
 
     # Public Methods ==========================================================
+
+    def get_color_values(self) -> ColorValues:
+        """Get all color correction values as a ColorValues dataclass.
+        
+        Returns:
+            ColorValues instance containing slope, offset, power, and saturation
+        """
+        return ColorValues(
+            slope=self.slope,
+            offset=self.offset, 
+            power=self.power,
+            saturation=self.sat
+        )
+    
+    def set_color_values(self, values: ColorValues) -> None:
+        """Set all color correction values from a ColorValues dataclass.
+        
+        Args:
+            values: ColorValues instance containing the values to set
+        """
+        self.slope = values.slope
+        self.offset = values.offset
+        self.power = values.power
+        self.sat = values.saturation
+    
+    def is_unity(self) -> bool:
+        """Check if this color correction represents unity/identity values.
+        
+        Returns:
+            True if all values are at unity (no correction applied)
+        """
+        return self.get_color_values().is_unity()
 
     def build_element(self) -> ElementTree.Element:
         """Builds an ElementTree XML element representing this CC"""
