@@ -59,9 +59,11 @@ SOFTWARE.
 # Standard Imports
 
 import sys
+from typing import Union
 
 # Local Imports
 from .collection import ColorCollection
+from .correction import ColorCorrection
 
 # ==============================================================================
 # EXPORTS
@@ -79,7 +81,7 @@ __all__ = [
 # ==============================================================================
 
 
-def _temp_container(cdl):
+def _temp_container(cdl: ColorCorrection) -> ColorCollection:
     """Builds a temporary collection container for a single cdl file."""
     temp_cdl = ColorCollection()
     orig_parent = cdl.parent
@@ -93,7 +95,7 @@ def _temp_container(cdl):
 # ==============================================================================
 
 
-def write_cc(cdl):
+def write_cc(cdl: ColorCorrection) -> None:
     """Writes the ColorCorrection to a .cc file"""
     with open(cdl.file_out, 'wb') as cdl_f:
         cdl_f.write(cdl.xml_root.encode('utf-8'))
@@ -101,7 +103,7 @@ def write_cc(cdl):
 # ==============================================================================
 
 
-def write_ccc(cdl):
+def write_ccc(cdl: Union[ColorCorrection, ColorCollection]) -> None:
     """Writes the ColorCollection to a .ccc file"""
     if not isinstance(cdl, ColorCollection):
         cdl = _temp_container(cdl)
@@ -115,7 +117,7 @@ def write_ccc(cdl):
 # ==============================================================================
 
 
-def write_cdl(cdl):
+def write_cdl(cdl: Union[ColorCorrection, ColorCollection]) -> None:
     """Writes the ColorCollection to a .cdl file"""
     if not isinstance(cdl, ColorCollection):
         cdl = _temp_container(cdl)
@@ -129,7 +131,7 @@ def write_cdl(cdl):
 # ==============================================================================
 
 
-def write_rnh_cdl(cdl):
+def write_rnh_cdl(cdl: ColorCorrection) -> None:
     """Writes the ColorCorrection to a space separated .cdl file"""
 
     values = list(cdl.slope)

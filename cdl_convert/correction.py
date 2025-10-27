@@ -63,6 +63,7 @@ SOFTWARE.
 from decimal import Decimal
 from pathlib import Path
 import re
+from typing import Dict, List, Optional, Union, Tuple, Any
 from xml.etree import ElementTree
 
 # cdl_convert imports
@@ -214,18 +215,18 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     """
 
-    members = {}
+    members: Dict[str, 'ColorCorrection'] = {}
 
-    def __init__(self, id, input_file=None):  # pylint: disable=W0622
+    def __init__(self, id: str, input_file: Optional[Union[str, Path]] = None) -> None:  # pylint: disable=W0622
         """Inits an instance of a ColorCorrection"""
         super(ColorCorrection, self).__init__()
 
         # File Attributes
-        self._file_in = Path(input_file).resolve() if input_file else None
-        self._file_out = None
+        self._file_in: Optional[Path] = Path(input_file).resolve() if input_file else None
+        self._file_out: Optional[Path] = None
 
         # If we're under a ColorCorrectionCollection or ColorDecision node:
-        self.parent = None
+        self.parent: Optional[Any] = None
 
         # The id is really the only required part of a ColorCorrection node
         # Each ID should be unique
@@ -249,31 +250,31 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         ColorCorrection.members[self._id] = self
 
         # ASC_SAT attribute
-        self._sat_node = None
+        self._sat_node: Optional['SatNode'] = None
 
         # ASC_SOP attributes
-        self._sop_node = None
+        self._sop_node: Optional['SopNode'] = None
 
     # Properties ==============================================================
 
     @property
-    def file_in(self):
+    def file_in(self) -> Optional[Path]:
         """Returns the absolute filepath to the input file"""
         return self._file_in
 
     @file_in.setter
-    def file_in(self, value):
+    def file_in(self, value: Optional[Union[str, Path]]) -> None:
         """Sets the file_in to the absolute path of file"""
         if value:
             self._file_in = Path(value).resolve()
 
     @property
-    def file_out(self):
+    def file_out(self) -> Optional[Path]:
         """Returns a theoretical absolute filepath based on output ext"""
         return self._file_out
 
     @property
-    def has_sat(self):
+    def has_sat(self) -> bool:
         """Returns True if SOP values are set"""
         if self._sat_node:
             return True
@@ -281,7 +282,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             return False
 
     @property
-    def has_sop(self):
+    def has_sop(self) -> bool:
         """Returns True if SOP values are set"""
         if self._sop_node:
             return True
@@ -289,72 +290,72 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             return False
 
     @property
-    def id(self):  # pylint: disable=C0103
+    def id(self) -> str:  # pylint: disable=C0103
         """Returns unique color correction id field"""
         return self._id
 
     @id.setter
-    def id(self, value):  # pylint: disable=C0103
+    def id(self, value: str) -> None:  # pylint: disable=C0103
         """Before setting make sure new id is unique"""
         self._set_id(value)
 
     @property
-    def offset(self):
+    def offset(self) -> Tuple[Decimal, Decimal, Decimal]:
         """Returns list of RGB offset values"""
         return self.sop_node.offset
 
     @offset.setter
-    def offset(self, offset_rgb):
+    def offset(self, offset_rgb: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
         """Runs tests and converts offset rgb values before setting"""
         self.sop_node.offset = offset_rgb
 
     @property
-    def power(self):
+    def power(self) -> Tuple[Decimal, Decimal, Decimal]:
         """Returns list of RGB power values"""
         return self.sop_node.power
 
     @power.setter
-    def power(self, power_rgb):
+    def power(self, power_rgb: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
         """Runs tests and converts power rgb values before setting"""
         self.sop_node.power = power_rgb
 
     @property
-    def sat_node(self):
+    def sat_node(self) -> 'SatNode':
         """Initializes a SatNode if one doesn't already exist"""
         if not self._sat_node:
             self._sat_node = SatNode(self)
         return self._sat_node
 
     @property
-    def slope(self):
+    def slope(self) -> Tuple[Decimal, Decimal, Decimal]:
         """Returns list of RGB slope values"""
         return self.sop_node.slope
 
     @slope.setter
-    def slope(self, slope_rgb):
+    def slope(self, slope_rgb: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
         """Runs tests and converts slope rgb values before setting"""
         self.sop_node.slope = slope_rgb
 
     @property
-    def sop_node(self):
+    def sop_node(self) -> 'SopNode':
         """Initializes a SopNode if one doesn't already exist"""
         if not self._sop_node:
             self._sop_node = SopNode(self)
         return self._sop_node
 
     @property
-    def sat(self):
+    def sat(self) -> Decimal:
         """Returns value for saturation"""
         return self.sat_node.sat
 
     @sat.setter
-    def sat(self, sat_value):
+    def sat(self, sat_value: Union[Decimal, float, int, str]) -> None:
         """Makes sure provided sat value is a positive"""
         self.sat_node.sat = sat_value
 
     # Private Methods =========================================================
 
-    def _set_id(self, new_id):
+    def _set_id(self, new_id: str) -> None:
         """Changes the id field if the new id is unique"""
         cc_id = _sanitize(new_id)
         # Check if this id is already registered
@@ -372,7 +373,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # Public Methods ==========================================================
 
-    def build_element(self):
+    def build_element(self) -> ElementTree.Element:
         """Builds an ElementTree XML element representing this CC"""
         cc_xml = ElementTree.Element('ColorCorrection')
         cc_xml.attrib = {'id': self.id}
@@ -396,7 +397,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def determine_dest(self, output, directory):
+    def determine_dest(self, output: str, directory: Union[str, Path]) -> None:
         """Determines the destination file and sets it on the color correct"""
 
         filename = f"{self.id}.{output}"
@@ -406,7 +407,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # =========================================================================
 
     @classmethod
-    def reset_members(cls):
+    def reset_members(cls) -> None:
         """Resets the class level members dictionary"""
         cls.members = {}
 
@@ -478,28 +479,28 @@ class SatNode(ColorNodeBase):
     """
 
     # XML Fields for SopNodes can be one of these names:
-    element_names = ['ASC_SAT', 'SATNode', 'SatNode']
+    element_names: List[str] = ['ASC_SAT', 'SATNode', 'SatNode']
 
-    def __init__(self, parent):
+    def __init__(self, parent: 'ColorCorrection') -> None:
         super(SatNode, self).__init__()
 
-        self._parent = parent
-        self._sat = Decimal('1.0')
+        self._parent: 'ColorCorrection' = parent
+        self._sat: Decimal = Decimal('1.0')
 
     # Properties ==============================================================
 
     @property
-    def parent(self):
+    def parent(self) -> 'ColorCorrection':
         """Returns which :class:`ColorCorrection` created this SatNode"""
         return self._parent
 
     @property
-    def sat(self):
+    def sat(self) -> Decimal:
         """Returns the protected sat attribute"""
         return self._sat
 
     @sat.setter
-    def sat(self, value):
+    def sat(self, value: Union[Decimal, float, int, str]) -> None:
         """Runs checks and converts saturation value before setting"""
         # If given as a string, the string must be convertible to a Decimal
         if type(value) in [Decimal, float, int, str]:
@@ -517,7 +518,7 @@ class SatNode(ColorNodeBase):
 
     # Public Methods ==========================================================
 
-    def build_element(self):
+    def build_element(self) -> ElementTree.Element:
         """Builds an ElementTree XML Element representing this SatNode"""
         sat = ElementTree.Element('SATNode')
         for description in self.desc:
@@ -625,60 +626,60 @@ class SopNode(ColorNodeBase):
     """
 
     # XML Fields for SopNodes can be one of these names:
-    element_names = ['ASC_SOP', 'SOPNode', 'SopNode']
+    element_names: List[str] = ['ASC_SOP', 'SOPNode', 'SopNode']
 
-    def __init__(self, parent):
+    def __init__(self, parent: 'ColorCorrection') -> None:
         super(SopNode, self).__init__()
 
-        self._parent = parent
+        self._parent: 'ColorCorrection' = parent
 
-        self._slope = [Decimal('1.0')] * 3
-        self._offset = [Decimal('0.0')] * 3
-        self._power = [Decimal('1.0')] * 3
+        self._slope: List[Decimal] = [Decimal('1.0')] * 3
+        self._offset: List[Decimal] = [Decimal('0.0')] * 3
+        self._power: List[Decimal] = [Decimal('1.0')] * 3
 
     # Properties ==============================================================
 
     @property
-    def parent(self):
+    def parent(self) -> 'ColorCorrection':
         """Returns which :class:`ColorCorrection` created this SopNode"""
         return self._parent
 
     @property
-    def slope(self):
+    def slope(self) -> Tuple[Decimal, Decimal, Decimal]:
         """Returns the slope as an tuple"""
         return tuple(self._slope)
 
     @slope.setter
-    def slope(self, value):
+    def slope(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
         """Runs tests and converts slope rgb values before setting"""
         value = self._check_setter_value(value, 'slope')
         self._slope = value
 
     @property
-    def offset(self):
+    def offset(self) -> Tuple[Decimal, Decimal, Decimal]:
         """Returns the offset as a tuple"""
         return tuple(self._offset)
 
     @offset.setter
-    def offset(self, value):
+    def offset(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
         """Runs tests and converts offset rgb values before setting"""
         value = self._check_setter_value(value, 'offset', True)
         self._offset = value
 
     @property
-    def power(self):
+    def power(self) -> Tuple[Decimal, Decimal, Decimal]:
         """Returns the power as a tuple"""
         return tuple(self._power)
 
     @power.setter
-    def power(self, value):
+    def power(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
         """Runs tests and converts power rgb values before setting"""
         value = self._check_setter_value(value, 'power')
         self._power = value
 
     # Private Methods =========================================================
 
-    def _check_rgb_values(self, values, name, negative_allow=False):
+    def _check_rgb_values(self, values: Union[List[Union[Decimal, str, float, int]], Tuple[Union[Decimal, str, float, int], ...]], name: str, negative_allow: bool = False) -> List[Decimal]:
         """Checks a list or tuple containing 3 values for legitimacy
 
         **Args:**
@@ -730,7 +731,7 @@ class SopNode(ColorNodeBase):
 
     # =========================================================================
 
-    def _check_setter_value(self, value, name, negative_allow=False):
+    def _check_setter_value(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]], name: str, negative_allow: bool = False) -> List[Decimal]:
         """Exception handling wrapper handling setting values
 
         Ties together _check_single_value and _check_rgb_values
@@ -783,7 +784,7 @@ class SopNode(ColorNodeBase):
 
     # Public Methods ==========================================================
 
-    def build_element(self):
+    def build_element(self) -> ElementTree.Element:
         """Builds an ElementTree XML Element representing this SopNode"""
         sop = ElementTree.Element('SOPNode')
         fields = ['Slope', 'Offset', 'Power']
@@ -800,7 +801,7 @@ class SopNode(ColorNodeBase):
 # ==============================================================================
 
 
-def _de_exponent(notation):
+def _de_exponent(notation: Union[Decimal, str, int, float]) -> str:
     """Translates scientific notation into non-normalized strings
 
      Unlike the methods to quantize a Decimal found on the Decimal FAQ, this
@@ -846,7 +847,7 @@ def _de_exponent(notation):
 # ==============================================================================
 
 
-def _sanitize(name):
+def _sanitize(name: str) -> str:
     """Removes any characters in string name that aren't alnum or in '_.
 
     Any spaces will be replaced with underscores. If a name starts with an

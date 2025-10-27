@@ -51,6 +51,7 @@ SOFTWARE.
 # Standard Imports
 
 from pathlib import Path
+from typing import List, Optional, Union, Any, Tuple
 from xml.etree import ElementTree
 
 # cdl_convert imports
@@ -237,69 +238,69 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     """
 
-    members = []
+    members: List['ColorCollection'] = []
 
-    def __init__(self, input_file=None):
+    def __init__(self, input_file: Optional[Union[str, Path]] = None) -> None:
         super(ColorCollection, self).__init__()
 
-        self._color_corrections = []
-        self._color_decisions = []
-        self._file_in = Path(input_file).resolve() if input_file else None
-        self._file_out = None
-        self._type = 'ccc'
-        self._xmlns = "urn:ASC:CDL:v1.01"
+        self._color_corrections: List[ColorCorrection] = []
+        self._color_decisions: List[ColorDecision] = []
+        self._file_in: Optional[Path] = Path(input_file).resolve() if input_file else None
+        self._file_out: Optional[Path] = None
+        self._type: str = 'ccc'
+        self._xmlns: str = "urn:ASC:CDL:v1.01"
 
         ColorCollection.members.append(self)
 
     # Properties ==============================================================
 
     @property
-    def all_children(self):
+    def all_children(self) -> List[Union[ColorCorrection, ColorDecision]]:
         """Returns a list of both color_corrections and color_decisions"""
         return self.color_corrections + self.color_decisions
 
     @property
-    def color_corrections(self):
+    def color_corrections(self) -> List[ColorCorrection]:
         """Returns the list of child ColorCorrections"""
         return self._color_corrections
 
     @color_corrections.setter
-    def color_corrections(self, values):
+    def color_corrections(self, values: Union[None, ColorCorrection, List[ColorCorrection], Tuple[ColorCorrection, ...], set]) -> None:
         """Makes sure color_corrections is only set with ColorCorrection"""
         self._color_corrections = self._list_setter(
             'color_corrections', ColorCorrection, values
         )
 
     @property
-    def color_decisions(self):
+    def color_decisions(self) -> List[ColorDecision]:
         """Returns the list of child ColorDecisions"""
         return self._color_decisions
 
     @color_decisions.setter
-    def color_decisions(self, values):
+    def color_decisions(self, values: Union[None, ColorDecision, List[ColorDecision], Tuple[ColorDecision, ...], set]) -> None:
         """Makes sure color_decisions is only set with ColorDecision"""
         self._color_decisions = self._list_setter(
             'color_decisions', ColorDecision, values
         )
 
     @property
-    def file_in(self):
+    def file_in(self) -> Optional[Path]:
         """Returns the absolute filepath to the input file"""
         return self._file_in
 
     @file_in.setter
-    def file_in(self, value):
+    def file_in(self, value: Optional[Union[str, Path]]) -> None:
         """Sets the file_in to the absolute path of file"""
         if value:
             self._file_in = Path(value).resolve()
 
     @property
-    def file_out(self):
+    def file_out(self) -> Optional[Path]:
         """Returns a theoretical absolute filepath based on output ext"""
         return self._file_out
 
     @property
-    def id_list(self):
+    def id_list(self) -> List[str]:
         """A list of the ids of fully qualified ColorCorrection children"""
         current_ids = [i.cc.id for i in self.color_decisions if not i.is_ref]
         current_ids.extend([i.id for i in self.color_corrections])
@@ -307,22 +308,22 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return current_ids
 
     @property
-    def is_ccc(self):
+    def is_ccc(self) -> bool:
         """True if this collection currently represents .ccc"""
         return self.type == 'ccc'
 
     @property
-    def is_cdl(self):
+    def is_cdl(self) -> bool:
         """True if this collection currently represents .cdl"""
         return self.type == 'cdl'
 
     @property
-    def type(self):
+    def type(self) -> str:
         """Describes the type of ColorCollection this class will export"""
         return self._type
 
     @type.setter
-    def type(self, value):
+    def type(self, value: str) -> None:
         """Checks if type is either cdl or ccc"""
         if value.lower() not in ['ccc', 'cdl']:
             raise ValueError('ColorCollection type must be set to either '
@@ -331,14 +332,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             self._type = value.lower()
 
     @property
-    def xmlns(self):
+    def xmlns(self) -> str:
         """Describes the version of the XML schema written by cdl_convert"""
         return self._xmlns
 
     # Private Methods =========================================================
 
     @staticmethod
-    def _list_setter(list_name, color_class, values):
+    def _list_setter(list_name: str, color_class: type, values: Union[None, Any, List[Any], Tuple[Any, ...], set]) -> List[Any]:
         """Sets a list to provided values but first checks membership"""
         if values is None:
             return []
@@ -365,7 +366,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # Public Methods ==========================================================
 
-    def append_child(self, child):
+    def append_child(self, child: Union[ColorCorrection, ColorDecision]) -> bool:
         """Appends a given child to the correct list of children"""
         # We need to make sure not to append a ColorDecision or ColorCorrection
         # if that id attribute already exists as a direct child or a child of a
@@ -409,14 +410,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def append_children(self, children):
+    def append_children(self, children: List[Union[ColorCorrection, ColorDecision]]) -> None:
         """Appends an entire list to the correctly list of children"""
         for child in children:
             self.append_child(child)
 
     # =========================================================================
 
-    def build_element(self):
+    def build_element(self) -> Optional[ElementTree.Element]:
         """Builds an ElementTree XML element representing for ColorCollection"""
         if self.is_ccc:
             return self.build_element_ccc()
@@ -425,7 +426,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def build_element_ccc(self):
+    def build_element_ccc(self) -> ElementTree.Element:
         """Builds a CCC XML element representing this ColorCollection"""
         ccc_xml = ElementTree.Element('ColorCorrectionCollection')
         ccc_xml.attrib = {'xmlns': self.xmlns}
@@ -461,7 +462,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def build_element_cdl(self):
+    def build_element_cdl(self) -> ElementTree.Element:
         """Builds a CDL XML element representing this ColorCollection"""
         cdl_xml = ElementTree.Element('ColorDecisionList')
         cdl_xml.attrib = {'xmlns': self.xmlns}
@@ -513,7 +514,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def copy_collection(self):
+    def copy_collection(self) -> 'ColorCollection':
         """Creates and returns a copy of this collection"""
         new_col = ColorCollection()
         new_col.desc = self.desc
@@ -526,7 +527,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def determine_dest(self, directory):
+    def determine_dest(self, directory: Union[str, Path]) -> None:
         """Determines the destination file and sets it on the cdl"""
         if self.file_in:
             filename = Path(self.file_in).stem
@@ -539,7 +540,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def merge_collections(self, collections):
+    def merge_collections(self, collections: List['ColorCollection']) -> 'ColorCollection':
         """Merges multiple collections together and returns a new one"""
         new_col = self.copy_collection()
 
@@ -569,7 +570,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def parse_xml_color_corrections(self, xml_element):
+    def parse_xml_color_corrections(self, xml_element: ElementTree.Element) -> bool:
         """Parses an ElementTree element to find & add all ColorCorrection.
 
         **Args:**
@@ -599,7 +600,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def parse_xml_color_decisions(self, xml_element):
+    def parse_xml_color_decisions(self, xml_element: ElementTree.Element) -> bool:
         """Parses an ElementTree element to find & add all ColorDecisions.
 
         **Args:**
@@ -630,25 +631,25 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # =========================================================================
 
     @classmethod
-    def reset_members(cls):
+    def reset_members(cls) -> None:
         """Resets the member list"""
         cls.members = []
 
     # =========================================================================
 
-    def set_parentage(self):
+    def set_parentage(self) -> None:
         """Sets the parent of all child nodes to point to this instance"""
         for node in self.all_children:
             node.parent = self
 
     # =========================================================================
 
-    def set_to_ccc(self):
+    def set_to_ccc(self) -> None:
         """Switches the type of the ColorCollection to export .ccc style xml"""
         self._type = 'ccc'
 
     # =========================================================================
 
-    def set_to_cdl(self):
+    def set_to_cdl(self) -> None:
         """Switches the type of the ColorCollection to export .cdl style xml"""
         self._type = 'cdl'

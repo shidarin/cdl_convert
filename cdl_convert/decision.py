@@ -80,6 +80,7 @@ SOFTWARE.
 
 from pathlib import Path
 import re
+from typing import Dict, List, Optional, Union, Any, Tuple
 from xml.etree import ElementTree
 
 # cdl_convert imports
@@ -183,11 +184,11 @@ class ColorCorrectionRef(AscXMLBase):
 
     """
 
-    members = {}
+    members: Dict[str, List['ColorCorrectionRef']] = {}
 
-    def __init__(self, id):  # pylint: disable=W0622
+    def __init__(self, id: str) -> None:  # pylint: disable=W0622
         super(ColorCorrectionRef, self).__init__()
-        self._id = None
+        self._id: Optional[str] = None
         # Bypass cc id existence checks on first set by calling private
         # method directly.
         self._set_id(id)
@@ -195,22 +196,22 @@ class ColorCorrectionRef(AscXMLBase):
         # While all ColorCorrectionReferences should be under a
         # ColorDecision node, we won't strictly enforce that a
         # parent must exist.
-        self.parent = None
+        self.parent: Optional['ColorDecision'] = None
 
     # Properties ==============================================================
 
     @property
-    def cc(self):  # pylint: disable=C0103
+    def cc(self) -> Optional[ColorCorrection]:  # pylint: disable=C0103
         """Returns the referenced ColorCorrection"""
         return self.resolve_reference()
 
     @property
-    def id(self):  # pylint: disable=C0103
+    def id(self) -> Optional[str]:  # pylint: disable=C0103
         """Returns the reference id"""
         return self._id
 
     @id.setter
-    def id(self, ref_id):  # pylint: disable=C0103
+    def id(self, ref_id: str) -> None:  # pylint: disable=C0103
         """Sets the reference id"""
         if ref_id not in ColorCorrection.members and config.HALT_ON_ERROR:
             raise ValueError(
@@ -223,7 +224,7 @@ class ColorCorrectionRef(AscXMLBase):
 
     # Private Methods =========================================================
 
-    def _set_id(self, new_ref):
+    def _set_id(self, new_ref: str) -> None:
         """Changes the id field and updates members dictionary"""
         # The only time it won't be in here is if this is the first time
         # we set it.
@@ -243,7 +244,7 @@ class ColorCorrectionRef(AscXMLBase):
 
     # Public Methods ==========================================================
 
-    def build_element(self):
+    def build_element(self) -> ElementTree.Element:
         """Builds an ElementTree XML element representing this reference"""
         cc_ref_xml = ElementTree.Element('ColorCorrectionRef')
         cc_ref_xml.attrib = {'ref': self.id}
@@ -253,13 +254,13 @@ class ColorCorrectionRef(AscXMLBase):
     # =========================================================================
 
     @classmethod
-    def reset_members(cls):
+    def reset_members(cls) -> None:
         """Resets the member list"""
         cls.members = {}
 
     # =========================================================================
 
-    def resolve_reference(self):
+    def resolve_reference(self) -> Optional[ColorCorrection]:
         """Returns the ColorCorrection this reference points to"""
         if self.id in ColorCorrection.members:
             return ColorCorrection.members[self.id]
@@ -426,15 +427,15 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     """
 
-    members = {}
+    members: Dict[str, List['ColorDecision']] = {}
 
-    def __init__(self, color_correct=None, media=None):
+    def __init__(self, color_correct: Optional[Union[ColorCorrection, 'ColorCorrectionRef']] = None, media: Optional['MediaRef'] = None) -> None:
         """Inits an instance of ColorDecision"""
         super(ColorDecision, self).__init__()
-        self.parent = None
-        self._cc = None
+        self.parent: Optional[Any] = None
+        self._cc: Optional[Union[ColorCorrection, 'ColorCorrectionRef']] = None
         self._set_cc(color_correct)
-        self._media_ref = media
+        self._media_ref: Optional['MediaRef'] = media
 
         if self.cc:
             self.set_parentage()
@@ -442,27 +443,27 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     # Properties ==============================================================
 
     @property
-    def cc(self):  # pylint: disable=C0103
+    def cc(self) -> Optional[Union[ColorCorrection, 'ColorCorrectionRef']]:  # pylint: disable=C0103
         """Returns the contained CC or CC Ref"""
         return self._cc
 
     @cc.setter
-    def cc(self, new_cc):  # pylint: disable=C0103
+    def cc(self, new_cc: Optional[Union[ColorCorrection, 'ColorCorrectionRef']]) -> None:  # pylint: disable=C0103
         """Sets the contained cc, updates dictionary and parentage"""
         self._set_cc(new_cc)
 
     @property
-    def is_ref(self):
+    def is_ref(self) -> bool:
         """True if our cc is a reference cc"""
         return type(self.cc) is ColorCorrectionRef
 
     @property
-    def media_ref(self):
+    def media_ref(self) -> Optional['MediaRef']:
         """Returns Media Ref (if we have one) or none"""
         return self._media_ref
 
     @media_ref.setter
-    def media_ref(self, new_media_ref):
+    def media_ref(self, new_media_ref: Optional['MediaRef']) -> None:
         """Sets media ref and updates parentage"""
         self._media_ref = new_media_ref
         if new_media_ref:
@@ -470,7 +471,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # Private Methods =========================================================
 
-    def _set_cc(self, new_cc):
+    def _set_cc(self, new_cc: Optional[Union[ColorCorrection, 'ColorCorrectionRef']]) -> None:
         """Sets cc to new_cc and updates members dictionary"""
         if self.cc:
             # If we have a cc, we've already been added to the member's list,
@@ -496,7 +497,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # Public Methods ==========================================================
 
-    def build_element(self, resolve=False):  # pylint: disable=W0221
+    def build_element(self, resolve: bool = False) -> ElementTree.Element:  # pylint: disable=W0221
         """Builds an ElementTree XML element representing this CC"""
         cd_xml = ElementTree.Element('ColorDecision')
         if self.input_desc:
@@ -528,7 +529,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # =========================================================================
 
-    def parse_xml_color_correction(self, xml_element):
+    def parse_xml_color_correction(self, xml_element: ElementTree.Element) -> bool:
         """Parses a Color Decision element to find a ColorCorrection"""
         cc_elem = xml_element.find('ColorCorrection')
         if cc_elem is None:
@@ -552,7 +553,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # =========================================================================
 
-    def parse_xml_color_decision(self, xml_element):
+    def parse_xml_color_decision(self, xml_element: ElementTree.Element) -> None:
         """Parses a Color Decision element and builds a :class:`ColorDecision`
 
         **Args:**
@@ -587,7 +588,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # =========================================================================
 
-    def parse_xml_media_ref(self, xml_element):
+    def parse_xml_media_ref(self, xml_element: ElementTree.Element) -> None:
         """Parses a Color Decision element to find a MediaRef"""
         media_ref_elem = xml_element.find('MediaRef')
         if media_ref_elem is not None:
@@ -597,13 +598,13 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     # =========================================================================
 
     @classmethod
-    def reset_members(cls):
+    def reset_members(cls) -> None:
         """Resets the member list"""
         cls.members = {}
 
     # =========================================================================
 
-    def set_parentage(self):
+    def set_parentage(self) -> None:
         """Sets the parent of all child nodes to point to this instance"""
         self.cc.parent = self
         if self.media_ref:  # Media ref objects are optional
@@ -746,30 +747,33 @@ class MediaRef(AscXMLBase):
 
     """
 
-    members = {}
+    members: Dict[str, List['MediaRef']] = {}
 
-    def __init__(self, ref_uri, parent=None):
+    def __init__(self, ref_uri: str, parent: Optional['ColorDecision'] = None) -> None:
         super(MediaRef, self).__init__()
+        self._protocol: str
+        self._dir: str
+        self._filename: str
         self._protocol, self._dir, self._filename = self._split_uri(ref_uri)
-        self.parent = parent
+        self.parent: Optional['ColorDecision'] = parent
 
         # If we're a directory, we can contain one or more sequences, but we
         # won't do the work to figure that out until is_seq, seq, and seqs are
         # called for.
-        self._is_seq = None
-        self._sequences = None
+        self._is_seq: Optional[bool] = None
+        self._sequences: Optional[List[str]] = None
 
         self._change_membership()
 
     # Properties ==============================================================
 
     @property
-    def directory(self):
+    def directory(self) -> str:
         """Returns the directory the uri points to"""
         return self._dir
 
     @directory.setter
-    def directory(self, value):
+    def directory(self, value: str) -> None:
         """Checks directory for type and resets cached properties"""
         if type(value) is str:
             old_ref = self.ref
@@ -782,17 +786,17 @@ class MediaRef(AscXMLBase):
             )
 
     @property
-    def exists(self):
+    def exists(self) -> bool:
         """Convenience property for Path.exists()"""
         return Path(self.path).exists()
 
     @property
-    def filename(self):
+    def filename(self) -> str:
         """Returns the filename the uri points to, if any"""
         return self._filename
 
     @filename.setter
-    def filename(self, value):
+    def filename(self, value: str) -> None:
         """Checks filename for type and resets cached properties"""
         if type(value) is str:
             old_ref = self.ref
@@ -805,24 +809,24 @@ class MediaRef(AscXMLBase):
             )
 
     @property
-    def is_abs(self):
+    def is_abs(self) -> bool:
         """Returns True if path is an absolute path"""
         return Path(self.path).is_absolute()
 
     @property
-    def is_dir(self):
+    def is_dir(self) -> bool:
         """Returns True if path points to a directory"""
         return Path(self.path).is_dir()
 
     @property
-    def is_seq(self):
+    def is_seq(self) -> bool:
         """Returns True if path is to an image sequence"""
         if self._is_seq is None:
             self._get_sequences()
         return self._is_seq
 
     @property
-    def path(self):
+    def path(self) -> str:
         """Returns the path without any uri protocol"""
         # Use os here to preserve the relative paths
         import os
@@ -835,12 +839,12 @@ class MediaRef(AscXMLBase):
             return self._dir if self._dir else '.'
 
     @property
-    def protocol(self):
+    def protocol(self) -> str:
         """Returns the protocol of the uri, if any"""
         return self._protocol
 
     @protocol.setter
-    def protocol(self, value):
+    def protocol(self, value: str) -> None:
         """Checks protocol for type and resets cached properties"""
         if type(value) is str:
             # If :// was appended we'll remove it.
@@ -858,7 +862,7 @@ class MediaRef(AscXMLBase):
             )
 
     @property
-    def ref(self):
+    def ref(self) -> str:
         """Returns the reference uri"""
         if self._protocol:
             prefix = f"{self._protocol}://"
@@ -867,7 +871,7 @@ class MediaRef(AscXMLBase):
         return prefix + self.path
 
     @ref.setter
-    def ref(self, uri):
+    def ref(self, uri: str) -> None:
         """Sets the reference uri and resets all cached properties"""
         if type(uri) is str:
             old_ref = self.ref
@@ -880,7 +884,7 @@ class MediaRef(AscXMLBase):
             )
 
     @property
-    def seq(self):
+    def seq(self) -> Optional[str]:
         """Returns first found sequence with frames as # padding"""
         if self._is_seq is None:
             self._get_sequences()
@@ -890,7 +894,7 @@ class MediaRef(AscXMLBase):
         return self._sequences[0]
 
     @property
-    def seqs(self):
+    def seqs(self) -> List[str]:
         """Returns all found sequences with frames as # padding"""
         if self._is_seq is None:
             self._get_sequences()
@@ -901,7 +905,7 @@ class MediaRef(AscXMLBase):
 
     # Private Methods =========================================================
 
-    def _change_membership(self, old_ref=None):
+    def _change_membership(self, old_ref: Optional[str] = None) -> None:
         """Change which ref uri this instance is under in the class dict.
 
         We remove ourselves from the list returned by the key of old_ref
@@ -943,7 +947,7 @@ class MediaRef(AscXMLBase):
 
     # =========================================================================
 
-    def _get_sequences(self):  # pylint: disable=R0912
+    def _get_sequences(self) -> None:  # pylint: disable=R0912
         """Determines if the media ref is pointing to an image sequence"""
         re_exp = r'(^[ \w_.-]+[_.])([0-9]+)(\.[a-zA-Z0-9]{3}$)'
         re_exp_percent = r'(^[ \w_.-]+[_.])(%[0-9]+d)(\.[a-zA-Z0-9]{3}$)'
@@ -994,7 +998,7 @@ class MediaRef(AscXMLBase):
 
     # =========================================================================
 
-    def _reset_cached_properties(self):
+    def _reset_cached_properties(self) -> None:
         """Resets cached attributes back to init values"""
         self._is_seq = None
         self._sequences = None
@@ -1002,7 +1006,7 @@ class MediaRef(AscXMLBase):
     # =========================================================================
 
     @staticmethod
-    def _split_uri(uri):
+    def _split_uri(uri: str) -> Tuple[str, str, str]:
         """Splits uri into protocol, base and filename"""
         if '://' in uri:
             protocol = uri.split('://')[0]
@@ -1021,7 +1025,7 @@ class MediaRef(AscXMLBase):
 
     # Public Methods ==========================================================
 
-    def build_element(self):
+    def build_element(self) -> ElementTree.Element:
         """Builds an ElementTree XML element representing this reference"""
         media_ref_xml = ElementTree.Element('MediaRef')
         media_ref_xml.attrib = {'ref': self.ref}
@@ -1031,6 +1035,6 @@ class MediaRef(AscXMLBase):
     # =========================================================================
 
     @classmethod
-    def reset_members(cls):
+    def reset_members(cls) -> None:
         """Resets the class level members dictionary"""
         cls.members = {}

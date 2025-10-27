@@ -90,6 +90,7 @@ SOFTWARE.
 from decimal import Decimal
 import re
 import sys
+from typing import List, Optional, Union, Any
 from xml.dom import minidom
 from xml.etree import ElementTree
 
@@ -148,16 +149,16 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
             If none is found, ``viewing_desc`` will remain set to ``None``.
 
     """
-    def __init__(self):
+    def __init__(self) -> None:
         # For multiple inheritance support.
         super(AscColorSpaceBase, self).__init__()
 
-        self.input_desc = None
-        self.viewing_desc = None
+        self.input_desc: Optional[str] = None
+        self.viewing_desc: Optional[str] = None
 
     # Public Methods ==========================================================
 
-    def parse_xml_input_desc(self, xml_element):
+    def parse_xml_input_desc(self, xml_element: ElementTree.Element) -> bool:
         """Parses an ElementTree element to find & add an input description
 
         **Args:**
@@ -184,7 +185,7 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
 
     # =========================================================================
 
-    def parse_xml_viewing_desc(self, xml_element):
+    def parse_xml_viewing_desc(self, xml_element: ElementTree.Element) -> bool:
         """Parses an ElementTree element to find & add a viewing description
 
         **Args:**
@@ -240,19 +241,19 @@ class AscDescBase(object):  # pylint: disable=R0903
             any text they contain to the ``desc``.
 
     """
-    def __init__(self):
+    def __init__(self) -> None:
         super(AscDescBase, self).__init__()
-        self._desc = []
+        self._desc: List[str] = []
 
     # Properties ==============================================================
 
     @property
-    def desc(self):
+    def desc(self) -> List[str]:
         """Returns the list of descriptions"""
         return self._desc
 
     @desc.setter
-    def desc(self, value):
+    def desc(self, value: Union[None, str, List[str], tuple]) -> None:
         """Adds an entry to the descriptions"""
         if value is None:
             self._desc = []
@@ -263,7 +264,7 @@ class AscDescBase(object):  # pylint: disable=R0903
 
     # Public Methods ==========================================================
 
-    def parse_xml_descs(self, xml_element):
+    def parse_xml_descs(self, xml_element: ElementTree.Element) -> None:
         """Parses an ElementTree element to find & add any descriptions
 
         **Args:**
@@ -314,18 +315,18 @@ class AscXMLBase(object):
             calling it will always return None.
 
     """
-    def __init__(self):
+    def __init__(self) -> None:
         super(AscXMLBase, self).__init__()
 
     # Properties ==============================================================
 
     @property
-    def element(self):
+    def element(self) -> Optional[ElementTree.Element]:
         """etree style Element representing the node."""
         return self.build_element()
 
     @property
-    def xml(self):
+    def xml(self) -> str:
         """A nicely formatted XML string representing the node"""
         # We'll take the xml_root attrib, which is ready to write, and just
         # remove the first line, which is the xml version and encoding.
@@ -333,7 +334,7 @@ class AscXMLBase(object):
         return '\n'.join(dom_string[1:])
 
     @property
-    def xml_root(self):
+    def xml_root(self) -> str:
         """A nicely formatted XML string with a root element ready to write"""
         xml_string = ElementTree.tostring(self.element, 'UTF-8')
         dom_xml = minidom.parseString(xml_string)
@@ -342,7 +343,7 @@ class AscXMLBase(object):
 
     # Public Methods ==========================================================
 
-    def build_element(self):  # pragma: no cover pylint: disable=R0201
+    def build_element(self) -> Optional[ElementTree.Element]:  # pragma: no cover pylint: disable=R0201
         """Placeholder for reference by attributes. Will return None"""
         return None
 
@@ -407,13 +408,13 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
             :class:`AscDescBase`
 
     """
-    def __init__(self):
+    def __init__(self) -> None:
         super(ColorNodeBase, self).__init__()
 
     # Private Methods =========================================================
 
     @staticmethod
-    def _check_single_value(value, name, negative_allow=False):
+    def _check_single_value(value: Union[Decimal, str, float, int], name: str, negative_allow: bool = False) -> Decimal:
         """Checks given value for legitimacy.
 
         **Args:**

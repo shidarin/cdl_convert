@@ -76,6 +76,7 @@ SOFTWARE.
 from ast import literal_eval
 from pathlib import Path
 import re
+from typing import Union, Optional
 from xml.etree import ElementTree
 
 # cdl_convert imports
@@ -102,11 +103,11 @@ __all__ = [
 # ==============================================================================
 
 
-def parse_ale(input_file):  # pylint: disable=R0914
+def parse_ale(input_file: Union[str, Path]) -> collection.ColorCollection:  # pylint: disable=R0914
     """Parses an Avid Log Exchange (ALE) file for CDLs
 
     **Args:**
-        input_file : (str)
+        input_file : (str|Path)
             The filepath to the ALE EDL
 
     **Returns:**
@@ -197,11 +198,11 @@ def parse_ale(input_file):  # pylint: disable=R0914
 # ==============================================================================
 
 
-def parse_cc(input_file):  # pylint: disable=R0912
+def parse_cc(input_file: Union[str, Path, ElementTree.Element]) -> correction.ColorCorrection:  # pylint: disable=R0912
     """Parses a .cc file for ASC CDL information
 
     **Args:**
-        input_file : (str|<ElementTree.Element>)
+        input_file : (str|Path|<ElementTree.Element>)
             The filepath to the CC or the ``ElementTree.Element`` object.
 
     **Returns:**
@@ -337,11 +338,11 @@ def parse_cc(input_file):  # pylint: disable=R0912
 # ==============================================================================
 
 
-def parse_ccc(input_file):
+def parse_ccc(input_file: Union[str, Path]) -> collection.ColorCollection:
     """Parses a .ccc file into a :class:`ColorCollection` with type 'ccc'
 
     **Args:**
-        input_file : (str)
+        input_file : (str|Path)
             The filepath to the CCC.
 
     **Returns:**
@@ -393,11 +394,11 @@ def parse_ccc(input_file):
 # ==============================================================================
 
 
-def parse_cdl(input_file):
+def parse_cdl(input_file: Union[str, Path]) -> collection.ColorCollection:
     """Parses a .cdl file into a :class:`ColorCollection` with type 'cdl'
 
     **Args:**
-        input_file : (str)
+        input_file : (str|Path)
             The filepath to the CDL.
 
     **Returns:**
@@ -450,11 +451,11 @@ def parse_cdl(input_file):
 # ==============================================================================
 
 
-def parse_cmx(input_file):  # pylint: disable=R0912,R0914
+def parse_cmx(input_file: Union[str, Path]) -> collection.ColorCollection:  # pylint: disable=R0912,R0914
     """Parses a CMX EDL file for ASC CDL information.
 
     **Args:**
-        input_file : (str)
+        input_file : (str|Path)
             The filepath to the CMX EDL
 
     **Returns:**
@@ -504,11 +505,11 @@ def parse_cmx(input_file):  # pylint: disable=R0912,R0914
 # ==============================================================================
 
 
-def parse_flex(input_file):  # pylint: disable=R0912,R0914
+def parse_flex(input_file: Union[str, Path]) -> collection.ColorCollection:  # pylint: disable=R0912,R0914
     """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
 
     **Args:**
-        input_file : (str)
+        input_file : (str|Path)
             The filepath to the FLEx EDL
 
     **Returns:**
@@ -657,11 +658,11 @@ def parse_flex(input_file):  # pylint: disable=R0912,R0914
 # ==============================================================================
 
 
-def parse_rnh_cdl(input_file):
+def parse_rnh_cdl(input_file: Union[str, Path]) -> correction.ColorCorrection:
     """Parses a space separated .cdl file for ASC CDL information.
 
     **Args:**
-        input_file : (str)
+        input_file : (str|Path)
             The filepath to the CDL
 
     **Returns:**
@@ -742,11 +743,11 @@ INPUT_FORMATS = {
 # ==============================================================================
 
 
-def parse_file(filepath, filetype=None):
+def parse_file(filepath: Union[str, Path], filetype: Optional[str] = None) -> Union[correction.ColorCorrection, collection.ColorCollection]:
     """Determines & uses the correct parser to use on a CDL file
 
     Args:
-        filepath : (str)
+        filepath : (str|Path)
             The filepath to the file. Must exist.
 
         filetype=None : (str)
