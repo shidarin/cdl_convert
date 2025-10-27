@@ -88,6 +88,7 @@ from xml.etree import ElementTree
 from .base import AscColorSpaceBase, AscDescBase, AscXMLBase
 from . import config
 from .correction import ColorCorrection
+from .exceptions import ValidationError, ParseError
 
 # ==============================================================================
 # EXPORTS
@@ -214,7 +215,7 @@ class ColorCorrectionRef(AscXMLBase):
     def id(self, ref_id: str) -> None:  # pylint: disable=C0103
         """Sets the reference id"""
         if ref_id not in ColorCorrection.members and config.HALT_ON_ERROR:
-            raise ValueError(
+            raise ValidationError(
                 f"Reference id '{ref_id}' does not match any existing "
                 f"ColorCorrection id in ColorCorrection.members "
                 f"dictionary."
@@ -266,7 +267,7 @@ class ColorCorrectionRef(AscXMLBase):
             return ColorCorrection.members[self.id]
         else:
             if config.HALT_ON_ERROR:
-                raise ValueError(
+                raise ValidationError(
                     f"Cannot resolve ColorCorrectionRef with reference "
                     f"id of '{self.id}' because no ColorCorrection with that id "
                     f"can be found."
@@ -578,7 +579,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
         # Grab our ColorCorrection
         if not self.parse_xml_color_correction(xml_element):
-            raise ValueError(
+            raise ParseError(
                 'ColorDecisions require at least one ColorCorrection or '
                 'ColorCorrectionRef node, but neither was found.'
             )
@@ -781,7 +782,7 @@ class MediaRef(AscXMLBase):
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
-            raise TypeError(
+            raise ValidationError(
                 f'Directory must be set with a string, not {type(value)}'
             )
 
@@ -804,7 +805,7 @@ class MediaRef(AscXMLBase):
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
-            raise TypeError(
+            raise ValidationError(
                 f'Filename must be set with a string, not {type(value)}'
             )
 
@@ -857,7 +858,7 @@ class MediaRef(AscXMLBase):
             # will just to be safe.
             self._reset_cached_properties()
         else:
-            raise TypeError(
+            raise ValidationError(
                 f'Protocol must be set with a string, not {type(value)}'
             )
 
@@ -879,7 +880,7 @@ class MediaRef(AscXMLBase):
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
-            raise TypeError(
+            raise ValidationError(
                 f'URI must be set with a string, not {type(uri)}'
             )
 
@@ -956,7 +957,7 @@ class MediaRef(AscXMLBase):
         if self.is_dir and not self.exists:
             # It doesn't exist, so we can't tell if it's a sequence
             if config.HALT_ON_ERROR:
-                raise ValueError(
+                raise ValidationError(
                     f'Cannot determine if non-existent directory {self.path} '
                     f'contains an image sequence.'
                 )

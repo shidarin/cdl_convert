@@ -51,6 +51,10 @@ SOFTWARE.
 
 from decimal import Decimal, InvalidOperation
 
+# cdl_convert Imports
+
+from .exceptions import ValidationError
+
 # ==============================================================================
 # EXPORTS
 # ==============================================================================
@@ -162,15 +166,16 @@ def to_decimal(value, name='Value'):
 
         try:
             value = Decimal(value)
-        except (InvalidOperation, ValueError):
-            raise TypeError(
-                f'Error setting {name} with value: "{value}". '
-                f'Value is not a number.'
-            )
+        except (InvalidOperation, ValueError) as e:
+            raise ValidationError(
+                f'Invalid numeric value for {name}: "{value}". '
+                f'The provided string cannot be converted to a number.'
+            ) from e
     else:
-        raise ValueError(
-            f'{name.title()} cannot be set directly with objects of type: "{type(value)}". '
-            f'Value given: "{value}".'
+        raise ValidationError(
+            f'Invalid {name} value type: {type(value).__name__}. '
+            f'Provided value: "{value}". '
+            f'{name.title()} must be a numeric value (int, float, str, or Decimal).'
         )
 
     return Decimal(value)

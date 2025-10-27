@@ -64,6 +64,7 @@ from typing import Union
 # Local Imports
 from .collection import ColorCollection
 from .correction import ColorCorrection
+from .exceptions import CDLConvertError
 
 # ==============================================================================
 # EXPORTS
@@ -97,8 +98,13 @@ def _temp_container(cdl: ColorCorrection) -> ColorCollection:
 
 def write_cc(cdl: ColorCorrection) -> None:
     """Writes the ColorCorrection to a .cc file"""
-    with open(cdl.file_out, 'wb') as cdl_f:
-        cdl_f.write(cdl.xml_root.encode('utf-8'))
+    try:
+        with open(cdl.file_out, 'wb') as cdl_f:
+            cdl_f.write(cdl.xml_root.encode('utf-8'))
+    except OSError as e:
+        raise CDLConvertError(
+            f"Failed to write CC file '{cdl.file_out}': {e}"
+        ) from e
 
 # ==============================================================================
 
@@ -110,9 +116,15 @@ def write_ccc(cdl: Union[ColorCorrection, ColorCollection]) -> None:
 
     collection_type = cdl.type
     cdl.set_to_ccc()
-    with open(cdl.file_out, 'wb') as cdl_f:
-        cdl_f.write(cdl.xml_root.encode('utf-8'))
-    cdl.type = collection_type
+    try:
+        with open(cdl.file_out, 'wb') as cdl_f:
+            cdl_f.write(cdl.xml_root.encode('utf-8'))
+    except OSError as e:
+        raise CDLConvertError(
+            f"Failed to write CCC file '{cdl.file_out}': {e}"
+        ) from e
+    finally:
+        cdl.type = collection_type
 
 # ==============================================================================
 
@@ -124,9 +136,15 @@ def write_cdl(cdl: Union[ColorCorrection, ColorCollection]) -> None:
 
     collection_type = cdl.type
     cdl.set_to_cdl()
-    with open(cdl.file_out, 'wb') as cdl_f:
-        cdl_f.write(cdl.xml_root.encode('utf-8'))
-    cdl.type = collection_type
+    try:
+        with open(cdl.file_out, 'wb') as cdl_f:
+            cdl_f.write(cdl.xml_root.encode('utf-8'))
+    except OSError as e:
+        raise CDLConvertError(
+            f"Failed to write CDL file '{cdl.file_out}': {e}"
+        ) from e
+    finally:
+        cdl.type = collection_type
 
 # ==============================================================================
 
@@ -142,8 +160,13 @@ def write_rnh_cdl(cdl: ColorCorrection) -> None:
 
     ss_cdl = ' '.join(values)
 
-    with open(cdl.file_out, 'wb') as cdl_f:
-        cdl_f.write(ss_cdl.encode('utf-8'))
+    try:
+        with open(cdl.file_out, 'wb') as cdl_f:
+            cdl_f.write(ss_cdl.encode('utf-8'))
+    except OSError as e:
+        raise CDLConvertError(
+            f"Failed to write RNH CDL file '{cdl.file_out}': {e}"
+        ) from e
 
 # ==============================================================================
 # GLOBALS

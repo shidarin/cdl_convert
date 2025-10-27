@@ -12,10 +12,7 @@ mock
 #==============================================================================
 
 # Standard Imports
-try:
-    from unittest import mock
-except ImportError:
-    import mock
+from unittest import mock
 import os
 from pathlib import Path
 import sys
@@ -35,6 +32,7 @@ from xml.etree import ElementTree
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert
+from cdl_convert.exceptions import CDLConvertError
 
 #==============================================================================
 # GLOBALS
@@ -1069,6 +1067,18 @@ class TestWriteCDLFull(unittest.TestCase):
 
         mockOpen().write.assert_called_once_with(self.target_xml_root.encode("utf-8"))
 
+    def test_write_oserror_raises_cdlconverterror(self):
+        """Tests that OSError during write raises CDLConvertError"""
+        self.cdl._file_out = 'invalid_path/bobs_big_file.cdl'
+
+        with mock.patch(builtins + '.open', side_effect=OSError("Permission denied")):
+            with self.assertRaises(CDLConvertError) as cm:
+                cdl_convert.write_cdl(self.cdl)
+            
+            self.assertIn("Failed to write CDL file", str(cm.exception))
+            self.assertIn("invalid_path/bobs_big_file.cdl", str(cm.exception))
+            self.assertIn("Permission denied", str(cm.exception))
+
 
 class TestWriteCDLFullAsCCC(TestWriteCDLFull):
     """Tests an write of the CDL file as a CCC file
@@ -1118,6 +1128,18 @@ class TestWriteCDLFullAsCCC(TestWriteCDLFull):
         mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
 
         mockOpen().write.assert_called_once_with(self.target_xml_root.encode("utf-8"))
+
+    def test_write_oserror_raises_cdlconverterror(self):
+        """Tests that OSError during write raises CDLConvertError"""
+        self.cdl._file_out = 'invalid_path/bobs_big_file.cdl'
+
+        with mock.patch(builtins + '.open', side_effect=OSError("Permission denied")):
+            with self.assertRaises(CDLConvertError) as cm:
+                cdl_convert.write_ccc(self.cdl)
+            
+            self.assertIn("Failed to write CCC file", str(cm.exception))
+            self.assertIn("invalid_path/bobs_big_file.cdl", str(cm.exception))
+            self.assertIn("Permission denied", str(cm.exception))
 
 
 class TestWriteCDLOddAsCCC(TestWriteCDLFullAsCCC):

@@ -16,10 +16,7 @@ mock
 import datetime
 from decimal import Decimal
 from pathlib import Path
-try:
-    from unittest import mock
-except ImportError:
-    import mock
+from unittest import mock
 import os
 from random import randrange
 from io import StringIO

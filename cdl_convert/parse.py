@@ -82,6 +82,7 @@ from xml.etree import ElementTree
 # cdl_convert imports
 
 from . import config, collection, correction
+from .exceptions import ParseError, ValidationError
 
 # ==============================================================================
 # EXPORTS
@@ -246,13 +247,19 @@ def parse_cc(input_file: Union[str, Path, ElementTree.Element]) -> correction.Co
 
     if not root.tag == 'ColorCorrection':
         # This is not a CC file...
-        raise ValueError('CC parsed but no ColorCorrection found')
+        raise ParseError(
+            f'Invalid CC file format: expected root element "ColorCorrection", found "{root.tag}". '
+            f'This file does not appear to be a valid ASC CDL ColorCorrection (.cc) file.'
+        )
 
     try:
         cc_id = root.attrib['id']
     except KeyError:
         if config.HALT_ON_ERROR:
-            raise ValueError('No id found on ColorCorrection')
+            raise ParseError(
+                'Missing required "id" attribute on ColorCorrection element. '
+                'ASC CDL ColorCorrection elements must have an "id" attribute for identification.'
+            )
         else:
             cc_id = None
 
@@ -311,9 +318,10 @@ def parse_cc(input_file: Union[str, Path, ElementTree.Element]) -> correction.Co
         sat_xml = None
 
     if sop_xml is None and sat_xml is None:
-        raise ValueError(
-            'The ColorCorrection element requires either a Sop node or a Sat '
-            'node, and it is missing both.'
+        raise ParseError(
+            'Incomplete ColorCorrection: missing both SOP and SAT nodes. '
+            'A valid ColorCorrection must contain at least one of: '
+            'SOPNode/SopNode (slope, offset, power) or SATNode/SatNode (saturation).'
         )
 
     if sop_xml is not None:
@@ -369,7 +377,10 @@ def parse_ccc(input_file: Union[str, Path]) -> collection.ColorCollection:
 
     if root.tag != 'ColorCorrectionCollection':
         # This is not a CCC file...
-        raise ValueError('CCC parsed but no ColorCorrectionCollection found')
+        raise ParseError(
+            f'Invalid CCC file format: expected root element "ColorCorrectionCollection", found "{root.tag}". '
+            f'This file does not appear to be a valid ASC CDL ColorCorrectionCollection (.ccc) file.'
+        )
 
     ccc = collection.ColorCollection()
     ccc.set_to_ccc()
@@ -384,9 +395,9 @@ def parse_ccc(input_file: Union[str, Path]) -> collection.ColorCollection:
     # Add all of our found color corrections. If the parse_xml returns False,
     # (for no CCs found) we raise a value error.
     if not ccc.parse_xml_color_corrections(root):
-        raise ValueError(
-            'ColorCorrectionCollections require at least one ColorCorrection '
-            'node, but no ColorCorrection nodes were found.'
+        raise ParseError(
+            'Empty ColorCorrectionCollection: no ColorCorrection elements found. '
+            'A valid CCC file must contain at least one ColorCorrection element.'
         )
 
     return ccc
@@ -426,7 +437,10 @@ def parse_cdl(input_file: Union[str, Path]) -> collection.ColorCollection:
 
     if root.tag != 'ColorDecisionList':
         # This is not a CDL file...
-        raise ValueError('CDL parsed but no ColorDecisionList found')
+        raise ParseError(
+            f'Invalid CDL file format: expected root element "ColorDecisionList", found "{root.tag}". '
+            f'This file does not appear to be a valid ASC CDL ColorDecisionList (.cdl) file.'
+        )
 
     cdl = collection.ColorCollection()
     cdl.set_to_cdl()
@@ -441,9 +455,9 @@ def parse_cdl(input_file: Union[str, Path]) -> collection.ColorCollection:
     # Add all of our found color decisions. If the parse_xml returns False,
     # (for no CDs found) we raise a value error.
     if not cdl.parse_xml_color_decisions(root):
-        raise ValueError(
-            'ColorDecisionLists require at least one ColorDecision node, but '
-            'no ColorDecision nodes were found.'
+        raise ParseError(
+            'Empty ColorDecisionList: no ColorDecision elements found. '
+            'A valid CDL file must contain at least one ColorDecision element.'
         )
 
     return cdl

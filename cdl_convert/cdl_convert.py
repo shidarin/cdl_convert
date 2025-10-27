@@ -57,6 +57,7 @@ from pathlib import Path
 
 from . import config, parse, write
 from .collection import ColorCollection
+from .exceptions import FormatError
 from .utils import sanity_check
 
 # ==============================================================================
@@ -136,7 +137,7 @@ def parse_args():
 
     if args.input:
         if args.input.lower() not in parse.INPUT_FORMATS:
-            raise ValueError(
+            raise FormatError(
                 f"The input format: {args.input} is not supported"
             )
         else:
@@ -153,7 +154,7 @@ def parse_args():
         output_types = args.output.split(',')
         for i in range(len(output_types)):
             if output_types[i].lower() not in write.OUTPUT_FORMATS.keys():
-                raise ValueError(
+                raise FormatError(
                     f"The output format: {output_types[i]} is not supported"
                 )
             else:

@@ -78,6 +78,7 @@ SOFTWARE.
 from .collection import ColorCollection
 from .correction import ColorCorrection, SatNode, SopNode
 from .decision import ColorCorrectionRef, ColorDecision, MediaRef
+from .exceptions import CDLConvertError, ParseError, ValidationError, FormatError
 from .parse import (
     parse_ale, parse_cc, parse_ccc,
     parse_cdl, parse_file, parse_flex,
@@ -104,11 +105,14 @@ __status__ = "Development"
 # ==============================================================================
 
 __all__ = [
+    'CDLConvertError',
     'ColorCorrection',
     'ColorCorrectionRef',
     'ColorCollection',
     'ColorDecision',
+    'FormatError',
     'MediaRef',
+    'ParseError',
     'parse_ale',
     'parse_cc',
     'parse_ccc',
@@ -121,6 +125,7 @@ __all__ = [
     'SatNode',
     'SopNode',
     'to_decimal',
+    'ValidationError',
     'write_cc',
     'write_ccc',
     'write_cdl',

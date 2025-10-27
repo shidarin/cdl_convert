@@ -13,10 +13,7 @@ mock
 
 # Standard Imports
 from decimal import Decimal
-try:
-    from unittest import mock
-except ImportError:
-    import mock
+from unittest import mock
 import os
 import sys
 import tempfile
@@ -34,6 +31,7 @@ import unittest
 sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
 
 import cdl_convert
+from cdl_convert.exceptions import CDLConvertError
 
 #==============================================================================
 # GLOBALS
@@ -225,6 +223,18 @@ class TestWriteRnHCDLBasic(unittest.TestCase):
         """Tests that write_rnh_cdl wrote the correct CDL"""
         handle = self.mockOpen()
         handle.write.assert_called_once_with(self.file.encode("utf-8"))
+
+    def test_write_oserror_raises_cdlconverterror(self):
+        """Tests that OSError during write raises CDLConvertError"""
+        self.cdl._file_out = 'invalid_path/bobs_big_file.cdl'
+
+        with mock.patch(builtins + '.open', side_effect=OSError("Permission denied")):
+            with self.assertRaises(CDLConvertError) as cm:
+                cdl_convert.write_rnh_cdl(self.cdl)
+            
+            self.assertIn("Failed to write RNH CDL file", str(cm.exception))
+            self.assertIn("invalid_path/bobs_big_file.cdl", str(cm.exception))
+            self.assertIn("Permission denied", str(cm.exception))
 
 
 class TestWriteRnHCDLOdd(TestWriteRnHCDLBasic):

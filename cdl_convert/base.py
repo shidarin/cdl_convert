@@ -96,6 +96,7 @@ from xml.etree import ElementTree
 
 # cdl_convert Imports
 from . import config
+from .exceptions import ValidationError
 from .utils import to_decimal
 
 # ==============================================================================
@@ -444,9 +445,9 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
         if not negative_allow:
             if value < 0:
                 if config.HALT_ON_ERROR:
-                    raise ValueError(
-                        f'Error setting {name} with value: "{value}". '
-                        f'Values must not be negative'
+                    raise ValidationError(
+                        f'Invalid {name} value: "{value}". '
+                        f'{name.title()} values must be non-negative (>= 0).'
                     )
                 else:
                     value = Decimal('0.0')

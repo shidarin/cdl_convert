@@ -70,6 +70,7 @@ from xml.etree import ElementTree
 
 from .base import AscColorSpaceBase, AscDescBase, AscXMLBase, ColorNodeBase
 from . import config
+from .exceptions import ValidationError
 
 
 
@@ -233,15 +234,19 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         id = _sanitize(id)
         if id in ColorCorrection.members.keys():
             if config.HALT_ON_ERROR:
-                raise ValueError(
-                    f'Error initiating id to "{id}". This id is already a '
-                    f'registered id.'
+                existing_ids = list(ColorCorrection.members.keys())
+                raise ValidationError(
+                    f'Duplicate ColorCorrection ID: "{id}" is already registered. '
+                    f'Each ColorCorrection must have a unique ID.'
                 )
             else:
                 id = f'{id}{len([cc for cc in ColorCorrection.members if cc.startswith(id)]):0>3}'
         elif not id:
             if config.HALT_ON_ERROR:
-                raise ValueError('Blank id given to ColorCorrection.')
+                raise ValidationError(
+                    'Empty ColorCorrection ID provided. '
+                    'ColorCorrections require a non-empty ID for identification.'
+                )
             else:
                 id = str(len(ColorCorrection.members) + 1).rjust(3, '0')
         self._id = id
@@ -360,9 +365,11 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         cc_id = _sanitize(new_id)
         # Check if this id is already registered
         if cc_id in ColorCorrection.members.keys():
-            raise ValueError(
-                f'Error setting the id to "{cc_id}". This id is already a '
-                f'registered id.'
+            existing_ids = list(ColorCorrection.members.keys())
+            raise ValidationError(
+                f'Cannot change ID to "{cc_id}": ID already exists. '
+                f'Each ColorCorrection must have a unique ID. '
+                f'Current ID: "{self._id}".'
             )
         else:
             # Clear the current id from the dictionary
@@ -511,9 +518,10 @@ class SatNode(ColorNodeBase):
             else:
                 self._sat = Decimal(value)
         else:
-            raise TypeError(
-                f'Saturation cannot be set directly with objects of type: '
-                f'"{type(value)}". Value given: "{value}".'
+            raise ValidationError(
+                f'Invalid saturation value type: {type(value).__name__}. '
+                f'Provided value: "{value}". '
+                f'Saturation must be a numeric value (int, float, str, or Decimal).'
             )
 
     # Public Methods ==========================================================
@@ -706,13 +714,11 @@ class SopNode(ColorNodeBase):
                 raised if value given is negative.
 
         """
-        try:
-            assert len(values) == 3
-        except AssertionError:
-            raise ValueError(
-                f'Error setting {name} with value: "{values}". '
-                f'{name.title()} values given as a list or tuple must have 3 '
-                f'elements, one for each color.'
+        if len(values) != 3:
+            raise ValidationError(
+                f'Invalid {name} values: expected 3 RGB values, got {len(values)}. '
+                f'Provided values: {values}. '
+                f'{name.title()} must specify exactly 3 values for Red, Green, and Blue channels.'
             )
 
         values = list(values)
@@ -775,9 +781,11 @@ class SopNode(ColorNodeBase):
             else:
                 set_value = value
         else:
-            raise TypeError(
-                f'{name.title()} cannot be set directly with objects of type: "{type(value)}".'
-                f' Value given: "{value}".'
+            raise ValidationError(
+                f'Invalid {name} value type: {type(value).__name__}. '
+                f'Provided value: "{value}". '
+                f'{name.title()} must be a numeric value or list of 3 numeric values. '
+                f'Supported types: int, float, str, Decimal, list, or tuple.'
             )
 
         return set_value

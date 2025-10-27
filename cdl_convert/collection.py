@@ -60,6 +60,7 @@ from .base import AscColorSpaceBase, AscDescBase, AscXMLBase
 from . import config
 from .correction import ColorCorrection
 from .decision import ColorDecision
+from .exceptions import ValidationError
 
 # ==============================================================================
 # EXPORTS
@@ -326,8 +327,10 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def type(self, value: str) -> None:
         """Checks if type is either cdl or ccc"""
         if value.lower() not in ['ccc', 'cdl']:
-            raise ValueError('ColorCollection type must be set to either '
-                             'ccc or cdl.')
+            raise ValidationError(
+                'ColorCollection type must be set to either '
+                'ccc or cdl.'
+            )
         else:
             self._type = value.lower()
 
@@ -347,7 +350,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             for color in values:
                 # We need to make sure each member is of the correct class.
                 if color.__class__ != color_class:
-                    raise TypeError(
+                    raise ValidationError(
                         f"ColorCollection().{list_name} cannot be set to "
                         f"provided list because not all members of that list "
                         f"are of the {color_class.__name__} class."
@@ -358,7 +361,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             # one member list.
             return [values]
         else:
-            raise TypeError(
+            raise ValidationError(
                 f"ColorCollection().{list_name} cannot be set to item "
                 f"of type '{type(values)}'. Please set {list_name} with a "
                 f"list containing only members of class {color_class.__name__}."
@@ -391,12 +394,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                 self._color_decisions.append(child)
         else:
 
-            raise TypeError("Can only append ColorCorrection and "
-                            "ColorDecision objects.")
+            raise ValidationError(
+                "Can only append ColorCorrection and "
+                "ColorDecision objects."
+            )
 
         if dup:
             if config.HALT_ON_ERROR:
-                raise ValueError(
+                raise ValidationError(
                     "Attempted to put a ColorDecision with a child "
                     "ColorCorrection id that duplicates an id of a "
                     "ColorCorrection that is already a child of "
