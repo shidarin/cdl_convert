@@ -146,49 +146,53 @@ def parse_ale(input_file: Union[str, Path]) -> collection.ColorCollection:  # py
             if not line.strip():
                 # Skip entirely blank lines
                 continue
-            elif line.startswith('Column'):
-                section['column'] = True
-                continue
-            elif line.startswith('Data'):
-                section['data'] = True
-                continue
-            elif section['column']:
-                for i, field in enumerate(line.split('\t')):
-                    ale_indexes[field.strip()] = i
-                section['column'] = False
-            elif section['data']:
-                cdl_data = line.split('\t')
+                
+            # Use match statement for line type detection
+            line_start = line.split()[0] if line.split() else ""
+            match line_start:
+                case 'Column':
+                    section['column'] = True
+                    continue
+                case 'Data':
+                    section['data'] = True
+                    continue
+                case _ if section['column']:
+                    for i, field in enumerate(line.split('\t')):
+                        ale_indexes[field.strip()] = i
+                    section['column'] = False
+                case _ if section['data']:
+                    cdl_data = line.split('\t')
 
-                sat = cdl_data[ale_indexes['ASC_SAT']]
-                sop = cdl_data[ale_indexes['ASC_SOP']]
-                try:
-                    cc_id = cdl_data[ale_indexes['Scan Filename']]
-                except KeyError:
-                    # Scan Filename is usually more descriptive, but we can
-                    # fall back on the always present 'Name' field if
-                    # Scan Filename is missing.
-                    cc_id = cdl_data[ale_indexes['Name']]
+                    sat = cdl_data[ale_indexes['ASC_SAT']]
+                    sop = cdl_data[ale_indexes['ASC_SOP']]
+                    try:
+                        cc_id = cdl_data[ale_indexes['Scan Filename']]
+                    except KeyError:
+                        # Scan Filename is usually more descriptive, but we can
+                        # fall back on the always present 'Name' field if
+                        # Scan Filename is missing.
+                        cc_id = cdl_data[ale_indexes['Name']]
 
-                # Determine slope, offset and power from sop
-                # sop should look like:
-                # (1.4 1.9 1.7)(-0.1 -0.26 -0.20)(0.87 1.0 1.32)
-                sop = sop.replace(' ', ', ')
-                sop = sop.replace(')(', ')|(')
-                sop = sop.split('|')
-                sop_values = {
-                    'slope': literal_eval(sop[0]),
-                    'offset': literal_eval(sop[1]),
-                    'power': literal_eval(sop[2])
-                }
+                    # Determine slope, offset and power from sop
+                    # sop should look like:
+                    # (1.4 1.9 1.7)(-0.1 -0.26 -0.20)(0.87 1.0 1.32)
+                    sop = sop.replace(' ', ', ')
+                    sop = sop.replace(')(', ')|(')
+                    sop = sop.split('|')
+                    sop_values = {
+                        'slope': literal_eval(sop[0]),
+                        'offset': literal_eval(sop[1]),
+                        'power': literal_eval(sop[2])
+                    }
 
-                cdl = correction.ColorCorrection(cc_id, input_file)
+                    cdl = correction.ColorCorrection(cc_id, input_file)
 
-                cdl.sat = sat
-                cdl.slope = sop_values['slope']
-                cdl.offset = sop_values['offset']
-                cdl.power = sop_values['power']
+                    cdl.sat = sat
+                    cdl.slope = sop_values['slope']
+                    cdl.offset = sop_values['offset']
+                    cdl.power = sop_values['power']
 
-                cdls.append(cdl)
+                    cdls.append(cdl)
 
     ccc = collection.ColorCollection()
     ccc.file_in = input_file
@@ -238,19 +242,29 @@ def parse_cc(input_file: Union[str, Path, ElementTree.Element]) -> correction.Co
     colorspace and equipment.
 
     """
-    if type(input_file) is str:
-        root = _remove_xmlns(input_file)
-        file_in = input_file
-    else:
-        root = input_file
-        file_in = None
+    # Use match statement for input type handling
+    match input_file:
+        case str() | Path():
+            root = _remove_xmlns(input_file)
+            file_in = input_file
+        case ElementTree.Element():
+            root = input_file
+            file_in = None
+        case _:
+            raise ParseError(
+                f"Invalid input type: {type(input_file).__name__}. "
+                f"Expected str, Path, or ElementTree.Element."
+            )
 
-    if not root.tag == 'ColorCorrection':
-        # This is not a CC file...
-        raise ParseError(
-            f'Invalid CC file format: expected root element "ColorCorrection", found "{root.tag}". '
-            f'This file does not appear to be a valid ASC CDL ColorCorrection (.cc) file.'
-        )
+    # Use match statement for XML root tag validation
+    match root.tag:
+        case 'ColorCorrection':
+            pass  # Valid CC file
+        case _:
+            raise ParseError(
+                f'Invalid CC file format: expected root element "ColorCorrection", found "{root.tag}". '
+                f'This file does not appear to be a valid ASC CDL ColorCorrection (.cc) file.'
+            )
 
     try:
         cc_id = root.attrib['id']
@@ -375,12 +389,15 @@ def parse_ccc(input_file: Union[str, Path]) -> collection.ColorCollection:
     """
     root = _remove_xmlns(input_file)
 
-    if root.tag != 'ColorCorrectionCollection':
-        # This is not a CCC file...
-        raise ParseError(
-            f'Invalid CCC file format: expected root element "ColorCorrectionCollection", found "{root.tag}". '
-            f'This file does not appear to be a valid ASC CDL ColorCorrectionCollection (.ccc) file.'
-        )
+    # Use match statement for XML root tag validation
+    match root.tag:
+        case 'ColorCorrectionCollection':
+            pass  # Valid CCC file
+        case _:
+            raise ParseError(
+                f'Invalid CCC file format: expected root element "ColorCorrectionCollection", found "{root.tag}". '
+                f'This file does not appear to be a valid ASC CDL ColorCorrectionCollection (.ccc) file.'
+            )
 
     ccc = collection.ColorCollection()
     ccc.set_to_ccc()
@@ -435,12 +452,15 @@ def parse_cdl(input_file: Union[str, Path]) -> collection.ColorCollection:
     """
     root = _remove_xmlns(input_file)
 
-    if root.tag != 'ColorDecisionList':
-        # This is not a CDL file...
-        raise ParseError(
-            f'Invalid CDL file format: expected root element "ColorDecisionList", found "{root.tag}". '
-            f'This file does not appear to be a valid ASC CDL ColorDecisionList (.cdl) file.'
-        )
+    # Use match statement for XML root tag validation
+    match root.tag:
+        case 'ColorDecisionList':
+            pass  # Valid CDL file
+        case _:
+            raise ParseError(
+                f'Invalid CDL file format: expected root element "ColorDecisionList", found "{root.tag}". '
+                f'This file does not appear to be a valid ASC CDL ColorDecisionList (.cdl) file.'
+            )
 
     cdl = collection.ColorCollection()
     cdl.set_to_cdl()
@@ -602,53 +622,59 @@ def parse_flex(input_file: Union[str, Path]) -> collection.ColorCollection:  # p
             return col_cor
 
         for line in lines:
-            if line.startswith('100'):
-                # This is the start of a take/shot
-                # We need to dump the previous records to a CDL
-                # Then clear the records.
-                # Note that the first data line will also hit this.
-                metadata = [i for i in metadata if i != '']
-                if metadata:
-                    cc_id = '_'.join(metadata)
-                else:
-                    field = title if title else filename
-                    cc_id = field + str(len(cdls) + 1).rjust(3, '0')
+            # Use match statement for line prefix detection
+            line_prefix = line[:3]
+            match line_prefix:
+                case '100':
+                    # This is the start of a take/shot
+                    # We need to dump the previous records to a CDL
+                    # Then clear the records.
+                    # Note that the first data line will also hit this.
+                    metadata = [i for i in metadata if i != '']
+                    if metadata:
+                        cc_id = '_'.join(metadata)
+                    else:
+                        field = title if title else filename
+                        cc_id = field + str(len(cdls) + 1).rjust(3, '0')
 
-                # If we already have values:
-                if sop or sat:
-                    cdl = build_cc(cc_id, input_file, sop, sat, title)
-                    cdls.append(cdl)
+                    # If we already have values:
+                    if sop or sat:
+                        cdl = build_cc(cc_id, input_file, sop, sat, title)
+                        cdls.append(cdl)
 
-                metadata = []
-                sop = {}
-                sat = None
+                    metadata = []
+                    sop = {}
+                    sat = None
 
-            elif line.startswith('010'):
-                # Title Line
-                # 10-79 Title
-                title = line[10:80].strip()
-            elif line.startswith('110'):
-                # Slate Information
-                # 10-17 Scene
-                # 24-31 Take ID
-                # 42-49 Camera Reel ID
-                metadata = [
-                    line[10:18].strip(),  # Scene
-                    line[24:32].strip(),  # Take
-                    line[42:50].strip(),  # Reel
-                ]
-            elif line.startswith('701'):
-                # ASC SOP
-                # 701 ASC_SOP(# # #)(-# -# -#)(# # #)
-                sop = {
-                    'slope': line[12:32].split(),
-                    'offset': line[34:57].split(),
-                    'power': line[59:79].split()
-                }
-            elif line.startswith('702'):
-                # ASC SAT
-                # 702 ASC_SAT ######
-                sat = line.split()[-1]
+                case '010':
+                    # Title Line
+                    # 10-79 Title
+                    title = line[10:80].strip()
+                    
+                case '110':
+                    # Slate Information
+                    # 10-17 Scene
+                    # 24-31 Take ID
+                    # 42-49 Camera Reel ID
+                    metadata = [
+                        line[10:18].strip(),  # Scene
+                        line[24:32].strip(),  # Take
+                        line[42:50].strip(),  # Reel
+                    ]
+                    
+                case '701':
+                    # ASC SOP
+                    # 701 ASC_SOP(# # #)(-# -# -#)(# # #)
+                    sop = {
+                        'slope': line[12:32].split(),
+                        'offset': line[34:57].split(),
+                        'power': line[59:79].split()
+                    }
+                    
+                case '702':
+                    # ASC SAT
+                    # 702 ASC_SAT ######
+                    sat = line.split()[-1]
 
     # We need to dump the last record to the cdl list
     metadata = [i for i in metadata if i != '']
@@ -771,7 +797,7 @@ def parse_file(filepath: Union[str, Path], filetype: Optional[str] = None) -> Un
             Should not include a '.'
 
     Raises:
-        N/A
+        ParseError: If the file format is not supported
 
     Returns:
         :class:`ColorCorrection` or :class:`ColorCollection`
@@ -782,6 +808,14 @@ def parse_file(filepath: Union[str, Path], filetype: Optional[str] = None) -> Un
 
     """
     if not filetype:
-        filetype = Path(filepath).suffix[1:].lower()  # Remove the leading dot
+        filetype = Path(filepath).suffix.removeprefix('.').lower()
 
-    return INPUT_FORMATS[filetype](filepath)
+    # Use match statement for format validation with better error handling
+    match filetype:
+        case filetype if filetype in INPUT_FORMATS:
+            return INPUT_FORMATS[filetype](filepath)
+        case _:
+            raise ParseError(
+                f"Unsupported file format: '{filetype}'. "
+                f"Supported formats are: {', '.join(INPUT_FORMATS.keys())}"
+            )

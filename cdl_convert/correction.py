@@ -941,7 +941,7 @@ def _de_exponent(notation: Union[Decimal, str, int, float]) -> str:
 
     if value.startswith('-'):
         negative = '-'
-        value = value[1:]
+        value = value.removeprefix('-')
     else:
         negative = ''
 
@@ -984,8 +984,7 @@ def _sanitize(name: str) -> str:
     # Replace any spaces with underscores
     name = name.replace(' ', '_')
     # If we start our string with an underscore or period, remove it
-    if name[0] in '_.':
-        name = name[1:]
+    name = name.removeprefix('_').removeprefix('.')
     # a-z is all lowercase
     # A-Z is all uppercase
     # 0-9 is all digits

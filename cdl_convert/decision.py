@@ -909,7 +909,7 @@ class MediaRef(AscXMLBase):
         if type(value) is str:
             # If :// was appended we'll remove it.
             if value.endswith('://'):
-                value = value[:-3]
+                value = value.removesuffix('://')
             old_ref = self.ref
             self._ref_info.protocol = value
             self._change_membership(old_ref=old_ref)

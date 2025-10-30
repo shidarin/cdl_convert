@@ -150,32 +150,35 @@ def to_decimal(value, name='Value'):
             If given a value that isn't an allowed type.
 
     """
-    if type(value) is float:
-        # Rather than mess about with float -> Decimal conversion,
-        # it suits our accuracy needs just fine to go straight to string.
-        value = str(value)
-    elif type(value) is int:
-        # If we're giving an int, we need to add a '.0' behind it.
-        value = str(value) + '.0'
-    elif type(value) is Decimal:
-        return value
-    elif type(value) is str:
-        if '.' not in value:
-            value = value.strip()
-            value += '.0'
+    # Use match statement for type-based conversion
+    match value:
+        case _ if isinstance(value, float):
+            # Rather than mess about with float -> Decimal conversion,
+            # it suits our accuracy needs just fine to go straight to string.
+            value = str(value)
+        case _ if isinstance(value, int) and not isinstance(value, bool):
+            # If we're giving an int, we need to add a '.0' behind it.
+            # Note: bool is a subclass of int, so we exclude it
+            value = str(value) + '.0'
+        case _ if isinstance(value, Decimal):
+            return value
+        case _ if isinstance(value, str):
+            if '.' not in value:
+                value = value.strip()
+                value += '.0'
 
-        try:
-            value = Decimal(value)
-        except (InvalidOperation, ValueError) as e:
+            try:
+                value = Decimal(value)
+            except (InvalidOperation, ValueError) as e:
+                raise ValidationError(
+                    f'Invalid numeric value for {name}: "{value}". '
+                    f'The provided string cannot be converted to a number.'
+                ) from e
+        case _:
             raise ValidationError(
-                f'Invalid numeric value for {name}: "{value}". '
-                f'The provided string cannot be converted to a number.'
-            ) from e
-    else:
-        raise ValidationError(
-            f'Invalid {name} value type: {type(value).__name__}. '
-            f'Provided value: "{value}". '
-            f'{name.title()} must be a numeric value (int, float, str, or Decimal).'
-        )
+                f'Invalid {name} value type: {type(value).__name__}. '
+                f'Provided value: "{value}". '
+                f'{name.title()} must be a numeric value (int, float, str, or Decimal).'
+            )
 
     return Decimal(value)

@@ -197,7 +197,7 @@ def main():  # pylint: disable=R0912
             print("--no-output argument provided. Skipping directory creation")
 
     if not args.input:
-        filetype_in = filepath.suffix[1:].lower()  # Remove the leading dot
+        filetype_in = filepath.suffix.removeprefix('.').lower()
     else:
         filetype_in = args.input
 
