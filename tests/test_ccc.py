@@ -783,9 +783,9 @@ class TestWriteCCCFull(unittest.TestCase):
         with mock.patch('builtins.open', mockOpen, create=True):
             cdl_convert.write_ccc(self.ccc)
 
-        mockOpen.assert_called_once_with('bobs_big_file.ccc', 'wb')
+        mockOpen.assert_called_once_with('bobs_big_file.ccc', 'w', encoding='utf-8')
 
-        mockOpen().write.assert_called_once_with(self.target_xml_root.encode('utf-8'))
+        mockOpen().write.assert_called_once_with(self.target_xml_root)
 
     def test_write_oserror_raises_cdlconverterror(self):
         """Tests that OSError during write raises CDLConvertError"""
@@ -843,9 +843,9 @@ class TestWriteCCCFullAsCDL(TestWriteCCCFull):
         with mock.patch('builtins.open', mockOpen, create=True):
             cdl_convert.write_cdl(self.ccc)
 
-        mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
+        mockOpen.assert_called_once_with('bobs_big_file.cdl', 'w', encoding='utf-8')
 
-        mockOpen().write.assert_called_once_with(self.target_xml_root.encode('utf-8'))
+        mockOpen().write.assert_called_once_with(self.target_xml_root)
 
     def test_write_oserror_raises_cdlconverterror(self):
         """Tests that OSError during write raises CDLConvertError"""

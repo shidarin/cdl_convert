@@ -50,8 +50,10 @@ SOFTWARE.
 
 # Standard Imports
 
-from argparse import ArgumentParser
+import sys
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
+from typing import Optional
 
 # cdl_convert imports
 
@@ -64,108 +66,206 @@ from .utils import sanity_check
 # EXPORTS
 # ==============================================================================
 
-__all__ = []
+__all__ = ['cli_main', 'main', 'parse_args']
+
+# ==============================================================================
+# UTILITY FUNCTIONS
+# ==============================================================================
+
+class Colors:
+    """ANSI color codes for terminal output"""
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    MAGENTA = '\033[95m'
+    CYAN = '\033[96m'
+    WHITE = '\033[97m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+
+def supports_color() -> bool:
+    """Check if terminal supports color output"""
+    return (
+        hasattr(sys.stdout, 'isatty') and sys.stdout.isatty() and
+        sys.platform != 'win32'  # Basic Windows check
+    )
+
+def colorize(text: str, color: str) -> str:
+    """Add color to text if terminal supports it"""
+    if supports_color():
+        return f"{color}{text}{Colors.END}"
+    return text
+
+def print_error(message: str, suggestion: Optional[str] = None) -> None:
+    """Print error message with color and optional suggestion"""
+    error_text = colorize("ERROR:", Colors.RED + Colors.BOLD)
+    print(f"{error_text} {message}", file=sys.stderr)
+    
+    if suggestion:
+        suggestion_text = colorize("SUGGESTION:", Colors.YELLOW + Colors.BOLD)
+        print(f"{suggestion_text} {suggestion}", file=sys.stderr)
+
+def print_warning(message: str) -> None:
+    """Print warning message with color"""
+    warning_text = colorize("WARNING:", Colors.YELLOW + Colors.BOLD)
+    print(f"{warning_text} {message}", file=sys.stderr)
+
+def print_info(message: str, verbose: bool = False) -> None:
+    """Print info message, only if verbose mode is enabled"""
+    if verbose:
+        info_text = colorize("INFO:", Colors.BLUE + Colors.BOLD)
+        print(f"{info_text} {message}")
+
+def print_success(message: str) -> None:
+    """Print success message with color"""
+    success_text = colorize("SUCCESS:", Colors.GREEN + Colors.BOLD)
+    print(f"{success_text} {message}")
 
 # ==============================================================================
 # PUBLIC FUNCTIONS
 # ==============================================================================
 
 
-def parse_args():
-    """Uses argparse to parse command line arguments"""
-    parser = ArgumentParser()
+def parse_args(validate_files=True):
+    """Uses argparse to parse command line arguments with enhanced validation and error messages
+    
+    Args:
+        validate_files (bool): Whether to validate that input files exist. Default True.
+                              Set to False for testing with mock files.
+    """
+    # Get supported formats for help text
+    input_formats = sorted(parse.INPUT_FORMATS.keys())
+    output_formats = sorted(write.OUTPUT_FORMATS.keys())
+    
+    parser = ArgumentParser(
+        description="Convert between ASC Color Decision List (CDL) formats",
+        epilog=f"Supported input formats: {', '.join(input_formats)}\n"
+               f"Supported output formats: {', '.join(output_formats)}",
+        formatter_class=RawDescriptionHelpFormatter
+    )
+    
     parser.add_argument(
         "input_file",
-        help="the file to be converted"
+        help="Path to the CDL file to be converted"
     )
+    
     parser.add_argument(
-        "-i",
-        "--input",
-        help="specify the filetype to convert from. Use when CDLConvert "
-             "cannot determine the filetype automatically. Supported input "  # pylint: disable=C0330
-             "formats are: "  # pylint: disable=C0330
-             f"{str(parse.INPUT_FORMATS.keys())}"  # pylint: disable=C0330
+        "-i", "--input",
+        help=f"Specify input format when auto-detection fails. "
+             f"Choices: {', '.join(input_formats)}"
     )
+    
     parser.add_argument(
-        "-o",
-        "--output",
-        help="specify the filetype to convert to, comma separated lists are "
-             "accepted. Defaults to a .cc XML. Supported output formats are: "  # pylint: disable=C0330
-             f"{str(write.OUTPUT_FORMATS.keys())}"  # pylint: disable=C0330
+        "-o", "--output",
+        help=f"Output format(s), comma-separated for multiple outputs. "
+             f"Choices: {', '.join(output_formats)}. Default: cc"
     )
+    
     parser.add_argument(
-        "-d",
-        "--destination",
-        help="specify an output directory to save converted files to. If not "
-             "provided will default to ./converted/"  # pylint: disable=C0330
+        "-d", "--destination",
+        type=Path,
+        help="Output directory for converted files. Default: ./converted/"
     )
+    
     parser.add_argument(
         "--halt",
         action='store_true',
-        help="turns off exception handling default behavior. Turn this on if "
-             "you want the conversion process to fail and not continue,"  # pylint: disable=C0330
-             "rather than relying on default behavior for bad values. Examples "  # pylint: disable=C0330
-             "are clipping negative values to 0.0 for Slope, Power and "  # pylint: disable=C0330
-             "Saturation, and automatically generating a new id for a "  # pylint: disable=C0330
-             "ColorCorrect if no or a bad id is given."  # pylint: disable=C0330
+        help="Stop processing on first error instead of using default values. "
+             "Useful for strict validation of CDL files. Turn this on if "
+             "you want the conversion process to fail and not continue,"
+             "rather than relying on default behavior for bad values. Examples "
+             "are clipping negative values to 0.0 for Slope, Power and "
+             "Saturation, and automatically generating a new id for a "
+             "ColorCorrect if no or a bad id is given." 
     )
+    
     parser.add_argument(
         "--no-output",
         action='store_true',
-        help="parses all incoming files but no files will be written. Use this "
-             "in conjunction with '--halt' and '--check' to try and "  # pylint: disable=C0330
-             "track down any oddities observed in the CDLs."  # pylint: disable=C0330
+        help="Parse files without writing output. Useful with --halt and --check "
+             "for validation-only runs."
     )
+    
     parser.add_argument(
         "--check",
         action='store_true',
-        help="checks all ColorCorrects that were parsed for odd values. Odd "
-             "values are any values over 3 or under 0.1 for Slope, Power "  # pylint: disable=C0330
-             "and Saturation. For offset, any value over 1 and under -1 is "  # pylint: disable=C0330
-             "flagged. Note that depending on the look, these still might "  # pylint: disable=C0330
-             "be correct values."  # pylint: disable=C0330
+        help="Check for unusual color correction values. Flags slope/power/saturation "
+             "outside 0.1-3.0 range and offset outside -1.0 to 1.0 range."
     )
+    
     parser.add_argument(
         "--single",
         action='store_true',
-        help="only write a single color decision per file when given collection "
-             "formats. This means that a single input CDL will export multiple "
-             "CDL files, one per color decision."
+        help="Write each color decision to a separate file instead of collections. "
+             "Converts one input file to multiple output files."
+    )
+    
+    parser.add_argument(
+        "-v", "--verbose",
+        action='store_true',
+        help="Enable verbose output with detailed processing information"
+    )
+    
+    parser.add_argument(
+        "--debug",
+        action='store_true',
+        help="Enable debug output with extensive diagnostic information"
     )
 
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except SystemExit as e:
+        # Provide more helpful error message for common issues
+        if e.code == 2:  # argparse error
+            parser.print_help()
+        raise
 
+    # Validate input file exists (if validation is enabled)
+    if validate_files:
+        input_path = Path(args.input_file)
+        if not input_path.exists():
+            suggestion = "Check the file path for typos or ensure the file exists"
+            if hasattr(args, 'verbose') and (args.verbose or getattr(args, 'debug', False)):
+                print_error(f"Input file not found: {input_path}", suggestion)
+            raise FormatError(f"Input file not found: {input_path}")
+        
+        if not input_path.is_file():
+            suggestion = "Provide a file path, not a directory"
+            if hasattr(args, 'verbose') and (args.verbose or getattr(args, 'debug', False)):
+                print_error(f"Input path is not a file: {input_path}", suggestion)
+            raise FormatError(f"Input path is not a file: {input_path}")
+
+    # Validate and normalize input format (maintain backward compatibility)
     if args.input:
         if args.input.lower() not in parse.INPUT_FORMATS:
-            raise FormatError(
-                f"The input format: {args.input} is not supported"
-            )
-        else:
-            args.input = args.input.lower()
+            suggestion = f"Use supported formats: {', '.join(input_formats)}"
+            if hasattr(args, 'verbose') and (args.verbose or getattr(args, 'debug', False)):
+                print_error(f"Unsupported input format: {args.input}", suggestion)
+            raise FormatError(f"The input format: {args.input} is not supported")
+        args.input = args.input.lower()
 
+    # Validate and normalize output formats
     if args.output:
-        # This might be a string separated list of output types.
-        # We'll split it, check each against the supported types, convert
-        # them to lowercase if not already, and place the resulting list back
-        # into args.output
-        #
-        # TODO: Define and add a new argparse type as described in:
-        # http://stackoverflow.com/questions/9978880/python-argument-parser-list-of-list-or-tuple-of-tuples
-        output_types = args.output.split(',')
-        for i in range(len(output_types)):
-            if output_types[i].lower() not in write.OUTPUT_FORMATS.keys():
-                raise FormatError(
-                    f"The output format: {output_types[i]} is not supported"
-                )
-            else:
-                output_types[i] = output_types[i].lower()
+        output_types = [fmt.strip().lower() for fmt in args.output.split(',')]
+        invalid_formats = [fmt for fmt in output_types if fmt not in write.OUTPUT_FORMATS]
+        
+        if invalid_formats:
+            suggestion = f"Use supported formats: {', '.join(output_formats)}. Example: 'cc,ccc'"
+            if args.verbose or args.debug:
+                print_error(f"Unsupported output format(s): {', '.join(invalid_formats)}", suggestion)
+            raise FormatError(f"Unsupported output format(s): {', '.join(invalid_formats)}")
+        
         args.output = output_types
     else:
-        args.output = ['cc', ]
+        args.output = ['cc']
 
+    # Set default destination if not provided
     if not args.destination:
-        args.destination = './converted/'
+        args.destination = Path('./converted/')
 
+    # Apply halt configuration (backward compatibility)
     if args.halt:
         config.config.halt_on_error = True
 
@@ -176,63 +276,124 @@ def parse_args():
 # ==============================================================================
 
 
-def main():  # pylint: disable=R0912
-    """Will figure out input and destination filetypes, then convert"""
-    args = parse_args()
+def main(validate_files=True):  # pylint: disable=R0912
+    """Main conversion function with enhanced error reporting and verbose output
+    
+    Args:
+        validate_files (bool): Whether to validate that input files exist. Default True.
+                              Set to False for testing with mock files.
+    """
+    try:
+        args = parse_args(validate_files=validate_files)
+    except FormatError as e:
+        print_error(str(e))
+        sys.exit(1)
+    except Exception as e:
+        print_error(f"Argument parsing failed: {e}")
+        sys.exit(1)
+
+    # Set up verbose/debug output
+    verbose = args.verbose or args.debug
+    debug = args.debug
 
     if args.no_output:
-        print("Dry run initiated, no files will be written.")
+        print_info("Dry run initiated, no files will be written.", verbose)
+
+    if debug:
+        print_info(f"Input file: {args.input_file}", True)
+        print_info(f"Input format: {args.input or 'auto-detect'}", True)
+        print_info(f"Output formats: {', '.join(args.output)}", True)
+        print_info(f"Destination: {args.destination}", True)
 
     filepath = Path(args.input_file).resolve()
     destination_dir = Path(args.destination).resolve()
 
     if not destination_dir.exists():
-        print(
-            f"Destination directory {destination_dir} does not exist."
-        )
+        print_info(f"Destination directory {destination_dir} does not exist.", verbose)
         if not args.no_output:
-            print("Creating destination directory.")
-            destination_dir.mkdir(parents=True, exist_ok=True)
+            print_info("Creating destination directory.", verbose)
+            try:
+                destination_dir.mkdir(parents=True, exist_ok=True)
+                print_success(f"Created destination directory: {destination_dir}")
+            except OSError as e:
+                print_error(f"Failed to create destination directory: {e}")
+                sys.exit(1)
         else:
-            print("--no-output argument provided. Skipping directory creation")
+            print_info("--no-output provided. Skipping directory creation.", verbose)
 
     if not args.input:
         filetype_in = filepath.suffix.removeprefix('.').lower()
+        print_info(f"Auto-detected input format: {filetype_in}", verbose)
     else:
         filetype_in = args.input
+        print_info(f"Using specified input format: {filetype_in}", verbose)
 
-    color_decisions = parse.parse_file(filepath, filetype_in)
+    try:
+        print_info(f"Parsing {filepath} as {filetype_in} format...", verbose)
+        color_decisions = parse.parse_file(filepath, filetype_in)
+        print_success(f"Successfully parsed {filepath}")
+    except Exception as e:
+        print_error(f"Failed to parse {filepath}: {e}")
+        if debug:
+            import traceback
+            traceback.print_exc()
+        sys.exit(1)
 
     def write_single_file(cdl, ext):
-        """Writes a single color correction file"""
-        cdl.determine_dest(ext, destination_dir)
-        print(
-            f"Writing cdl {cdl.id} to {cdl.file_out}"
-        )
-        if not args.no_output:
-            write.OUTPUT_FORMATS[ext](cdl)
+        """Writes a single color correction file with enhanced error handling"""
+        try:
+            cdl.determine_dest(ext, destination_dir)
+            print_info(f"Writing CDL {cdl.id} to {cdl.file_out}", verbose)
+            if not args.no_output:
+                write.OUTPUT_FORMATS[ext](cdl)
+                print_success(f"Wrote {cdl.id} as {ext} format")
+            else:
+                print_info(f"Dry run: would write {cdl.id} to {cdl.file_out}", verbose)
+        except Exception as e:
+            print_error(f"Failed to write CDL {cdl.id}: {e}")
+            if debug:
+                import traceback
+                traceback.print_exc()
+            if args.halt:
+                sys.exit(1)
 
     def write_collection_file(col, ext):
-        """Writes a collection file"""
-        col.type = ext
-        col.determine_dest(destination_dir)
-        print(
-            f"Writing collection to {col.file_out}"
-        )
-        if not args.no_output:
-            write.OUTPUT_FORMATS[ext](col)
+        """Writes a collection file with enhanced error handling"""
+        try:
+            col.type = ext
+            col.determine_dest(destination_dir)
+            print_info(f"Writing collection to {col.file_out}", verbose)
+            if not args.no_output:
+                write.OUTPUT_FORMATS[ext](col)
+                print_success(f"Wrote collection as {ext} format")
+            else:
+                print_info(f"Dry run: would write collection to {col.file_out}", verbose)
+        except Exception as e:
+            print_error(f"Failed to write collection: {e}")
+            if debug:
+                import traceback
+                traceback.print_exc()
+            if args.halt:
+                sys.exit(1)
 
     if color_decisions:
         # Sanity Check
         if args.check:
-            if config.config.is_collection_format(filetype_in):
-                for color_correct in color_decisions.color_corrections:
-                    sanity_check(color_correct)
-                for decision in color_decisions.color_decisions:
-                    if not decision.is_ref:
-                        sanity_check(decision.cc)
-            else:
-                sanity_check(color_decisions)
+            print_info("Performing sanity checks on color correction values...", verbose)
+            try:
+                if config.config.is_collection_format(filetype_in):
+                    for color_correct in color_decisions.color_corrections:
+                        sanity_check(color_correct)
+                    for decision in color_decisions.color_decisions:
+                        if not decision.is_ref:
+                            sanity_check(decision.cc)
+                else:
+                    sanity_check(color_decisions)
+                print_success("Sanity checks completed")
+            except Exception as e:
+                print_warning(f"Sanity check found issues: {e}")
+                if args.halt:
+                    sys.exit(1)
 
         # Writing
         for ext in args.output:
@@ -262,3 +423,24 @@ def main():  # pylint: disable=R0912
                     collection = ColorCollection(input_file=filepath)
                     collection.append_child(color_decisions)
                     write_collection_file(collection, ext)
+    else:
+        print_error("No color decisions found in input file")
+        sys.exit(1)
+
+
+def cli_main():
+    """CLI entry point with backward-compatible error handling"""
+    try:
+        main()
+    except KeyboardInterrupt:
+        print_error("Operation cancelled by user")
+        sys.exit(130)  # Standard exit code for SIGINT
+    except FormatError as e:
+        # Maintain backward compatibility - just print error and exit
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        # For unexpected errors, provide helpful information
+        print_error(f"Unexpected error: {e}")
+        print_error("This may be a bug. Please report it with the input file if possible.")
+        sys.exit(1)

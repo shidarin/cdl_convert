@@ -46,7 +46,7 @@ import sys
 
 # cdl_convert imports
 
-from cdl_convert.cdl_convert import main
+from cdl_convert.cdl_convert import cli_main
 
 # ==============================================================================
 # PRIVATE FUNCTIONS
@@ -62,7 +62,7 @@ def _print_error(*objs):
 
 if __name__ == '__main__':  # pragma: no cover
     try:
-        main()
+        cli_main()
     except Exception as err:  # pylint: disable=W0703
         import traceback
         _print_error('Unexpected error encountered:')

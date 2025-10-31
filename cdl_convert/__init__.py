@@ -71,8 +71,6 @@ SOFTWARE.
 # IMPORTS
 # ==============================================================================
 
-
-
 # cdl_convert imports
 
 from .collection import ColorCollection

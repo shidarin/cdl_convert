@@ -141,8 +141,7 @@ def parse_ale(input_file: Union[str, Path]) -> collection.ColorCollection:  # py
     cdls = []
 
     with open(input_file, 'r') as edl:
-        lines = edl.readlines()
-        for line in lines:
+        for line in edl:
             if not line.strip():
                 # Skip entirely blank lines
                 continue
@@ -593,35 +592,33 @@ def parse_flex(input_file: Union[str, Path]) -> collection.ColorCollection:  # p
 
     cdls = []
 
+    filename = Path(input_file).stem
+
+    title = None
+    # Metadata will store, in order, the various scene, take, reel fields
+    # it finds.
+    metadata = []
+
+    sop = {}
+    sat = None
+
+    def build_cc(line_id, edl_path, sop_dict, sat_value, title_line):
+        """Builds and returns a cc if sop/sat values found"""
+        col_cor = correction.ColorCorrection(line_id, edl_path)
+        if title_line:
+            col_cor.desc = title_line
+        if sop_dict:
+            # If it finds the 701 line, it will have all three
+            col_cor.slope = sop_dict['slope']
+            col_cor.offset = sop_dict['offset']
+            col_cor.power = sop_dict['power']
+        if sat_value:
+            col_cor.sat = sat_value
+
+        return col_cor
+
     with open(input_file, 'r') as edl:
-        lines = edl.readlines()
-
-        filename = Path(input_file).stem
-
-        title = None
-        # Metadata will store, in order, the various scene, take, reel fields
-        # it finds.
-        metadata = []
-
-        sop = {}
-        sat = None
-
-        def build_cc(line_id, edl_path, sop_dict, sat_value, title_line):
-            """Builds and returns a cc if sop/sat values found"""
-            col_cor = correction.ColorCorrection(line_id, edl_path)
-            if title_line:
-                col_cor.desc = title_line
-            if sop_dict:
-                # If it finds the 701 line, it will have all three
-                col_cor.slope = sop_dict['slope']
-                col_cor.offset = sop_dict['offset']
-                col_cor.power = sop_dict['power']
-            if sat_value:
-                col_cor.sat = sat_value
-
-            return col_cor
-
-        for line in lines:
+        for line in edl:
             # Use match statement for line prefix detection
             line_prefix = line[:3]
             match line_prefix:
@@ -757,12 +754,20 @@ def _remove_xmlns(input_file):
     # We're going to open the file as a string and remove the xmlns, as
     # it doesn't do a lot for us when working with CDLs, and in fact
     # just clutters everything the hell up.
-    with open(input_file, 'r') as xml_file:
-        xml_string = xml_file.read()
+    try:
+        with open(input_file, 'r', encoding='utf-8') as xml_file:
+            xml_string = xml_file.read()
+    except UnicodeDecodeError:
+        # Fallback to default encoding if UTF-8 fails
+        with open(input_file, 'r') as xml_file:
+            xml_string = xml_file.read()
 
     xml_string = re.sub(' xmlns="[^"]+"', '', xml_string, count=1)
 
-    return ElementTree.fromstring(xml_string)
+    try:
+        return ElementTree.fromstring(xml_string)
+    except ElementTree.ParseError as e:
+        raise ParseError(f"Invalid XML format in file '{input_file}': {e}") from e
 
 # ==============================================================================
 # GLOBALS

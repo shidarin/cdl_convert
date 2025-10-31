@@ -180,7 +180,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'cdl_convert=cdl_convert.cdl_convert:main',
+            'cdl_convert=cdl_convert.cdl_convert:cli_main',
         ],
     },
 )

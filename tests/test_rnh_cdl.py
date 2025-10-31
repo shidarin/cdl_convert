@@ -215,14 +215,14 @@ class TestWriteRnHCDLBasic(unittest.TestCase):
 
     def testOpen(self):
         """Tests that open was called correctly"""
-        self.mockOpen.assert_called_once_with(self.cdl.file_out, 'wb')
+        self.mockOpen.assert_called_once_with(self.cdl.file_out, 'w', encoding='utf-8')
 
     #==========================================================================
 
     def testContent(self):
         """Tests that write_rnh_cdl wrote the correct CDL"""
         handle = self.mockOpen()
-        handle.write.assert_called_once_with(self.file.encode("utf-8"))
+        handle.write.assert_called_once_with(self.file)
 
     def test_write_oserror_raises_cdlconverterror(self):
         """Tests that OSError during write raises CDLConvertError"""

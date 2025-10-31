@@ -808,9 +808,9 @@ class TestWriteCCFull(unittest.TestCase):
         with mock.patch('builtins.open', mockOpen, create=True):
             cdl_convert.write_cc(self.cdl)
 
-        mockOpen.assert_called_once_with('bobs_big_file.cc', 'wb')
+        mockOpen.assert_called_once_with('bobs_big_file.cc', 'w', encoding='utf-8')
 
-        mockOpen().write.assert_called_once_with(self.target_xml_root.encode('utf-8'))
+        mockOpen().write.assert_called_once_with(self.target_xml_root)
 
     def test_write_oserror_raises_cdlconverterror(self):
         """Tests that OSError during write raises CDLConvertError"""

@@ -58,10 +58,9 @@ SOFTWARE.
 
 # Standard Imports
 
-import sys
 from typing import Union
 
-# Local Imports
+# cdl_convert imports
 from .collection import ColorCollection
 from .correction import ColorCorrection
 from .exceptions import CDLConvertError
@@ -99,8 +98,8 @@ def _temp_container(cdl: ColorCorrection) -> ColorCollection:
 def write_cc(cdl: ColorCorrection) -> None:
     """Writes the ColorCorrection to a .cc file"""
     try:
-        with open(cdl.file_out, 'wb') as cdl_f:
-            cdl_f.write(cdl.xml_root.encode('utf-8'))
+        with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:
+            cdl_f.write(cdl.xml_root)
     except OSError as e:
         raise CDLConvertError(
             f"Failed to write CC file '{cdl.file_out}': {e}"
@@ -117,8 +116,8 @@ def write_ccc(cdl: Union[ColorCorrection, ColorCollection]) -> None:
     collection_type = cdl.type
     cdl.set_to_ccc()
     try:
-        with open(cdl.file_out, 'wb') as cdl_f:
-            cdl_f.write(cdl.xml_root.encode('utf-8'))
+        with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:
+            cdl_f.write(cdl.xml_root)
     except OSError as e:
         raise CDLConvertError(
             f"Failed to write CCC file '{cdl.file_out}': {e}"
@@ -137,8 +136,8 @@ def write_cdl(cdl: Union[ColorCorrection, ColorCollection]) -> None:
     collection_type = cdl.type
     cdl.set_to_cdl()
     try:
-        with open(cdl.file_out, 'wb') as cdl_f:
-            cdl_f.write(cdl.xml_root.encode('utf-8'))
+        with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:
+            cdl_f.write(cdl.xml_root)
     except OSError as e:
         raise CDLConvertError(
             f"Failed to write CDL file '{cdl.file_out}': {e}"
@@ -164,8 +163,8 @@ def write_rnh_cdl(cdl: ColorCorrection) -> None:
     ss_cdl = ' '.join(values)
 
     try:
-        with open(cdl.file_out, 'wb') as cdl_f:
-            cdl_f.write(ss_cdl.encode('utf-8'))
+        with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:
+            cdl_f.write(ss_cdl)
     except OSError as e:
         raise CDLConvertError(
             f"Failed to write RNH CDL file '{cdl.file_out}': {e}"

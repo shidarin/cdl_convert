@@ -89,7 +89,6 @@ SOFTWARE.
 # Standard Imports
 from decimal import Decimal
 import re
-import sys
 from typing import List, Optional, Union, Any
 from xml.dom import minidom
 from xml.etree import ElementTree

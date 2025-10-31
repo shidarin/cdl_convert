@@ -453,32 +453,32 @@ class TestCLICompatibility(unittest.TestCase):
         
         # Test basic input file argument
         sys.argv = ['cdl_convert', 'input.cc']
-        args = parse_args()
+        args = parse_args(validate_files=False)
         self.assertEqual(args.input_file, 'input.cc')
         
         # Test input format specification
         sys.argv = ['cdl_convert', 'input.file', '-i', 'cc']
-        args = parse_args()
+        args = parse_args(validate_files=False)
         self.assertEqual(args.input, 'cc')
         
         # Test output format specification
         sys.argv = ['cdl_convert', 'input.file', '-o', 'ccc']
-        args = parse_args()
+        args = parse_args(validate_files=False)
         self.assertEqual(args.output, ['ccc'])
         
         # Test multiple output formats
         sys.argv = ['cdl_convert', 'input.file', '-o', 'cc,ccc']
-        args = parse_args()
+        args = parse_args(validate_files=False)
         self.assertEqual(set(args.output), {'cc', 'ccc'})
         
         # Test destination directory
         sys.argv = ['cdl_convert', 'input.file', '-d', '/custom/path']
-        args = parse_args()
-        self.assertEqual(args.destination, '/custom/path')
+        args = parse_args(validate_files=False)
+        self.assertEqual(args.destination, Path('/custom/path'))
         
         # Test flags
         sys.argv = ['cdl_convert', 'input.file', '--halt', '--check', '--single', '--no-output']
-        args = parse_args()
+        args = parse_args(validate_files=False)
         self.assertTrue(args.check)
         self.assertTrue(args.single)
         self.assertTrue(args.no_output)

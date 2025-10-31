@@ -991,9 +991,7 @@ def _sanitize(name: str) -> str:
     # \. is an escaped period
     # _ is an underscore
     # Put them together, negate them by leading with an ^
-    # and our compiler will mark every non alnum, non ., _ character
-    pattern = re.compile(r'[^a-zA-Z0-9\._-]+')
-    # Then we sub them with nothing
-    fixed = pattern.sub('', name)
+    # and our sub will mark every non alnum, non ., _ character
+    return re.sub(r'[^a-zA-Z0-9\._-]+', '', name)
 
     return fixed
