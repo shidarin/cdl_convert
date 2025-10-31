@@ -151,12 +151,15 @@ def write_cdl(cdl: Union[ColorCorrection, ColorCollection]) -> None:
 
 def write_rnh_cdl(cdl: ColorCorrection) -> None:
     """Writes the ColorCorrection to a space separated .cdl file"""
+    # Import here to avoid circular imports
+    from .correction import _de_exponent
 
     values = list(cdl.slope)
     values.extend(cdl.offset)
     values.extend(cdl.power)
     values.append(cdl.sat)
-    values = [str(i) for i in values]
+    # Use _de_exponent to avoid scientific notation (consistent with XML output)
+    values = [_de_exponent(i) for i in values]
 
     ss_cdl = ' '.join(values)
 

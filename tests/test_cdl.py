@@ -627,7 +627,7 @@ CDL_BAD_TAG = """<?xml version="1.0" encoding="UTF-8"?>
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
-builtins = 'builtins'
+
 
 #==============================================================================
 # TEST CLASSES
@@ -1060,7 +1060,7 @@ class TestWriteCDLFull(unittest.TestCase):
 
         self.cdl._file_out = 'bobs_big_file.cdl'
 
-        with mock.patch(builtins + '.open', mockOpen, create=True):
+        with mock.patch('builtins.open', mockOpen, create=True):
             cdl_convert.write_cdl(self.cdl)
 
         mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
@@ -1071,7 +1071,7 @@ class TestWriteCDLFull(unittest.TestCase):
         """Tests that OSError during write raises CDLConvertError"""
         self.cdl._file_out = 'invalid_path/bobs_big_file.cdl'
 
-        with mock.patch(builtins + '.open', side_effect=OSError("Permission denied")):
+        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_cdl(self.cdl)
             
@@ -1122,7 +1122,7 @@ class TestWriteCDLFullAsCCC(TestWriteCDLFull):
 
         self.cdl._file_out = 'bobs_big_file.cdl'
 
-        with mock.patch(builtins + '.open', mockOpen, create=True):
+        with mock.patch('builtins.open', mockOpen, create=True):
             cdl_convert.write_ccc(self.cdl)
 
         mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
@@ -1133,7 +1133,7 @@ class TestWriteCDLFullAsCCC(TestWriteCDLFull):
         """Tests that OSError during write raises CDLConvertError"""
         self.cdl._file_out = 'invalid_path/bobs_big_file.cdl'
 
-        with mock.patch(builtins + '.open', side_effect=OSError("Permission denied")):
+        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_ccc(self.cdl)
             
@@ -1232,7 +1232,7 @@ class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
 
         self.cdl._file_out = 'bobs_big_file.cdl'
 
-        with mock.patch(builtins + '.open', mockOpen, create=True):
+        with mock.patch('builtins.open', mockOpen, create=True):
             cdl_convert.write_cdl(self.cdl)
 
         mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')

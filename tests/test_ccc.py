@@ -522,7 +522,7 @@ CCC_BAD_TAG = """<?xml version="1.0" encoding="UTF-8"?>
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
-builtins = 'builtins'
+
 
 #==============================================================================
 # TEST CLASSES
@@ -780,7 +780,7 @@ class TestWriteCCCFull(unittest.TestCase):
 
         self.ccc._file_out = 'bobs_big_file.ccc'
 
-        with mock.patch(builtins + '.open', mockOpen, create=True):
+        with mock.patch('builtins.open', mockOpen, create=True):
             cdl_convert.write_ccc(self.ccc)
 
         mockOpen.assert_called_once_with('bobs_big_file.ccc', 'wb')
@@ -791,7 +791,7 @@ class TestWriteCCCFull(unittest.TestCase):
         """Tests that OSError during write raises CDLConvertError"""
         self.ccc._file_out = 'invalid_path/bobs_big_file.ccc'
 
-        with mock.patch(builtins + '.open', side_effect=OSError("Permission denied")):
+        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_ccc(self.ccc)
             
@@ -840,7 +840,7 @@ class TestWriteCCCFullAsCDL(TestWriteCCCFull):
 
         self.ccc._file_out = 'bobs_big_file.cdl'
 
-        with mock.patch(builtins + '.open', mockOpen, create=True):
+        with mock.patch('builtins.open', mockOpen, create=True):
             cdl_convert.write_cdl(self.ccc)
 
         mockOpen.assert_called_once_with('bobs_big_file.cdl', 'wb')
@@ -851,7 +851,7 @@ class TestWriteCCCFullAsCDL(TestWriteCCCFull):
         """Tests that OSError during write raises CDLConvertError"""
         self.ccc._file_out = 'invalid_path/bobs_big_file.cdl'
 
-        with mock.patch(builtins + '.open', side_effect=OSError("Permission denied")):
+        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_cdl(self.ccc)
             

@@ -264,7 +264,7 @@ CC_NO_SAT_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
-builtins = 'builtins'
+
 
 #==============================================================================
 # TEST CLASSES
@@ -805,7 +805,7 @@ class TestWriteCCFull(unittest.TestCase):
 
         self.cdl._file_out = 'bobs_big_file.cc'
 
-        with mock.patch(builtins + '.open', mockOpen, create=True):
+        with mock.patch('builtins.open', mockOpen, create=True):
             cdl_convert.write_cc(self.cdl)
 
         mockOpen.assert_called_once_with('bobs_big_file.cc', 'wb')
@@ -816,7 +816,7 @@ class TestWriteCCFull(unittest.TestCase):
         """Tests that OSError during write raises CDLConvertError"""
         self.cdl._file_out = 'invalid_path/bobs_big_file.cc'
 
-        with mock.patch(builtins + '.open', side_effect=OSError("Permission denied")):
+        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_cc(self.cdl)
             

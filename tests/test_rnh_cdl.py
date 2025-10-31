@@ -59,7 +59,7 @@ CC_CLOSE = "</ColorCorrection>\n"
 UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
-builtins = 'builtins'
+
 
 #==============================================================================
 # TEST CLASSES
@@ -201,7 +201,7 @@ class TestWriteRnHCDLBasic(unittest.TestCase):
 
         self.mockOpen = mock.mock_open()
 
-        with mock.patch(builtins + '.open', self.mockOpen, create=True):
+        with mock.patch('builtins.open', self.mockOpen, create=True):
             cdl_convert.write_rnh_cdl(self.cdl)
 
     def tearDown(self):
@@ -228,7 +228,7 @@ class TestWriteRnHCDLBasic(unittest.TestCase):
         """Tests that OSError during write raises CDLConvertError"""
         self.cdl._file_out = 'invalid_path/bobs_big_file.cdl'
 
-        with mock.patch(builtins + '.open', side_effect=OSError("Permission denied")):
+        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_rnh_cdl(self.cdl)
             
@@ -267,7 +267,7 @@ class TestWriteRnHCDLOdd(TestWriteRnHCDLBasic):
 
         self.mockOpen = mock.mock_open()
 
-        with mock.patch(builtins + '.open', self.mockOpen, create=True):
+        with mock.patch('builtins.open', self.mockOpen, create=True):
             cdl_convert.write_rnh_cdl(self.cdl)
 
 #==============================================================================
@@ -277,12 +277,15 @@ class TestWriteRnHCDLOdd(TestWriteRnHCDLBasic):
 
 def buildCDL(slope, offset, power, sat):
     """Populates a CDL string and returns it"""
+    # Import here to avoid circular imports
+    from cdl_convert.correction import _de_exponent
 
     values = list(slope)
     values.extend(offset)
     values.extend(power)
     values.append(sat)
-    values = [str(i) for i in values]
+    # Use _de_exponent to avoid scientific notation
+    values = [_de_exponent(i) for i in values]
 
     ss_cdl = ' '.join(values)
 
