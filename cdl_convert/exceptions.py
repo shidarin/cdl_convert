@@ -82,6 +82,7 @@ __all__ = [
     'ParseError',
     'ValidationError',
     'FormatError',
+    'OTIOAdapterError',
 ]
 
 # ==============================================================================
@@ -133,6 +134,17 @@ class ValidationError(CDLConvertError, ValueError, TypeError):
     which values failed validation and why.
     
     Inherits from ValueError and TypeError for backward compatibility.
+    
+    """
+    pass
+
+
+class OTIOAdapterError(CDLConvertError):
+    """Raised when OpenTimelineIO adapter operations fail.
+    
+    This exception is raised when there are issues with OpenTimelineIO
+    adapter availability, installation, or parsing operations. It provides
+    clear error messages with installation instructions for missing adapters.
     
     """
     pass

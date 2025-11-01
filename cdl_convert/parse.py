@@ -91,7 +91,7 @@ from xml.etree import ElementTree
 # cdl_convert imports
 
 from . import config, collection, correction
-from .exceptions import ParseError, ValidationError
+from .exceptions import ParseError, ValidationError, OTIOAdapterError
 
 # ==============================================================================
 # EXPORTS
@@ -760,6 +760,176 @@ def parse_rnh_cdl(input_file: Union[str, Path]) -> correction.ColorCorrection:
         cdl.sat = sat
 
     return cdl
+
+# ==============================================================================
+# OTIO HELPER FUNCTIONS
+# ==============================================================================
+
+
+def _check_otio_adapter(adapter_name: str) -> None:
+    """Check if specific OTIO adapter is available.
+    
+    Validates that OpenTimelineIO is installed and that the specified
+    adapter is available for use. Raises OTIOAdapterError with clear
+    installation instructions if the adapter is missing.
+    
+    Args:
+        adapter_name (str): Name of the OTIO adapter to check
+            (e.g., 'cmx_3600', 'ale').
+        
+    Raises:
+        OTIOAdapterError: If OpenTimelineIO is not installed or if the
+            specified adapter is not available.
+            
+    Example:
+        >>> _check_otio_adapter('cmx_3600')  # Validates CMX adapter
+        >>> _check_otio_adapter('ale')       # Validates ALE adapter
+    """
+    try:
+        import opentimelineio as otio
+    except ImportError:
+        raise OTIOAdapterError(
+            "OpenTimelineIO not installed. Install with: "
+            "pip install OpenTimelineIO"
+        )
+    
+    try:
+        available_adapters = otio.adapters.available_adapter_names()
+        if adapter_name not in available_adapters:
+            # Provide specific installation instructions based on adapter
+            if adapter_name == 'cmx_3600':
+                install_cmd = "pip install otio-cmx3600-adapter>=1.0.0"
+            elif adapter_name == 'ale':
+                install_cmd = "pip install otio-ale-adapter>=1.0.0"
+            else:
+                install_cmd = f"pip install otio-{adapter_name}-adapter"
+                
+            raise OTIOAdapterError(
+                f"Missing required OTIO adapter: '{adapter_name}'. "
+                f"Install with: {install_cmd}"
+            )
+    except Exception as e:
+        # Handle any other OTIO-related errors
+        raise OTIOAdapterError(
+            f"Error checking OTIO adapter availability: {e}"
+        )
+
+
+def _extract_cdl_from_otio_clip(clip, source_file: Union[str, Path]) -> Optional[correction.ColorCorrection]:
+    """Extract CDL metadata from OTIO clip object.
+    
+    Extracts ASC CDL color correction data from an OpenTimelineIO clip's
+    metadata structure and creates a ColorCorrection object. Handles
+    missing or malformed CDL metadata gracefully by returning None.
+    
+    Expected OTIO CDL metadata structure:
+        clip.metadata['cdl'] = {
+            'asc_sop': {
+                'slope': [float, float, float],
+                'offset': [float, float, float], 
+                'power': [float, float, float]
+            },
+            'asc_sat': float
+        }
+    
+    Args:
+        clip: OTIO clip object containing potential CDL metadata.
+        source_file (Union[str, Path]): Source file path for ColorCorrection.
+        
+    Returns:
+        Optional[ColorCorrection]: ColorCorrection object with extracted CDL
+            values, or None if no valid CDL metadata is found.
+            
+    Example:
+        >>> cc = _extract_cdl_from_otio_clip(otio_clip, "input.edl")
+        >>> if cc:
+        ...     print(f"Extracted CDL for {cc.id}")
+
+    """
+    # Check if clip has CDL metadata
+    if not hasattr(clip, 'metadata') or 'cdl' not in clip.metadata:
+        return None
+        
+    cdl_data = clip.metadata['cdl']
+    
+    # Create ColorCorrection with clip name as ID
+    clip_name = getattr(clip, 'name', 'Unknown')
+    cc = correction.ColorCorrection(clip_name, source_file)
+    
+    try:
+        # Extract SOP values if present
+        if 'asc_sop' in cdl_data:
+            sop_data = cdl_data['asc_sop']
+            # Validate that sop_data is a dictionary
+            if not isinstance(sop_data, dict):
+                raise TypeError(
+                    f"Expected dict for asc_sop, got {type(sop_data).__name__}"
+                    )
+            if 'slope' in sop_data:
+                cc.slope = sop_data['slope']
+            if 'offset' in sop_data:
+                cc.offset = sop_data['offset']
+            if 'power' in sop_data:
+                cc.power = sop_data['power']
+                
+        # Extract saturation value if present
+        if 'asc_sat' in cdl_data:
+            cc.sat = cdl_data['asc_sat']
+            
+        return cc
+        
+    except (KeyError, TypeError, ValueError) as e:
+        # Handle malformed CDL metadata gracefully
+        if config.config.halt_on_error:
+            raise ParseError(
+                f"Malformed CDL metadata in clip '{clip_name}': {e}"
+            )
+        else:
+            # Return None for malformed data when not in strict mode
+            return None
+
+
+def _extract_cdl_metadata(timeline, source_file: Union[str, Path]) -> List[correction.ColorCorrection]:
+    """Process OTIO timeline structure to extract all clips with CDL data.
+    
+    Iterates through all tracks and clips in an OpenTimelineIO timeline
+    to extract CDL metadata and create ColorCorrection objects. Maintains
+    consistent error handling across formats.
+    
+    Args:
+        timeline: OTIO Timeline object to process.
+        source_file (Union[str, Path]): Source file path for ColorCorrections.
+        
+    Returns:
+        List[ColorCorrection]: List of ColorCorrection objects extracted
+            from timeline clips that contain valid CDL metadata.
+            
+    Raises:
+        ParseError: If timeline structure is invalid or cannot be processed.
+        
+    Example:
+        >>> corrections = _extract_cdl_metadata(otio_timeline, "input.edl")
+        >>> print(f"Found {len(corrections)} clips with CDL data")
+        
+    """
+    cdl_corrections = []
+    
+    try:
+        # Iterate through all tracks in the timeline
+        for track in timeline.tracks:
+            # OTIO tracks are list-like, iterate through clips directly
+            for clip in track:
+                cc = _extract_cdl_from_otio_clip(clip, source_file)
+                if cc is not None:
+                    cdl_corrections.append(cc)
+                    
+    except Exception as e:
+        raise ParseError(
+            f"Error processing OTIO timeline structure: {e}"
+        )
+        
+    return cdl_corrections
+
 
 # ==============================================================================
 # PRIVATE FUNCTIONS
