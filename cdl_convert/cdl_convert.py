@@ -192,7 +192,7 @@ def parse_args(validate_files=True):
     parser.add_argument(
         "--no-output",
         action='store_true',
-        help="Parse files without writing output. Useful with --halt and
+        help="Parse files without writing output. Useful with --halt and"
              " --check for validation-only runs."
     )
     
