@@ -1,31 +1,23 @@
 #!/usr/bin/env python
-"""
+"""CDL Convert Configuration Module
 
-CDL Convert Config
-================
+Configuration management for CDL Convert
 
-Contains type-safe configuration parameters using modern Python features.
+Classes:
+    CDLFormat: Enum containing all supported CDL format types with type safety.
+    Config: Type-safe configuration dataclass containing all global settings
+        with validation.
 
-## GLOBALS
-
-    config
-        Global configuration instance. Access settings via config.halt_on_error,
-        config.collection_formats, etc.
-
-## CLASSES
-
-    CDLFormat
-        Enum containing all supported CDL format types.
-
-    Config
-        Type-safe configuration dataclass containing all global settings.
+Global Configuration:
+    config: Global configuration instance providing centralized access to all
+        settings via type-safe attributes (config.halt_on_error, etc.).
 
 ## License
 
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2015 Sean Wallitsch
+Copyright (c) 2015-2025 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -81,14 +73,17 @@ class CDLFormat(Enum):
 class Config:
     """Type-safe configuration for CDL Convert.
     
-    This class contains all global configuration settings with proper type hints
-    and validation.
+    This class contains all global configuration settings with proper type
+    hints and validation.
     
     Attributes:
         halt_on_error: If True, exceptions are raised instead of being handled
                       with default behavior. Used for strict validation mode.
-        collection_formats: Set of formats that represent ColorCollection objects.
-        single_formats: Set of formats that represent single ColorCorrection objects.
+        collection_formats: Set of formats that represent ColorCollection
+            objects.
+        single_formats: Set of formats that represent single ColorCorrection
+            objects.
+
     """
     halt_on_error: bool = False
     collection_formats: FrozenSet[CDLFormat] = frozenset({
@@ -111,6 +106,7 @@ class Config:
             
         Returns:
             True if the format is a collection format, False otherwise.
+
         """
         try:
             fmt = CDLFormat(format_type.lower())
@@ -126,6 +122,7 @@ class Config:
             
         Returns:
             True if the format is a single format, False otherwise.
+            
         """
         try:
             fmt = CDLFormat(format_type.lower())

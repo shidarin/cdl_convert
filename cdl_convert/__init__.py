@@ -1,50 +1,63 @@
 #!/usr/bin/env python
-"""
+"""CDL Convert - Modern ASC CDL Format Conversion Library
 
-CDL Convert
-===========
+CDL Convert is a Python library and command-line tool for converting between
+common American Society of Cinematographers Color Decision List (ASC CDL)
+formats. This modernized version uses Python 3.11+ features including type
+hints, pathlib, dataclasses, and enhanced error handling.
 
-Converts between common ASC CDL (http://en.wikipedia.org/wiki/ASC_CDL)
-formats. The American Society of Cinematographers Color Decision List (ASC CDL,
-or CDL for short) is a schema to simplify the process of interchanging color
-data between various programs and facilities.
+https://en.wikipedia.org/wiki/ASC_CDL
 
-The ASC has defined schemas for including the 10 basic numbers in 5 different
-formats:
+CDL is a schema to simplify the process of interchanging color data between
+various programs and facilities in the film and television industry.
 
-* Avid Log Exchange (ALE)
-* Film Log EDL Exchange (FLEx)
-* CMX EDL
-* XML Color Correction (cc)
-* XML Color Correction Collection (ccc)
-* XML Color Decision List (cdl)
+Supported Input Formats:
+    * Avid Log Exchange (ALE)
+    * Film Log EDL Exchange (FLEx) 
+    * CMX EDL
+    * XML Color Correction (cc)
+    * XML Color Correction Collection (ccc)
+    * XML Color Decision List (cdl)
+    * Space Separated CDL (RCDL) - Rhythm and Hues format
 
-Unofficial Formats:
+Supported Output Formats:
+    * XML Color Correction (cc)
+    * XML Color Correction Collection (ccc)
+    * XML Color Decision List (cdl)
+    * Space Separated CDL (RCDL)
 
-* OCIOCDLTransform, a Foundry Nuke node
-* Space Separated CDL, a Rhythm and Hues cdl format
+ToDo:
+    * OCIOCDLTransform (Foundry Nuke node)
 
-It is the purpose of CDLConvert to convert ASC CDL information between these
-basic formats to further facilitate the ease of exchange of color data within
-the Film and TV industries.
+Example Usage:
+    >>> from cdl_convert import parse_file, ColorCorrection
+    >>> 
+    >>> # Parse any supported format
+    >>> collection = parse_file("input.ale")
+    >>> print(f"Found {len(collection.color_corrections)} corrections")
+    >>> 
+    >>> # Create and modify corrections
+    >>> cc = ColorCorrection("my_shot")
+    >>> cc.slope = [1.2, 1.1, 1.0]
+    >>> cc.sat = 0.9
+    >>> 
+    >>> # Use ColorValues dataclass
+    >>> values = cc.get_color_values()
+    >>> print(f"Is unity: {values.is_unity()}")
 
-`cdl_convert` supports parsing ALE, FLEx, CC, CCC, CDL and RCDL. We can write
-out CC, CCC, CDL and RCDL.
-
-**CDLConvert is not associated with the American Society of Cinematographers**
+**CDL Convertis not associated with the American Society of Cinematographers**
 
 ## Public Functions
 
-    reset_all()
+    reset_all() -> None
         Resets all the class level memberships lists and dictionaries. This
         effectively resets the entire module.
-
 ## License
 
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2015 Sean Wallitsch
+Copyright (c) 2015-2025 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -90,7 +103,7 @@ from .write import write_cc, write_ccc, write_cdl, write_rnh_cdl
 # ==============================================================================
 
 __author__ = "Sean Wallitsch"
-__copyright__ = "Copyright 2015, Sean Wallitsch"
+__copyright__ = "Copyright 2015-2025, Sean Wallitsch"
 __credits__ = ["Sean Wallitsch", ]
 __license__ = "MIT"
 __version__ = "0.9.2"
@@ -135,8 +148,22 @@ __all__ = [
 # ==============================================================================
 
 
-def reset_all():
-    """Resets all class level member lists and dictionaries"""
+def reset_all() -> None:
+    """Reset all class level member lists and dictionaries.
+    
+    This function clears all registered ColorCorrection, ColorCollection,
+    ColorDecision, and related class instances. Useful for testing or
+    when you need to start with a clean state.
+    
+    Example:
+        >>> from cdl_convert import ColorCorrection, reset_all
+        >>> cc1 = ColorCorrection("test1")
+        >>> cc2 = ColorCorrection("test2") 
+        >>> print(len(ColorCorrection.members))  # 2
+        >>> reset_all()
+        >>> print(len(ColorCorrection.members))  # 0
+        
+    """
     # Import these here to avoid cyclic imports
 
     ColorCorrection.reset_members()

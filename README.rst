@@ -11,7 +11,7 @@ CDL Convert
 - **Docs:** http://cdl-convert.readthedocs.org/
 - **GitHub:** https://github.com/shidarin/cdl_convert
 - **PyPI:** https://pypi.python.org/pypi/cdl_convert
-- **Python Versions:** 2.7-3.5, PyPy & PyPy3
+- **Python Versions:** 3.11, 3.12, 3.13, 3.14, PyPy3
 
 Introduction
 ------------
@@ -43,38 +43,63 @@ data within the Film and TV industries.
 ``cdl_convert`` supports parsing ALE, FLEx, CC, CCC, CDL CMX EDL and RCDL.
 We can write out CC, CCC, CDL and RCDL.
 
-The only requirement of ``cdl_convert`` is Pixar's `OpenTimelineIO`_ project
-for reading EDLs. This dependency was added because OTIO does a much better
-job of parsing EDLs than we do, so a much larger range of compatibility was
-added.
+New in 1.0:
+^^^^^^^^^^^
 
-**cdl_convert is not associated with the American Society of
-Cinematographers**
+This version of ``cdl_convert`` has been modernized with:
+
+- **Type hints** throughout the codebase for better IDE support and code clarity
+- **pathlib.Path** for robust cross-platform file operations
+- **Dataclasses** for structured color correction data (``ColorValues``)
+- **Enhanced error handling** with specific exception types (``ValidationError``, ``ParseError``, ``FormatError``)
+- **f-string formatting** for improved string operations
+- **Context managers** for safe resource management
+- **Match statements** for cleaner control flow (Python 3.10+ features)
+
+``cdl_convert`` uses the Academy Software Foundation's `OpenTimelineIO`_ project for reading EDLs.
+
+**cdl_convert is not associated with the American Society of Cinematographers**
 
 Usage
 -----
 
-Most likely you'll use ``cdl_convert`` as a script, instead of a python package
-itself (indeed, even the name is formatted more like a script (with an
-underscore) than the more common all lowercase of python modules.
-
-For usage as a python module, see the module documentation.
+``cdl_convert`` can be used both as a command-line script and as a Python library.
 
 Script Usage
 ^^^^^^^^^^^^
 
-If you just want to convert to a ``.cc`` XML file, the only required argument
-is an input file, like so:::
+Convert to a ``.cc`` XML file (default output)::
 
     $ cdl_convert ./di_v001.flex
 
-You can override the default ``.cc`` output, or provide multiple outputs with
-the ``-o`` flag.::
+Override the default output format or provide multiple outputs::
 
     $ cdl_convert ./di_v001.flex -o cc,cdl
 
+Use enhanced error checking and validation::
+
+    $ cdl_convert --check --halt-on-error ./input.ale -o ccc
+
+Specify output directory::
+
+    $ cdl_convert ./input.flex -d ./output_directory/ -o cc,ccc,cdl
+
 Changelog
 ---------
+
+*New in version 1.0.0:*
+
+**Breaking Changes:**
+
+- **Python 3.11+ Required** - Dropped support for Python 2.7-3.10
+
+**New Features:**
+
+- **Type hints throughout** - Full type annotation for better IDE support
+- **pathlib integration** - Modern file path handling with ``pathlib.Path``
+- **ColorValues dataclass** - Structured color correction data with validation
+- **Enhanced error handling** - Specific exception types (``ValidationError``, ``ParseError``, ``FormatError``)
+- **Colored CLI output** - Enhanced command-line experience with colored error messages
 
 *New in version 0.9.2:*
 
@@ -152,15 +177,28 @@ and ``.flex`` files now return a collection.
 Installation
 ------------
 
-Installing is as simple as using pip:::
+Installing from PyPI
+^^^^^^^^^^^^^^^^^^^^^
 
-    $ pip install cdl_convert --process-dependency-links
+The recommended installation method using pip::
 
-If you don't want to bother with a pip style install, you can alternatively
-grab the entire `cdl_convert`_ directory, then set up a shortcut to call
-``cdl_convert/cdl_convert.py``.
+    $ pip install cdl_convert
 
-Note you will need to install `OpenTimelineIO`_ to parse EDLs.
+Installing from Source
+^^^^^^^^^^^^^^^^^^^^^^
+
+For the latest development version::
+
+    $ git clone https://github.com/shidarin/cdl_convert.git
+    $ cd cdl_convert
+    $ pip install -e .
+
+Dependencies
+^^^^^^^^^^^^
+
+``cdl_convert`` automatically installs its dependencies:
+
+- **OpenTimelineIO** - For robust EDL parsing
 
 GitHub, Bug Reporting and Support
 ---------------------------------
@@ -174,30 +212,61 @@ The `issues`_ page on GitHub is the best place to report bugs or request support
 and while ``cdl_convert`` is distributed with no warranty of any kind, issues
 will be read and helped if able.
 
+Migration from Legacy Versions
+------------------------------
+
+If you're upgrading from an older version of ``cdl_convert`` (0.9.x), please note:
+
+API Compatibility
+^^^^^^^^^^^^^^^^^^
+
+The public API remains largely compatible, but with improvements:
+
+- All functions now have **type hints**
+- **Enhanced error messages** with specific exception types
+- **ColorValues dataclass** for structured color data access
+- **Improved file handling** with automatic pathlib conversion
+
+Migration Example::
+
+    # Old usage (still works)
+    from cdl_convert import ColorCorrection
+    cc = ColorCorrection("test")
+    cc.slope = [1.2, 1.1, 1.0]
+
+    # New enhanced usage
+    from cdl_convert import ColorCorrection, ColorValues
+    from pathlib import Path
+    
+    cc = ColorCorrection("test", input_file=Path("input.ale"))
+    values = ColorValues(slope=(1.2, 1.1, 1.0), saturation=0.9)
+    cc.set_color_values(values)
+    
+    # Enhanced validation and error handling
+    try:
+        cc.slope = [-1.0, 1.0, 1.0]  # This will raise ValidationError
+    except ValidationError as e:
+        print(f"Detailed error: {e}")
+
 Frequently Asked Questions
 --------------------------
 
 - What versions of Python does ``cdl_convert`` support?
-    ``cdl_convert`` works in Python 2.6 through 3.4 and PyPy. A full test suite
-    runs continuous integration through `Travis-ci.org`_, coverage through
-    `coveralls.io`_, and code quality checked with `landscape.io`_. **Code is**
-    pep 8 **compliant**, with docstrings following `google code`_ docstring
-    standards.
+    ``cdl_convert`` requires **Python 3.11 or higher**. 
 
-- Why don't you support format *X*?
-    I either haven't had time to build a parser for the format yet, or I might
-    even be unaware it exists. Perhaps you should drop by the `issues`_ page
-    and create a request for the format? If creating a request for a format it
-    helps immensely to have a sample of that format.
 
 - Why the underscore?
     ``cdl_convert`` started as a simple script to convert from one format to
     another. As such, it wasn't named with the standards that one would usually
     use for a python module. By the time the project became big enough, was on
     PyPI, etc, it was too spread out on the web, in too many places to make
-    changing easy. In the end, I opted to keep it. At some point,
-    ``cdl_convert`` might migrate into a larger, more generic film & tv
-    python module, which will be named properly.
+    changing easy. In the end, I opted to keep it.
+
+- Why the ten year break between updates?
+    Work. When I stated ``cdl_convert``, I was a VFX artist who coded on the side.
+    ``cdl_convert`` helped me make the transition to Pipeline programmer, where I started
+    slinging code daily and stopped having time to do it on the side. Since then,
+    I've stopped coding daily and find more time in my off-hours to code again.
 
 Contributing
 ------------
@@ -230,17 +299,16 @@ Submitting Code
 ^^^^^^^^^^^^^^^
 
 Before generating a pull request, make sure to run the test suite:::
+    
+    $ python -m pytest tests/ -v
 
-    $ python setup.py test
+If the tests fail, note which tests are failing and how they would have been
+affected by your code. The tests are run every push with github actions, so
+they should have been passing before your changes. If you know you didn't break something, and the tests are simply reporting out of date results based on your changes, so *change the tests.*
 
-If the tests fail, note which tests are failing, how they would have been
-affected by your code. Always assume you broke something rather than that the
-tests are 'wrong.' If you know you didn't break something, and the tests are
-simply reporting out of date results based on your changes, *change the tests.*
-
-If your code fails the tests (`Travis-ci.org`_ checks all pull requests when
+If your code fails the tests (GitHub Actions checks all pull requests when
 you create them) it will be **rejected**. If the code style doesn't follow
-PEP-8, it's not going to be a high priority for integration.
+PEP-8 or type hints are missing, please correct.
 
 When submitting, you'll be asked to waive copyright to your submitted code to
 the listed authors. This is so we can keep a tight handle on the code and change
@@ -252,7 +320,7 @@ License
     The MIT License (MIT)
 
     | cdl_convert
-    | Copyright (c) 2015 Sean Wallitsch
+    | Copyright (c) 2015-2025 Sean Wallitsch
     | http://github.com/shidarin/cdl_convert/
 
     Permission is hereby granted, free of charge, to any person obtaining a copy

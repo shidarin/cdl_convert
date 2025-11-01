@@ -1,26 +1,40 @@
 #!/usr/bin/env python
-"""
+"""CDL Convert Utilities Module
 
-CDL Convert Utils
-=================
+This module provides utility functions for color correction validation,
+numeric conversion, and data processing.
 
-Contains basic utility functions for cdl_convert.
+Public Functions:
+    sanity_check(ColorCorrection) -> None: Validation function that
+        checks color correction values against reasonable ranges.
 
-## Public Functions
+    to_decimal(Union[str, int, float, Decimal], str) -> Decimal:
+        Numeric conversion function with error handling.
 
-    sanity_check()
-        Checks the color values of a given ColorCorrection to see if they fall
-        within 'sane' values.
-
-    to_decimal()
-        Converts floats, ints, and strings to Decimal() in a predictable way.
+Example Usage:
+    >>> from decimal import Decimal
+    >>> from cdl_convert import ColorCorrection, sanity_check, to_decimal
+    >>> 
+    >>> # Type-safe numeric conversion
+    >>> slope_value = to_decimal("1.2", "slope")
+    >>> print(f"Converted value: {slope_value}")  # Decimal('1.2')
+    >>> 
+    >>> # Enhanced validation with detailed reporting
+    >>> cc = ColorCorrection("test_shot")
+    >>> cc.slope = [2.5, 1.0, 0.8]  # Potentially unusual values
+    >>> sanity_check(cc)  # Provides warnings
+    >>> 
+    >>> try:
+    ...     invalid_value = to_decimal("not_a_number", "saturation")
+    ... except ValidationError as e:
+    ...     print(f"Conversion error: {e}")
 
 ## License
 
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2015 Sean Wallitsch
+Copyright (c) 2015-2025 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,8 +52,8 @@ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
 
 """
 
@@ -70,37 +84,45 @@ __all__ = [
 
 
 def sanity_check(colcor):
-    """Checks values on :class:`ColorCorrection` for sanity.
-
-    **Args:**
-        colcor : (:class:`ColorCorrection`)
-            The :class:`ColorCorrection` to check for sane values.
-
-    **Returns:**
-        (bool)
-            Returns True if all values are sane.
-
-    **Raises:**
-        N/A
-
-    Will print a warning to stdout if any values exceed normal limits.
-    Normal limits are defined as:
-
-    For Slope, Power and Saturation:
-        Any value over 3 or under 0.1
-
-    For Offset:
-        Any value over 1 or under -1
-
-    Note that depending on the desired look for a shot or sequence, it's
-    possible that a single ColorCorrection element might have very odd
-    looking values and still achieve a correct look.
+    """Check ColorCorrection values against reasonable ranges.
+    
+    Validates CDL parameter values against typical ranges used in color
+    correction workflows. Prints warnings to stdout for values that fall
+    outside normal ranges, but does not prevent their use since extreme
+    values may be intentional for creative looks.
+    
+    Validation ranges:
+    - Slope, Power, Saturation: 0.1 to 3.0
+    - Offset: -1.0 to 1.0
+    
+    Args:
+        colcor (ColorCorrection): ColorCorrection instance to validate.
+        
+    Returns:
+        bool: True if all values are within normal ranges, False if any
+            values triggered warnings.
+            
+    Example:
+        >>> cc = ColorCorrection("test")
+        >>> cc.slope = [2.5, 1.0, 0.8]  # High red slope
+        >>> is_sane = sanity_check(cc)  # Prints warning for 2.5 slope
+        >>> print(is_sane)  # False
 
     """
     sane_values = True
 
     def _check_value(value, minmax, value_type):
-        """Checks if a value falls outside of min or max"""
+        """Check if value falls outside acceptable range and print warning.
+        
+        Args:
+            value: Numeric value to check (converted to float for comparison).
+            minmax: Tuple of (min, max) acceptable values.
+            value_type: String description of value type for warning message.
+            
+        Returns:
+            bool: True if value is within range, False if outside range.
+
+        """
         value = float(value)  # Decimal doesn't always compare correctly
         if value <= minmax[0] or value >= minmax[1]:
             print(
@@ -129,26 +151,36 @@ def sanity_check(colcor):
 
 
 def to_decimal(value, name='Value'):
-    """Converts an incoming value to Decimal in the best way
-
-    **Args:**
-        value : (Decimal|str|float|int)
-            Any numeric value to be checked.
-
-        name='Value' : (str)
-            The type of value being checked: slope, offset, etc.
-
-    **Returns:**
-        (Decimal)
-            If value passes all tests, returns value as Decimal.
-
-    **Raises:**
-        TypeError:
-            If value given is not a number.
-
-        ValueError:
-            If given a value that isn't an allowed type.
-
+    """Convert numeric value to Decimal with validation and error handling.
+    
+    Converts various numeric types to Decimal format with appropriate
+    formatting for CDL values. Handles type conversion, string parsing,
+    and ensures proper decimal representation for color correction values.
+    
+    Conversion behavior:
+    - float: Converted to string then Decimal to avoid precision issues
+    - int: Appended with '.0' for proper decimal format
+    - str: Validated and parsed, '.0' added if no decimal point
+    - Decimal: Returned as-is
+    
+    Args:
+        value (Union[Decimal, str, float, int]): Numeric value to convert.
+        name (str): Descriptive name for the value type (e.g., 'slope',
+            'offset') used in error messages.
+            
+    Returns:
+        Decimal: Converted value as Decimal instance.
+        
+    Raises:
+        ValidationError: If value cannot be converted to a valid number
+            or is an unsupported type.
+            
+    Example:
+        >>> slope_val = to_decimal(1.2, "slope")
+        >>> print(slope_val)  # Decimal('1.2')
+        >>> offset_val = to_decimal("0.5", "offset")
+        >>> print(offset_val)  # Decimal('0.5')
+        
     """
     # Use match statement for type-based conversion
     match value:

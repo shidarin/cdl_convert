@@ -1,53 +1,45 @@
 #!/usr/bin/env python
-"""
+"""CDL Convert Decision Module
 
-CDL Convert Decision
-====================
+This module contains classes for managing color decisions and media references
+in ASC CDL workflows, providing type-safe containers for linking color
+corrections with reference media.
 
-Contains the ColorDecision class and it's unique child classes,
-ColorCorrectionRef and MediaRef.
+Classes:
+    ColorCorrectionRef: Reference to existing ColorCorrection instances. 
+        References are validated when accessed if strict mode is enabled.
 
-## Classes
+    ColorDecision: Container linking ColorCorrections with MediaRefs.
+        Supports both direct corrections and correction references.
 
-    ColorCorrectionRef
+    MediaRef: Media reference handler with pathlib integration for
+        file operations, sequence detection, and path manipulation.
 
-        This class contains a reference to a ColorCorrection. The reference
-        should be a reference to an existing ColorCorrection, but this is
-        not enforced explicitly unless config.HALT_ON_ERROR is set and you
-        try and retrieve the referenced Correction.
-
-        Should be contained only within a ColorDecision
-
-    ColorDecision
-
-        A simple container format. Requires a ColorCorrection or a
-        ColorCorrectionRef, and may also contain an optional MediaRef. This
-        should only be contained within a ColorCollection.
-
-        ColorDecisions are used to link a ColorCorrection with one or several
-        pieces of reference media, as represented by MediaRef. A single
-        ColorCorrection may be referenced and 'contained' within many different
-        ColorDecisions so that a single ColorCorrection can be linked with many
-        different MediaRefs
-
-    MediaRef
-
-        Contains a single uri path to a peice of reference media. This class
-        contains many attributes and helper methods for dealing with media
-        reference, which should let a user do the following and more:
-
-            * Change refs to be absolute or relative
-            * Change refs to be in a new directory
-            * Determine if a ref exists on disk
-            * Determine if a ref is an image sequence
-            * If a directory, find all files and sequences within.
+Example Usage:
+    >>> from pathlib import Path
+    >>> from cdl_convert import ColorCorrection, ColorDecision, MediaRef
+    >>> 
+    >>> # Create correction and media reference
+    >>> cc = ColorCorrection("shot_001")
+    >>> media = MediaRef(Path("footage/shot_001.%04d.exr"))
+    >>> 
+    >>> # Create decision linking correction to media
+    >>> decision = ColorDecision(cc, media_ref=media)
+    >>> 
+    >>> if media.exists():
+    ...     print(f"Media found: {media.ref}")
+    >>> 
+    >>> try:
+    ...     decision.validate_references()
+    ... except ValidationError as e:
+    ...     print(f"Validation error: {e}")
 
 ## License
 
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2015 Sean Wallitsch
+Copyright (c) 2015-2025 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -98,23 +90,34 @@ from .exceptions import ValidationError, ParseError
 
 @dataclass
 class MediaRefInfo:
-    """Data structure for parsed media reference URI components.
+    """Container for parsed media reference URI components.
     
-    This dataclass provides a clean way to store the components of a parsed
-    media reference URI, making it easier to work with protocol, directory,
-    and filename components separately.
+    Stores the individual components of a media reference URI after parsing,
+    allowing separate access to protocol, directory, and filename parts.
     
     Attributes:
-        protocol: URI protocol (e.g., 'http', 'file') without '://'
-        directory: Directory path component
-        filename: Filename component
+        protocol (str): URI protocol (e.g., 'http', 'file') without the '://'
+            suffix. Empty string if no protocol is present.
+        directory (str): Directory path component of the URI. May be relative
+            or absolute path.
+        filename (str): Filename component of the URI. Empty string if URI
+            points to a directory only.
+
     """
     protocol: str = ''
     directory: str = ''
     filename: str = ''
     
     def to_uri(self) -> str:
-        """Reconstruct the full URI from components."""
+        """Reconstruct the full URI from individual components.
+        
+        Combines protocol, directory, and filename back into a complete URI
+        string, adding protocol prefix if present.
+        
+        Returns:
+            str: Complete URI string reconstructed from components.
+
+        """
         if self.protocol:
             prefix = f"{self.protocol}://"
         else:
@@ -135,20 +138,30 @@ class MediaRefInfo:
 
 @dataclass
 class SequenceInfo:
-    """Data structure for image sequence information.
+    """Container for image sequence detection results.
     
-    This dataclass stores information about detected image sequences,
-    including the sequence pattern and whether sequences were found.
+    Stores information about detected image sequences, including whether
+    sequences were found and their patterns with frame padding notation.
     
     Attributes:
-        is_sequence: True if sequences were detected
-        sequences: List of sequence patterns with # padding
+        is_sequence (bool): True if image sequences were detected in the
+            media reference path.
+
+        sequences (List[str]): List of sequence patterns using # padding
+            notation (e.g., 'image.####.exr'). None is converted to empty
+            list during initialization.
+
     """
     is_sequence: bool = False
     sequences: List[str] = None
     
     def __post_init__(self) -> None:
-        """Initialize sequences list if None."""
+        """Initialize sequences list after dataclass creation.
+        
+        Ensures sequences attribute is always a list, converting None
+        to an empty list for consistent behavior.
+
+        """
         if self.sequences is None:
             self.sequences = []
 
@@ -171,88 +184,49 @@ __all__ = [
 
 
 class ColorCorrectionRef(AscXMLBase):
-    """Reference marker to a full color correction
+    """Reference to an existing ColorCorrection by ID.
 
-    Description
-    ~~~~~~~~~~~
+    Contains a reference to a ColorCorrection instance by storing its ID.
+    The reference can be resolved to retrieve the actual ColorCorrection
+    object if it exists in the ColorCorrection.members dictionary.
 
-    This is a fairly basic class that simply contains a reference to a full
-    :class:`ColorCorrection` . The ``id`` attribute must match the
-    ``id`` attribute in order for this class to function fully.
+    When writing to formats that support references (like CDL), the reference
+    writes as a ColorCorrectionRef element. When writing to formats that don't
+    support references (like CCC), behavior depends on halt_on_error setting.
 
-    When writing to a format that allows empty references (like ``cdl``),
-    the reference can write correctly without breaking. However, if writing to
-    a format that does not support reference objects at all (like ``ccc``),
-    attempting to write an empty reference will result in a ``ValueError`` (if
-    ``HALT_ON_ERROR`` is set to ``True``, or simply skip past the reference
-    entirely.
+    Class Attributes:
+        members (Dict[str, List[ColorCorrectionRef]]): Dictionary mapping
+            ColorCorrection IDs to lists of ColorCorrectionRef instances
+            that reference them. Multiple references can point to the same ID.
 
-    **Class Attributes:**
+    Attributes:
+        cc (Optional[ColorCorrection]): The referenced ColorCorrection instance
+            if the reference can be resolved, None otherwise.
+        parent (Optional[ColorDecision]): Parent ColorDecision that contains
+            this reference.
+        id (Optional[str]): ID of the ColorCorrection this reference points to.
+        xml (str): Formatted XML string representation. Inherited from
+            AscXMLBase.
+        xml_root (str): XML string with declaration header. Inherited from
+            AscXMLBase.
 
-        members : {str: [:class`ColorCorrectionRef` ]}
-            All instanced :class:`ColorCorrectionRef` are added to this
-            member dictionary. Multiple :class:`ColorCorrectionRef` can
-            share the same reference id, therefore for each reference id key,
-            the members dictionary stores a list of
-            :class:`ColorCorrectionRef` instances that share that ``id``
-            value.
-
-    **Attributes:**
-
-        cc : (:class:`ColorCorrection`)
-            If the stored reference resolves to an existing
-            :class:`ColorCorrection`, this attribute will return that node
-            using the ``resolve_reference`` method. This attribute is the same
-            as calling that method.
-
-        parent : (:class:`ColorDecision`)
-            The parent :class:`ColorDecision` that contains this node.
-
-        id : (str)
-            The :class:`ColorCorrection` id that this reference refers to. If
-            ``HALT_ON_ERROR`` is set to ``True``, will raise a ``ValueError``
-            if set to a :class:`ColorCorrection` ``id`` value that doesn't
-            yet exist.
-
-        xml : (str)
-            A nicely formatted XML string representing the node. Inherited from
-            :class:`AscXMLBase`.
-
-        xml_root : (str)
-            A nicely formatted XML, ready to write to file string representing
-            the node. Formatted as an XML root, it includes the xml version and
-            encoding tags on the first line. Inherited from
-            :class:`AscXMLBase`.
-
-    **Public Methods:**
-
-        build_element()
-            Builds an ElementTree XML Element for this node and all nodes it
-            contains. ``element``, ``xml``, and ``xml_root`` attributes use
-            this to build the XML. This function is identical to calling the
-            ``element`` attribute. Overrides inherited placeholder method
-            from :class:`AscXMLBase` .
-
-        reset_members()
-            Resets the class level members list.
-
-        resolve_reference()
-            Attempts to return the :class:`ColorCorrection` that this
-            reference is supposed to refer to.
-
-            If ``HALT_ON_ERROR`` is set to ``True``, resolving a bad reference
-            will raise a ``ValueError`` exception. If not set, it will simply
-            return None.
-
-            Otherwise (if the ``id`` attribute matches a known
-            :class:`ColorCorrection` ``id``, the :class:`ColorCorrection` will
-            be returned.
+    Example:
+        >>> cc = ColorCorrection("shot_001")
+        >>> ref = ColorCorrectionRef("shot_001")
+        >>> print(ref.cc.id)  # "shot_001"
+        >>> print(ref.id)     # "shot_001"
 
     """
 
     members: Dict[str, List['ColorCorrectionRef']] = {}
 
     def __init__(self, id: str) -> None:  # pylint: disable=W0622
+        """Initialize ColorCorrectionRef with target ColorCorrection ID.
+        
+        Args:
+            id (str): ID of the ColorCorrection this reference should point to.
+                The ColorCorrection doesn't need to exist at creation time.
+        """
         super(ColorCorrectionRef, self).__init__()
         self._id: Optional[str] = None
         # Bypass cc id existence checks on first set by calling private
@@ -268,17 +242,34 @@ class ColorCorrectionRef(AscXMLBase):
 
     @property
     def cc(self) -> Optional[ColorCorrection]:  # pylint: disable=C0103
-        """Returns the referenced ColorCorrection"""
+        """Return the referenced ColorCorrection instance if it exists.
+        
+        Returns:
+            Optional[ColorCorrection]: The ColorCorrection instance with
+                matching ID, or None if reference cannot be resolved.
+        """
         return self.resolve_reference()
 
     @property
     def id(self) -> Optional[str]:  # pylint: disable=C0103
-        """Returns the reference id"""
+        """Return the ID of the referenced ColorCorrection.
+        
+        Returns:
+            Optional[str]: ColorCorrection ID this reference points to.
+        """
         return self._id
 
     @id.setter
     def id(self, ref_id: str) -> None:  # pylint: disable=C0103
-        """Sets the reference id"""
+        """Set the ID of the ColorCorrection to reference.
+        
+        Args:
+            ref_id (str): ID of the ColorCorrection to reference.
+            
+        Raises:
+            ValidationError: If ref_id doesn't match existing ColorCorrection
+                and halt_on_error is enabled.
+        """
         if ref_id not in ColorCorrection.members and config.config.halt_on_error:
             raise ValidationError(
                 f"Reference id '{ref_id}' does not match any existing "
@@ -291,7 +282,11 @@ class ColorCorrectionRef(AscXMLBase):
     # Private Methods =========================================================
 
     def _set_id(self, new_ref: str) -> None:
-        """Changes the id field and updates members dictionary"""
+        """Change reference ID and update class members dictionary.
+        
+        Args:
+            new_ref (str): New ColorCorrection ID to reference.
+        """
         # The only time it won't be in here is if this is the first time
         # we set it.
         if self.id in ColorCorrectionRef.members:
@@ -311,7 +306,15 @@ class ColorCorrectionRef(AscXMLBase):
     # Public Methods ==========================================================
 
     def build_element(self) -> ElementTree.Element:
-        """Builds an ElementTree XML element representing this reference"""
+        """Build XML ElementTree Element representing this reference.
+        
+        Creates a ColorCorrectionRef XML element with ref attribute containing
+        the referenced ColorCorrection ID.
+        
+        Returns:
+            ElementTree.Element: XML element representing this reference.
+
+        """
         cc_ref_xml = ElementTree.Element('ColorCorrectionRef')
         cc_ref_xml.attrib = {'ref': self.id}
 
@@ -321,13 +324,31 @@ class ColorCorrectionRef(AscXMLBase):
 
     @classmethod
     def reset_members(cls) -> None:
-        """Resets the member list"""
+        """Clear the class-level members dictionary.
+        
+        Removes all ColorCorrectionRef instances from the members dictionary.
+        Useful for testing or when starting with a clean state.
+
+        """
         cls.members = {}
 
     # =========================================================================
 
     def resolve_reference(self) -> Optional[ColorCorrection]:
-        """Returns the ColorCorrection this reference points to"""
+        """Resolve reference to return the actual ColorCorrection instance.
+        
+        Attempts to find and return the ColorCorrection instance with matching
+        ID from the ColorCorrection.members dictionary.
+        
+        Returns:
+            Optional[ColorCorrection]: The referenced ColorCorrection if found,
+                None if not found (when halt_on_error is False).
+                
+        Raises:
+            ValidationError: If reference cannot be resolved and halt_on_error
+                is enabled.
+
+        """
         if self.id in ColorCorrection.members:
             return ColorCorrection.members[self.id]
         else:
@@ -344,30 +365,24 @@ class ColorCorrectionRef(AscXMLBase):
 
 
 class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0903
-    """Contains a media ref and a ColorCorrection or reference to CC.
+    """Container linking ColorCorrections with media references.
 
-    Description
-    ~~~~~~~~~~~
+    Associates a ColorCorrection (or ColorCorrectionRef) with an optional
+    MediaRef to link color corrections with reference media files. This is
+    the primary mechanism for connecting color corrections to specific media
+    in CDL workflows.
 
-    This class is a simple container to link a :class:`ColorCorrection` (or
-    :class:`ColorCorrectionRef` ) with a :class:`MediaRef` . The
-    :class:`MediaRef` is optional, the ColorCorrection is not. The
-    ColorCorrection does not need to be provided at initialization time
-    however, as :class:`ColorDecision` provides an XML element parser
-    for deriving one.
+    The ColorCorrection component is required, while MediaRef is optional.
+    ColorDecision can contain either a direct ColorCorrection or a
+    ColorCorrectionRef that points to an existing ColorCorrection.
 
-    The primary purpose of a ColorDecision node is to associate a
-    ColorCorrection node with one or more items of Media Reference.
-
-    Along with Media Reference, a ColorDecision can contain the normal
-    type of input, viewer and description metadata.
-
-    Additional, it is the only node that can contain ColorCorrectionRef
-    nodes, which link the same ColorCorrection to many different
-    ColorDecisions (and thus, many different items of media reference)
+    ColorDecision is the only container that can hold ColorCorrectionRef
+    objects, allowing the same ColorCorrection to be linked with multiple
+    different media references across different ColorDecisions.
 
     An example containing a ColorCorrection node:
-    ::
+
+    ``` xml
         <ColorDecision>
             <MediaRef ref="http://www.theasc.com/foasc-logo2.png"/>
             <ColorCorrection id="ascpromo">
@@ -379,124 +394,57 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
                 </SOPNode>
             </ColorCorrection>
         </ColorDecision>
+    ```
 
     But it can also contain just a reference:
-    ::
+    
+    ``` xml
         <ColorDecision>
             <MediaRef ref="best/project/ever/jim.0100.dpx"/>
             <ColorCorrectionRef ref="xf45.x628"/>
         </ColorDecision>
+    ```
 
-    **Class Attributes:**
+    Class Attributes:
+        members (Dict[str, List[ColorDecision]]): Dictionary mapping
+            ColorCorrection IDs to lists of ColorDecision instances that
+            contain them. Multiple decisions can reference the same correction.
 
-        members : {str: [ :class`ColorDecision` ]}
-            All instanced :class:`ColorDecision` are added to this
-            member dictionary. The key is the id or reference id of the
-            contained :class:`ColorCorrection` or
-            :class:`ColorCorrectionRef` Multiple :class:`ColorDecision`
-            can , therefore for each reference id key,
-            the members dictionary stores a list of
-            :class:`ColorDecision` instances that share that ``id``
-            value.
-
-    **Attributes:**
-
-        cc : (:class:`ColorCorrection` , :class:`ColorCorrectionRef`)
-            Returns the contained ColorCorrection, even if it's a reference.
-
-        desc : [str]
-            Since all Asc nodes which can contain a single description, can
-            actually contain an infinite number of descriptions, the desc
-            attribute is a list, allowing us to store every single description
-            found during parsing.
-
-            Setting desc directly will cause the value given to append to the
-            end of the list, but desc can also be replaced by passing it a list
-            or tuple. Desc can be emptied by passing it None, [] or ().
-
-            Inherited from :class:`AscDescBase` .
-
-        element : (<xml.etree.ElementTree.Element>)
-            etree style Element representing the node. Inherited from
-            :class:`AscXMLBase` .
-
-        input_desc : (str)
-            Description of the color space, format and properties of the input
-            images. Inherited from :class:`AscColorSpaceBase` .
-
-        is_ref : (bool)
-            True if contains a :class:`ColorCorrectionRef` object instead
-            of a :class:`ColorCorrection`
-
-        media_ref : (:class:`MediaRef`)
-            Returns the contained :class:`MediaRef` or None.
-
-        parent : (:class:`ColorDecisionList`)
-            The parent node that contains this node.
-
-        set_parentage()
-            Sets child :class:`ColorCorrection` (or
-            :class:`ColorCorrectionRef`) and :class:`MediaRef` (if
-            present) ``parent`` attribute to point to this instance.
-
-        viewing_desc : (str)
-            Viewing device, settings and environment. Inherited from
-            :class:`AscColorSpaceBase` .
-
-        xml : (str)
-            A nicely formatted XML string representing the node. Inherited from
-            :class:`AscXMLBase`.
-
-        xml_root : (str)
-            A nicely formatted XML, ready to write to file string representing
-            the node. Formatted as an XML root, it includes the xml version and
-            encoding tags on the first line. Inherited from
-            :class:`AscXMLBase`.
-
-    **Public Methods:**
-
-        build_element()
-            Builds an ElementTree XML Element for this node and all nodes it
-            contains. ``element``, ``xml``, and ``xml_root`` attributes use
-            this to build the XML. This function is identical to calling the
-            ``element`` attribute. Overrides inherited placeholder method
-            from :class:`AscXMLBase` .
-
-        parse_xml_color_correction()
-            Parses a ColorDecision ElementTree Element for a ColorCorrection
-            Element or a ColorCorrectionRef Element.
-
-        parse_xml_color_decision()
-            Parses a ColorDecision ElementTree Element for metadata,
-            then calls parsers for ColorCorrection and MediaRef.
-
-        parse_xml_descs()
-            Parses an ElementTree Element for any Description tags and appends
-            any text they contain to the ``desc``. Inherited from
-            :class:`AscDescBase`
-
-        parse_xml_input_desc()
-            Parses an ElementTree Element to find & add an InputDescription.
-            If none is found, ``input_desc`` will remain set to ``None``.
-            Inherited from :class:`AscColorSpaceBase`
-
-        parse_xml_media_ref()
-            Parses an ColorDecision Element for a MediaRef Element.
-
-        parse_xml_viewing_desc()
-            Parses an ElementTree Element to find & add a ViewingDescription.
-            If none is found, ``viewing_desc`` will remain set to ``None``.
-            Inherited from :class:`AscColorSpaceBase`
-
-        reset_members()
-            Resets the class level members list.
+    Attributes:
+        cc (Optional[Union[ColorCorrection, ColorCorrectionRef]]): The
+            contained ColorCorrection or ColorCorrectionRef instance.
+        desc (List[str]): List of description strings. Inherited from
+            AscDescBase.
+        element (Optional[ElementTree.Element]): XML Element
+            representation. Inherited from AscXMLBase.
+        input_desc (Optional[str]): Input colorspace description. Inherited
+            from AscColorSpaceBase.
+        is_ref (bool): True if contains ColorCorrectionRef instead of
+            ColorCorrection.
+        media_ref (Optional[MediaRef]): Associated media reference, if any.
+        parent (Optional[Any]): Parent container (typically ColorCollection).
+        viewing_desc (Optional[str]): Viewing environment description.
+            Inherited from AscColorSpaceBase.
+        xml (str): Formatted XML string representation. Inherited from
+            AscXMLBase.
+        xml_root (str): XML string with declaration header. Inherited from
+            AscXMLBase.
 
     """
 
     members: Dict[str, List['ColorDecision']] = {}
 
     def __init__(self, color_correct: Optional[Union[ColorCorrection, 'ColorCorrectionRef']] = None, media: Optional['MediaRef'] = None) -> None:
-        """Inits an instance of ColorDecision"""
+        """Initialize ColorDecision with ColorCorrection and optional MediaRef.
+        
+        Args:
+            color_correct (Optional[Union[ColorCorrection, ColorCorrectionRef]]):
+                ColorCorrection or ColorCorrectionRef to associate with media.
+                Can be None initially and set later.
+            media (Optional[MediaRef]): Optional media reference to associate
+                with the color correction.
+
+        """
         super(ColorDecision, self).__init__()
         self.parent: Optional[Any] = None
         self._cc: Optional[Union[ColorCorrection, 'ColorCorrectionRef']] = None
@@ -510,27 +458,55 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     @property
     def cc(self) -> Optional[Union[ColorCorrection, 'ColorCorrectionRef']]:  # pylint: disable=C0103
-        """Returns the contained CC or CC Ref"""
+        """Return the contained ColorCorrection or ColorCorrectionRef.
+        
+        Returns:
+            Optional[Union[ColorCorrection, ColorCorrectionRef]]: The color
+                correction instance or reference, or None if not set.
+
+        """
         return self._cc
 
     @cc.setter
     def cc(self, new_cc: Optional[Union[ColorCorrection, 'ColorCorrectionRef']]) -> None:  # pylint: disable=C0103
-        """Sets the contained cc, updates dictionary and parentage"""
+        """Set the ColorCorrection or ColorCorrectionRef and update links.
+        
+        Args:
+            new_cc (Optional[Union[ColorCorrection, ColorCorrectionRef]]):
+                New color correction to associate with this decision.
+
+        """
         self._set_cc(new_cc)
 
     @property
     def is_ref(self) -> bool:
-        """True if our cc is a reference cc"""
+        """Return True if contains ColorCorrectionRef.
+        
+        Returns:
+            bool: True if cc is a ColorCorrectionRef, False if ColorCorrection.
+        """
         return type(self.cc) is ColorCorrectionRef
 
     @property
     def media_ref(self) -> Optional['MediaRef']:
-        """Returns Media Ref (if we have one) or none"""
+        """Return the associated MediaRef instance if present.
+        
+        Returns:
+            Optional[MediaRef]: The media reference associated with this
+                decision, or None if no media reference is set.
+
+        """
         return self._media_ref
 
     @media_ref.setter
     def media_ref(self, new_media_ref: Optional['MediaRef']) -> None:
-        """Sets media ref and updates parentage"""
+        """Set the MediaRef and update parent relationship.
+        
+        Args:
+            new_media_ref (Optional[MediaRef]): New media reference to
+                associate with this decision.
+
+        """
         self._media_ref = new_media_ref
         if new_media_ref:
             new_media_ref.parent = self
@@ -538,7 +514,13 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     # Private Methods =========================================================
 
     def _set_cc(self, new_cc: Optional[Union[ColorCorrection, 'ColorCorrectionRef']]) -> None:
-        """Sets cc to new_cc and updates members dictionary"""
+        """Set ColorCorrection and update class members dictionary.
+        
+        Args:
+            new_cc (Optional[Union[ColorCorrection, ColorCorrectionRef]]):
+                New color correction to set and register in members dictionary.
+
+        """
         if self.cc:
             # If we have a cc, we've already been added to the member's list,
             # and need to update membership.
@@ -564,7 +546,20 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     # Public Methods ==========================================================
 
     def build_element(self, resolve: bool = False) -> ElementTree.Element:  # pylint: disable=W0221
-        """Builds an ElementTree XML element representing this CC"""
+        """Build XML ElementTree Element representing this ColorDecision.
+        
+        Creates a ColorDecision XML element containing descriptions, MediaRef
+        (if present), and ColorCorrection or ColorCorrectionRef.
+        
+        Args:
+            resolve (bool): If True and this contains a ColorCorrectionRef,
+                resolve the reference and include the actual ColorCorrection
+                element instead of the reference element.
+                
+        Returns:
+            ElementTree.Element: XML element representing this ColorDecision.
+
+        """
         cd_xml = ElementTree.Element('ColorDecision')
         if self.input_desc:
             input_desc = ElementTree.SubElement(cd_xml, 'InputDescription')
@@ -596,7 +591,20 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     # =========================================================================
 
     def parse_xml_color_correction(self, xml_element: ElementTree.Element) -> bool:
-        """Parses a Color Decision element to find a ColorCorrection"""
+        """Parse ColorDecision XML element to find ColorCorrection or reference.
+        
+        Searches for either a ColorCorrection or ColorCorrectionRef element
+        within the ColorDecision and creates the appropriate object.
+        
+        Args:
+            xml_element (ElementTree.Element): ColorDecision XML element to
+                parse.
+            
+        Returns:
+            bool: True if ColorCorrection or ColorCorrectionRef was found and
+                parsed successfully, False otherwise.
+
+        """
         cc_elem = xml_element.find('ColorCorrection')
         if cc_elem is None:
             # Perhaps we're a ColorCorrectionRef?
@@ -620,19 +628,19 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     # =========================================================================
 
     def parse_xml_color_decision(self, xml_element: ElementTree.Element) -> None:
-        """Parses a Color Decision element and builds a :class:`ColorDecision`
-
-        **Args:**
-            input_file : (<ElementTree.Element>)
-                The ``ElementTree.Element`` object of the ColorDecision
-
-        **Returns:**
-            None
-
-        **Raises:**
-            ValueError:
-                Bad XML formatting can raise ValueError is missing required
-                elements.
+        """Parse ColorDecision XML element and populate this instance.
+        
+        Parses a ColorDecision XML element to extract descriptions,
+        input/viewing descriptions, ColorCorrection or ColorCorrectionRef, and
+        MediaRef.
+        
+        Args:
+            xml_element (ElementTree.Element): ColorDecision XML element to
+                parse.
+            
+        Raises:
+            ParseError: If ColorDecision element is missing required
+                ColorCorrection or ColorCorrectionRef child element.
 
         """
         # Grab our descriptions and add them to the cd.
@@ -655,7 +663,16 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     # =========================================================================
 
     def parse_xml_media_ref(self, xml_element: ElementTree.Element) -> None:
-        """Parses a Color Decision element to find a MediaRef"""
+        """Parse ColorDecision XML element to find and create MediaRef.
+        
+        Searches for a MediaRef element within the ColorDecision and creates
+        a MediaRef instance if found.
+        
+        Args:
+            xml_element (ElementTree.Element): ColorDecision XML element to
+                parse.
+
+        """
         media_ref_elem = xml_element.find('MediaRef')
         if media_ref_elem is not None:
             ref_uri = media_ref_elem.attrib['ref']
@@ -665,13 +682,24 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     @classmethod
     def reset_members(cls) -> None:
-        """Resets the member list"""
+        """Clear the class-level members dictionary.
+        
+        Removes all ColorDecision instances from the members dictionary.
+        Useful for testing or when starting with a clean state.
+
+        """
         cls.members = {}
 
     # =========================================================================
 
     def set_parentage(self) -> None:
-        """Sets the parent of all child nodes to point to this instance"""
+        """Set parent attribute of child objects to reference this instance.
+        
+        Updates the parent attribute of the contained ColorCorrection or
+        ColorCorrectionRef and MediaRef (if present) to point to this
+        ColorDecision instance.
+
+        """
         self.cc.parent = self
         if self.media_ref:  # Media ref objects are optional
             self.media_ref.parent = self
@@ -680,136 +708,56 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
 
 class MediaRef(AscXMLBase):
-    """A directory of files or a single file used for grade reference
+    """Reference to media files or directories for color correction context.
 
-    Description
-    ~~~~~~~~~~~
+    Container for media file or directory paths that should be referenced
+    in relation to color corrections being performed. Supports both individual
+    files and image sequences, with automatic sequence detection and path
+    manipulation capabilities.
 
-    :class:`MediaRef` is a container for an image path that should be
-    referenced in regards to the color correction being performed. What that
-    reference means must be further clarified, either through communication or
-    Description fields.
+    URIs can include protocols (e.g., 'http://') but many path manipulation
+    methods work best with local file paths. The class provides comprehensive
+    path parsing and sequence detection for film and TV workflows.
 
-    Requires a ``ref_uri`` and an optional ``parent`` to instantiate.
+    Class Attributes:
+        members (Dict[str, List[MediaRef]]): Dictionary mapping reference URIs
+            to lists of MediaRef instances that point to them. Multiple
+            MediaRef instances can reference the same URI.
 
-    An XML URI is usually a filepath to a directory or file, sometimes
-    proceeded by a protocol (such as ``http://``). **Note that many of the**
-    **functions and methods described below do not function properly when**
-    **given a URI with a protocol in front.**
+    Attributes:
+        directory (str): Directory portion of the URI without protocol or
+            filename.
+        element (Optional[ElementTree.Element]): XML Element representation.
+            Inherited from AscXMLBase.
+        exists (bool): True if the path exists in the file system.
+        filename (str): Filename portion of the URI without protocol or
+            directory.
+        is_abs (bool): True if directory path is absolute.
+        is_dir (bool): True if path points to a directory (no filename).
+        is_seq (bool): True if path points to image sequence(s). Sequences are
+            detected by files ending with dot/underscore + digits + extension.
+            Also detects # padding and %d padding formats.
+        parent (Optional[ColorDecision]): Parent ColorDecision containing this
+            MediaRef. Should typically be ColorDecision per CDL specification.
+        path (str): Directory joined with filename. Identical to directory if
+            no filename. Identical to ref if no protocol.
+        protocol (str): URI protocol (e.g., 'http', 'file') without '://'
+            suffix. Empty string if no protocol present.
+        ref (str): Complete URI including protocol, directory, and filename.
+        seq (Optional[str]): First found image sequence with # padding notation
+            (e.g., 'image.####.exr'). None if no sequences found.
+        seqs (List[str]): All found image sequences with # padding notation.
+            Single item list for files, multiple items for directories.
+        xml (str): Formatted XML string representation. Inherited from
+            AscXMLBase.
+        xml_root (str): XML string with declaration header. Inherited from
+            AscXMLBase.
 
-    The parent of a :class:`MediaRef` should typically be a
-    :class:`ColorDecision` , and in fact the CDL specification states that
-    no other container is allowed to contain a :class:`MediaRef`. That
-    restriction is not enforced in the python API.
-
-    **Class Attributes:**
-
-        members : {str: [ :class:`MediaRef` ]}
-            All instances of :class:`MediaRef` are added to this class level
-            members dictionary, with the key being the full reference URI.
-            Since it's possible that multiple :class:`MediaRef` point to the
-            same reference URI, the value returned is a list of
-            :class:`MediaRef` that all have a value of that same URI.
-
-            When you change a single :class:`MediaRef` ref attribute, it
-            removes itself from the old key's list, and adds itself to the
-            new key's list. The old key is removed from the dictionary if this
-            :class:`MediaRef` was the last member.
-
-    **Attributes:**
-
-        directory : (str)
-            The directory portion of the URI, without the protocol or filename.
-
-        element : (<xml.etree.ElementTree.Element>)
-            etree style Element representing the node. Inherited from
-            :class:`AscXMLBase` .
-
-        exists : (bool)
-            True if the path is present in the file system.
-
-        filename : (str)
-            The filename portion of the URI, without any protocol or directory.
-
-        is_abs : (bool)
-            True if ``directory`` is an absolute reference.
-
-        is_dir : (bool)
-            True if ``path`` points to a directory with no filename portion.
-
-        is_seq : (bool)
-            True if ``path`` points to an image sequence or a directory of
-            image sequences. Image sequences are determined by files ending
-            in a dot or underscore, followed by an integer, followed by the
-            file extension. If the filename reference given already has pound
-            padding or %d indication padding, this will also return true.
-
-            Valid image sequences:
-                - TCM100X_20140215.0001.exr
-                - Bobs Big_Score_2.jpg
-                - 2383-279873.67267_32t7634.63278623781638218763.exr
-                - 104fl.x034.######.dpx
-                - 104fl.x034_%06d.dpx
-
-        parent : (:class:`ColorDecision`)
-            The parent that contains this :class:`MediaRef` object. This should
-            normally be a :class:`ColorDecision` , but that is not enforced.
-
-        path : (str)
-            The directory joined with the filename via pathlib Path, if
-            there is no filename, path is identical to ``directory``. If there
-            is no protocol, ``path`` is identicial to ``ref``.
-
-        protocol : (str)
-            The URI protocol section of the URI, if any. This is the section
-            that proceeds the '://' of any URI. If there is no '://' in the
-            given URI, this is empty.
-
-        ref : (str)
-            The full URI reference which includes the protocol, directory and
-            filename. If there is no protocol and no filename, ``ref`` is
-            identical to ``directory``.
-
-        seq : (str)
-            If ``is_seq`` finds that the filename or directory refers to one or
-            more image sequences, ``seq`` will return the first found sequence
-            in  the form of filename.####.ext (or filename_####.ext if the
-            sequence has an ``_`` in front of the frame numbers).
-            *Note that there may be more than one image sequence if* ``ref``
-            *points to a directory*. To get a list of all image sequences
-            found, use ``seqs``.
-
-            Only if a reference was given to us already in the form of ``%d``
-            padding will ``seq`` and ``seqs`` return a sequence filename with
-            ``%d`` padding.
-
-        seqs : [str]
-            Returns all found sequences in a list. If ``ref`` points to a
-            filename, this list will only contain one sequence. If ``ref``
-            points to a directory, all sequences found in that directory will
-            be in this list.
-
-        xml : (str)
-            A nicely formatted XML string representing the node. Inherited from
-            :class:`AscXMLBase`.
-
-        xml_root : (str)
-            A nicely formatted XML, ready to write to file string representing
-            the node. Formatted as an XML root, it includes the xml version and
-            encoding tags on the first line. Inherited from
-            :class:`AscXMLBase`.
-
-    **Public Methods:**
-
-        build_element()
-            Builds an ElementTree XML Element for this node and all nodes it
-            contains. ``element``, ``xml``, and ``xml_root`` attributes use
-            this to build the XML. This function is identical to calling the
-            ``element`` attribute. Overrides inherited placeholder method
-            from :class:`AscXMLBase` .
-
-        reset_members()
-            Resets the class level members list.
+    Example:
+        >>> media = MediaRef("footage/shot_001.0001.exr")
+        >>> print(media.is_seq)  # True
+        >>> print(media.seq)     # "shot_001.####.exr"
+        >>> print(media.exists) 
 
     """
 
@@ -829,12 +777,29 @@ class MediaRef(AscXMLBase):
 
     @property
     def directory(self) -> str:
-        """Returns the directory the uri points to"""
+        """Return directory portion of the URI path.
+        
+        Returns:
+            str: Directory path without protocol or filename. Empty string
+                if URI points to a file in the current directory.
+
+        """
         return self._ref_info.directory
 
     @directory.setter
     def directory(self, value: str) -> None:
-        """Checks directory for type and resets cached properties"""
+        """Set directory portion of the URI path.
+        
+        Updates the directory component and resets cached sequence information.
+        Also updates class membership dictionary with new URI.
+        
+        Args:
+            value (str): New directory path to set.
+            
+        Raises:
+            ValidationError: If value is not a string.
+
+        """
         if type(value) is str:
             old_ref = self.ref
             self._ref_info.directory = value
@@ -847,17 +812,39 @@ class MediaRef(AscXMLBase):
 
     @property
     def exists(self) -> bool:
-        """Convenience property for Path.exists()"""
+        """Check if the referenced path exists in the file system.
+        
+        Returns:
+            bool: True if the file or directory exists, False otherwise.
+
+        """
         return Path(self.path).exists()
 
     @property
     def filename(self) -> str:
-        """Returns the filename the uri points to, if any"""
+        """Return filename portion of the URI path.
+        
+        Returns:
+            str: Filename with extension, or empty string if URI points
+                to a directory only.
+
+        """
         return self._ref_info.filename
 
     @filename.setter
     def filename(self, value: str) -> None:
-        """Checks filename for type and resets cached properties"""
+        """Set filename portion of the URI path.
+        
+        Updates the filename component and resets cached sequence information.
+        Also updates class membership dictionary with new URI.
+        
+        Args:
+            value (str): New filename to set, including extension.
+            
+        Raises:
+            ValidationError: If value is not a string.
+
+        """
         if type(value) is str:
             old_ref = self.ref
             self._ref_info.filename = value
@@ -870,24 +857,53 @@ class MediaRef(AscXMLBase):
 
     @property
     def is_abs(self) -> bool:
-        """Returns True if path is an absolute path"""
+        """Check if the path is absolute.
+        
+        Returns:
+            bool: True if path is absolute, False if relative.
+
+        """
         return Path(self.path).is_absolute()
 
     @property
     def is_dir(self) -> bool:
-        """Returns True if path points to a directory"""
+        """Check if the path points to a directory.
+        
+        Returns:
+            bool: True if path is a directory, False if file or non-existent.
+
+        """
         return Path(self.path).is_dir()
 
     @property
     def is_seq(self) -> bool:
-        """Returns True if path is to an image sequence"""
+        """Check if the path represents an image sequence.
+        
+        Detects sequences by analyzing filenames for frame number patterns
+        like digits, # padding, or %d formatting. For directories, scans
+        contained files for sequence patterns.
+        
+        Returns:
+            bool: True if path represents an image sequence, False otherwise.
+
+        """
         if self._sequence_info is None:
             self._get_sequences()
         return self._sequence_info.is_sequence if self._sequence_info else False
 
     @property
     def path(self) -> str:
-        """Returns the path without any uri protocol"""
+        """Return complete file path without URI protocol.
+        
+        Combines directory and filename components into a complete path.
+        Preserves relative path format including './' prefixes.
+        
+        Returns:
+            str: Complete file path without protocol. Returns directory
+                if no filename, or '.' if both directory and filename are
+                empty.
+
+        """
         # Use os here to preserve the relative paths
         import os
         if self._ref_info.filename:
@@ -900,12 +916,30 @@ class MediaRef(AscXMLBase):
 
     @property
     def protocol(self) -> str:
-        """Returns the protocol of the uri, if any"""
+        """Return URI protocol without '://' suffix.
+        
+        Returns:
+            str: Protocol portion of URI (e.g., 'http', 'file', 'ftp').
+                Empty string if no protocol is present.
+
+        """
         return self._ref_info.protocol
 
     @protocol.setter
     def protocol(self, value: str) -> None:
-        """Checks protocol for type and resets cached properties"""
+        """Set URI protocol.
+        
+        Automatically removes '://' suffix if present. Updates class
+        membership dictionary and resets cached properties.
+        
+        Args:
+            value (str): Protocol to set (e.g., 'http', 'file'). Can include
+                '://' suffix which will be automatically removed.
+                
+        Raises:
+            ValidationError: If value is not a string.
+
+        """
         if type(value) is str:
             # If :// was appended we'll remove it.
             if value.endswith('://'):
@@ -923,12 +957,29 @@ class MediaRef(AscXMLBase):
 
     @property
     def ref(self) -> str:
-        """Returns the reference uri"""
+        """Return complete URI including protocol, directory, and filename.
+        
+        Returns:
+            str: Complete URI string. Includes protocol with '://' if present,
+                followed by directory and filename components.
+
+        """
         return self._ref_info.to_uri()
 
     @ref.setter
     def ref(self, uri: str) -> None:
-        """Sets the reference uri and resets all cached properties"""
+        """Set complete URI and parse into components.
+        
+        Parses the URI into protocol, directory, and filename components.
+        Updates class membership dictionary and resets all cached properties.
+        
+        Args:
+            uri (str): Complete URI string to parse and set.
+            
+        Raises:
+            ValidationError: If uri is not a string.
+
+        """
         if type(uri) is str:
             old_ref = self.ref
             self._ref_info = MediaRefInfo(*self._split_uri(uri))
@@ -941,7 +992,16 @@ class MediaRef(AscXMLBase):
 
     @property
     def seq(self) -> Optional[str]:
-        """Returns first found sequence with frames as # padding"""
+        """Return first detected image sequence with # padding notation.
+        
+        Converts frame number patterns to # padding format (e.g.,
+        'image.0001.exr' becomes 'image.####.exr').
+        
+        Returns:
+            Optional[str]: First sequence with # padding, or None if no
+                sequences detected.
+
+        """
         if self._sequence_info is None:
             self._get_sequences()
         if not self._sequence_info or not self._sequence_info.is_sequence:
@@ -951,7 +1011,16 @@ class MediaRef(AscXMLBase):
 
     @property
     def seqs(self) -> List[str]:
-        """Returns all found sequences with frames as # padding"""
+        """Return all detected image sequences with # padding notation.
+        
+        For directories, returns all unique sequence patterns found.
+        For files, returns single-item list if file is part of a sequence.
+        
+        Returns:
+            List[str]: All sequences with # padding notation. Empty list
+                if no sequences detected.
+
+        """
         if self._sequence_info is None:
             self._get_sequences()
         if not self._sequence_info or not self._sequence_info.is_sequence:
@@ -962,27 +1031,16 @@ class MediaRef(AscXMLBase):
     # Private Methods =========================================================
 
     def _change_membership(self, old_ref: Optional[str] = None) -> None:
-        """Change which ref uri this instance is under in the class dict.
-
-        We remove ourselves from the list returned by the key of old_ref
-        in the member dictionary, then append ourselves to the list of the
-        new ref key. If the ref isn't already in the dictionary, we'll be
-        creating a new list with ourselves as the only member.
-
-        **Args:**
-
-            old_ref=None : (str)
-                The previous uri reference of the instance. We'll look in the
-                class level member dictionary for this uri as a key, then
-                remove ourselves. If old_ref isn't a key, or we're not in the
-                list it returns, we'll just move on.
-
-        Returns:
-            None
-
-        Raises:
-            N/A
-
+        """Update class members dictionary when URI reference changes.
+        
+        Removes this instance from the old URI's member list and adds it
+        to the new URI's member list. Creates new member list if the new
+        URI is not already tracked. Cleans up empty member lists.
+        
+        Args:
+            old_ref (Optional[str]): Previous URI reference to remove this
+                instance from. If None or not found, removal is skipped.
+                
         """
         if old_ref:
             try:
@@ -1004,7 +1062,18 @@ class MediaRef(AscXMLBase):
     # =========================================================================
 
     def _get_sequences(self) -> None:  # pylint: disable=R0912
-        """Determines if the media ref is pointing to an image sequence"""
+        """Analyze path to detect image sequences and cache results.
+        
+        Examines the path to determine if it represents an image sequence
+        by looking for frame number patterns. For directories, scans all
+        files to find sequence patterns. Results are cached in _sequence_info.
+        
+        Sequence detection patterns:
+        - Numeric frame numbers: image.0001.exr -> image.####.exr
+        - Percent formatting: image.%04d.exr (preserved as-is)
+        - Hash padding: image.####.exr (already in target format)
+
+        """
         re_exp = r'(^[ \w_.-]+[_.])([0-9]+)(\.[a-zA-Z0-9]{3}$)'
         re_exp_percent = r'(^[ \w_.-]+[_.])(%[0-9]+d)(\.[a-zA-Z0-9]{3}$)'
         match = re.compile(re_exp)
@@ -1052,14 +1121,32 @@ class MediaRef(AscXMLBase):
     # =========================================================================
 
     def _reset_cached_properties(self) -> None:
-        """Resets cached attributes back to init values"""
+        """Reset cached sequence information to force re-computation.
+        
+        Clears the _sequence_info cache so that sequence detection will
+        be performed again on next access to sequence-related properties.
+
+        """
         self._sequence_info = None
 
     # =========================================================================
 
     @staticmethod
     def _split_uri(uri: str) -> Tuple[str, str, str]:
-        """Splits uri into protocol, base and filename"""
+        """Parse URI into protocol, directory, and filename components.
+        
+        Separates a URI into its constituent parts while preserving the
+        original path format including relative path indicators.
+        
+        Args:
+            uri (str): URI string to parse.
+            
+        Returns:
+            Tuple[str, str, str]: Three-tuple of (protocol, directory, 
+                filename). Protocol is empty string if not present.
+                Directory preserves original format including './' prefixes.
+
+        """
         if '://' in uri:
             protocol = uri.split('://')[0]
             uri = uri.split('://')[1]
@@ -1078,7 +1165,16 @@ class MediaRef(AscXMLBase):
     # Public Methods ==========================================================
 
     def build_element(self) -> ElementTree.Element:
-        """Builds an ElementTree XML element representing this reference"""
+        """Build XML ElementTree Element representing this MediaRef.
+        
+        Creates a MediaRef XML element with the 'ref' attribute containing
+        the complete URI.
+        
+        Returns:
+            ElementTree.Element: XML element with MediaRef tag and ref
+                attribute.
+
+        """
         media_ref_xml = ElementTree.Element('MediaRef')
         media_ref_xml.attrib = {'ref': self.ref}
 
@@ -1088,5 +1184,10 @@ class MediaRef(AscXMLBase):
 
     @classmethod
     def reset_members(cls) -> None:
-        """Resets the class level members dictionary"""
+        """Clear the class-level members dictionary.
+        
+        Removes all MediaRef instances from the members dictionary.
+        Useful for testing or when starting with a clean state.
+        
+        """
         cls.members = {}

@@ -1,35 +1,48 @@
 #!/usr/bin/env python
-"""
+"""CDL Convert Write Module
 
-CDL Convert Write
-=================
+Provides writing capabilities for all supported ASC CDL output formats.
 
-Functions for writing different types of cdls.
+Public Functions:
+    write_cc(ColorCorrection) -> None: Write ColorCorrection to .cc XML format.
 
-## Public Functions
+    write_ccc(Union[ColorCorrection, ColorCollection]) -> None: Write to .ccc
+        XML format (ColorCorrectionCollection) with automatic collection
+        wrapping.
 
-    write_cc()
-        Writes a given ColorCorrection to disk. ``file_out`` should already be
-        set on the ColorCorrection.
+    write_cdl(Union[ColorCorrection, ColorCollection]) -> None: Write to .cdl
+        XML format (ColorDecisionList).
 
-    write_ccc()
-        Writes a given ColorCollection to disk. ``file_out`` should already be
-        set on the ColorCollection.
+    write_rnh_cdl(ColorCorrection) -> None: Write to Rhythm & Hues
+        space-separated format.
 
-    write_cdl()
-        Writes a given ColorCollection to disk. ``file_out`` should already be
-        set on the ColorCollection.
-
-    write_rnh_cdl()
-        Writes a given ColorCorrection to disk. ``file_out`` should already be
-        set on the ColorCorrection.
+Example Usage:
+    >>> from pathlib import Path
+    >>> from cdl_convert import ColorCorrection, ColorCollection, write_cc, write_ccc
+    >>> 
+    >>> # Write single correction
+    >>> cc = ColorCorrection("shot_001")
+    >>> cc.file_out = Path("output.cc")
+    >>> cc.slope = [1.2, 1.1, 1.0]
+    >>> 
+    >>> try:
+    ...     write_cc(cc)
+    ...     print(f"Successfully wrote {cc.file_out}")
+    ... except CDLConvertError as e:
+    ...     print(f"Write error: {e}")
+    >>> 
+    >>> # Write collection with format handling
+    >>> collection = ColorCollection()
+    >>> collection.append_child(cc)
+    >>> collection.file_out = Path("collection.ccc")
+    >>> write_ccc(collection)
 
 ## License
 
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2015 Sean Wallitsch
+Copyright (c) 2015-2025 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -82,7 +95,19 @@ __all__ = [
 
 
 def _temp_container(cdl: ColorCorrection) -> ColorCollection:
-    """Builds a temporary collection container for a single cdl file."""
+    """Build a temporary collection container for a single CDL file.
+    
+    This helper function creates a temporary ColorCollection to wrap a single
+    ColorCorrection for writing operations that require collection format.
+    
+    Args:
+        cdl (ColorCorrection): The ColorCorrection to wrap in a collection.
+        
+    Returns:
+        ColorCollection: A temporary collection containing the single
+            correction.
+        
+    """
     temp_cdl = ColorCollection()
     orig_parent = cdl.parent
     temp_cdl.append_child(cdl)
@@ -96,7 +121,25 @@ def _temp_container(cdl: ColorCorrection) -> ColorCollection:
 
 
 def write_cc(cdl: ColorCorrection) -> None:
-    """Writes the ColorCorrection to a .cc file"""
+    """Write a ColorCorrection to a .cc XML file.
+
+    Args:
+        cdl (ColorCorrection): The ColorCorrection instance to write. Must have
+            a valid file_out attribute set to the target file path.
+
+    Raises:
+        CDLConvertError: If the file cannot be written, with the original
+            OSError chained for context. This includes permission errors,
+            disk space issues, or invalid file paths.
+
+    Example:
+        >>> from pathlib import Path
+        >>> cc = ColorCorrection("test_id")
+        >>> cc.file_out = Path("output.cc")
+        >>> cc.slope = [1.2, 1.1, 1.0]
+        >>> write_cc(cc)  # Writes XML to output.cc
+
+    """
     try:
         with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:
             cdl_f.write(cdl.xml_root)
@@ -109,7 +152,35 @@ def write_cc(cdl: ColorCorrection) -> None:
 
 
 def write_ccc(cdl: Union[ColorCorrection, ColorCollection]) -> None:
-    """Writes the ColorCollection to a .ccc file"""
+    """Write a ColorCollection to a .ccc XML file.
+
+    Accepts either a single ColorCorrection (which gets wrapped in a 
+    temporary collection) or a full ColorCollection.
+
+    Args:
+        cdl (Union[ColorCorrection, ColorCollection]): The color correction
+            data to write. If a ColorCorrection is provided, it will be
+            wrapped in a temporary ColorCollection.
+
+    Raises:
+        CDLConvertError: If the file cannot be written, with the original
+            OSError chained for context. This includes permission errors,
+            disk space issues, or invalid file paths.
+
+    Example:
+        >>> from pathlib import Path
+        >>> # Write a single correction
+        >>> cc = ColorCorrection("test_id")
+        >>> cc.file_out = Path("output.ccc")
+        >>> write_ccc(cc)
+        
+        >>> # Write a collection
+        >>> collection = ColorCollection()
+        >>> collection.append_child(cc)
+        >>> collection.file_out = Path("collection.ccc")
+        >>> write_ccc(collection)
+
+    """
     if not isinstance(cdl, ColorCollection):
         cdl = _temp_container(cdl)
 
@@ -129,7 +200,35 @@ def write_ccc(cdl: Union[ColorCorrection, ColorCollection]) -> None:
 
 
 def write_cdl(cdl: Union[ColorCorrection, ColorCollection]) -> None:
-    """Writes the ColorCollection to a .cdl file"""
+    """Write a ColorCollection to a .cdl XML file.
+
+    Accepts either a single ColorCorrection (which gets wrapped in a 
+    temporary collection) or a full ColorCollection.
+
+    Args:
+        cdl (Union[ColorCorrection, ColorCollection]): The color correction
+            data to write. If a ColorCorrection is provided, it will be
+            wrapped in a temporary ColorCollection.
+
+    Raises:
+        CDLConvertError: If the file cannot be written, with the original
+            OSError chained for context. This includes permission errors,
+            disk space issues, or invalid file paths.
+
+    Example:
+        >>> from pathlib import Path
+        >>> # Write a single correction as CDL
+        >>> cc = ColorCorrection("test_id")
+        >>> cc.file_out = Path("output.cdl")
+        >>> write_cdl(cc)
+        
+        >>> # Write a collection as CDL
+        >>> collection = ColorCollection()
+        >>> collection.append_child(cc)
+        >>> collection.file_out = Path("collection.cdl")
+        >>> write_cdl(collection)
+
+    """
     if not isinstance(cdl, ColorCollection):
         cdl = _temp_container(cdl)
 

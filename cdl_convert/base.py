@@ -1,65 +1,29 @@
 #!/usr/bin/env python
-"""
+"""CDL Convert Base Classes Module
 
-CDL Convert Base
-================
+This module provides foundational base classes that implement common functionality
+shared across CDL Convert components. The classes listed here should only be used
+for inheritance by more specialized classes.
 
-Contains base classes containing methods and attributes shared between many
-CDL classes. The classes listed here should only be used for inheritance by
-more fully realized classes.
+Classes:
+    AscColorSpaceBase: Base class for ASC XML nodes handling colorspace
+        metadata with type hints and enhanced validation. Provides standardized
+        input and viewing colorspace description management.
 
-## Classes
+    AscDescBase: Type-safe base class for ASC XML nodes supporting multiple
+        descriptions with enhanced list management. Handles unlimited 
+        description elements per ASC CDL specifications.
 
-    AscColorSpaceBase
+    AscXMLBase: Base class for XML element generation.
 
-        Contains attributes and methods for input colorspace description and
-        viewing colorspace descriptions. Methods are parse methods for
-        parsing an ElementTree element and retrieving the Input Description
-        and Viewing Description if present.
-
-    AscDescBase
-
-        Contains attributes and methods for generic description entries.
-        Methods are parse methods for parsing an ElementTree element and
-        retrieving all Description entries within.
-
-        The ``desc`` attribute has specific setting behavior as follows:
-            * If set with `None`, ``desc`` will be set to an empty list.
-            * If set with a list or tuple, ``desc`` will become a list of that
-                list or tuple.
-            * If set with a straight value (such as a string) that value is
-                appended to the end of the current ``desc`` list.
-
-    AscXMLBase
-
-        Base class for nodes which need to be represented as ElementTree
-        XML Elements. This class contains several attributes and methods to
-        facilitate this:
-
-            * An ``element`` attribute which will return the
-                ElementTree Element
-            * An ``xml`` attribute which returns the built element as a
-                pretty formatted string.
-            * An ``xml_root`` attribute which returns the same built element
-                as above, but with the required XML header. This XML string
-                is ready to be printed.
-
-        All of these attributes depend on the ``build_element`` method, which
-        must be overridden by classes which inherit this class if the above
-        attributes are to work. The ``build_element`` must return an
-        ElementTree Element.
-
-    ColorNodeBase
-
-        A base class for Sop and Sat nodes, some basic color value checking
-        functionality is included here.
+    ColorNodeBase: Base class for color correction nodes (SOP/SAT).
 
 ## License
 
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2015 Sean Wallitsch
+Copyright (c) 2015-2025 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -115,38 +79,25 @@ __all__ = [
 
 
 class AscColorSpaceBase(object):  # pylint: disable=R0903
-    """Base class for Asc XML type nodes that deal with colorspace
+    """Base class for ASC XML type nodes that deal with colorspace.
 
-    Description
-    ~~~~~~~~~~~
+    This class is meant to be inherited by any node type that uses viewing and
+    input colorspace descriptions. It provides standardized handling of
+    colorspace metadata according to ASC CDL specifications.
 
-    This class is meant to be inherited by any node type that used viewing and
-    input colorspace descriptions.
+    Attributes:
+        input_desc (Optional[str]): Description of the color space, format and 
+            properties of the input images. Individual ColorCorrections can 
+            override this. Defaults to None.
+        viewing_desc (Optional[str]): Viewing device, settings and environment. 
+            Individual ColorCorrections can override this. Defaults to None.
 
-    This class doesn't do a lot right now, as we don't have any specific
-    controls on how to set or retrieve these fields. In the future however,
-    we'll parse incoming descriptions to try and resolve input colorspace and
-    viewing colorspace.
-
-    **Attributes:**
-
-        input_desc : (str)
-            Description of the color space, format and properties of the input
-            images. Individual :class:`ColorCorrections` can override this.
-
-        viewing_desc : (str)
-            Viewing device, settings and environment. Individual
-            :class:`ColorCorrections` can override this.
-
-    **Public Methods:**
-
-        parse_xml_input_desc()
-            Parses an ElementTree Element to find & add an InputDescription.
-            If none is found, ``input_desc`` will remain set to ``None``.
-
-        parse_xml_viewing_desc()
-            Parses an ElementTree Element to find & add a ViewingDescription.
-            If none is found, ``viewing_desc`` will remain set to ``None``.
+    Example:
+        >>> class MyColorNode(AscColorSpaceBase):
+        ...     def __init__(self):
+        ...         super().__init__()
+        ...         self.input_desc = "Rec.709 Linear"
+        ...         self.viewing_desc = "sRGB Display"
 
     """
     def __init__(self) -> None:
@@ -159,19 +110,15 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
     # Public Methods ==========================================================
 
     def parse_xml_input_desc(self, xml_element: ElementTree.Element) -> bool:
-        """Parses an ElementTree element to find & add an input description
+        """Parse an ElementTree element to find and add an input description.
 
-        **Args:**
-            xml_element : (``xml.etree.ElementTree.Element``)
-                The element to parse for an Input Description element. If
-                found, set our ``input_desc``
+        Args:
+            xml_element (ElementTree.Element): The XML element to parse for an 
+                InputDescription element. If found, sets the input_desc
+                attribute.
 
-        **Returns:**
-            (bool)
-                True if found InputDescription Fields (even if blank)
-
-        **Raises:**
-            None
+        Returns:
+            bool: True if InputDescription element was found (even if blank),
 
         """
         # If the text field is empty, this will return None, which is the
@@ -186,19 +133,16 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
     # =========================================================================
 
     def parse_xml_viewing_desc(self, xml_element: ElementTree.Element) -> bool:
-        """Parses an ElementTree element to find & add a viewing description
+        """Parse an ElementTree element to find and add a viewing description.
 
-        **Args:**
-            xml_element : (``xml.etree.ElementTree.Element``)
-                The element to parse for a Viewing Description element. If
-                found, set our ``viewing_desc``
+        Args:
+            xml_element (ElementTree.Element): The XML element to parse for a 
+                ViewingDescription element. If found, sets the viewing_desc
+                attribute.
 
-        **Returns:**
-            (bool)
-                True if found InputDescription Fields (even if blank)
-
-        **Raises:**
-            None
+        Returns:
+            bool: True if ViewingDescription element was found (even if blank),
+                False otherwise.
 
         """
         # If the text field is empty, this will return None, which is the
@@ -214,31 +158,32 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
 
 
 class AscDescBase(object):  # pylint: disable=R0903
-    """Base class for most Asc XML type nodes, allows for infinite desc
-
-    Description
-    ~~~~~~~~~~~
+    """Base class for ASC XML type nodes that support multiple descriptions.
 
     This class is meant to be inherited by any node type that uses description
-    fields.
+    fields. It provides standardized handling of multiple description elements
+    as specified in the ASC CDL schema.
 
-    **Attributes:**
+    Attributes:
+        desc (List[str]): List of description strings. Since ASC nodes can
+            contain multiple description elements, this attribute stores all
+            descriptions found during parsing. Setting desc directly will:
+            - Append single values to the end of the list
+            - Replace the list when given a list or tuple
+            - Empty the list when given None, [], or ()
 
-        desc : [str]
-            Since all Asc nodes which can contain a single description, can
-            actually contain an infinite number of descriptions, the desc
-            attribute is a list, allowing us to store every single description
-            found during parsing.
-
-            Setting desc directly will cause the value given to append to the
-            end of the list, but desc can also be replaced by passing it a list
-            or tuple. Desc can be emptied by passing it None, [] or ().
-
-    **Public Methods:**
-
-        parse_xml_descs()
-            Parses an ElementTree Element for any Description tags and appends
-            any text they contain to the ``desc``.
+    Example:
+        >>> node = AscDescBase()
+        >>> node.desc = "First description"
+        >>> node.desc = "Second description"  
+        >>> print(node.desc)
+        ['First description', 'Second description']
+        >>> node.desc = ["New list", "of descriptions"]
+        >>> print(node.desc)
+        ['New list', 'of descriptions']
+        >>> node.desc = None  # Clear descriptions
+        >>> print(node.desc)
+        []
 
     """
     def __init__(self) -> None:
@@ -265,19 +210,25 @@ class AscDescBase(object):  # pylint: disable=R0903
     # Public Methods ==========================================================
 
     def parse_xml_descs(self, xml_element: ElementTree.Element) -> None:
-        """Parses an ElementTree element to find & add any descriptions
+        """Parse an ElementTree element to find and add any descriptions.
 
-        **Args:**
-            xml_element : (``xml.etree.ElementTree.Element``)
-                The element to parse for Description elements. Any found
-                will be appended to the end of ``desc``
+        Args:
+            xml_element (ElementTree.Element): The XML element to parse for 
+                Description elements. Any found will be appended to the desc
+                list.
 
-        **Returns:**
-            None
-
-        **Raises:**
-            None
-
+        Example:
+            >>> import xml.etree.ElementTree as ET
+            >>> node = AscDescBase()
+            >>> xml = ET.fromstring('''
+            ... <root>
+            ...     <Description>First description</Description>
+            ...     <Description>Second description</Description>
+            ... </root>
+            ... ''')
+            >>> node.parse_xml_descs(xml)
+            >>> print(node.desc)
+            ['First description', 'Second description']
         """
         for desc_entry in xml_element.findall('Description'):
             if desc_entry.text:  # Don't attend if text returns none
@@ -287,32 +238,31 @@ class AscDescBase(object):  # pylint: disable=R0903
 
 
 class AscXMLBase(object):
-    """Base class for nodes which can be converted to XML Elements
+    """Base class for nodes which can be converted to XML Elements.
 
-    Description
-    ~~~~~~~~~~~
+    This class provides convenience attributes and methods for converting
+    CDL objects to XML representations. 
 
-    This class contains several convenience attributes which can be used
-    to retrieve ElementTree Elements, or nicely formatted strings.
+    Attributes:
+        element (Optional[ElementTree.Element]): ElementTree Element 
+            representing the node. 
+        xml (str): A nicely formatted XML string representing the node,
+            without XML declaration header.
+        xml_root (str): A nicely formatted XML string with XML declaration
+            header, ready to write to file.
 
-    **Attributes:**
+    Example:
+        >>> class MyNode(AscXMLBase):
+        ...     def build_element(self):
+        ...         import xml.etree.ElementTree as ET
+        ...         return ET.Element('MyNode')
+        >>> node = MyNode()
+        >>> print(node.xml)  # Pretty-formatted XML without header
+        >>> print(node.xml_root)  # With XML declaration
 
-        element : (<xml.etree.ElementTree.Element>)
-            etree style Element representing the node.
-
-        xml : (str)
-            A nicely formatted XML string representing the node.
-
-        xml_root : (str)
-            A nicely formatted XML, ready to write to file string representing
-            the node. Formatted as an XML root, it includes the xml version and
-            encoding tags on the first line.
-
-    **Public Methods:**
-
-        build_element()
-            A placeholder method to be overridden by inheriting classes,
-            calling it will always return None.
+    Note:
+        Subclasses must override build_element() to return a valid
+        ElementTree.Element for the XML-related attributes to work.
 
     """
     def __init__(self) -> None:
@@ -344,68 +294,44 @@ class AscXMLBase(object):
     # Public Methods ==========================================================
 
     def build_element(self) -> Optional[ElementTree.Element]:  # pragma: no cover pylint: disable=R0201
-        """Placeholder for reference by attributes. Will return None"""
+        """Build an ElementTree Element representing this node.
+        
+        This is a placeholder method that must be overridden by inheriting
+        classes to provide actual XML element construction.
+        
+        Returns:
+            Optional[ElementTree.Element]: None in base implementation.
+                Subclasses should return a valid ElementTree.Element.
+
+        """
         return None
 
 # ==============================================================================
 
 
 class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
-    """Base class for SOP and SAT nodes.
+    """Base class for SOP and SAT color correction nodes.
 
-    Description
-    ~~~~~~~~~~~
+    This class is meant only to be inherited by SopNode and SatNode classes
+    and should not be used directly. It combines description and XML
+    functionality while providing value validation methods for color
+    correction parameters.
 
-    This class is meant only to be inherited by :class:`SopNode` and
-    :class:`SatNode` and should not be used outside of those classes.
+    Attributes:
+        desc (List[str]): List of description strings. Inherited from
+            AscDescBase.
+        element (Optional[ElementTree.Element]): XML Element representation. 
+            Inherited from AscXMLBase.
+        xml (str): Formatted XML string. Inherited from AscXMLBase.
+        xml_root (str): XML string with declaration header. Inherited from
+            AscXMLBase.
 
-    It inherits from both :class:`AscDescBase` and :class:`AscXMLBase` giving
-    the child classes both ``desc`` and ``xml`` related functionality.
-
-    This class is also home to a private function which helps :class:`SopNode`
-    and :class:`SatNode` perform type and value checks on incoming values.
-
-    **Attributes:**
-
-        desc : [str]
-            Since all Asc nodes which can contain a single description, can
-            actually contain an infinite number of descriptions, the desc
-            attribute is a list, allowing us to store every single description
-            found during parsing.
-
-            Setting desc directly will cause the value given to append to the
-            end of the list, but desc can also be replaced by passing it a list
-            or tuple. Desc can be emptied by passing it None, [] or ().
-
-            Inherited from :class:`AscDescBase` .
-
-        element : (<xml.etree.ElementTree.Element>)
-            etree style Element representing the node. Inherited from
-            :class:`AscXMLBase` .
-
-        xml : (str)
-            A nicely formatted XML string representing the node. Inherited from
-            :class:`AscXMLBase`.
-
-        xml_root : (str)
-            A nicely formatted XML, ready to write to file string representing
-            the node. Formatted as an XML root, it includes the xml version and
-            encoding tags on the first line. Inherited from
-            :class:`AscXMLBase`.
-
-    **Public Methods:**
-
-        build_element()
-            Builds an ElementTree XML Element for this node and all nodes it
-            contains. ``element``, ``xml``, and ``xml_root`` attributes use
-            this to build the XML. This function is identical to calling the
-            ``element`` attribute. Overrides inherited placeholder method
-            from :class:`AscXMLBase` .
-
-        parse_xml_descs()
-            Parses an ElementTree Element for any Description tags and appends
-            any text they contain to the ``desc``. Inherited from
-            :class:`AscDescBase`
+    Example:
+        >>> # This class is not used directly, but through SopNode/SatNode
+        >>> from cdl_convert import ColorCorrection
+        >>> cc = ColorCorrection("test_id")
+        >>> cc.slope = [1.2, 1.1, 1.0]  # Uses SopNode internally
+        >>> print(cc.sop_node.xml)  # XML representation
 
     """
     def __init__(self) -> None:
@@ -415,29 +341,35 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
 
     @staticmethod
     def _check_single_value(value: Union[Decimal, str, float, int], name: str, negative_allow: bool = False) -> Decimal:
-        """Checks given value for legitimacy.
+        """Check and validate a single numeric value for color correction.
 
-        **Args:**
-            value : (Decimal|str|float|int)
-                Any numeric value to be checked.
+        Args:
+            value (Union[Decimal, str, float, int]): The numeric value to
+                validate. Can be any numeric type or string representation.
+            name (str): The type of value being checked (e.g., 'slope',
+                'offset', 'power', 'saturation'). Used in error messages.
+            negative_allow (bool, optional): Whether to allow negative values. 
+                Defaults to False.
 
-            name : (str)
-                The type of value being checked: slope, offset, etc.
+        Returns:
+            Decimal: The validated value converted to Decimal type.
 
-            negative_allow=False : (bool)
-                If false, do not allow negative values.
+        Raises:
+            ValidationError: If the value fails validation checks. Includes:
+                - Non-numeric values when numeric is required
+                - Negative values when negative_allow is False
+                - Invalid string representations of numbers
 
-        **Returns:**
-            (Decimal)
-                If value passes all tests, returns value as Decimal.
-
-        **Raises:**
-            TypeError:
-                If value given is not a number.
-
-            ValueError:
-                If negative is False, raised if value given is negative.
-
+        Example:
+            >>> # Valid usage (internal method)
+            >>> value = ColorNodeBase._check_single_value(1.5, 'slope')
+            >>> print(value)  # Decimal('1.5')
+            
+            >>> # This would raise ValidationError for negative slope
+            >>> try:
+            ...     ColorNodeBase._check_single_value(-0.5, 'slope')
+            ... except ValidationError as e:
+            ...     print(f"Validation failed: {e}")
         """
         value = to_decimal(value, name)
         # If given as a single number, that number must be positive

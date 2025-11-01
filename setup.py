@@ -121,15 +121,12 @@ setup(
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
 
-        # Specify the Python versions you support here. In particular, ensure
-        # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
+        # Specify the Python versions you support here.
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.1',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
 
@@ -147,18 +144,24 @@ setup(
     # simple. Or you can use find_packages.
     packages=['cdl_convert'],
 
+    # Python version requirement
+    python_requires='>=3.11',
+
     # List run-time dependencies here.  These will be installed by pip when
     #  your project is installed.
     install_requires=[
-        'OpenTimelineIO==0.7.dev0'
-    ],
-    dependency_links=[
-        'git+git://github.com/PixarAnimationStudios/OpenTimelineIO.git@v0.7#egg=OpenTimelineIO-0.7.dev0'
+        'OpenTimelineIO>=0.17.0'
     ],
 
-    # Testing
-    test_suite='nose.collector',
-    tests_require=['nose', 'mock'],
+    # Testing - now uses pytest
+    extras_require={
+        'dev': [
+            'pytest>=7.0',
+            'pytest-cov>=4.0',
+            'mypy>=1.0',
+            'ruff>=0.1.0',
+        ]
+    },
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these

@@ -71,7 +71,7 @@ Full help is available using the standard ``--help`` command:
       -h, --help            show this help message and exit
       -i INPUT, --input INPUT
                             specify the filetype to convert from. Use when
-                            CDLConvert cannot determine the filetype
+                            CDL Convertcannot determine the filetype
                             automatically. Supported input formats are: ['flex',
                             'cc', 'ale', 'cdl', 'rcdl', 'ccc']
       -o OUTPUT, --output OUTPUT

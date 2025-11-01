@@ -1,31 +1,56 @@
 #!/usr/bin/env python
-"""
+"""CDL Convert Exceptions Module
 
-CDL Convert Exceptions
-======================
+Exception classes for CDL Convert operations.
 
-Contains custom exception classes for CDL Convert operations.
+Exception Classes:
+    CDLConvertError: Base exception class providing common interface for all
+        CDL Convert operations.
 
-## Classes
+    FormatError: Specialized exception for unsupported format detection and
+        compatibility issues.
 
-    CDLConvertError
-        Base exception class for all CDL Convert operations.
+    ParseError: Comprehensive parsing exception with context about file 
+        structure issues, malformed data, and specific parsing failures
+        with line numbers and element information where available.
 
-    ParseError
-        Raised when parsing CDL files fails.
+    ValidationError: Advanced validation exception providing detailed information
+        about value validation failures, acceptable ranges, and specific
+        validation rules that were violated.
 
-    ValidationError
-        Raised when CDL values fail validation.
-
-    FormatError
-        Raised when unsupported format is encountered.
+Example Usage:
+    >>> from cdl_convert import ColorCorrection, ValidationError, ParseError
+    >>> 
+    >>> # Validation error handling
+    >>> try:
+    ...     cc = ColorCorrection("test")
+    ...     cc.slope = [-1.0, 1.0, 1.0]  # Invalid negative slope
+    ... except ValidationError as e:
+    ...     print(f"Validation failed: {e}")
+    ...     # Error with context about which value failed and why
+    >>> 
+    >>> # Parsing error handling
+    >>> try:
+    ...     from cdl_convert import parse_file
+    ...     from pathlib import Path
+    ...     collection = parse_file(Path("malformed.xml"))
+    ... except ParseError as e:
+    ...     print(f"Parse error: {e}")
+    ...     # Context about parsing failure location and cause
+    >>> 
+    >>> # Exception chaining for debugging
+    >>> try:
+    ...     # Some operation that might fail
+    ...     pass
+    ... except ValidationError as e:
+    ...     raise FormatError(f"Format validation failed: {e}") from e
 
 ## License
 
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2015 Sean Wallitsch
+Copyright (c) 2015-2025 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -70,6 +95,7 @@ class CDLConvertError(Exception):
     This is the base class for all CDL Convert specific exceptions.
     It provides a common interface for handling errors that occur
     during CDL file processing, parsing, validation, and conversion.
+
     """
     pass
 
@@ -81,6 +107,7 @@ class FormatError(CDLConvertError, ValueError):
     issues with file format compatibility and supported operations.
     
     Inherits from ValueError for backward compatibility.
+
     """
     pass
 
@@ -92,6 +119,7 @@ class ParseError(CDLConvertError, ValueError):
     structure. It includes context about what went wrong during parsing.
     
     Inherits from ValueError for backward compatibility.
+
     """
     pass
 
@@ -105,6 +133,7 @@ class ValidationError(CDLConvertError, ValueError, TypeError):
     which values failed validation and why.
     
     Inherits from ValueError and TypeError for backward compatibility.
+    
     """
     pass
 

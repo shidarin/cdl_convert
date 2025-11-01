@@ -1,48 +1,57 @@
 #!/usr/bin/env python
-"""
+"""CDL Convert Parse Module
 
-CDL Convert Parse
-=================
+Parsing functions for converting CDL files to cdl_convert objects.
 
-Contains parser functions for converting files to cdl_convert objects.
+Public Functions:
+    parse_ale(Union[str, Path]) -> ColorCollection: Parse Avid Log Exchange
+        files.
 
-## Public Functions
+    parse_cc(Union[str, Path]) -> ColorCorrection: Parse XML Color Correction
+        files.
 
-    parse_ale()
-        Parses an ALE EDL file into a ColorCollection set to ccc.
+    parse_ccc(Union[str, Path]) -> ColorCollection: Parse XML Color Correction
+        Collection files.
 
-    parse_cc()
-        Parses an XML CC file into a ColorCorrection.
+    parse_cdl(Union[str, Path]) -> ColorCollection: Parse XML Color Decision
+        List files.
 
-    parse_ccc()
-        Parses an XML CCC file into a ColorCollection set to ccc.
+    parse_file(Union[str, Path], Optional[str]) -> Union[ColorCorrection, ColorCollection]:
+        Format detection and parsing.
 
-    parse_cdl
-        Parses an XML CDL file into a ColorCollection set to cdl.
+    parse_flex(Union[str, Path]) -> ColorCollection: Parse Film Log EDL
+        Exchange files.
 
-    parse_file()
-        Determines which parse function to call based on file extension (or
-        provided ext arg) and calls that function. Returns result.
+    parse_rnh_cdl(Union[str, Path]) -> ColorCorrection: Parse Rhythm & Hues
+        space-separated CDL files.
 
-    parse_flex()
-        Parses a FLEx EDL into a ColorCollection set to ccc.
+Global Configuration:
+    INPUT_FORMATS: Type-safe dictionary mapping file extensions to parser
+        functions for automatic format detection and processing.
 
-    parse_rnh_cdl
-        Parses a Rhythm & Hues Space Separated cdl file, which is based on a
-        very early ASC CDL spec, into a single ColorCorrection.
-
-## GLOBALS
-
-    INPUT_FORMATS
-        A dictionary whose keys are file extensions and values are the above
-        functions. Used by ``parse_file()`` to determine what parser to call.
+Example Usage:
+    >>> from pathlib import Path
+    >>> from cdl_convert import parse_file, parse_ale
+    >>> 
+    >>> # File parsing with pathlib
+    >>> input_file = Path("input.ale")
+    >>> collection = parse_file(input_file)
+    >>> print(f"Found {len(collection.color_corrections)} corrections")
+    >>> 
+    >>> # Specific format parsing
+    >>> try:
+    ...     ale_collection = parse_ale(input_file)
+    ... except ParseError as e:
+    ...     print(f"Parse error: {e}")
+    ... except ValidationError as e:
+    ...     print(f"Validation error: {e}")
 
 ## License
 
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2015 Sean Wallitsch
+Copyright (c) 2015-2025 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -105,28 +114,23 @@ __all__ = [
 
 
 def parse_ale(input_file: Union[str, Path]) -> collection.ColorCollection:  # pylint: disable=R0914
-    """Parses an Avid Log Exchange (ALE) file for CDLs
-
-    **Args:**
-        input_file : (str|Path)
-            The filepath to the ALE EDL
-
-    **Returns:**
-        (:class:`ColorCollection`)
-            A collection that contains all found ColorCorrections
-
-    **Raises:**
-        N/A
+    """Parse an Avid Log Exchange (ALE) file for CDL color corrections.
 
     An ALE file is traditionally gathered during a telecine transfer using
-    standard ASCII characters. Each line theoretically represents a single
-    clip/take/shot.
+    standard ASCII characters. Each line represents a single clip/take/shot
+    with tab-delimited fields including ASC_SOP and ASC_SAT values.
 
-    Each field of data is tab delineated. We'll be searching for the ASC_SOP,
-    ASC_SAT fields, alone with the standard Scan Filename fields.
+    Args:
+        input_file (Union[str, Path]): The filepath to the ALE EDL file.
 
-    The Data line indicates that all the following lines are comprised of
-    shot information.
+    Returns:
+        ColorCollection: A collection containing all found ColorCorrections
+            with the collection type set to 'ccc'.
+
+    Raises:
+        ParseError: If the ALE file cannot be parsed or contains invalid data.
+        ValidationError: If color correction values fail validation.
+        FileNotFoundError: If the input file does not exist.
 
     """
     # When we enter a section, we're store the section name
@@ -203,42 +207,33 @@ def parse_ale(input_file: Union[str, Path]) -> collection.ColorCollection:  # py
 
 
 def parse_cc(input_file: Union[str, Path, ElementTree.Element]) -> correction.ColorCorrection:  # pylint: disable=R0912
-    """Parses a .cc file for ASC CDL information
-
-    **Args:**
-        input_file : (str|Path|<ElementTree.Element>)
-            The filepath to the CC or the ``ElementTree.Element`` object.
-
-    **Returns:**
-        (:class:`ColorCorrection`)
-            The :class:`ColorCorrection` described within.
-
-    **Raises:**
-        ValueError:
-            Bad XML formatting can raise ValueError is missing required
-            elements.
-
-    A CC file is really only a single element of a larger CDL or CCC XML file,
-    but this element has become a popular way of passing around single shot
-    CDLs, rather than the much bulkier CDL file.
-
-    A sample CC XML file has text like:
-    ::
-        <ColorCorrection id="cc03340">
-            <SOPNode>
-                <Description>change +1 red, contrast boost</Description>
-                <Slope>1.2 1.3 1.4</Slope>
-                <Offset>0.3 0.0 0.0</Offset>
-                <Power>1.0 1.0 1.0</Power>
-            </SOPNode>
-            <SatNode>
-                <Saturation>1.2</Saturation>
-            </SatNode>
-        </ColorCorrection>
-
-    Additional elements can include multiple descriptions at every level,
-    a description of the input colorspace, and a description of the viewing
-    colorspace and equipment.
+    """Parse XML Color Correction (.cc) file or element.
+    
+    Parses a single ColorCorrection XML element containing ASC CDL values.
+    CC files represent individual color corrections and are commonly used
+    for single-shot CDL exchange instead of larger CDL or CCC files.
+    
+    The parser extracts SOP (Slope, Offset, Power) and Saturation values
+    along with descriptions, input/viewing colorspace information, and
+    other metadata from the XML structure.
+    
+    Args:
+        input_file (Union[str, Path, ElementTree.Element]): File path to
+            CC file or pre-parsed ElementTree Element containing
+            ColorCorrection data.
+            
+    Returns:
+        ColorCorrection: ColorCorrection instance with parsed CDL values
+            and metadata.
+            
+    Raises:
+        ParseError: If XML structure is invalid or required elements missing.
+        ValidationError: If CDL values fail validation checks.
+        FileNotFoundError: If input file path does not exist.
+        
+    Example:
+        >>> cc = parse_cc("shot_001.cc")
+        >>> print(f"ID: {cc.id}, Slope: {cc.slope}")
 
     """
     # Use match statement for input type handling
@@ -360,30 +355,32 @@ def parse_cc(input_file: Union[str, Path, ElementTree.Element]) -> correction.Co
 
 
 def parse_ccc(input_file: Union[str, Path]) -> collection.ColorCollection:
-    """Parses a .ccc file into a :class:`ColorCollection` with type 'ccc'
-
-    **Args:**
-        input_file : (str|Path)
-            The filepath to the CCC.
-
-    **Returns:**
-        (:class:`ColorCollection`)
-            A collection of all the found :class:`ColorCorrection` as well
-            as any metadata within the XML
-
-    **Raises:**
-        ValueError:
-            Bad XML formatting can raise ValueError is missing required
-            elements.
-
-    A ColorCorrectionCollection is just that- a collection of ColorCorrection
-    elements. It does not contain any ColorDecision or MediaRef elements,
-    but is free to contain as many Description elements as someone adds in.
-
-    It should also contain an InputDescription element, describing the color
-    space and other properties of the incoming image, as well as a
-    ViewingDescription which describes the viewing environment as well
-    as any relevant hardware devices used to view or grade.
+    """Parse XML Color Correction Collection (.ccc) file.
+    
+    Parses a ColorCorrectionCollection XML file containing multiple
+    ColorCorrection elements. CCC files are collections of individual
+    color corrections without ColorDecision or MediaRef elements.
+    
+    The parser extracts all ColorCorrection elements along with collection-
+    level descriptions, InputDescription (source colorspace), and
+    ViewingDescription (viewing environment and hardware) metadata.
+    
+    Args:
+        input_file (Union[str, Path]): File path to CCC file to parse.
+        
+    Returns:
+        ColorCollection: Collection containing all found ColorCorrections
+            with type set to 'ccc' and parsed metadata.
+            
+    Raises:
+        ParseError: If XML structure is invalid or root element is not
+            ColorCorrectionCollection.
+        ValidationError: If CDL values fail validation checks.
+        FileNotFoundError: If input file path does not exist.
+        
+    Example:
+        >>> ccc = parse_ccc("show_corrections.ccc")
+        >>> print(f"Found {len(ccc.color_corrections)} corrections")
 
     """
     root = _remove_xmlns(input_file)
@@ -422,31 +419,32 @@ def parse_ccc(input_file: Union[str, Path]) -> collection.ColorCollection:
 
 
 def parse_cdl(input_file: Union[str, Path]) -> collection.ColorCollection:
-    """Parses a .cdl file into a :class:`ColorCollection` with type 'cdl'
-
-    **Args:**
-        input_file : (str|Path)
-            The filepath to the CDL.
-
-    **Returns:**
-        (:class:`ColorCollection`)
-            A collection of all the found :class:`ColorDecisions` as well
-            as any metadata within the XML
-
-    **Raises:**
-        ValueError:
-            Bad XML formatting can raise ValueError is missing required
-            elements.
-
-    A ColorDecicionList is just that- a list of ColorDecision elements. It does
-    not directly contain any ColorCorrections or Media Ref, only
-    ColorDecisions, but is free to contain as many Description elements as
-    someone adds in.
-
-    It should also contain an InputDescription element, describing the color
-    space and other properties of the incoming image, as well as a
-    ViewingDescription which describes the viewing environment as well
-    as any relevant hardware devices used to view or grade.
+    """Parse XML Color Decision List (.cdl) file.
+    
+    Parses a ColorDecisionList XML file containing ColorDecision elements
+    that link ColorCorrections with MediaRef elements. CDL files represent
+    the complete ASC CDL workflow including media references.
+    
+    The parser extracts all ColorDecision elements along with collection-
+    level descriptions, InputDescription (source colorspace), and
+    ViewingDescription (viewing environment and hardware) metadata.
+    
+    Args:
+        input_file (Union[str, Path]): File path to CDL file to parse.
+        
+    Returns:
+        ColorCollection: Collection containing all found ColorDecisions
+            with type set to 'cdl' and parsed metadata.
+            
+    Raises:
+        ParseError: If XML structure is invalid or root element is not
+            ColorDecisionList.
+        ValidationError: If CDL values fail validation checks.
+        FileNotFoundError: If input file path does not exist.
+        
+    Example:
+        >>> cdl = parse_cdl("project_decisions.cdl")
+        >>> print(f"Found {len(cdl.color_decisions)} decisions")
 
     """
     root = _remove_xmlns(input_file)
@@ -485,23 +483,38 @@ def parse_cdl(input_file: Union[str, Path]) -> collection.ColorCollection:
 
 
 def parse_cmx(input_file: Union[str, Path]) -> collection.ColorCollection:  # pylint: disable=R0912,R0914
-    """Parses a CMX EDL file for ASC CDL information.
+    """Parse CMX EDL file for ASC CDL color correction information.
+    
+    Parses a CMX Edit Decision List file to extract ASC CDL color correction
+    data embedded as *ASC_SOP and *ASC_SAT comments. Uses OpenTimelineIO
+    for EDL parsing and timeline structure handling.
+    
+    CDL data appears in CMX EDL files as comment lines following edit entries:
 
-    **Args:**
-        input_file : (str|Path)
-            The filepath to the CMX EDL
-
-    **Returns:**
-        (:class:`ColorCollection`)
-            A collection that contains all the ColorCorrection objects found
-            within this EDL
-
-    **Raises:**
-        N/A
-
+    ASC_SOP (slope_r slope_g slope_b)(offset_r offset_g offset_b)(power_r power_g power_b)
+    ASC_SAT saturation_value
+    
+    ```
     001  DS0010.bg1 V     C     00:08:07:23 00:08:16:10 01:00:00:00 01:00:08:11
     *ASC_SOP (1.45 1.22 1.15)(-0.14 -0.11 -0.11)(1.00 1.00 1.00)
     *ASC_SAT 0.773000
+    ```
+    
+    Args:
+        input_file (Union[str, Path]): File path to CMX EDL file to parse.
+        
+    Returns:
+        ColorCollection: Collection containing ColorCorrections extracted
+            from EDL with clip names as IDs and filename as source.
+            
+    Raises:
+        RuntimeError: If OpenTimelineIO is not installed or cannot be imported.
+        ParseError: If EDL file cannot be parsed by OpenTimelineIO.
+        FileNotFoundError: If input file path does not exist.
+        
+    Example:
+        >>> edl_collection = parse_cmx("project.edl")
+        >>> print(f"Found {len(edl_collection.color_corrections)} clips with CDL")
 
     """
     try:
@@ -539,54 +552,39 @@ def parse_cmx(input_file: Union[str, Path]) -> collection.ColorCollection:  # py
 
 
 def parse_flex(input_file: Union[str, Path]) -> collection.ColorCollection:  # pylint: disable=R0912,R0914
-    """Parses a DaVinci FLEx telecine EDL for ASC CDL information.
-
-    **Args:**
-        input_file : (str|Path)
-            The filepath to the FLEx EDL
-
-    **Returns:**
-        (:class:`ColorCollection`)
-            A collection that contains all the ColorCorrection objects found
-            within this EDL
-
-    **Raises:**
-        N/A
-
-    The DaVinci FLEx EDL is an odd duck, it's information conveyed via an
-    extremely strict line & character addressing system.
-
-    Each line must begin with a line number header that indicated what type
-    of information the line contains, with line number 100 indicating the
-    start of a new shot/take. Lines 000-099 contain session information.
-
-    Within each line, important information is constricted to a certain
-    range of characters, rather than space or comma separated like in an
-    ALE EDL.
-
-    Some line numbers we care about, and the character indexes:
-
-    +--------+---------------+------------+---------------------------------+
-    | Line # | Line Name     | Char Index | Data Type                       |
-    +========+===============+============+=================================+
-    | 010    | Project Title | 10-79      | Title                           |
-    +--------+---------------+------------+---------------------------------+
-    | 100    | Slate Info    | 10-17      | Scene                           |
-    +--------+---------------+------------+---------------------------------+
-    |        |               | 24-31      | Take ID                         |
-    +--------+---------------+------------+---------------------------------+
-    |        |               | 42-49      | Camera Reel ID                  |
-    +--------+---------------+------------+---------------------------------+
-    | 701    | ASC SOP       | (This entry can be safely space separated)   |
-    +--------+---------------+------------+---------------------------------+
-    | 702    | ASC SAT       | (This entry can be safely space separated)   |
-    +--------+---------------+------------+---------------------------------+
-
-    We'll try and default to using the Slate information to derive the
-    resultant filename, however that information is optional. If no
-    slate information is found, we'll iterate up at the end of the title.
-    If no title information is found, we'll have to iterate up on the
-    actual input filename, which is far from ideal.
+    """Parse DaVinci FLEx telecine EDL file for ASC CDL information.
+    
+    Parses a Film Log EDL Exchange (FLEx) file from DaVinci telecine systems.
+    FLEx uses a strict line-based format with fixed character positions for
+    data fields rather than delimited values.
+    
+    The parser extracts ASC CDL data from line types 701 (SOP values) and
+    702 (Saturation values), along with shot identification from line 100
+    (slate information) and project title from line 010.
+    
+    FLEx Format Structure:
+    - Lines 000-099: Session information
+    - Line 010: Project title (chars 10-79)
+    - Line 100: Slate info - Scene (10-17), Take (24-31), Reel (42-49)
+    - Line 701: ASC SOP values (space-separated)
+    - Line 702: ASC SAT value (space-separated)
+    
+    Args:
+        input_file (Union[str, Path]): File path to FLEx EDL file to parse.
+        
+    Returns:
+        ColorCollection: Collection containing ColorCorrections extracted
+            from FLEx with shot identifiers derived from slate information
+            or project title.
+            
+    Raises:
+        ParseError: If FLEx file format is invalid or cannot be parsed.
+        ValidationError: If CDL values fail validation checks.
+        FileNotFoundError: If input file path does not exist.
+        
+    Example:
+        >>> flex_collection = parse_flex("telecine_session.flex")
+        >>> print(f"Found {len(flex_collection.color_corrections)} shots")
 
     """
 
@@ -603,7 +601,22 @@ def parse_flex(input_file: Union[str, Path]) -> collection.ColorCollection:  # p
     sat = None
 
     def build_cc(line_id, edl_path, sop_dict, sat_value, title_line):
-        """Builds and returns a cc if sop/sat values found"""
+        """Build ColorCorrection from FLEx EDL data if CDL values are present.
+        
+        Creates a ColorCorrection instance from parsed FLEx data, setting
+        SOP values, saturation, and description if available.
+        
+        Args:
+            line_id: Identifier for the color correction.
+            edl_path: Source EDL file path.
+            sop_dict: Dictionary with 'slope', 'offset', 'power' keys or None.
+            sat_value: Saturation value or None.
+            title_line: Project title for description or None.
+            
+        Returns:
+            ColorCorrection: ColorCorrection with parsed CDL values.
+
+        """
         col_cor = correction.ColorCorrection(line_id, edl_path)
         if title_line:
             col_cor.desc = title_line
@@ -696,29 +709,33 @@ def parse_flex(input_file: Union[str, Path]) -> collection.ColorCollection:  # p
 
 
 def parse_rnh_cdl(input_file: Union[str, Path]) -> correction.ColorCorrection:
-    """Parses a space separated .cdl file for ASC CDL information.
-
-    **Args:**
-        input_file : (str|Path)
-            The filepath to the CDL
-
-    **Returns:**
-        (:class:`ColorCorrection`)
-            The single ColorCorrection object retrieved from the beta CDL
-
-    **Raises:**
-        N/A
-
-    A space separated cdl file is an internal Rhythm & Hues format used by
-    the Rhythm & Hues for displaying shot level and sequence level within
-    their internally developed playback software.
-
-    The file is a simple file consisting of one line. That line has 10, space
-    separated elements that correspond to the ten ASC CDL elements in order of
-    operations.
-
-    ``SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat``
-
+    """Parse Rhythm & Hues space-separated CDL file format.
+    
+    Parses a simple text file containing a single line with 10 space-separated
+    numeric values representing ASC CDL parameters. This format was used
+    internally by Rhythm & Hues for shot and sequence level color correction
+    data in their playback software.
+    
+    The format contains exactly 10 values in ASC CDL order of operations:
+    
+    `SlopeR SlopeG SlopeB OffsetR OffsetG OffsetB PowerR PowerG PowerB Sat`
+    
+    Args:
+        input_file (Union[str, Path]): File path to space-separated CDL file.
+        
+    Returns:
+        ColorCorrection: Single ColorCorrection with filename (without
+            extension) as ID and parsed CDL values.
+            
+    Raises:
+        ParseError: If file format is invalid or values cannot be parsed.
+        ValidationError: If CDL values fail validation checks.
+        FileNotFoundError: If input file path does not exist.
+        IndexError: If file does not contain exactly 10 space-separated values.
+        
+    Example:
+        >>> cc = parse_rnh_cdl("shot_001.cdl")
+        >>> print(f"Slope: {cc.slope}, Saturation: {cc.sat}")
     """
 
     with open(input_file, 'r') as cdl_f:
@@ -750,7 +767,23 @@ def parse_rnh_cdl(input_file: Union[str, Path]) -> correction.ColorCorrection:
 
 
 def _remove_xmlns(input_file):
-    """Removes the xmlns attribute from XML files, then returns the element"""
+    """Remove xmlns namespace attribute from XML file, return parsed element.
+    
+    Reads XML file content, strips the xmlns namespace declaration to simplify
+    parsing, and returns the parsed ElementTree root element. Handles encoding
+    issues by falling back from UTF-8 to default encoding if needed.
+    
+    Args:
+        input_file: File path to XML file to process.
+        
+    Returns:
+        ElementTree.Element: Parsed XML root element with xmlns removed.
+        
+    Raises:
+        ParseError: If XML cannot be parsed after xmlns removal.
+        FileNotFoundError: If input file does not exist.
+
+    """
     # We're going to open the file as a string and remove the xmlns, as
     # it doesn't do a lot for us when working with CDLs, and in fact
     # just clutters everything the hell up.
@@ -789,28 +822,33 @@ INPUT_FORMATS = {
 
 
 def parse_file(filepath: Union[str, Path], filetype: Optional[str] = None) -> Union[correction.ColorCorrection, collection.ColorCollection]:
-    """Determines & uses the correct parser to use on a CDL file
-
+    """Parse CDL file using automatic format detection or specified type.
+    
+    Determines the appropriate parser based on file extension and delegates
+    to the corresponding format-specific parsing function. Supports all
+    CDL-related formats including XML variants and EDL formats.
+    
     Args:
-        filepath : (str|Path)
-            The filepath to the file. Must exist.
-
-        filetype=None : (str)
-            A file extension corresponding to the CDL type to convert from.
-            If not provided, we'll derive it from the filepath.
-
-            Should not include a '.'
-
-    Raises:
-        ParseError: If the file format is not supported
-
+        filepath (Union[str, Path]): Path to CDL file to parse.
+            File must exist.
+        filetype (Optional[str]): File format override. If not provided,
+            format is detected from file extension. Should not include
+            leading dot (e.g., 'ccc' not '.ccc').
+            
     Returns:
-        :class:`ColorCorrection` or :class:`ColorCollection`
-            Depending on the type of input file, this function will
-            either return a single :class:`ColorCorrection` or a full
-            :class:`ColorCollection` , containing one or more
-            :class:`ColorCorrection` or :class:`ColorDecision`
-
+        Union[ColorCorrection, ColorCollection]: Single ColorCorrection for
+            formats like .cc and .rcdl, or ColorCollection for multi-correction
+            formats like .ccc, .cdl, .ale, .edl, and .flex.
+            
+    Raises:
+        ParseError: If file format is not supported or parsing fails.
+        FileNotFoundError: If input file path does not exist.
+        
+    Example:
+        >>> result = parse_file("project.ccc")
+        >>> if isinstance(result, ColorCollection):
+        ...     print(f"Found {len(result.color_corrections)} corrections")
+        
     """
     if not filetype:
         filetype = Path(filepath).suffix.removeprefix('.').lower()

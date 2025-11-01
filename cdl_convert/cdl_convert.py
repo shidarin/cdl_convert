@@ -1,27 +1,34 @@
 #!/usr/bin/env python
-"""
+"""CDL Convert Command Line Interface
 
-CDL Convert Cdl_Convert
-=======================
+This module provides the main entry point for the cdl_convert command-line
+tool, with argument parsing, validation, and error reporting.
 
-Contains the script functions for using cdl_convert as a script.
+Public Functions:
+    parse_args() -> argparse.Namespace
+        Parse command line arguments using modern argparse features with
+        improved validation and error messages.
 
-## Public Functions
-
-    parse_args()
-        Uses argparse to parse the command line args provided to cdl_convert.
-
-    main()
+    main() -> None  
         Main script runner, this calls parse_args, determines the input and
         output extensions, calls the correct parser and determines how to
         fulfill the output requested.
+
+    cli_main() -> None
+        Entry point wrapper that handles top-level exceptions and provides
+        clean exit codes for different error conditions.
+
+Example Usage:
+    $ cdl_convert input.ale output.ccc
+    $ cdl_convert --input-format ale --output-format ccc input.txt output.xml
+    $ cdl_convert --verbose --halt-on-error input.cdl output.cc
 
 ## License
 
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2015 Sean Wallitsch
+Copyright (c) 2015-2025 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -129,11 +136,12 @@ def print_success(message: str) -> None:
 
 
 def parse_args(validate_files=True):
-    """Uses argparse to parse command line arguments with enhanced validation and error messages
+    """Uses argparse to parse command line arguments
     
     Args:
-        validate_files (bool): Whether to validate that input files exist. Default True.
-                              Set to False for testing with mock files.
+        validate_files (bool): Whether to validate that input files exist.
+            Default True.
+
     """
     # Get supported formats for help text
     input_formats = sorted(parse.INPUT_FORMATS.keys())
@@ -175,8 +183,8 @@ def parse_args(validate_files=True):
         help="Stop processing on first error instead of using default values. "
              "Useful for strict validation of CDL files. Turn this on if "
              "you want the conversion process to fail and not continue,"
-             "rather than relying on default behavior for bad values. Examples "
-             "are clipping negative values to 0.0 for Slope, Power and "
+             "rather than relying on default behavior for bad values. Examples"
+             " are clipping negative values to 0.0 for Slope, Power and "
              "Saturation, and automatically generating a new id for a "
              "ColorCorrect if no or a bad id is given." 
     )
@@ -184,22 +192,23 @@ def parse_args(validate_files=True):
     parser.add_argument(
         "--no-output",
         action='store_true',
-        help="Parse files without writing output. Useful with --halt and --check "
-             "for validation-only runs."
+        help="Parse files without writing output. Useful with --halt and
+             " --check for validation-only runs."
     )
     
     parser.add_argument(
         "--check",
         action='store_true',
-        help="Check for unusual color correction values. Flags slope/power/saturation "
-             "outside 0.1-3.0 range and offset outside -1.0 to 1.0 range."
+        help="Check for unusual color correction values. Flags "
+             "slope/power/saturation outside 0.1-3.0 range and offset outside "
+             "-1.0 to 1.0 range."
     )
     
     parser.add_argument(
         "--single",
         action='store_true',
-        help="Write each color decision to a separate file instead of collections. "
-             "Converts one input file to multiple output files."
+        help="Write each color decision to a separate file instead of "
+             "collections. Converts one input file to multiple output files."
     )
     
     parser.add_argument(
@@ -277,11 +286,11 @@ def parse_args(validate_files=True):
 
 
 def main(validate_files=True):  # pylint: disable=R0912
-    """Main conversion function with enhanced error reporting and verbose output
+    """Main conversion function with enhanced error reporting and output
     
     Args:
-        validate_files (bool): Whether to validate that input files exist. Default True.
-                              Set to False for testing with mock files.
+        validate_files (bool): Whether to validate that input files exist.
+            Default True.
     """
     try:
         args = parse_args(validate_files=validate_files)
@@ -340,7 +349,7 @@ def main(validate_files=True):  # pylint: disable=R0912
         sys.exit(1)
 
     def write_single_file(cdl, ext):
-        """Writes a single color correction file with enhanced error handling"""
+        """Writes a single color correction file with error handling"""
         try:
             cdl.determine_dest(ext, destination_dir)
             print_info(f"Writing CDL {cdl.id} to {cdl.file_out}", verbose)

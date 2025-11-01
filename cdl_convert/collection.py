@@ -1,25 +1,20 @@
 #!/usr/bin/env python
-"""
+"""CDL Convert Collection Module
 
-CDL Convert Collection
-======================
+This module contains the ColorCollection class, which serves as a unified
+container for both ColorCorrectionCollection and ColorDecisionList formats,
+providing seamless conversion between ASC CDL collection types.
 
-Contains the ColorCollection class, which acts as both
-ColorCorrectionCollection and ColorDecisionList.
-
-## Classes
-
-    ColorCollection
-        Collection format for both ColorCorrections and ColorDecisions. This
-        class can export both ColorCorrectionCollection and ColorDecisionList
-        formats.
+Classes:
+    ColorCollection: Collection container for ColorCorrections and 
+        ColorDecisions with support for both CCC and CDL export formats.
 
 ## License
 
 The MIT License (MIT)
 
 cdl_convert
-Copyright (c) 2015 Sean Wallitsch
+Copyright (c) 2015-2025 Sean Wallitsch
 http://github.com/shidarin/cdl_convert/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -76,167 +71,50 @@ __all__ = ['ColorCollection']
 class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disable=R0902,R0904
     """Container class for ColorDecisionLists and ColorCorrectionCollections.
 
-    Description
-    ~~~~~~~~~~~
+    ColorCollection stores child ColorCorrection and ColorDecision objects and 
+    can export them as either ColorCorrectionCollection (.ccc) or 
+    ColorDecisionList (.cdl) XML formats. It inherits description, colorspace,
+    and XML functionality from base classes.
 
-    Collections need to store children and have access to descriptions,
-    input descriptions, and viewing descriptions.
+    Class Attributes:
+        members (List[ColorCollection]): All ColorCollection instances are
+            tracked in this list. Used for generating default filenames when 
+            no input file is set.
 
-    **Class Attributes:**
+    Attributes:
+        all_children (List[Union[ColorCorrection, ColorDecision]]): Combined 
+            list of all ColorCorrection and ColorDecision children.
+        color_corrections (List[ColorCorrection]): List of ColorCorrection
+            children.
+        color_decisions (List[ColorDecision]): List of ColorDecision children.
+        desc (List[str]): List of description strings. Inherited from
+            AscDescBase.
+        element (Optional[ElementTree.Element]): XML Element representation. 
+            Inherited from AscXMLBase.
+        file_in (Optional[Path]): Input file path used to create this 
+            collection.
+        file_out (Optional[Path]): Output file path for writing this 
+            collection.
+        input_desc (Optional[str]): Input colorspace description. Inherited
+            from AscColorSpaceBase.
+        is_ccc (bool): True if collection type is set to 'ccc'.
+        is_cdl (bool): True if collection type is set to 'cdl'.
+        type (str): Collection type, either 'ccc' or 'cdl'. Determines export
+            format.
+        viewing_desc (Optional[str]): Viewing environment description.
+            Inherited from AscColorSpaceBase.
+        xml (str): Formatted XML string representation. Inherited from
+            AscXMLBase.
+        xml_root (str): XML string with declaration header. Inherited from
+            AscXMLBase.
+        xmlns (str): XML namespace for ASC CDL schema version.
 
-        members : [ :class`ColorCollection` ]
-            All instanced :class:`ColorCollection` are added to this member
-            list. Unlike the :class:`ColorCorrection` member's dictionary,
-            :class:`ColorCollection` do not need any unique values to exist.
-
-            This is currently only used for determining an id value when
-            exporting and no file_in attribute is set.
-
-    **Attributes:**
-
-        all_children : (:class:`ColorCorrection`, :class:`ColorDecision`)
-            A tuple of all the children of this collection, both
-            Corrections and Decisions.
-
-        color_corrections : (:class:`ColorCorrection`)
-            All the :class:`ColorCorrection` children are listed here.
-
-        color_decisions : (:class:`ColorDecision`)
-            All the :class:`ColorDecision` children are listed here.
-
-        desc : [str]
-            Since all Asc nodes which can contain a single description, can
-            actually contain an infinite number of descriptions, the desc
-            attribute is a list, allowing us to store every single description
-            found during parsing.
-
-            Setting desc directly will cause the value given to append to the
-            end of the list, but desc can also be replaced by passing it a list
-            or tuple. Desc can be emptied by passing it None, [] or ().
-
-            Inherited from :class:`AscDescBase` .
-
-        element : (<xml.etree.ElementTree.Element>)
-            etree style Element representing the node. Inherited from
-            :class:`AscXMLBase` .
-
-        file_in : (str)
-            Filepath used to create this :class:`ColorCollection` .
-
-        file_out : (str)
-            Filepath this :class:`ColorCollection` will be written to.
-
-        input_desc : (str)
-            Description of the color space, format and properties of the input
-            images. Inherited from :class:`AscColorSpaceBase` .
-
-        is_ccc : (bool)
-            True if this collection currently represents ``.ccc``.
-
-        is_cdl : (bool)
-            True if this collection currently represents ``.cdl``.
-
-        type : (str)
-            Either ``ccc`` or ``cdl``, represents the type of collection
-            this class currently will export by default.
-
-        viewing_desc : (str)
-            Viewing device, settings and environment. Inherited from
-            :class:`AscColorSpaceBase` .
-
-        xml : (str)
-            A nicely formatted XML string representing the node. Inherited from
-            :class:`AscXMLBase`.
-
-        xml_root : (str)
-            A nicely formatted XML, ready to write to file string representing
-            the node. Formatted as an XML root, it includes the xml version and
-            encoding tags on the first line. Inherited from
-            :class:`AscXMLBase`.
-
-        xmlns : (str)
-            Describes the version of the ASC XML Schema that cdl_convert writes
-            out to files following the full schema (``.ccc`` and ``.cdl``)
-
-    **Public Methods:**
-
-        append_child()
-            Appends the given object, either a :class:`ColorCorrection` or a
-            :class:`ColorDecision` , to the respective attribute list, either
-            ``color_corrections`` or ``color_decision`` depending on the class
-            of the object passed in.
-
-        append_children()
-            Given a list, will iterate through and append each element of that
-            list to the correct child list, using the ``append_child()``
-            method.
-
-        build_element()
-            Builds an ElementTree XML Element for this node and all nodes it
-            contains. ``element``, ``xml``, and ``xml_root`` attributes use
-            this to build the XML. This function is identical to calling the
-            ``element`` attribute. Overrides inherited placeholder method
-            from :class:`AscXMLBase` .
-
-            Here on :class:`ColorCollection` , this is a pointer to
-            ``build_element_ccc()`` or ``build_element_cdl()`` depending on
-            which type the :class:`ColorCollection` is currently set to.
-
-        build_element_ccc()
-            Builds a CCC style XML tree representing this
-            :class:`ColorCollection` instance.
-
-        build_element_cdl()
-            Builds a CDL style XML tree representing this
-            :class:`ColorCollection` instance.
-
-        copy_collection()
-            Creates and returns an exact new instance that's an exact copy of
-            the current instance. Note that references to the child instances
-            will be copied, but that the child instances themselves will
-            not be.
-
-        merge_collections()
-            Merges all members of a list containing :class:`ColorCollection`
-            and the instance this is called on to return a new
-            :class:`ColorCollection` that is primarily a copy of this instance,
-            but contains all children and description elements from the given
-            collections. `input_desc`, `viewing_desc`, `file_in`, and `type`
-            will be set to the values of the parent instance.
-
-        parse_xml_color_corrections()
-            Parses an ElementTree element to find & add all ColorCorrection.
-
-        parse_xml_descs()
-            Parses an ElementTree Element for any Description tags and appends
-            any text they contain to the ``desc``. Inherited from
-            :class:`AscDescBase`
-
-        parse_xml_input_desc()
-            Parses an ElementTree Element to find & add an InputDescription.
-            If none is found, ``input_desc`` will remain set to ``None``.
-            Inherited from :class:`AscColorSpaceBase`
-
-        parse_xml_viewing_desc()
-            Parses an ElementTree Element to find & add a ViewingDescription.
-            If none is found, ``viewing_desc`` will remain set to ``None``.
-            Inherited from :class:`AscColorSpaceBase`
-
-        reset_members()
-            Resets the class level members list.
-
-        set_parentage()
-            Sets all child :class:`ColorCorrection` and :class:`ColorDecision`
-            ``parent`` attribute to point to this instance.
-
-        set_to_ccc()
-            Switches the ``type`` of this collection to export a ``ccc`` style
-            xml collection by default.
-
-        set_to_cdl()
-            Switches the ``type`` of this collection to export a ``cdl`` style
-            xml collection by default.
-
+    Example:
+        >>> collection = ColorCollection()
+        >>> cc = ColorCorrection("shot_001")
+        >>> collection.append_child(cc)
+        >>> collection.set_to_ccc()
+        >>> print(collection.type)  # 'ccc'
     """
 
     members: List['ColorCollection'] = []
@@ -257,52 +135,52 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     @property
     def all_children(self) -> List[Union[ColorCorrection, ColorDecision]]:
-        """Returns a list of both color_corrections and color_decisions"""
+        """Return combined list of ColorCorrection and ColorDecision."""
         return self.color_corrections + self.color_decisions
 
     @property
     def color_corrections(self) -> List[ColorCorrection]:
-        """Returns the list of child ColorCorrections"""
+        """Return list of ColorCorrection children."""
         return self._color_corrections
 
     @color_corrections.setter
     def color_corrections(self, values: Union[None, ColorCorrection, List[ColorCorrection], Tuple[ColorCorrection, ...], set]) -> None:
-        """Makes sure color_corrections is only set with ColorCorrection"""
+        """Set color_corrections list, ensuring all items are ColorCorrection instances."""
         self._color_corrections = self._list_setter(
             'color_corrections', ColorCorrection, values
         )
 
     @property
     def color_decisions(self) -> List[ColorDecision]:
-        """Returns the list of child ColorDecisions"""
+        """Return list of ColorDecision children."""
         return self._color_decisions
 
     @color_decisions.setter
     def color_decisions(self, values: Union[None, ColorDecision, List[ColorDecision], Tuple[ColorDecision, ...], set]) -> None:
-        """Makes sure color_decisions is only set with ColorDecision"""
+        """Set color_decisions list, ensuring all items are ColorDecision."""
         self._color_decisions = self._list_setter(
             'color_decisions', ColorDecision, values
         )
 
     @property
     def file_in(self) -> Optional[Path]:
-        """Returns the absolute filepath to the input file"""
+        """Return absolute path to the input file."""
         return self._file_in
 
     @file_in.setter
     def file_in(self, value: Optional[Union[str, Path]]) -> None:
-        """Sets the file_in to the absolute path of file"""
+        """Set file_in to absolute path of the provided file."""
         if value:
             self._file_in = Path(value).resolve()
 
     @property
     def file_out(self) -> Optional[Path]:
-        """Returns a theoretical absolute filepath based on output ext"""
+        """Return output file path for writing this collection."""
         return self._file_out
 
     @property
     def id_list(self) -> List[str]:
-        """A list of the ids of fully qualified ColorCorrection children"""
+        """Return sorted list of IDs from all ColorCorrection children."""
         current_ids = [i.cc.id for i in self.color_decisions if not i.is_ref]
         current_ids.extend([i.id for i in self.color_corrections])
         current_ids.sort()
@@ -310,22 +188,22 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     @property
     def is_ccc(self) -> bool:
-        """True if this collection currently represents .ccc"""
+        """Return True if collection type is set to 'ccc'."""
         return self.type == 'ccc'
 
     @property
     def is_cdl(self) -> bool:
-        """True if this collection currently represents .cdl"""
+        """Return True if collection type is set to 'cdl'."""
         return self.type == 'cdl'
 
     @property
     def type(self) -> str:
-        """Describes the type of ColorCollection this class will export"""
+        """Return collection type that determines export format."""
         return self._type
 
     @type.setter
     def type(self, value: str) -> None:
-        """Checks if type is either cdl or ccc"""
+        """Set collection type to 'ccc' or 'cdl'."""
         if value.lower() not in ['ccc', 'cdl']:
             raise ValidationError(
                 'ColorCollection type must be set to either '
@@ -336,14 +214,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     @property
     def xmlns(self) -> str:
-        """Describes the version of the XML schema written by cdl_convert"""
+        """Return XML namespace URI for ASC CDL schema version."""
         return self._xmlns
 
     # Private Methods =========================================================
 
     @staticmethod
     def _list_setter(list_name: str, color_class: type, values: Union[None, Any, List[Any], Tuple[Any, ...], set]) -> List[Any]:
-        """Sets a list to provided values but first checks membership"""
+        """Set list to provided values after validating."""
         if values is None:
             return []
         elif type(values) in [list, tuple, set]:
@@ -370,7 +248,21 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # Public Methods ==========================================================
 
     def append_child(self, child: Union[ColorCorrection, ColorDecision]) -> bool:
-        """Appends a given child to the correct list of children"""
+        """Add a ColorCorrection or ColorDecision to the appropriate list.
+        
+        Args:
+            child: ColorCorrection or ColorDecision instance to add.
+            
+        Returns:
+            bool: True if child was added successfully, False if duplicate ID
+                prevented addition.
+            
+        Raises:
+            ValidationError: If child is not a ColorCorrection or
+                ColorDecision, or if duplicate ID is found and halt_on_error
+                is enabled.
+
+        """
         # We need to make sure not to append a ColorDecision or ColorCorrection
         # if that id attribute already exists as a direct child or a child of a
         # ColorDecision child.
@@ -416,14 +308,26 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # =========================================================================
 
     def append_children(self, children: List[Union[ColorCorrection, ColorDecision]]) -> None:
-        """Appends an entire list to the correctly list of children"""
+        """Add multiple ColorCorrection and ColorDecision objects to lists.
+        
+        Args:
+            children: List of ColorCorrection and/or ColorDecision instances
+                to add.
+
+        """
         for child in children:
             self.append_child(child)
 
     # =========================================================================
 
     def build_element(self) -> Optional[ElementTree.Element]:
-        """Builds an ElementTree XML element representing for ColorCollection"""
+        """Build XML ElementTree Element based on current collection type.
+        
+        Returns:
+            ElementTree.Element: CCC or CDL format XML element depending on
+                type.
+
+        """
         if self.is_ccc:
             return self.build_element_ccc()
         elif self.is_cdl:
@@ -432,7 +336,13 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # =========================================================================
 
     def build_element_ccc(self) -> ElementTree.Element:
-        """Builds a CCC XML element representing this ColorCollection"""
+        """Build ColorCorrectionCollection XML element.
+        
+        Returns:
+            ElementTree.Element: CCC format XML element containing all
+                ColorCorrections.
+
+        """
         ccc_xml = ElementTree.Element('ColorCorrectionCollection')
         ccc_xml.attrib = {'xmlns': self.xmlns}
         if self.input_desc:
@@ -468,7 +378,13 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # =========================================================================
 
     def build_element_cdl(self) -> ElementTree.Element:
-        """Builds a CDL XML element representing this ColorCollection"""
+        """Build ColorDecisionList XML element.
+        
+        Returns:
+            ElementTree.Element: CDL format XML element containing all
+                ColorDecisions.
+
+        """
         cdl_xml = ElementTree.Element('ColorDecisionList')
         cdl_xml.attrib = {'xmlns': self.xmlns}
         if self.input_desc:
@@ -520,7 +436,17 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # =========================================================================
 
     def copy_collection(self) -> 'ColorCollection':
-        """Creates and returns a copy of this collection"""
+        """Create a copy of this collection with the same attributes.
+        
+        Returns:
+            ColorCollection: New collection instance with copied attributes
+                and child references.
+            
+        Note:
+            Child objects are referenced, not deep copied.
+        
+        """
+        # TODO: Add deep copy ability
         new_col = ColorCollection()
         new_col.desc = self.desc
         new_col.file_in = self.file_in if self.file_in else None
@@ -533,7 +459,12 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # =========================================================================
 
     def determine_dest(self, directory: Union[str, Path]) -> None:
-        """Determines the destination file and sets it on the cdl"""
+        """Set output file path based on input filename or collection index.
+        
+        Args:
+            directory: Directory path where output file will be written.
+
+        """
         if self.file_in:
             filename = Path(self.file_in).stem
         else:
@@ -546,7 +477,17 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # =========================================================================
 
     def merge_collections(self, collections: List['ColorCollection']) -> 'ColorCollection':
-        """Merges multiple collections together and returns a new one"""
+        """Merge collection with others to create a new combined collection.
+        
+        Args:
+            collections: List of ColorCollection instances to merge with.
+            
+        Returns:
+            ColorCollection: New collection containing children from all input
+                collections, with duplicates removed and attributes from this
+                collection preserved.
+
+        """
         new_col = self.copy_collection()
 
         # We need to move all the children into one big list, so that
@@ -576,19 +517,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # =========================================================================
 
     def parse_xml_color_corrections(self, xml_element: ElementTree.Element) -> bool:
-        """Parses an ElementTree element to find & add all ColorCorrection.
+        """Parse XML element to find and add ColorCorrection elements.
 
-        **Args:**
-            xml_element : (``xml.etree.ElementTree.Element``)
-                The element to parse for multiple ColorCorrection elements. If
-                found, append to our ``color_corrections``.
+        Args:
+            xml_element: XML element to search for ColorCorrection child
+                elements.
 
-        **Returns:**
-            (bool)
-                True if found ColorCorrections.
-
-        **Raises:**
-            None
+        Returns:
+            bool: True if ColorCorrection elements were found and added.
 
         """
         from . import parse
@@ -606,20 +542,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # =========================================================================
 
     def parse_xml_color_decisions(self, xml_element: ElementTree.Element) -> bool:
-        """Parses an ElementTree element to find & add all ColorDecisions.
+        """Parse XML element to find and add ColorDecision elements.
 
-        **Args:**
-            xml_element : (``xml.etree.ElementTree.Element``)
-                The element to parse for multiple ColorDecision elements. If
-                found, append to our ``color_decisions``.
+        Args:
+            xml_element: XML element to search for ColorDecision child
+                elements.
 
-        **Returns:**
-            (bool)
-                True if found ColorCorrections.
-
-        **Raises:**
-            None
-
+        Returns:
+            bool: True if ColorDecision elements were found and added.
         """
         cd_nodes = xml_element.findall('ColorDecision')
         if not cd_nodes:
@@ -637,24 +567,24 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     @classmethod
     def reset_members(cls) -> None:
-        """Resets the member list"""
+        """Clear the class-level members list."""
         cls.members = []
 
     # =========================================================================
 
     def set_parentage(self) -> None:
-        """Sets the parent of all child nodes to point to this instance"""
+        """Set the parent attribute of all child objects to this collection."""
         for node in self.all_children:
             node.parent = self
 
     # =========================================================================
 
     def set_to_ccc(self) -> None:
-        """Switches the type of the ColorCollection to export .ccc style xml"""
+        """Set collection type to 'ccc' for ColorCorrectionCollection."""
         self._type = 'ccc'
 
     # =========================================================================
 
     def set_to_cdl(self) -> None:
-        """Switches the type of the ColorCollection to export .cdl style xml"""
+        """Set collection type to 'cdl' for ColorDecisionList format."""
         self._type = 'cdl'
