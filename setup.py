@@ -150,7 +150,9 @@ setup(
     # List run-time dependencies here.  These will be installed by pip when
     #  your project is installed.
     install_requires=[
-        'OpenTimelineIO>=0.17.0'
+        'OpenTimelineIO>=0.17.0',
+        'otio-cmx3600-adapter>=1.0.0',
+        'otio-ale-adapter>=1.0.0'
     ],
 
     # Testing - now uses pytest
