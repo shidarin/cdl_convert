@@ -1,0 +1,186 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cdl_convert"
+dynamic = ["version"]
+description = "Converts between common ASC Color Decision List (CDL) formats"
+readme = "README.rst"
+license = {file = "LICENSE"}
+authors = [{name = "Sean Wallitsch", email = "shidarin@alphamatte.com"}]
+maintainers = [{name = "Sean Wallitsch", email = "shidarin@alphamatte.com"}]
+keywords = ["film", "tv", "color", "conversion", "converter", "cdl", "editing"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Multimedia :: Video :: Display",
+    "Topic :: Multimedia :: Video :: Non-Linear Editor",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Operating System :: OS Independent",
+    "Natural Language :: English",
+]
+requires-python = ">=3.11"
+dependencies = [
+    "OpenTimelineIO>=0.17.0",
+    "otio-cmx3600-adapter>=1.0.0",
+    "otio-ale-adapter>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+    "ruff>=0.1.0",
+]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+docs = [
+    "sphinx>=6.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+]
+
+[project.urls]
+Homepage = "http://github.com/shidarin/cdl_convert"
+Repository = "http://github.com/shidarin/cdl_convert"
+"Bug Tracker" = "http://github.com/shidarin/cdl_convert/issues"
+
+[project.scripts]
+cdl_convert = "cdl_convert.cdl_convert:cli_main"
+
+[tool.hatch.version]
+path = "cdl_convert/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["cdl_convert"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/cdl_convert",
+    "/tests",
+    "/docs",
+    "/README.rst",
+    "/LICENSE",
+    "/MANIFEST.in",
+]
+exclude = [
+    "/.git",
+    "/.github",
+    "/.pytest_cache",
+    "/__pycache__",
+    "*.pyc",
+    "*.pyo",
+    "/build",
+    "/dist",
+    "/.eggs",
+    "*.egg-info",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+]
+
+[tool.coverage.run]
+source = ["cdl_convert"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.ruff]
+target-version = "py311"
+line-length = 80
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+]
+
+[tool.ruff.per-file-ignores]
+"tests/*" = ["B011"]
+
+[tool.hatch.envs.default]
+dependencies = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+    "ruff>=0.1.0",
+]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args}"
+lint = "ruff check {args:.}"
+format = "ruff format {args:.}"
+type-check = "mypy {args:cdl_convert}"
+
+[tool.hatch.envs.test]
+dependencies = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[tool.hatch.envs.test.scripts]
+run = "pytest {args}"
+cov = "pytest --cov=cdl_convert --cov-report=term-missing --cov-report=html {args}"
+
+# Matrix testing across Python versions
+[[tool.hatch.envs.test.matrix]]
+python = ["3.11", "3.12", "3.13", "3.14"]
+
+[tool.hatch.envs.test.overrides]
+matrix.python.dependencies = [
+    { value = "pytest>=7.0", if = ["3.11", "3.12", "3.13", "3.14"] },
+    { value = "pytest-cov>=4.0", if = ["3.11", "3.12", "3.13", "3.14"] },
+]

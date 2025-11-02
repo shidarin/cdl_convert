@@ -102,6 +102,7 @@ Changelog
 **New Features:**
 
 - **OTIO support** - Now ingests .otio files with CDL metadata
+- **Hatch & pyproject.toml** - Modern python packaging and building
 - **Type hints throughout** - Full type annotation for better IDE support
 - **pathlib integration** - Modern file path handling with ``pathlib.Path``
 - **ColorValues dataclass** - Structured color correction data with validation
@@ -200,12 +201,62 @@ For the latest development version::
     $ cd cdl_convert
     $ pip install -e .
 
+Development Installation
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+For development work with modern Python packaging::
+
+    $ git clone https://github.com/shidarin/cdl_convert.git
+    $ cd cdl_convert
+    $ pip install -e .[dev]
+
+This installs the package in editable mode with all development dependencies including pytest, mypy, and ruff.
+
+Building from Source
+^^^^^^^^^^^^^^^^^^^^
+
+``cdl_convert`` uses modern Python packaging with ``pyproject.toml`` and Hatch::
+
+    # Install build dependencies
+    $ pip install hatch
+
+    # Build wheel and source distributions
+    $ hatch build
+
+    # Install from built wheel
+    $ pip install dist/cdl_convert-*.whl
+
+Development Workflow
+^^^^^^^^^^^^^^^^^^^^
+
+The project uses Hatch for development workflow management::
+
+    # Run tests
+    $ hatch run test:run
+
+    # Run tests with coverage
+    $ hatch run test:cov
+
+    # Run linting
+    $ hatch run lint
+
+    # Run type checking
+    $ hatch run type-check
+
+    # Format code
+    $ hatch run format
+
+    # Run tests in default environment
+    $ hatch run test
+
 Dependencies
 ^^^^^^^^^^^^
 
 ``cdl_convert`` automatically installs its dependencies:
 
 - **OpenTimelineIO** - For robust EDL parsing
+- **otio-cmx3600-adapter** - CMX EDL format support
+- **otio-ale-adapter** - ALE format support
 
 GitHub, Bug Reporting and Support
 ---------------------------------
@@ -305,17 +356,38 @@ doesn't mean any work has begun.
 Submitting Code
 ^^^^^^^^^^^^^^^
 
-Before generating a pull request, make sure to run the test suite:::
+Before generating a pull request, make sure to run the full development workflow::
     
-    $ python -m pytest tests/ -v
+    # Run tests with coverage
+    $ pytest tests/ -v --cov=cdl_convert
+
+    # Run linting and formatting checks
+    $ ruff check cdl_convert/
+    $ ruff format --check cdl_convert/
+
+    # Run type checking
+    $ mypy cdl_convert/
+
+Alternatively, if you have Hatch installed, you can use the development environments::
+
+    # Run all checks
+    $ hatch run test:cov
+    $ hatch run lint
+    $ hatch run type-check
 
 If the tests fail, note which tests are failing and how they would have been
-affected by your code. The tests are run every push with github actions, so
+affected by your code. The tests are run every push with GitHub Actions, so
 they should have been passing before your changes. If you know you didn't break something, and the tests are simply reporting out of date results based on your changes, so *change the tests.*
 
 If your code fails the tests (GitHub Actions checks all pull requests when
 you create them) it will be **rejected**. If the code style doesn't follow
-PEP-8 or type hints are missing, please correct.
+PEP-8, type hints are missing, or linting fails, please correct these issues.
+
+Code Quality Standards:
+- **Type hints** are required for all new code
+- **PEP-8 compliance** enforced by ruff
+- **Test coverage** should be maintained or improved
+- **Documentation** should be updated for API changes
 
 When submitting, you'll be asked to waive copyright to your submitted code to
 the listed authors. This is so we can keep a tight handle on the code and change
