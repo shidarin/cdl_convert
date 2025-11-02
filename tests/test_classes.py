@@ -3046,12 +3046,17 @@ class TestMediaRefGetSequences(unittest.TestCase):
 
     #==========================================================================
 
+    @mock.patch('pathlib.Path.exists')
+    @mock.patch('pathlib.Path.is_dir')
     @mock.patch('os.path.exists')
     @mock.patch('os.path.isdir')
-    def testDirDoesNotExist(self, mock_dir, mock_exists):
+    def testDirDoesNotExist(self, mock_os_isdir, mock_os_exists, mock_path_is_dir, mock_path_exists):
         """Tests what happens when directory doesn't exist"""
-        mock_dir.return_value = True
-        mock_exists.return_value = False
+        # Mock both os.path and pathlib methods for cross-version compatibility
+        mock_os_isdir.return_value = True
+        mock_os_exists.return_value = False
+        mock_path_is_dir.return_value = True
+        mock_path_exists.return_value = False
 
         cdl_convert.config.config.halt_on_error = True
 
