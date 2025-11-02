@@ -16,6 +16,9 @@ Public Functions:
     parse_cdl(Union[str, Path]) -> ColorCollection: Parse XML Color Decision
         List files.
 
+    parse_cmx(Union[str, Path]) -> ColorCollection: Parse CMX EDL files
+        using OpenTimelineIO adapter.
+
     parse_file(Union[str, Path], Optional[str]) -> Union[ColorCorrection, ColorCollection]:
         Format detection and parsing.
 
@@ -482,12 +485,13 @@ def parse_cdl(input_file: Union[str, Path]) -> collection.ColorCollection:
 # ==============================================================================
 
 
-def parse_cmx(input_file: Union[str, Path]) -> collection.ColorCollection:  # pylint: disable=R0912,R0914
-    """Parse CMX EDL file for ASC CDL color correction information.
+def parse_cmx(input_file: Union[str, Path]) -> collection.ColorCollection:
+    """Parse CMX EDL file for ASC CDL color correction information using OTIO.
     
     Parses a CMX Edit Decision List file to extract ASC CDL color correction
-    data embedded as *ASC_SOP and *ASC_SAT comments. Uses OpenTimelineIO
-    otio-cmx3600-adapter for EDL parsing and timeline structure handling.
+    data embedded as *ASC_SOP and *ASC_SAT comments. This function uses the
+    OpenTimelineIO otio-cmx3600-adapter for EDL parsing and timeline structure
+    handling
     
     CDL data appears in CMX EDL files as comment lines following edit entries:
 
@@ -508,7 +512,8 @@ def parse_cmx(input_file: Union[str, Path]) -> collection.ColorCollection:  # py
             from EDL with clip names as IDs and filename as source.
             
     Raises:
-        ParseError: If EDL file cannot be parsed by OpenTimelineIO.
+        OTIOAdapterError: If otio-cmx3600-adapter is not installed or available.
+        ParseError: If EDL file cannot be parsed by OpenTimelineIO adapter.
         FileNotFoundError: If input file path does not exist.
         
     Example:

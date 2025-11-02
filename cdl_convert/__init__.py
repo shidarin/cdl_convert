@@ -92,7 +92,7 @@ from .decision import ColorCorrectionRef, ColorDecision, MediaRef
 from .exceptions import CDLConvertError, ParseError, ValidationError, FormatError
 from .parse import (
     parse_ale, parse_cc, parse_ccc,
-    parse_cdl, parse_file, parse_flex,
+    parse_cdl, parse_cmx, parse_file, parse_flex,
     parse_rnh_cdl
 )
 from .utils import sanity_check, to_decimal
@@ -128,6 +128,7 @@ __all__ = [
     'parse_cc',
     'parse_ccc',
     'parse_cdl',
+    'parse_cmx',
     'parse_file',
     'parse_flex',
     'parse_rnh_cdl',
