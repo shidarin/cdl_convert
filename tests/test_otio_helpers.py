@@ -568,6 +568,121 @@ class TestExtractCDLMetadata(unittest.TestCase):
         error_msg = str(cm.exception)
         self.assertIn("Error processing OTIO timeline structure", error_msg)
 
+class TestOTIOAdapterIntegration(unittest.TestCase):
+    """Tests integration of OTIO adapters with CDL Convert parsing functions"""
+
+    def setUp(self):
+        """Set up test fixtures"""
+        # Clear ColorCorrection members to avoid ID conflicts between tests
+        cdl_convert.reset_all()
+
+    def test_parse_cmx_successful_integration(self):
+        """Tests successful CMX parsing integration with OTIO adapter"""
+        from cdl_convert.parse import parse_cmx
+        
+        # Create mock timeline with CDL data
+        mock_clip = mock.MagicMock()
+        mock_clip.name = "cmx_integration_shot"
+        mock_clip.metadata = {
+            'cdl': {
+                'asc_sop': {
+                    'slope': [1.1, 1.0, 0.9],
+                    'offset': [0.0, 0.0, 0.0],
+                    'power': [1.0, 1.0, 1.0]
+                },
+                'asc_sat': 0.95
+            }
+        }
+        
+        mock_track = [mock_clip]
+        mock_timeline = mock.MagicMock()
+        mock_timeline.tracks = [mock_track]
+        
+        # Mock OTIO with successful parsing
+        mock_otio = mock.MagicMock()
+        mock_otio.adapters.available_adapter_names.return_value = ['cmx_3600', 'ale']
+        mock_otio.adapters.read_from_file.return_value = mock_timeline
+        
+        with mock.patch.dict('sys.modules', {'opentimelineio': mock_otio}):
+            result = parse_cmx('test.edl')
+        
+        # Verify result structure
+        self.assertIsInstance(result, cdl_convert.ColorCollection)
+        self.assertEqual(len(result.color_corrections), 1)
+        self.assertEqual(result.color_corrections[0].id, "cmx_integration_shot")
+
+    def test_parse_ale_successful_integration(self):
+        """Tests successful ALE parsing integration with OTIO adapter"""
+        from cdl_convert.parse import parse_ale
+        
+        # Create mock clip with CDL data
+        mock_clip = mock.MagicMock()
+        mock_clip.name = "ale_integration_shot"
+        mock_clip.metadata = {
+            'cdl': {
+                'asc_sat': 1.05
+            }
+        }
+        
+        # ALE adapter returns a SerializableCollection of clips directly
+        mock_collection = [mock_clip]
+        
+        # Mock OTIO with successful parsing
+        mock_otio = mock.MagicMock()
+        mock_otio.adapters.available_adapter_names.return_value = ['cmx_3600', 'ale']
+        mock_otio.adapters.read_from_file.return_value = mock_collection
+        
+        with mock.patch.dict('sys.modules', {'opentimelineio': mock_otio}):
+            result = parse_ale('test.ale')
+        
+        # Verify result structure
+        self.assertIsInstance(result, cdl_convert.ColorCollection)
+        self.assertEqual(len(result.color_corrections), 1)
+        self.assertEqual(result.color_corrections[0].id, "ale_integration_shot")
+
+    def test_parse_cmx_empty_timeline(self):
+        """Tests CMX parsing with timeline containing no CDL data"""
+        from cdl_convert.parse import parse_cmx
+        
+        # Create mock timeline with no CDL clips
+        mock_clip = mock.MagicMock()
+        mock_clip.name = "no_cdl_shot"
+        mock_clip.metadata = {'other_data': 'value'}
+        
+        mock_track = [mock_clip]
+        mock_timeline = mock.MagicMock()
+        mock_timeline.tracks = [mock_track]
+        
+        # Mock OTIO with successful parsing
+        mock_otio = mock.MagicMock()
+        mock_otio.adapters.available_adapter_names.return_value = ['cmx_3600', 'ale']
+        mock_otio.adapters.read_from_file.return_value = mock_timeline
+        
+        with mock.patch.dict('sys.modules', {'opentimelineio': mock_otio}):
+            result = parse_cmx('test.edl')
+        
+        # Should return empty collection
+        self.assertIsInstance(result, cdl_convert.ColorCollection)
+        self.assertEqual(len(result.color_corrections), 0)
+
+    def test_parse_ale_empty_collection(self):
+        """Tests ALE parsing with collection containing no CDL data"""
+        from cdl_convert.parse import parse_ale
+        
+        # Create empty collection (ALE adapter returns SerializableCollection)
+        mock_collection = []
+        
+        # Mock OTIO with successful parsing
+        mock_otio = mock.MagicMock()
+        mock_otio.adapters.available_adapter_names.return_value = ['cmx_3600', 'ale']
+        mock_otio.adapters.read_from_file.return_value = mock_collection
+        
+        with mock.patch.dict('sys.modules', {'opentimelineio': mock_otio}):
+            result = parse_ale('test.ale')
+        
+        # Should return empty collection
+        self.assertIsInstance(result, cdl_convert.ColorCollection)
+        self.assertEqual(len(result.color_corrections), 0)
 
 # ==============================================================================
 # MAIN
