@@ -25,6 +25,9 @@ Public Functions:
     parse_flex(Union[str, Path]) -> ColorCollection: Parse Film Log EDL
         Exchange files.
 
+    parse_otio(Union[str, Path]) -> ColorCollection: Parse OpenTimelineIO
+        timeline files.
+
     parse_rnh_cdl(Union[str, Path]) -> ColorCorrection: Parse Rhythm & Hues
         space-separated CDL files.
 
@@ -107,6 +110,7 @@ __all__ = [
     'parse_cmx',
     'parse_file',
     'parse_flex',
+    'parse_otio',
     'parse_rnh_cdl'
 ]
 
@@ -669,6 +673,69 @@ def parse_flex(input_file: Union[str, Path]) -> collection.ColorCollection:  # p
 # ==============================================================================
 
 
+def parse_otio(input_file: Union[str, Path]) -> collection.ColorCollection:
+    """Parse OpenTimelineIO (.otio) timeline file for ASC CDL color corrections.
+
+    Parses an OTIO timeline file to extract ASC CDL color correction data
+    embedded in clip metadata. This function uses OpenTimelineIO's native
+    deserialization to read .otio files and extract CDL metadata from all
+    clips in the timeline structure.
+
+    CDL data appears in OTIO files as clip metadata:
+    clip.metadata['cdl'] = {
+        'asc_sop': {
+            'slope': [float, float, float],
+            'offset': [float, float, float],
+            'power': [float, float, float]
+        },
+        'asc_sat': float
+    }
+
+    Args:
+        input_file (Union[str, Path]): The filepath to the .otio file.
+
+    Returns:
+        ColorCollection: A collection containing all found ColorCorrections
+            with the collection type set to 'ccc'.
+
+    Raises:
+        OTIOAdapterError: If OpenTimelineIO is not installed or available.
+        ParseError: If .otio file cannot be parsed by OpenTimelineIO.
+        ValidationError: If color correction values fail validation.
+        FileNotFoundError: If the input file does not exist.
+
+    Example:
+        >>> otio_collection = parse_otio("timeline.otio")
+        >>> print(f"Found {len(otio_collection.color_corrections)} clips with CDL")
+
+    """
+    # Check that OTIO is available (using built-in JSON adapter)
+    _check_otio_adapter('otio_json')
+    
+    try:
+        import opentimelineio as otio
+        
+        # Use OTIO's native deserialization for .otio files
+        timeline = otio.adapters.read_from_file(input_file)
+        
+        # Extract CDL metadata from the timeline
+        cdl_corrections = _extract_cdl_metadata(timeline, input_file)
+        
+    except Exception as e:
+        raise ParseError(
+            f"Failed to parse OTIO file '{input_file}': {e}"
+        )
+
+    # Create and return ColorCollection
+    ccc = collection.ColorCollection()
+    ccc.file_in = input_file
+    ccc.append_children(cdl_corrections)
+
+    return ccc
+
+# ==============================================================================
+
+
 def parse_rnh_cdl(input_file: Union[str, Path]) -> correction.ColorCorrection:
     """Parse Rhythm & Hues space-separated CDL file format.
     
@@ -762,6 +829,12 @@ def _check_otio_adapter(adapter_name: str) -> None:
                 install_cmd = "pip install otio-cmx3600-adapter>=1.0.0"
             elif adapter_name == 'ale':
                 install_cmd = "pip install otio-ale-adapter>=1.0.0"
+            elif adapter_name == 'otio_json':
+                # Built-in adapter should always be available with OTIO
+                raise OTIOAdapterError(
+                    f"Built-in OTIO adapter '{adapter_name}' not available. "
+                    f"This may indicate an OpenTimelineIO installation issue."
+                )
             else:
                 install_cmd = f"pip install otio-{adapter_name}-adapter"
                 
@@ -995,6 +1068,7 @@ INPUT_FORMATS = {
     'cdl': parse_cdl,
     'edl': parse_cmx,
     'flex': parse_flex,
+    'otio': parse_otio,
     'rcdl': parse_rnh_cdl,
 }
 

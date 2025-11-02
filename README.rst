@@ -33,6 +33,7 @@ different formats:
 
 Unofficial Formats:
 
+-  OpenTimelineIO (OTIO) timeline files with embedded CDL metadata
 -  OCIOCDLTransform, a `Foundry Nuke`_ node
 -  Space separated CDL, a Rhythm & Hues internal cdl format
 
@@ -40,11 +41,14 @@ It is the purpose of ``cdl_convert`` to convert ASC CDL information between
 these basic formats to further facilitate the ease of exchange of color
 data within the Film and TV industries.
 
-``cdl_convert`` supports parsing ALE, FLEx, CC, CCC, CDL CMX EDL and RCDL.
+``cdl_convert`` supports parsing ALE, FLEx, CC, CCC, CDL, CMX EDL, OTIO and RCDL.
 We can write out CC, CCC, CDL and RCDL.
 
 New in 1.0:
 ^^^^^^^^^^^
+
+- **OTIO backend for ALE and CMX** allows for more robust EDL parsing
+- **OTIO EDL support** for OpenTimelineIO files with CDL metadata
 
 This version of ``cdl_convert`` has been modernized with:
 
@@ -97,6 +101,7 @@ Changelog
 
 **New Features:**
 
+- **OTIO support** - Now ingests .otio files with CDL metadata
 - **Type hints throughout** - Full type annotation for better IDE support
 - **pathlib integration** - Modern file path handling with ``pathlib.Path``
 - **ColorValues dataclass** - Structured color correction data with validation

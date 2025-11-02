@@ -93,7 +93,7 @@ from .exceptions import CDLConvertError, ParseError, ValidationError, FormatErro
 from .parse import (
     parse_ale, parse_cc, parse_ccc,
     parse_cdl, parse_cmx, parse_file, parse_flex,
-    parse_rnh_cdl
+    parse_otio, parse_rnh_cdl
 )
 from .utils import sanity_check, to_decimal
 from .write import write_cc, write_ccc, write_cdl, write_rnh_cdl
@@ -131,6 +131,7 @@ __all__ = [
     'parse_cmx',
     'parse_file',
     'parse_flex',
+    'parse_otio',
     'parse_rnh_cdl',
     'reset_all',
     'sanity_check',
