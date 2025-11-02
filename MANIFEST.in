@@ -1,4 +1,0 @@
-include README.rst
-include LICENSE
-include cdl_convert.py
-recursive-include docs_html *

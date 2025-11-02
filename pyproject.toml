@@ -75,7 +75,6 @@ include = [
     "/docs",
     "/README.rst",
     "/LICENSE",
-    "/MANIFEST.in",
 ]
 exclude = [
     "/.git",
