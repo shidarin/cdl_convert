@@ -487,7 +487,7 @@ def parse_cmx(input_file: Union[str, Path]) -> collection.ColorCollection:  # py
     
     Parses a CMX Edit Decision List file to extract ASC CDL color correction
     data embedded as *ASC_SOP and *ASC_SAT comments. Uses OpenTimelineIO
-    for EDL parsing and timeline structure handling.
+    otio-cmx3600-adapter for EDL parsing and timeline structure handling.
     
     CDL data appears in CMX EDL files as comment lines following edit entries:
 
@@ -508,7 +508,6 @@ def parse_cmx(input_file: Union[str, Path]) -> collection.ColorCollection:  # py
             from EDL with clip names as IDs and filename as source.
             
     Raises:
-        RuntimeError: If OpenTimelineIO is not installed or cannot be imported.
         ParseError: If EDL file cannot be parsed by OpenTimelineIO.
         FileNotFoundError: If input file path does not exist.
         
@@ -517,34 +516,28 @@ def parse_cmx(input_file: Union[str, Path]) -> collection.ColorCollection:  # py
         >>> print(f"Found {len(edl_collection.color_corrections)} clips with CDL")
 
     """
+    # Check that the required OTIO adapter is available
+    _check_otio_adapter('cmx_3600')
+    
     try:
         import opentimelineio as otio
-    except ImportError:
-        raise RuntimeError(
-            "Cannot import OpenTimelineIO. OpenTimelineIO is required for "
-            "parsing of CMX EDL files. Please install OpenTimelineIO from "
-            "https://github.com/PixarAnimationStudios/OpenTimelineIO"
+        
+        # Use OTIO adapter to read the CMX EDL file
+        timeline = otio.adapters.read_from_file(input_file)
+        
+        # Extract CDL metadata from the timeline
+        cdl_corrections = _extract_cdl_metadata(timeline, input_file)
+        
+    except Exception as e:
+        raise ParseError(
+            f"Failed to parse CMX EDL file '{input_file}'" 
+            f"with OTIO cmx_3600 adapter: {e}"
         )
-    cdls = []
-    edl = otio.adapters.read_from_file(input_file)
-    filename = Path(input_file).stem
-    for track in edl.tracks:
-        for clip in track.data['children']:
-            title = clip.name
-            cc = correction.ColorCorrection(title, filename)
-            try:
-                cdl = clip.metadata['cdl']
-            except KeyError:
-                continue
-            cc.slope = cdl['asc_sop']['slope']
-            cc.power = cdl['asc_sop']['power']
-            cc.offset = cdl['asc_sop']['offset']
-            cc.sat = cdl['asc_sat']
-            cdls.append(cc)
 
+    # Create and return ColorCollection
     ccc = collection.ColorCollection()
     ccc.file_in = input_file
-    ccc.append_children(cdls)
+    ccc.append_children(cdl_corrections)
 
     return ccc
 
@@ -821,7 +814,10 @@ def _extract_cdl_from_otio_clip(clip, source_file: Union[str, Path]) -> Optional
     Extracts ASC CDL color correction data from an OpenTimelineIO clip's
     metadata structure and creates a ColorCorrection object. Handles
     missing or malformed CDL metadata gracefully by returning None.
-    
+
+    Will convert OpenTimelineIO's AnyDictionary and AnyVector types to
+    normal dict and list types.
+
     Expected OTIO CDL metadata structure:
         clip.metadata['cdl'] = {
             'asc_sop': {
@@ -859,18 +855,18 @@ def _extract_cdl_from_otio_clip(clip, source_file: Union[str, Path]) -> Optional
     try:
         # Extract SOP values if present
         if 'asc_sop' in cdl_data:
-            sop_data = cdl_data['asc_sop']
+            sop_data = dict(cdl_data['asc_sop'])
             # Validate that sop_data is a dictionary
             if not isinstance(sop_data, dict):
                 raise TypeError(
                     f"Expected dict for asc_sop, got {type(sop_data).__name__}"
                     )
             if 'slope' in sop_data:
-                cc.slope = sop_data['slope']
+                cc.slope = list(sop_data['slope'])
             if 'offset' in sop_data:
-                cc.offset = sop_data['offset']
+                cc.offset = list(sop_data['offset'])
             if 'power' in sop_data:
-                cc.power = sop_data['power']
+                cc.power = list(sop_data['power'])
                 
         # Extract saturation value if present
         if 'asc_sat' in cdl_data:

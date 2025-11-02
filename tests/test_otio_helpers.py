@@ -315,6 +315,81 @@ class TestExtractCDLFromOTIOClip(unittest.TestCase):
             # Restore original setting
             cdl_convert.config.config.halt_on_error = original_halt
 
+    def test_otio_anydictionary_anyvector_conversion(self):
+        """Tests that OTIO AnyDictionary and AnyVector types are properly converted to Python types"""
+        try:
+            import opentimelineio.core._core_utils as core_utils
+        except ImportError:
+            self.skipTest("OpenTimelineIO core utils not available")
+        
+        # Create OTIO AnyDictionary and AnyVector objects (the actual OTIO types)
+        otio_dict = core_utils.AnyDictionary()
+        otio_dict['asc_sop'] = core_utils.AnyDictionary()
+        otio_dict['asc_sop']['slope'] = core_utils.AnyVector()
+        otio_dict['asc_sop']['slope'].extend([1.2, 1.1, 1.0])
+        otio_dict['asc_sop']['offset'] = core_utils.AnyVector()
+        otio_dict['asc_sop']['offset'].extend([-0.1, 0.0, 0.1])
+        otio_dict['asc_sop']['power'] = core_utils.AnyVector()
+        otio_dict['asc_sop']['power'].extend([0.9, 1.0, 1.1])
+        otio_dict['asc_sat'] = 0.85
+        
+        # Create mock clip with OTIO data types
+        mock_clip = mock.MagicMock()
+        mock_clip.name = "shot_otio_types"
+        mock_clip.metadata = core_utils.AnyDictionary()
+        mock_clip.metadata['cdl'] = otio_dict
+        
+        # This should work without type errors due to the dict()/list() conversions
+        result = _extract_cdl_from_otio_clip(mock_clip, self.source_file)
+        
+        self.assertIsInstance(result, ColorCorrection)
+        self.assertEqual(result.id, "shot_otio_types")
+        
+        # Verify the values were extracted correctly
+        from decimal import Decimal
+        self.assertEqual(result.slope, (Decimal('1.2'), Decimal('1.1'), Decimal('1.0')))
+        self.assertEqual(result.offset, (Decimal('-0.1'), Decimal('0.0'), Decimal('0.1')))
+        self.assertEqual(result.power, (Decimal('0.9'), Decimal('1.0'), Decimal('1.1')))
+        self.assertEqual(result.sat, Decimal('0.85'))
+
+    def test_type_conversion_robustness(self):
+        """Tests that the function handles mixed Python and OTIO-like types gracefully"""
+        # Create a mock that behaves like OTIO types but isn't actually OTIO
+        # This tests the robustness of our dict()/list() conversions
+        
+        class MockAnyDict(dict):
+            """Mock class that behaves like AnyDictionary but is a dict subclass"""
+            pass
+        
+        class MockAnyVector(list):
+            """Mock class that behaves like AnyVector but is a list subclass"""
+            pass
+        
+        mock_clip = mock.MagicMock()
+        mock_clip.name = "shot_mixed_types"
+        
+        # Use our mock types that should still work with dict()/list() conversion
+        cdl_data = MockAnyDict()
+        cdl_data['asc_sop'] = MockAnyDict()
+        cdl_data['asc_sop']['slope'] = MockAnyVector([1.3, 1.2, 1.1])
+        cdl_data['asc_sop']['offset'] = MockAnyVector([0.1, 0.0, -0.1])
+        cdl_data['asc_sop']['power'] = MockAnyVector([0.95, 1.0, 1.05])
+        cdl_data['asc_sat'] = 0.9
+        
+        mock_clip.metadata = MockAnyDict()
+        mock_clip.metadata['cdl'] = cdl_data
+        
+        result = _extract_cdl_from_otio_clip(mock_clip, self.source_file)
+        
+        self.assertIsInstance(result, ColorCorrection)
+        self.assertEqual(result.id, "shot_mixed_types")
+        
+        # Verify the values were extracted correctly
+        from decimal import Decimal
+        self.assertEqual(result.slope, (Decimal('1.3'), Decimal('1.2'), Decimal('1.1')))
+        self.assertEqual(result.offset, (Decimal('0.1'), Decimal('0.0'), Decimal('-0.1')))
+        self.assertEqual(result.power, (Decimal('0.95'), Decimal('1.0'), Decimal('1.05')))
+        self.assertEqual(result.sat, Decimal('0.9'))
 
 class TestExtractCDLMetadata(unittest.TestCase):
     """Tests the _extract_cdl_metadata helper function"""
