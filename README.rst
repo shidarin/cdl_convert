@@ -92,6 +92,8 @@ Changelog
 **Breaking Changes:**
 
 - **Python 3.11+ Required** - Dropped support for Python 2.7-3.10
+- **OpenTimelineIO Required** - We've moved to using OpenTimelineIO's robust
+    EDL adaptor system to parse CMX and ALE EDL files
 
 **New Features:**
 
