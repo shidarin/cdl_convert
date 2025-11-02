@@ -90,7 +90,7 @@ SOFTWARE.
 
 from pathlib import Path
 import re
-from typing import Union, Optional
+from typing import List, Optional, Union
 from xml.etree import ElementTree
 
 # cdl_convert imports
