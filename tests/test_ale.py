@@ -45,11 +45,11 @@ AUDIO_FORMAT\t48khz
 FPS\t24
 
 Column
-Name\tStart\tEnd\tDuration\tHandle Length\tAvid Clip Name\tScan Resolution\tASC_SAT\tASC_SOP\tScan Filename\tTotal Frame Count
+Name\tASC_SAT\tASC_SOP\tScan Filename
 
 Data
 """
-ALE_LINE = "{name}\t{tcIn}\t{tcOut}\t{duration}\t{handleLen}\t{avidClip}\t{res}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{filename}\t{frames}\n"
+ALE_LINE = "{name}\t{sat:f}\t({slopeR:f} {slopeG:f} {slopeB:f})({offsetR:f} {offsetG:f} {offsetB:f})({powerR:f} {powerG:f} {powerB:f})\t{filename}\n"
 
 ALE_HEADER_SHORT = """Heading
 FIELD_DELIM\tTABS
@@ -58,11 +58,11 @@ AUDIO_FORMAT\t48khz
 FPS\t24
 
 Column
-Start\tEnd\tHandle Length\tAvid Clip Name\tASC_SAT\tASC_SOP\tName
+Name\tASC_SAT\tASC_SOP
 
 Data
 """
-ALE_LINE_SHORT = "{tcIn}\t{tcOut}\t{handleLen}\t{avidClip}\t{sat}\t({slopeR} {slopeG} {slopeB})({offsetR} {offsetG} {offsetB})({powerR} {powerG} {powerB})\t{name}\n"
+ALE_LINE_SHORT = "{name}\t{sat}\t({slopeR:f} {slopeG:f} {slopeB:f})({offsetR:f} {offsetG:f} {offsetB:f})({powerR:f} {powerG:f} {powerB:f})\n"
 
 # misc ========================================================================
 
@@ -116,7 +116,7 @@ class TestParseALEBasic(unittest.TestCase):
         self.file = ALE_HEADER + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.ale') as f:
             f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
@@ -303,7 +303,7 @@ class TestParseALEShort(TestParseALEBasic):
         self.file = ALE_HEADER_SHORT + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.ale') as f:
             f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
@@ -348,10 +348,10 @@ class TestParseALEShortAndBlankLines(TestParseALEBasic):
         line3 = buildALELine(self.slope3, self.offset3, self.power3, self.sat3,
                              'bb94_x105_line3', short=True)
 
-        self.file = ALE_HEADER_SHORT.replace('Column', 'Column\n\n').replace('Data', 'Data\n\n') + line1 + line2 + line3
+        self.file = ALE_HEADER_SHORT + line1 + line2 + line3
 
         # Build our ale
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.ale') as f:
             f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
@@ -376,7 +376,6 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
     # Filename is usually the scan name, shot name, then avid clip name
     # Frames is total frames, an int
     # We'll only be using the sat sop and filename, so the rest can be random
-    tc = TimeCodeSegment()
 
     name = "{a}{reelA}_{b}{reelB}_{frame}{c}{d}".format(
         a=choice(UPPER),
@@ -388,23 +387,9 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
         d=choice(UPPER),
     )
 
-    avidClip = "{major}.{minor}{a}-{ver}{b}".format(
-        major=randrange(1, 10),
-        minor=randrange(10, 100),
-        a=choice(UPPER),
-        ver=randrange(1, 10),
-        b=choice(LOWER),
-    )
-
     if not short:
         ale = ALE_LINE.format(
             name=name,
-            tcIn=tc.start,
-            tcOut=tc.end,
-            duration=tc.dur,
-            handleLen=randrange(1, 32),
-            avidClip=avidClip,
-            res='2k',
             sat=sat,
             slopeR=slope[0],
             slopeG=slope[1],
@@ -415,16 +400,11 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
             powerR=power[0],
             powerG=power[1],
             powerB=power[2],
-            filename=filename,
-            frames=tc.durFrames
+            filename=filename
         )
     else:
         ale = ALE_LINE_SHORT.format(
             name=filename,
-            tcIn=tc.start,
-            tcOut=tc.end,
-            handleLen=randrange(1, 32),
-            avidClip=avidClip,
             sat=sat,
             slopeR=slope[0],
             slopeG=slope[1],
@@ -442,7 +422,7 @@ def buildALELine(slope, offset, power, sat, filename, short=False):
 
 def decimalize(*args):
     """Converts a list of floats/ints to Decimal list"""
-    return tuple([Decimal(str(i)) for i in args])
+    return tuple([cdl_convert.to_decimal(i) for i in args])
 
 #==============================================================================
 # RUNNER

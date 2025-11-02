@@ -85,7 +85,6 @@ SOFTWARE.
 
 # Standard Imports
 
-from ast import literal_eval
 from pathlib import Path
 import re
 from typing import Union, Optional
@@ -116,93 +115,57 @@ __all__ = [
 # ==============================================================================
 
 
-def parse_ale(input_file: Union[str, Path]) -> collection.ColorCollection:  # pylint: disable=R0914
-    """Parse an Avid Log Exchange (ALE) file for CDL color corrections.
+def parse_ale(input_file: Union[str, Path]) -> collection.ColorCollection:
+    """Parse an Avid Log Exchange (ALE) file for CDL color corrections using OTIO.
 
-    An ALE file is traditionally gathered during a telecine transfer using
-    standard ASCII characters. Each line represents a single clip/take/shot
-    with tab-delimited fields including ASC_SOP and ASC_SAT values.
+    Parses an ALE file to extract ASC CDL color correction data embedded as
+    ASC_SOP and ASC_SAT columns. This function uses the OpenTimelineIO 
+    otio-ale-adapter for ALE parsing and CDL metadata extraction.
+
+    CDL data appears in ALE files as tab-delimited columns:
+    - ASC_SOP: (slope_r slope_g slope_b)(offset_r offset_g offset_b)(power_r power_g power_b)
+    - ASC_SAT: saturation_value
 
     Args:
-        input_file (Union[str, Path]): The filepath to the ALE EDL file.
+        input_file (Union[str, Path]): The filepath to the ALE file.
 
     Returns:
         ColorCollection: A collection containing all found ColorCorrections
             with the collection type set to 'ccc'.
 
     Raises:
-        ParseError: If the ALE file cannot be parsed or contains invalid data.
+        OTIOAdapterError: If otio-ale-adapter is not installed or available.
+        ParseError: If ALE file cannot be parsed by OpenTimelineIO adapter.
         ValidationError: If color correction values fail validation.
         FileNotFoundError: If the input file does not exist.
 
+    Example:
+        >>> ale_collection = parse_ale("project.ale")
+        >>> print(f"Found {len(ale_collection.color_corrections)} clips with CDL")
+
     """
-    # When we enter a section, we're store the section name
-    section = {
-        'column': False,
-        'data': False
-    }
+    # Check that the required OTIO adapter is available
+    _check_otio_adapter('ale')
+    
+    try:
+        import opentimelineio as otio
+        
+        # Use OTIO adapter to read the ALE file
+        clip_collection = otio.adapters.read_from_file(input_file)
+        
+        # Extract CDL metadata from the clip collection
+        cdl_corrections = _extract_cdl_from_ale_collection(clip_collection, input_file)
+        
+    except Exception as e:
+        raise ParseError(
+            f"Failed to parse ALE file '{input_file}' "
+            f"with OTIO ale adapter: {e}"
+        )
 
-    # We'll store the correlation between index and field name
-    ale_indexes = {}
-
-    cdls = []
-
-    with open(input_file, 'r') as edl:
-        for line in edl:
-            if not line.strip():
-                # Skip entirely blank lines
-                continue
-                
-            # Use match statement for line type detection
-            line_start = line.split()[0] if line.split() else ""
-            match line_start:
-                case 'Column':
-                    section['column'] = True
-                    continue
-                case 'Data':
-                    section['data'] = True
-                    continue
-                case _ if section['column']:
-                    for i, field in enumerate(line.split('\t')):
-                        ale_indexes[field.strip()] = i
-                    section['column'] = False
-                case _ if section['data']:
-                    cdl_data = line.split('\t')
-
-                    sat = cdl_data[ale_indexes['ASC_SAT']]
-                    sop = cdl_data[ale_indexes['ASC_SOP']]
-                    try:
-                        cc_id = cdl_data[ale_indexes['Scan Filename']]
-                    except KeyError:
-                        # Scan Filename is usually more descriptive, but we can
-                        # fall back on the always present 'Name' field if
-                        # Scan Filename is missing.
-                        cc_id = cdl_data[ale_indexes['Name']]
-
-                    # Determine slope, offset and power from sop
-                    # sop should look like:
-                    # (1.4 1.9 1.7)(-0.1 -0.26 -0.20)(0.87 1.0 1.32)
-                    sop = sop.replace(' ', ', ')
-                    sop = sop.replace(')(', ')|(')
-                    sop = sop.split('|')
-                    sop_values = {
-                        'slope': literal_eval(sop[0]),
-                        'offset': literal_eval(sop[1]),
-                        'power': literal_eval(sop[2])
-                    }
-
-                    cdl = correction.ColorCorrection(cc_id, input_file)
-
-                    cdl.sat = sat
-                    cdl.slope = sop_values['slope']
-                    cdl.offset = sop_values['offset']
-                    cdl.power = sop_values['power']
-
-                    cdls.append(cdl)
-
+    # Create and return ColorCollection
     ccc = collection.ColorCollection()
     ccc.file_in = input_file
-    ccc.append_children(cdls)
+    ccc.append_children(cdl_corrections)
 
     return ccc
 
@@ -853,8 +816,16 @@ def _extract_cdl_from_otio_clip(clip, source_file: Union[str, Path]) -> Optional
         
     cdl_data = clip.metadata['cdl']
     
-    # Create ColorCorrection with clip name as ID
+    # Determine clip ID - prefer Scan Filename over Name for compatibility
     clip_name = getattr(clip, 'name', 'Unknown')
+    if hasattr(clip, 'metadata') and 'ALE' in clip.metadata:
+        ale_metadata = clip.metadata['ALE']
+        # Try to get Scan Filename first, fall back to Name
+        if 'Scan Filename' in ale_metadata:
+            clip_name = ale_metadata['Scan Filename']
+        elif 'Name' in ale_metadata:
+            clip_name = ale_metadata['Name']
+    
     cc = correction.ColorCorrection(clip_name, source_file)
     
     try:
@@ -927,6 +898,46 @@ def _extract_cdl_metadata(timeline, source_file: Union[str, Path]) -> List[corre
     except Exception as e:
         raise ParseError(
             f"Error processing OTIO timeline structure: {e}"
+        )
+        
+    return cdl_corrections
+
+
+def _extract_cdl_from_ale_collection(clip_collection, source_file: Union[str, Path]) -> List[correction.ColorCorrection]:
+    """Process OTIO SerializableCollection from ALE adapter to extract CDL data.
+    
+    Iterates through all clips in an OpenTimelineIO SerializableCollection
+    (returned by otio-ale-adapter) to extract CDL metadata and create 
+    ColorCorrection objects. Maintains consistent error handling across formats.
+    
+    Args:
+        clip_collection: OTIO SerializableCollection object from ALE adapter.
+        source_file (Union[str, Path]): Source file path for ColorCorrections.
+        
+    Returns:
+        List[ColorCorrection]: List of ColorCorrection objects extracted
+            from collection clips that contain valid CDL metadata.
+            
+    Raises:
+        ParseError: If collection structure is invalid or cannot be processed.
+        
+    Example:
+        >>> corrections = _extract_cdl_from_ale_collection(otio_collection, "input.ale")
+        >>> print(f"Found {len(corrections)} clips with CDL data")
+        
+    """
+    cdl_corrections = []
+    
+    try:
+        # ALE adapter returns a SerializableCollection of clips directly
+        for clip in clip_collection:
+            cc = _extract_cdl_from_otio_clip(clip, source_file)
+            if cc is not None:
+                cdl_corrections.append(cc)
+                    
+    except Exception as e:
+        raise ParseError(
+            f"Error processing OTIO ALE collection structure: {e}"
         )
         
     return cdl_corrections
