@@ -11,7 +11,7 @@ CDL Convert
 - **Docs:** http://cdl-convert.readthedocs.org/
 - **GitHub:** https://github.com/shidarin/cdl_convert
 - **PyPI:** https://pypi.python.org/pypi/cdl_convert
-- **Python Versions:** 3.11, 3.12, 3.13, 3.14, PyPy3
+- **Python Versions:** 3.11, 3.12, 3.13, 3.14
 
 Introduction
 ------------
@@ -49,6 +49,7 @@ New in 1.0:
 
 - **OTIO backend for ALE and CMX** allows for more robust EDL parsing
 - **OTIO EDL support** for OpenTimelineIO files with CDL metadata
+- **Python 3.11-3.14 support** 
 
 This version of ``cdl_convert`` has been modernized with:
 
@@ -95,9 +96,11 @@ Changelog
 
 **Breaking Changes:**
 
-- **Python 3.11+ Required** - Dropped support for Python 2.7-3.10
+- **Python 3.11+ Required** - Dropped support for Python 2.7-3.10 and PyPy
 - **OpenTimelineIO Required** - We've moved to using OpenTimelineIO's robust
     EDL adaptor system to parse CMX and ALE EDL files
+- **Windows 3.13 and 3.14 are not supported** - Due to an OTIO build issue, 
+    running on Windows with Python 3.13 and 3.14 is at your own risk
 
 **New Features:**
 
