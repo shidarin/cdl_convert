@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.11', '3.12', '3.13', '3.14']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', '**/dev-requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-
+
+    - name: Cache virtual environment
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', '**/dev-requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-venv-${{ matrix.python-version }}-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -e .[dev,test]
+
+    - name: Run tests
+      if: matrix.os != 'ubuntu-latest' || matrix.python-version != '3.14'
+      run: |
+        python -m pytest tests/ -v --tb=short --strict-markers --strict-config --junitxml=junit-test-results.xml -o junit_family=legacy
+
+    - name: Run tests with coverage
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14'
+      run: |
+        python -m pytest tests/ --cov=cdl_convert --cov-report=xml --cov-report=term-missing --junitxml=junit-test-results.xml -o junit_family=legacy
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v5
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14'
+      with:
+        files: ./junit-test-results.xml
+        flags: unittests
+        name: codecov-umbrella
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
+
+    - name: Upload test results to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14' && !cancelled()
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Upload test results to Github
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+        path: |
+          *test-results*.xml
+        retention-days: 30
+
