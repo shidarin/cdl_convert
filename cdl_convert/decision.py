@@ -102,38 +102,73 @@ class MediaRefInfo:
             or absolute path.
         filename (str): Filename component of the URI. Empty string if URI
             points to a directory only.
+        original_uri (str): Complete original URI as provided during initialization.
+            Used to preserve exact path separator formatting across platforms.
 
     """
     protocol: str = ''
     directory: str = ''
     filename: str = ''
+    original_uri: str = ''
     
     def to_uri(self) -> str:
         """Reconstruct the full URI from individual components.
         
-        Combines protocol, directory, and filename back into a complete URI
-        string, adding protocol prefix if present.
+        Returns the original URI if available to preserve exact formatting,
+        otherwise reconstructs from components using intelligent separator
+        detection based on the directory's existing separator pattern.
         
         Returns:
-            str: Complete URI string reconstructed from components.
+            str: Complete URI string. Returns original_uri if available,
+                otherwise reconstructed from components.
 
         """
+        # Return original URI if available to preserve exact formatting
+        if self.original_uri:
+            return self.original_uri
+            
+        # Fallback to reconstruction for backward compatibility
         if self.protocol:
             prefix = f"{self.protocol}://"
         else:
             prefix = ''
         
-        # Use os.path.join to preserve original path format
-        import os
+        # Intelligent separator detection for reconstruction
         if self.filename:
             if self.directory:
-                path = os.path.join(self.directory, self.filename)
+                separator = self._detect_separator(self.directory)
+                path = f"{self.directory}{separator}{self.filename}"
             else:
                 path = self.filename
         else:
             path = self.directory if self.directory else '.'
             
         return prefix + path
+    
+    def _detect_separator(self, directory: str) -> str:
+        """Detect the appropriate path separator based on directory pattern.
+        
+        Analyzes the directory string to determine whether to use forward
+        slashes, backslashes, or default to forward slash for mixed patterns.
+        
+        Args:
+            directory (str): Directory path to analyze.
+            
+        Returns:
+            str: '\\' for Windows-style paths, '/' for Unix-style or mixed paths.
+        """
+        if not directory:
+            return '/'
+            
+        has_forward = '/' in directory
+        has_backward = '\\' in directory
+        
+        if has_backward and not has_forward:
+            # Pure Windows-style path
+            return '\\'
+        else:
+            # Unix-style or mixed - default to forward slash
+            return '/'
 
 
 @dataclass
@@ -765,7 +800,14 @@ class MediaRef(AscXMLBase):
 
     def __init__(self, ref_uri: str, parent: Optional['ColorDecision'] = None) -> None:
         super(MediaRef, self).__init__()
-        self._ref_info = MediaRefInfo(*self._split_uri(ref_uri))
+        # Parse URI components and store original URI for preservation
+        protocol, directory, filename = self._split_uri(ref_uri)
+        self._ref_info = MediaRefInfo(
+            protocol=protocol,
+            directory=directory, 
+            filename=filename,
+            original_uri=ref_uri
+        )
         self.parent: Optional['ColorDecision'] = parent
 
         # Cache for sequence information - computed lazily
@@ -791,7 +833,8 @@ class MediaRef(AscXMLBase):
         """Set directory portion of the URI path.
         
         Updates the directory component and resets cached sequence information.
-        Also updates class membership dictionary with new URI.
+        Also updates class membership dictionary with new URI. Clears
+        original_uri since the URI is being modified.
         
         Args:
             value (str): New directory path to set.
@@ -803,6 +846,8 @@ class MediaRef(AscXMLBase):
         if type(value) is str:
             old_ref = self.ref
             self._ref_info.directory = value
+            # Clear original URI since we're modifying components
+            self._ref_info.original_uri = ''
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
@@ -836,7 +881,8 @@ class MediaRef(AscXMLBase):
         """Set filename portion of the URI path.
         
         Updates the filename component and resets cached sequence information.
-        Also updates class membership dictionary with new URI.
+        Also updates class membership dictionary with new URI. Clears
+        original_uri since the URI is being modified.
         
         Args:
             value (str): New filename to set, including extension.
@@ -848,6 +894,8 @@ class MediaRef(AscXMLBase):
         if type(value) is str:
             old_ref = self.ref
             self._ref_info.filename = value
+            # Clear original URI since we're modifying components
+            self._ref_info.original_uri = ''
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
@@ -895,8 +943,9 @@ class MediaRef(AscXMLBase):
     def path(self) -> str:
         """Return complete file path without URI protocol.
         
-        Combines directory and filename components into a complete path.
-        Preserves relative path format including './' prefixes.
+        Uses the original URI if available to preserve exact formatting.
+        If original_uri has been cleared due to property changes, uses
+        intelligent separator detection based on directory pattern.
         
         Returns:
             str: Complete file path without protocol. Returns directory
@@ -904,11 +953,19 @@ class MediaRef(AscXMLBase):
                 empty.
 
         """
-        # Use os here to preserve the relative paths
-        import os
+        # If we have original URI, extract path portion preserving separators
+        if self._ref_info.original_uri:
+            uri = self._ref_info.original_uri
+            # Remove protocol if present
+            if '://' in uri:
+                uri = uri.split('://', 1)[1]
+            return uri
+        
+        # Fallback to reconstruction using intelligent separator detection
         if self._ref_info.filename:
             if self._ref_info.directory:
-                return os.path.join(self._ref_info.directory, self._ref_info.filename)
+                separator = self._ref_info._detect_separator(self._ref_info.directory)
+                return f"{self._ref_info.directory}{separator}{self._ref_info.filename}"
             else:
                 return self._ref_info.filename
         else:
@@ -930,7 +987,8 @@ class MediaRef(AscXMLBase):
         """Set URI protocol.
         
         Automatically removes '://' suffix if present. Updates class
-        membership dictionary and resets cached properties.
+        membership dictionary and resets cached properties. Clears original_uri
+        since the URI is being modified.
         
         Args:
             value (str): Protocol to set (e.g., 'http', 'file'). Can include
@@ -946,6 +1004,8 @@ class MediaRef(AscXMLBase):
                 value = value.removesuffix('://')
             old_ref = self.ref
             self._ref_info.protocol = value
+            # Clear original URI since we're modifying components
+            self._ref_info.original_uri = ''
             self._change_membership(old_ref=old_ref)
             # We probably don't need to reset the cached properties, but we
             # will just to be safe.
@@ -970,7 +1030,8 @@ class MediaRef(AscXMLBase):
     def ref(self, uri: str) -> None:
         """Set complete URI and parse into components.
         
-        Parses the URI into protocol, directory, and filename components.
+        Parses the URI into protocol, directory, and filename components
+        while preserving the original URI format for exact reconstruction.
         Updates class membership dictionary and resets all cached properties.
         
         Args:
@@ -982,7 +1043,14 @@ class MediaRef(AscXMLBase):
         """
         if type(uri) is str:
             old_ref = self.ref
-            self._ref_info = MediaRefInfo(*self._split_uri(uri))
+            # Parse components and store original URI
+            protocol, directory, filename = self._split_uri(uri)
+            self._ref_info = MediaRefInfo(
+                protocol=protocol,
+                directory=directory,
+                filename=filename,
+                original_uri=uri
+            )
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
@@ -1136,7 +1204,8 @@ class MediaRef(AscXMLBase):
         """Parse URI into protocol, directory, and filename components.
         
         Separates a URI into its constituent parts while preserving the
-        original path format including relative path indicators.
+        original path format including relative path indicators. Handles
+        both Unix (/) and Windows (\\) path separators.
         
         Args:
             uri (str): URI string to parse.
@@ -1153,12 +1222,24 @@ class MediaRef(AscXMLBase):
         else:
             protocol = ''
 
-        # Use os.path.split to preserve original path format (including ./ prefix)
-        import os
-        directory, ref_file = os.path.split(uri)
+        # Handle both Unix and Windows path separators
+        # Find the last occurrence of either separator type
+        last_forward_slash = uri.rfind('/')
+        last_backslash = uri.rfind('\\')
         
-        # Don't modify empty directory - let it stay empty
-        # This preserves the original path format
+        # Use the separator that appears last in the string
+        if last_forward_slash == -1 and last_backslash == -1:
+            # No separators found - entire URI is filename
+            directory = ''
+            ref_file = uri
+        elif last_forward_slash > last_backslash:
+            # Forward slash is the last separator
+            directory = uri[:last_forward_slash]
+            ref_file = uri[last_forward_slash + 1:]
+        else:
+            # Backslash is the last separator (or they're equal and both exist)
+            directory = uri[:last_backslash]
+            ref_file = uri[last_backslash + 1:]
 
         return protocol, directory, ref_file
 

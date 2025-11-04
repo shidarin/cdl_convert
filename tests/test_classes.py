@@ -2394,7 +2394,8 @@ class TestMediaRefProperties(unittest.TestCase):
         )
 
         protocol = self.protocol + '://' if self.protocol else ''
-        new_ref = protocol + os.path.join(new_directory, self.filename)
+        # With path preservation logic, forward slashes are preserved unless path is purely Windows-style
+        new_ref = protocol + new_directory + '/' + self.filename
 
         self.assertEqual(
             new_ref,
@@ -2474,7 +2475,8 @@ class TestMediaRefProperties(unittest.TestCase):
         )
 
         protocol = self.protocol + '://' if self.protocol else ''
-        new_ref = protocol + os.path.join(self.directory, new_filename)
+        # With path preservation logic, forward slashes are preserved unless path is purely Windows-style
+        new_ref = protocol + self.directory + '/' + new_filename
 
         self.assertEqual(
             new_ref,
@@ -2564,16 +2566,14 @@ class TestMediaRefProperties(unittest.TestCase):
 
     #==========================================================================
 
-    @mock.patch('os.path.join')
-    def testPathMock(self, mock_path):
-        """Tests that path is called correctly"""
-        mock_path.return_value = 'ed'
+    def testPathMock(self):
+        """Tests that path returns the original URI path portion"""
+        # With the new implementation, path returns the original URI path
+        # without protocol, preserving the original separator format
         self.assertEqual(
-            'ed',
+            self.path,  # This is 'heeba/jeeba/race/car.jpg'
             self.mr.path
         )
-
-        mock_path.assert_called_once_with(self.directory, self.filename)
 
     #==========================================================================
 
@@ -2621,7 +2621,8 @@ class TestMediaRefProperties(unittest.TestCase):
         )
 
         protocol = new_protocol + '://'
-        new_ref = protocol + os.path.join(self.directory, self.filename)
+        # With path preservation logic, forward slashes are preserved unless path is purely Windows-style
+        new_ref = protocol + self.directory + '/' + self.filename
 
         self.assertEqual(
             new_ref,
@@ -2872,6 +2873,8 @@ class TestMediaRefChangeMembership(unittest.TestCase):
         )
 
         self.mr._ref_info.filename = 'goodbye'
+        # Clear original_uri so ref property uses reconstructed URI
+        self.mr._ref_info.original_uri = ''
         self.mr._change_membership(old_ref='hello')
 
         self.assertEqual(
@@ -2891,6 +2894,8 @@ class TestMediaRefChangeMembership(unittest.TestCase):
         )
 
         self.mr._ref_info.filename = 'goodbye'
+        # Clear original_uri so ref property uses reconstructed URI
+        self.mr._ref_info.original_uri = ''
         self.mr._change_membership(old_ref='hello')
 
         self.assertEqual(
@@ -2910,6 +2915,8 @@ class TestMediaRefChangeMembership(unittest.TestCase):
         )
 
         self.mr._ref_info.filename = 'goodbye'
+        # Clear original_uri so ref property uses reconstructed URI
+        self.mr._ref_info.original_uri = ''
         self.mr._change_membership(old_ref='hello')
 
         self.assertEqual(
@@ -2924,6 +2931,8 @@ class TestMediaRefChangeMembership(unittest.TestCase):
         cdl_convert.reset_all()
 
         self.mr._ref_info.filename = 'goodbye'
+        # Clear original_uri so ref property uses reconstructed URI
+        self.mr._ref_info.original_uri = ''
         self.mr._change_membership(old_ref='hello')
 
         self.assertEqual(

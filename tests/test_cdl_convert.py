@@ -1158,7 +1158,9 @@ class TestMain(unittest.TestCase):
         expected_path = Path('file.cc').resolve()
         mockParse.assert_called_once_with(expected_path)
         # Determine dest should have set a file_out
-        mockDest.assert_called_once_with('cc', Path('/fakepath'))
+        # On Windows, Path('/fakepath') resolves to absolute path like 'D:/fakepath'
+        expected_dest_path = Path('/fakepath').resolve()
+        mockDest.assert_called_once_with('cc', expected_dest_path)
         # But the write should never have been called.
         self.assertFalse(
             mockWrite.called
@@ -1208,7 +1210,9 @@ class TestMain(unittest.TestCase):
         expected_path = Path('file.cc').resolve()
         mockParse.assert_called_once_with(expected_path)
         # Determine dest should have set a file_out
-        mockDest.assert_called_once_with(Path('/fakepath'))
+        # On Windows, Path('/fakepath') resolves to absolute path like 'D:/fakepath'
+        expected_dest_path = Path('/fakepath').resolve()
+        mockDest.assert_called_once_with(expected_dest_path)
         # But the write should never have been called.
         self.assertFalse(
             mockWrite.called
