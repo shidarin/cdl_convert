@@ -57,6 +57,10 @@ from typing import List, Optional, Union, Any
 from xml.dom import minidom
 from xml.etree import ElementTree
 
+# Secure XML parsing
+import defusedxml
+defusedxml.defuse_stdlib()
+
 # cdl_convert Imports
 from . import config
 from .exceptions import ValidationError

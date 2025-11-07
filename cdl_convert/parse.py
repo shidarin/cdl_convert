@@ -93,6 +93,10 @@ import re
 from typing import List, Optional, Union
 from xml.etree import ElementTree
 
+# Secure XML parsing
+import defusedxml
+defusedxml.defuse_stdlib()
+
 # cdl_convert imports
 
 from . import config, collection, correction

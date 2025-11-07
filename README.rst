@@ -260,6 +260,7 @@ Dependencies
 - **OpenTimelineIO** - For robust EDL parsing
 - **otio-cmx3600-adapter** - CMX EDL format support
 - **otio-ale-adapter** - ALE format support
+- **defusedxml** - Secure XML parsing to prevent XML attacks
 
 GitHub, Bug Reporting and Support
 ---------------------------------
