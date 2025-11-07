@@ -234,11 +234,14 @@ Development Workflow
 
 The project uses Hatch for development workflow management::
 
-    # Run tests
-    $ hatch run test:run
+    # Run tests across all python versions
+    $ hatch run test:all
 
     # Run tests with coverage
     $ hatch run test:cov
+
+    # Run tests in just 3.14
+    $ hatch run test
 
     # Run linting
     $ hatch run lint
@@ -248,9 +251,6 @@ The project uses Hatch for development workflow management::
 
     # Format code
     $ hatch run format
-
-    # Run tests in default environment
-    $ hatch run test
 
 Dependencies
 ^^^^^^^^^^^^

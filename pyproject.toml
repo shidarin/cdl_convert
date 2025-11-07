@@ -190,7 +190,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.test.scripts]
-run = "pytest {args}"
+all = "pytest {args}"
 cov = "pytest --cov=cdl_convert --cov-report=term-missing --cov-report=html {args}"
 
 # Matrix testing across Python versions
