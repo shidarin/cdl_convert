@@ -41,7 +41,7 @@ from cdl_convert.exceptions import CDLConvertError
 
 # parse_ccc ===================================================================
 
-CCC_FULL = """<?xml version="1.0" encoding="UTF-8"?>
+CCC_FULL = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
     <Description>CCC description 1</Description>
     <InputDescription>CCC Input Desc Text</InputDescription>
@@ -139,7 +139,7 @@ CCC_FULL = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrectionCollection>
 """
 
-CCC_ODD = """<?xml version="1.0" encoding="UTF-8"?>
+CCC_ODD = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrectionCollection>
     <Description></Description>
     <InputDescription></InputDescription>
@@ -188,7 +188,7 @@ CCC_ODD = """<?xml version="1.0" encoding="UTF-8"?>
 
 # write_ccc ===================================================================
 
-CCC_FULL_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
+CCC_FULL_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
     <InputDescription>CCC Input Desc Text</InputDescription>
     <ViewingDescription>CCC Viewing Desc Text</ViewingDescription>
@@ -279,7 +279,7 @@ CCC_FULL_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrectionCollection>
 """
 
-CCC_FULL_WRITE_CDL = """<?xml version="1.0" encoding="UTF-8"?>
+CCC_FULL_WRITE_CDL = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorDecisionList xmlns="urn:ASC:CDL:v1.01">
     <InputDescription>CCC Input Desc Text</InputDescription>
     <ViewingDescription>CCC Viewing Desc Text</ViewingDescription>
@@ -384,7 +384,7 @@ CCC_FULL_WRITE_CDL = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorDecisionList>
 """
 
-CCC_ODD_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
+CCC_ODD_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
     <Description>CCC description 1</Description>
     <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
@@ -425,7 +425,7 @@ CCC_ODD_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrectionCollection>
 """
 
-CCC_ODD_WRITE_CDL = """<?xml version="1.0" encoding="UTF-8"?>
+CCC_ODD_WRITE_CDL = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorDecisionList xmlns="urn:ASC:CDL:v1.01">
     <Description>CCC description 1</Description>
     <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
@@ -476,7 +476,7 @@ CCC_ODD_WRITE_CDL = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorDecisionList>
 """
 
-CCC_BAD_TAG = """<?xml version="1.0" encoding="UTF-8"?>
+CCC_BAD_TAG = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrectionBollection xmlns="urn:ASC:CDL:v1.01">
     <Description>CCC description 1</Description>
     <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
@@ -640,8 +640,8 @@ class TestParseCCCOdd(TestParseCCCFull):
     def setUp(self):
         self.desc = [
             'CCC description 1',
-            'Raised1 saturation a little!?! ag... \/Offset',
-            'Raised2 saturation a little!?! ag... \/Offset',
+            'Raised1 saturation a little!?! ag... \\/Offset',
+            'Raised2 saturation a little!?! ag... \\/Offset',
         ]
         self.input_desc = None
         self.viewing_desc = None

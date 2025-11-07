@@ -40,7 +40,7 @@ from cdl_convert.exceptions import CDLConvertError
 
 # parse_cdl ===================================================================
 
-CDL_FULL = """<?xml version="1.0" encoding="UTF-8"?>
+CDL_FULL = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorDecisionList xmlns="urn:ASC:CDL:v1.01">
     <Description>CDL description 1</Description>
     <InputDescription>CDL Input Desc Text</InputDescription>
@@ -227,7 +227,7 @@ CDL_ODD = r"""<?xml version="1.0" encoding="UTF-8"?>
 
 # write_cdl ===================================================================
 
-CDL_FULL_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
+CDL_FULL_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorDecisionList xmlns="urn:ASC:CDL:v1.01">
     <InputDescription>CDL Input Desc Text</InputDescription>
     <ViewingDescription>CDL Viewing Desc Text</ViewingDescription>
@@ -333,7 +333,7 @@ CDL_FULL_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
 </ColorDecisionList>
 """
 
-CDL_FULL_WRITE_CCC = """<?xml version="1.0" encoding="UTF-8"?>
+CDL_FULL_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
     <InputDescription>CDL Input Desc Text</InputDescription>
     <ViewingDescription>CDL Viewing Desc Text</ViewingDescription>
@@ -602,7 +602,7 @@ CDL_ODD_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
 </ColorCorrectionCollection>
 """
 
-CDL_BAD_TAG = """<?xml version="1.0" encoding="UTF-8"?>
+CDL_BAD_TAG = r"""<?xml version="1.0" encoding="UTF-8"?>
 <ColorDecisionBlist xmlns="urn:ASC:CDL:v1.01">
     <Description>CCC description 1</Description>
     <Description>Raised1 saturation a little!?! ag... \/Offset</Description>
@@ -851,8 +851,8 @@ class TestParseCDLOdd(TestParseCDLFull):
     def setUp(self):
         self.desc = [
             'CDL description 1',
-            'Raised1 saturation a little!?! ag... \/Offset',
-            'Raised2 saturation a little!?! ag... \/Offset',
+            'Raised1 saturation a little!?! ag... \\/Offset',
+            'Raised2 saturation a little!?! ag... \\/Offset',
         ]
         self.input_desc = None
         self.viewing_desc = None
@@ -881,7 +881,7 @@ class TestParseCDLOdd(TestParseCDLFull):
             [],
             [],
             [],
-            ['Raised2 saturation a little!?! ag... \/Offset']
+            ['Raised2 saturation a little!?! ag... \\/Offset']
         ]
         self.color_decision_input_descs = [
             None,

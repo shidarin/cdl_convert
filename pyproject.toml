@@ -99,6 +99,10 @@ addopts = [
     "--strict-markers",
     "--strict-config",
 ]
+filterwarnings = [
+    "ignore::UserWarning",
+    'ignore:defusedxml\.cElementTree is deprecated, import from defusedxml\.ElementTree instead\.:DeprecationWarning',
+]
 
 [tool.coverage.run]
 source = ["cdl_convert"]
