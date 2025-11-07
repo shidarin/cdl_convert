@@ -1,0 +1,65 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-quality-${{ hashFiles('**/pyproject.toml', '**/dev-requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-quality-
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff mypy
+        if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
+        if [ -f pyproject.toml ]; then pip install -e .; fi
+        
+    - name: Run Ruff linting
+      id: ruff-lint
+      run: |
+        echo "::group::Ruff Linting"
+        ruff check . --output-format=github
+        echo "::endgroup::"
+        
+    - name: Run Ruff formatting check
+      id: ruff-format
+      run: |
+        echo "::group::Ruff Formatting"
+        ruff format --check --diff .
+        echo "::endgroup::"
+        
+    - name: Run mypy type checking
+      id: mypy
+      run: |
+        echo "::group::MyPy Type Checking"
+        mypy cdl_convert --show-error-codes --pretty --error-format='{path}:{line}: {severity}: {message} [{error_code}]'
+        echo "::endgroup::"
+        
+    - name: Security scan with bandit
+      id: bandit
+      run: |
+        echo "::group::Security Scanning"
+        pip install bandit[toml]
+        bandit -r cdl_convert --format github
+        echo "::endgroup::"

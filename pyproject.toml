@@ -133,6 +133,8 @@ strict_equality = true
 [tool.ruff]
 target-version = "py311"
 line-length = 80
+
+[tool.ruff.lint]
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -143,12 +145,15 @@ select = [
     "UP", # pyupgrade
 ]
 ignore = [
-    "E501",  # line too long, handled by black
+    "E501",  # line too long, handled by formatter
     "B008",  # do not perform function calls in argument defaults
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B011"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "docs"]
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -156,6 +161,7 @@ dependencies = [
     "pytest-cov>=4.0",
     "mypy>=1.0",
     "ruff>=0.1.0",
+    "bandit[toml]>=1.7.0",
 ]
 
 [tool.hatch.envs.default.scripts]
@@ -163,6 +169,16 @@ test = "pytest {args}"
 lint = "ruff check {args:.}"
 format = "ruff format {args:.}"
 type-check = "mypy {args:cdl_convert}"
+security = "hatch run security:scan {args}"
+
+[tool.hatch.envs.security]
+python = "3.13"
+dependencies = [
+    "bandit[toml]>=1.7.0",
+]
+
+[tool.hatch.envs.security.scripts]
+scan = "bandit -r cdl_convert {args}"
 
 [tool.hatch.envs.test]
 dependencies = [

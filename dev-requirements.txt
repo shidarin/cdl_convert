@@ -9,6 +9,9 @@ mypy>=1.0
 # Code formatting and linting
 ruff>=0.1.0
 
+# Security scanning
+bandit[toml]>=1.7.0
+
 # Documentation
 sphinx>=6.0
 
