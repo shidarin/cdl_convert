@@ -755,7 +755,7 @@ class SatNode(ColorNodeBase):
 
     """
 
-    # XML Fields for SopNodes can be one of these names:
+    # XML Fields for SatNodes can be one of these names:
     element_names: List[str] = ['ASC_SAT', 'SATNode', 'SatNode']
 
     def __init__(self, parent: 'ColorCorrection') -> None:
