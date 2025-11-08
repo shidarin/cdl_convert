@@ -23,7 +23,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.13'
+        python-version: '3.11'
         
     - name: Cache pip dependencies
       uses: actions/cache@v3
@@ -37,7 +37,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install ruff mypy bandit[toml]
+        pip install ruff mypy bandit[toml] sphinx sphinx-rtd-theme myst-parser
         if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
         if [ -f pyproject.toml ]; then pip install -e .; fi
         
@@ -78,13 +78,24 @@ jobs:
         bandit -c pyproject.toml -r cdl_convert --format github
         echo "::endgroup::"
         
+    - name: Build documentation
+      id: docs
+      continue-on-error: true
+      run: |
+        echo "::group::Documentation Build"
+        cd docs
+        # Build with warnings as errors (-W flag)
+        sphinx-build -W --keep-going -b html . _build/html
+        echo "::endgroup::"
+        
     - name: Check quality gate
       if: always()
       run: |
         if [ "${{ steps.ruff-lint.outcome }}" == "failure" ] || \
            [ "${{ steps.ruff-format.outcome }}" == "failure" ] || \
            [ "${{ steps.mypy.outcome }}" == "failure" ] || \
-           [ "${{ steps.bandit.outcome }}" == "failure" ]; then
+           [ "${{ steps.bandit.outcome }}" == "failure" ] || \
+           [ "${{ steps.docs.outcome }}" == "failure" ]; then
           echo "Quality checks failed"
           exit 1
         fi
