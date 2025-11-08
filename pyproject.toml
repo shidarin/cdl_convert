@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "cdl_convert"
 dynamic = ["version"]
 description = "Converts between common ASC Color Decision List (CDL) formats"
-readme = "README.rst"
+readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{name = "Sean Wallitsch", email = "shidarin@alphamatte.com"}]
 maintainers = [{name = "Sean Wallitsch", email = "shidarin@alphamatte.com"}]
@@ -51,8 +51,10 @@ test = [
     "pytest-cov>=4.0",
 ]
 docs = [
-    "sphinx>=6.0.0",
-    "sphinx-rtd-theme>=1.0.0",
+    "sphinx>=7.0.0",
+    "myst-parser>=2.0.0",
+    "furo>=2024.1.29",
+    "sphinx-copybutton>=0.5.2",
 ]
 
 [project.urls]
@@ -205,4 +207,23 @@ python = ["3.11", "3.12", "3.13", "3.14"]
 matrix.python.dependencies = [
     { value = "pytest>=7.0", if = ["3.11", "3.12", "3.13", "3.14"] },
     { value = "pytest-cov>=4.0", if = ["3.11", "3.12", "3.13", "3.14"] },
+]
+
+[tool.hatch.envs.docs]
+python = "3.11"
+dependencies = [
+    "sphinx>=7.0.0",
+    "myst-parser>=2.0.0",
+    "furo>=2024.1.29",
+    "sphinx-copybutton>=0.5.2",
+]
+
+[tool.hatch.envs.docs.scripts]
+build = "sphinx-build -b html docs docs/_build/html {args}"
+clean = "rm -rf docs/_build"
+serve = "python -m http.server --directory docs/_build/html {args:8000}"
+linkcheck = "sphinx-build -b linkcheck docs docs/_build/linkcheck"
+rebuild = [
+    "clean",
+    "build",
 ]

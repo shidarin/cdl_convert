@@ -1,0 +1,24 @@
+# Read the Docs configuration file for cdl_convert
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+version: 2
+
+# Build configuration
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.11"
+
+# Sphinx configuration
+sphinx:
+  configuration: docs/conf.py
+  fail_on_warning: false
+
+# Python configuration
+python:
+  install:
+    # Install the package itself with docs dependencies for autodoc
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs

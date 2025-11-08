@@ -1,0 +1,191 @@
+# Changelog
+
+All notable changes to CDL Convert are documented in this file.
+
+## Version 1.0.0
+
+### Breaking Changes
+
+- **Python 3.11+ Required** - Dropped support for Python 2.7-3.10 and PyPy
+- **OpenTimelineIO Required** - We've moved to using OpenTimelineIO's robust EDL adaptor system to parse ALE, CMX, and OTIO EDL files
+- **Windows 3.13 and 3.14 are not supported** - Due to an OTIO build issue, running on Windows with Python 3.13 and 3.14 is at your own risk
+
+### New Features
+
+- **OTIO support** - Now ingests .otio files with CDL metadata
+- **Hatch & pyproject.toml** - Modern Python packaging and building
+- **Type hints throughout** - Full type annotation for better IDE support
+- **pathlib integration** - Modern file path handling with `pathlib.Path`
+- **ColorValues dataclass** - Structured color correction data with validation
+- **Enhanced error handling** - Specific exception types (`ValidationError`, `ParseError`, `FormatError`)
+- **Colored CLI output** - Enhanced command-line experience with colored error messages
+- **f-string formatting** - Improved string operations throughout
+- **Context managers** - Safe resource management
+- **Match statements** - Cleaner control flow (Python 3.10+ features)
+
+### Infrastructure Changes
+
+- **Build System:** Migrated from setup.py to pyproject.toml with Hatch
+- **CI/CD:** Migrated from Travis CI to GitHub Actions
+- **Dependencies:** Upgraded OpenTimelineIO to v0.17+
+- **Documentation:** Modernized to Sphinx + MyST Parser with Furo theme
+
+### Compatibility
+
+CLI and API should be compatible with tools written for 0.9.2, however no warranties or guarantees are given.
+
+See {doc}`installation` for updated installation instructions.
+
+## Version 0.9.2
+
+### Fixed
+- Fixed a bug where ALEs with blank lines would not convert correctly
+- Fixed a bug preventing `cdl_convert` from being correctly installed in Python 2.6
+- Fixed continuous integration testing
+
+### Changed
+- No longer officially supporting Python 3.2 (removed from CI builds, but should still work)
+
+## Version 0.9
+
+### Added
+- Ability to parse CMX EDLs
+- `cdl_convert.py` stub file at package root level for running without installation
+
+### Fixed
+- Script bug where collection formats containing color decisions would not export those decisions as individual color corrections
+- Bug where line endings weren't being read correctly in certain situations
+- Script now writes errors to stderr correctly and exits with status 1
+
+## Version 0.8
+
+### Added
+- `--single` flag: When provided with an output collection format, each color correction in the input will be exported to its own collection
+
+### Changed
+- Giving a {class}`~cdl_convert.correction.ColorCorrection` a non-duplicate ID now works unless the `--halt` flag is given
+- Incoming collections with duplicate IDs will no longer fail
+
+## Version 0.7.1
+
+### Fixed
+- Bug where ALEs without 'Scan Filename' fields could not parse correctly
+
+## Version 0.7
+
+- Addition of collection format support.
+- `.ccc` (Color Correction Collections) and `.cdl` (Color Decision Lists) can now be parsed and written.
+- `.ale` and `.flex` files now return a collection.
+
+### Added
+- **New script flags:**
+  - `--check`: Checks all parsed {class}`~cdl_convert.correction.ColorCorrection` objects for sane values and prints warnings
+  - `-d`, `--destination`: Specify output directory for converted files
+  - `--no-output`: Dry run mode - goes through conversion without writing to disk
+  - `--halt`: Halts on errors that can be resolved safely (e.g., negative slope or power values)
+- {func}`~cdl_convert.parse.parse_ccc`: Parse Color Correction Collections
+- {func}`~cdl_convert.write.write_ccc`: Write Color Correction Collections
+- {func}`~cdl_convert.parse.parse_cdl`: Parse Color Decision Lists
+- {func}`~cdl_convert.write.write_cdl`: Write Color Decision Lists
+- {class}`~cdl_convert.decision.ColorDecision`: Stores a {class}`~cdl_convert.correction.ColorCorrection` or {class}`~cdl_convert.decision.ColorCorrectionRef` with optional {class}`~cdl_convert.decision.MediaRef`
+- {class}`~cdl_convert.decision.ColorCorrectionRef`: Reference to a {class}`~cdl_convert.correction.ColorCorrection`
+- `parent` attribute to {class}`~cdl_convert.correction.ColorCorrection`
+- {func}`~cdl_convert.utils.sanity_check`: Prints unusual values to stdout
+- `dev-requirements.txt` with `mock` for testing
+
+### Changed
+- Renamed `ColorCollectionBase` to {class}`~cdl_convert.collection.ColorCollection`
+- {class}`~cdl_convert.collection.ColorCollection` is now a fully functional container class
+- Calling `sop_node` or `sat_node` on {class}`~cdl_convert.correction.ColorCorrection` before setting values now works
+- {class}`~cdl_convert.correction.ColorCorrection` `cdl_file` init argument renamed to `input_file`
+- {func}`~cdl_convert.parse.parse_cc` and `parse_rnh_cdl` now yield a single {class}`~cdl_convert.correction.ColorCorrection`, not a list
+- All `determine_dest` methods now take a `directory` argument
+- Renamed `parse_cdl`/`write_cdl` to `parse_rnh_cdl`/`write_rnh_cdl`
+- Renamed `cdl_file` argument to `input_file` in parse functions
+
+### Python Structure Refactoring
+- Moved `HALT_ON_ERROR` into `config` module
+- Moved base classes to `cdl_convert.base`
+- Moved {class}`~cdl_convert.collection.ColorCollection` to `cdl_convert.collection`
+- Moved {class}`~cdl_convert.correction.ColorCorrection`, {class}`~cdl_convert.correction.SatNode`, {class}`~cdl_convert.correction.SopNode` to `cdl_convert.correction`
+- Moved {class}`~cdl_convert.decision.ColorDecision`, {class}`~cdl_convert.decision.ColorCorrectionRef`, {class}`~cdl_convert.decision.MediaRef` to `cdl_convert.decision`
+- Moved all parse functions to `cdl_convert.parse`
+- Moved all write functions to `cdl_convert.write`
+- Moved {func}`~cdl_convert.utils.sanity_check` to `cdl_convert.utils`
+
+## Version 0.6.1
+
+### Added
+- `AscXMLBase` class for XML-representable nodes
+- Tests for `write_cc` - **brings coverage to 100%**
+
+### Changed
+- Suppressed scientific notation when writing files
+- `write_cc` now writes 100% correct XML using ElementTree
+
+## Version 0.6
+
+Major release adding ASC CDL XML compliance and restructuring the class hierarchy.
+
+### Added
+- Much greater ASC CDL XML compliance with new classes representing XML schema nodes
+- {class}`~cdl_convert.base.AscColorSpaceBase`: Base class for `viewing_desc` and `input_desc`
+- {class}`~cdl_convert.base.AscDescBase`: Base class for `desc` attribute
+- `ColorCollectionBase`: Basis for collection type nodes
+- {class}`~cdl_convert.decision.MediaRef`: Represents MediaRef node with convenient file handling
+- `HALT_ON_ERROR` module variable for exception handling behavior
+- Class-level member dictionary for {class}`~cdl_convert.correction.ColorCorrection` lookup by ID
+- {class}`~cdl_convert.correction.SatNode` and {class}`~cdl_convert.correction.SopNode` classes for color operations
+
+### Changed
+- Renamed `AscCdl` to {class}`~cdl_convert.correction.ColorCorrection`
+- {class}`~cdl_convert.correction.ColorCorrection` now requires unique ID
+- Moved SOP and SAT operations into separate node classes
+- Removed `metadata` attribute, split into `input_desc`, `viewing_desc`, and `desc`
+- `desc` is now a list of all description fields
+- Renamed `cc_id` to `id`
+- Slope, Offset, and Power now return tuples instead of lists
+- {func}`~cdl_convert.parse.parse_cc` now parses wider variety of `.cc` files
+- Significantly simplified {func}`~cdl_convert.parse.parse_flex`
+
+### Added
+- PyPy support
+- ReadTheDocs documentation
+- Test suite broken into sub-modules
+
+## Version 0.5
+
+### Changed
+- Restructured project according to Python packaging guidelines
+- Some `AscCdl` attributes moved into dictionaries (reversed in 0.6)
+- Refactored parse functions to reduce complexity
+- Simplified `write_cdl` to be more pythonic
+
+## Version 0.4.2
+
+### Fixed
+- Hotfix for `from __future__` imports
+
+## Version 0.4.1
+
+### Changed
+- PEP 8 conversion
+- Added landscape.io support
+- Uses `from __future__` for print function
+
+## Version 0.4
+
+### Added
+- Python 3 compatibility
+- Better type and exception handling for `AscCdl` setters
+- ID field sanitization
+- Travis CI for continuous integration
+- ElementTree for XML parsing in `parse_cc`
+
+### Changed
+- More unit testing bug fixes and enhancements
+- Test suite now runs on Windows
+
+---
+
+For the latest changes, see the [GitHub repository](https://github.com/shidarin/cdl_convert).
