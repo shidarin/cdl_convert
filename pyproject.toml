@@ -45,6 +45,7 @@ dev = [
     "pytest-cov>=4.0",
     "mypy>=1.0",
     "ruff>=0.1.0",
+    "bandit[toml]>=1.7.0",
 ]
 test = [
     "pytest>=7.0",
