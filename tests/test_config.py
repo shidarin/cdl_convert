@@ -56,7 +56,7 @@ class TestConfig(unittest.TestCase):
         
         expected_collection = {
             CDLFormat.ALE, CDLFormat.CCC, CDLFormat.CDL, 
-            CDLFormat.EDL, CDLFormat.FLEX
+            CDLFormat.EDL, CDLFormat.FLEX, CDLFormat.OTIO
         }
         self.assertEqual(set(self.config.collection_formats), expected_collection)
         

@@ -98,7 +98,7 @@ See {doc}`usage_cc` for detailed Python API examples and {doc}`usage_ccc` for wo
 
 Full help is available using the standard `--help` command:
 
-```bash
+```
 $ cdl_convert --help
 usage: cdl_convert [-h] [-i INPUT] [-o OUTPUT] [-d DESTINATION] [--halt]
                    [--no-output] [--check] [--single] [-v] [--debug]

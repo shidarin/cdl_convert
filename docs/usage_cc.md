@@ -1,4 +1,4 @@
-# ColorCorrection Usage
+# Color Corrections
 
 Once installed with pip, importing `cdl_convert` works like importing any other Python module.
 
@@ -40,7 +40,7 @@ cc = cdl.ColorCorrection(id='cc1', input_file='./myfirstcdl.cc')
 :::{warning}
 When an instance of {class}`~cdl_convert.correction.ColorCorrection` is first created, the `id` provided is checked against a class level dictionary variable named `members` to ensure that no two {class}`~cdl_convert.correction.ColorCorrection` share the same `id`, as this is required by the specification.
 
-Giving duplicate `id` will result in a number being appended to the back, unless `HALT_ON_ERROR` is set, in which case it will fail.
+Giving duplicate `id` will result in a number being appended to the back, unless `config.HALT_ON_ERROR` is set, in which case it will fail.
 
 Reset the members list by calling the `reset_members` method of {class}`~cdl_convert.correction.ColorCorrection` or reset all class member lists and dictionaries with {func}`~cdl_convert.reset_all`.
 :::
@@ -148,7 +148,7 @@ Decimal('0.0')
 ```
 
 :::{warning}
-If it's desired to have negative values raise an exception instead of truncating to zero, set the global config module variable `HALT_ON_ERROR` to be `True`.
+If it's desired to have negative values raise an exception instead of truncating to zero, set the global config module variable `config.` to be `True`.
 
 ```python
 >>> cdl.config.HALT_ON_ERROR = True
@@ -220,7 +220,7 @@ Traceback (most recent call last):
 ValueError: Error setting the id to "cc1". This id is already a registered id.
 ```
 
-A ValueError is only raised if `HALT_ON_ERROR` is set. If `HALT_ON_ERROR` is not set (default), a number will be appended to the non-duplicate ID.
+A ValueError is only raised if `config.HALT_ON_ERROR` is set. If `config.HALT_ON_ERROR` is not set (default), a number will be appended to the non-duplicate ID.
 
 So if you already have a ColorCorrection with the id of 'sh100cc', the second ColorCorrection you set to have that id will actually set to 'sh100cc001'.
 
@@ -300,8 +300,9 @@ The `ColorValues` dataclass automatically validates values during initialization
 
 ## See Also
 
+- {class}`~cdl_convert.correction.ColorCorrection` - ColorCorrection class API reference
 - {doc}`usage_ccc` - Working with ColorCollection (multiple CDLs)
 - {doc}`usage` - Command-line usage
-- {doc}`api/classes` - Full API reference for ColorCorrection
+- {doc}`api/classes` - Full API reference for all classes
 - {doc}`api/parse` - All parsing functions
 - {doc}`api/write` - All writing functions

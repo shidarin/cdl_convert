@@ -10,6 +10,7 @@ However, where similar elements exist as entirely separate entities in the XML s
 :maxdepth: 2
 
 classes
+config
 parse
 write
 utils
@@ -40,3 +41,9 @@ utils
 - {func}`~cdl_convert.write.write_ccc` - Write Color Correction Collection
 - {func}`~cdl_convert.write.write_cdl` - Write Color Decision List
 - {func}`~cdl_convert.write.write_rnh_cdl` - Write Rhythm & Hues CDL
+
+### Configuration
+
+- {class}`~cdl_convert.config.Config` - Global configuration dataclass
+- {class}`~cdl_convert.config.CDLFormat` - Format type enum
+- {data}`~cdl_convert.config.config` - Global configuration instance

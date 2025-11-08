@@ -60,11 +60,35 @@ pygments_style = 'sphinx'
 
 autodoc_default_options = {
     'members': True,
-    'member-order': 'bysource',
+    'member-order': 'groupwise',
     'special-members': '__init__',
+    'inherited-members': True,
     'undoc-members': True,
+    'show-inheritance': True,
     'exclude-members': '__weakref__'
 }
+
+from sphinx.ext import autodoc
+
+# # Original order
+# autodoc.Documenter.member_order = 0
+# autodoc.ExceptionDocumenter.member_order = 10
+# autodoc.ClassDocumenter.member_order = 20
+# autodoc.FunctionDocumenter.member_order = 30
+# autodoc.DataDocumenter.member_order = 40
+# autodoc.MethodDocumenter.member_order = 50
+# autodoc.AttributeDocumenter.member_order = 60
+# autodoc.PropertyDocumenter.member_order = 60
+
+# Overridden
+autodoc.Documenter.member_order = 0
+autodoc.DataDocumenter.member_order = 10
+autodoc.FunctionDocumenter.member_order = 40
+autodoc.ClassDocumenter.member_order = 30
+autodoc.AttributeDocumenter.member_order = 20
+autodoc.PropertyDocumenter.member_order = 20
+autodoc.MethodDocumenter.member_order = 50
+autodoc.ExceptionDocumenter.member_order = 60
 
 # -- Intersphinx configuration -----------------------------------------------
 

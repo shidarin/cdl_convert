@@ -241,3 +241,13 @@ Unlike the Input and Viewing Descriptions, the normal Description attributes are
 :::{note}
 Unlike the lists of children, duplicates are not removed from the list of descriptions.
 :::
+
+## See Also
+
+- {class}`~cdl_convert.collection.ColorCollection` - ColorCollection class API reference
+- {class}`~cdl_convert.decision.ColorDecision` - ColorDecision class API reference
+- {doc}`usage_cc` - Working with individual ColorCorrection objects
+- {doc}`usage` - Command-line usage
+- {doc}`api/classes` - Full API reference for all classes
+- {doc}`api/parse` - All parsing functions
+- {doc}`api/write` - All writing functions

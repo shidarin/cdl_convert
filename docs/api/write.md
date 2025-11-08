@@ -30,7 +30,8 @@ Write XML Color Decision List (cdl) files.
 
 Write Rhythm & Hues CDL format.
 
-This writes a very sparse cdl format that is based on a very early spec of the cdl implementation. It lacks all metadata. Unless you work at Rhythm & Hues, you probably don't want to write a cdl that uses this format.
+This writes a very sparse cdl format that is based on a very early spec of the cdl implementation. It lacks all metadata. Unless you work at Rhythm & Hues, a 
+VFX company which hasn't existed for years now, you probably don't want to write a cdl that uses this format.
 
 ```{eval-rst}
 .. autofunction:: cdl_convert.write.write_rnh_cdl

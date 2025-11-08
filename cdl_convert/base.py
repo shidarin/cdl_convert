@@ -168,14 +168,6 @@ class AscDescBase(object):  # pylint: disable=R0903
     fields. It provides standardized handling of multiple description elements
     as specified in the ASC CDL schema.
 
-    Attributes:
-        desc (List[str]): List of description strings. Since ASC nodes can
-            contain multiple description elements, this attribute stores all
-            descriptions found during parsing. Setting desc directly will:
-            - Append single values to the end of the list
-            - Replace the list when given a list or tuple
-            - Empty the list when given None, [], or ()
-
     Example:
         >>> node = AscDescBase()
         >>> node.desc = "First description"
@@ -198,7 +190,19 @@ class AscDescBase(object):  # pylint: disable=R0903
 
     @property
     def desc(self) -> List[str]:
-        """Returns the list of descriptions"""
+        """Returns the list of descriptions.
+        
+        Since ASC nodes can
+            contain multiple description elements, this attribute stores all
+            descriptions found during parsing. 
+            
+            Setting desc directly will:
+            
+            - Append single values to the end of the list
+            - Replace the list when given a list or tuple  
+            - Empty the list when given None, [], or ()
+        
+        """
         return self._desc
 
     @desc.setter
@@ -246,14 +250,6 @@ class AscXMLBase(object):
 
     This class provides convenience attributes and methods for converting
     CDL objects to XML representations. 
-
-    Attributes:
-        element (Optional[ElementTree.Element]): ElementTree Element 
-            representing the node. 
-        xml (str): A nicely formatted XML string representing the node,
-            without XML declaration header.
-        xml_root (str): A nicely formatted XML string with XML declaration
-            header, ready to write to file.
 
     Example:
         >>> class MyNode(AscXMLBase):
@@ -320,15 +316,6 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
     and should not be used directly. It combines description and XML
     functionality while providing value validation methods for color
     correction parameters.
-
-    Attributes:
-        desc (List[str]): List of description strings. Inherited from
-            AscDescBase.
-        element (Optional[ElementTree.Element]): XML Element representation. 
-            Inherited from AscXMLBase.
-        xml (str): Formatted XML string. Inherited from AscXMLBase.
-        xml_root (str): XML string with declaration header. Inherited from
-            AscXMLBase.
 
     Example:
         >>> # This class is not used directly, but through SopNode/SatNode

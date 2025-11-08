@@ -51,13 +51,9 @@ If you need support for a specific format, please [create an issue](https://gith
 - Documentation or specification for the format
 - Your use case for needing this format
 
-### Can cdl_convert read Nuke CDL nodes?
-
-Yes! CDL Convert can read Foundry Nuke CDL nodes and can also write OCIOCDLTransform nodes for Nuke. See {doc}`usage` for examples.
-
 ### Does cdl_convert support OpenTimelineIO?
 
-Yes! CDL Convert uses [OpenTimelineIO](https://github.com/PixarAnimationStudios/OpenTimelineIO) for EDL parsing and can also read OTIO timeline files with embedded CDL metadata. See {doc}`usage_otio` for details.
+Yes, CDL Convert uses [OpenTimelineIO](https://github.com/PixarAnimationStudios/OpenTimelineIO) for EDL parsing and can also read OTIO timeline files with embedded CDL metadata. See {doc}`usage_otio` for details.
 
 ## Project Structure
 

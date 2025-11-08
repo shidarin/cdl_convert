@@ -95,21 +95,19 @@ class MediaRefInfo:
     Stores the individual components of a media reference URI after parsing,
     allowing separate access to protocol, directory, and filename parts.
     
-    Attributes:
-        protocol (str): URI protocol (e.g., 'http', 'file') without the '://'
-            suffix. Empty string if no protocol is present.
-        directory (str): Directory path component of the URI. May be relative
-            or absolute path.
-        filename (str): Filename component of the URI. Empty string if URI
-            points to a directory only.
-        original_uri (str): Complete original URI as provided during initialization.
-            Used to preserve exact path separator formatting across platforms.
-
     """
     protocol: str = ''
+    """URI protocol (e.g., 'http', 'file') without the '://' suffix.
+    Empty string if no protocol is present."""
     directory: str = ''
+    """Directory path component of the URI. May be relative or 
+    absolute path."""
     filename: str = ''
+    """Filename component of the URI. Empty string if URI points to a 
+    directory only."""
     original_uri: str = ''
+    """Complete original URI as provided during initialization. Used to 
+    preserve exact path separator formatting across platforms."""
     
     def to_uri(self) -> str:
         """Reconstruct the full URI from individual components.
@@ -177,18 +175,13 @@ class SequenceInfo:
     
     Stores information about detected image sequences, including whether
     sequences were found and their patterns with frame padding notation.
-    
-    Attributes:
-        is_sequence (bool): True if image sequences were detected in the
-            media reference path.
-
-        sequences (List[str]): List of sequence patterns using # padding
-            notation (e.g., 'image.####.exr'). None is converted to empty
-            list during initialization.
 
     """
     is_sequence: bool = False
+    """True if image sequences were detected in the media reference path."""
     sequences: List[str] = None
+    """List of sequence patterns using # padding notation ('image.####.exr').
+    None is converted to empty list during initialization."""
     
     def __post_init__(self) -> None:
         """Initialize sequences list after dataclass creation.
@@ -229,22 +222,6 @@ class ColorCorrectionRef(AscXMLBase):
     writes as a ColorCorrectionRef element. When writing to formats that don't
     support references (like CCC), behavior depends on halt_on_error setting.
 
-    Class Attributes:
-        members (Dict[str, List[ColorCorrectionRef]]): Dictionary mapping
-            ColorCorrection IDs to lists of ColorCorrectionRef instances
-            that reference them. Multiple references can point to the same ID.
-
-    Attributes:
-        cc (Optional[ColorCorrection]): The referenced ColorCorrection instance
-            if the reference can be resolved, None otherwise.
-        parent (Optional[ColorDecision]): Parent ColorDecision that contains
-            this reference.
-        id (Optional[str]): ID of the ColorCorrection this reference points to.
-        xml (str): Formatted XML string representation. Inherited from
-            AscXMLBase.
-        xml_root (str): XML string with declaration header. Inherited from
-            AscXMLBase.
-
     Example:
         >>> cc = ColorCorrection("shot_001")
         >>> ref = ColorCorrectionRef("shot_001")
@@ -254,6 +231,9 @@ class ColorCorrectionRef(AscXMLBase):
     """
 
     members: Dict[str, List['ColorCorrectionRef']] = {}
+    """Dictionary mapping ColorCorrection IDs to lists of ColorCorrectionRef
+    instances that reference them. Multiple references can point to the 
+    same ID."""
 
     def __init__(self, id: str) -> None:  # pylint: disable=W0622
         """Initialize ColorCorrectionRef with target ColorCorrection ID.
@@ -415,9 +395,8 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     objects, allowing the same ColorCorrection to be linked with multiple
     different media references across different ColorDecisions.
 
-    An example containing a ColorCorrection node:
+    An example containing a ColorCorrection node::
 
-    ``` xml
         <ColorDecision>
             <MediaRef ref="http://www.theasc.com/foasc-logo2.png"/>
             <ColorCorrection id="ascpromo">
@@ -429,45 +408,20 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
                 </SOPNode>
             </ColorCorrection>
         </ColorDecision>
-    ```
 
-    But it can also contain just a reference:
-    
-    ``` xml
+    But it can also contain just a reference::
+
         <ColorDecision>
             <MediaRef ref="best/project/ever/jim.0100.dpx"/>
             <ColorCorrectionRef ref="xf45.x628"/>
         </ColorDecision>
-    ```
-
-    Class Attributes:
-        members (Dict[str, List[ColorDecision]]): Dictionary mapping
-            ColorCorrection IDs to lists of ColorDecision instances that
-            contain them. Multiple decisions can reference the same correction.
-
-    Attributes:
-        cc (Optional[Union[ColorCorrection, ColorCorrectionRef]]): The
-            contained ColorCorrection or ColorCorrectionRef instance.
-        desc (List[str]): List of description strings. Inherited from
-            AscDescBase.
-        element (Optional[ElementTree.Element]): XML Element
-            representation. Inherited from AscXMLBase.
-        input_desc (Optional[str]): Input colorspace description. Inherited
-            from AscColorSpaceBase.
-        is_ref (bool): True if contains ColorCorrectionRef instead of
-            ColorCorrection.
-        media_ref (Optional[MediaRef]): Associated media reference, if any.
-        parent (Optional[Any]): Parent container (typically ColorCollection).
-        viewing_desc (Optional[str]): Viewing environment description.
-            Inherited from AscColorSpaceBase.
-        xml (str): Formatted XML string representation. Inherited from
-            AscXMLBase.
-        xml_root (str): XML string with declaration header. Inherited from
-            AscXMLBase.
 
     """
 
     members: Dict[str, List['ColorDecision']] = {}
+    """Dictionary mapping ColorCorrection IDs to lists of ColorDecision 
+    instances that contain them. Multiple decisions can reference the same 
+    correction."""
 
     def __init__(self, color_correct: Optional[Union[ColorCorrection, 'ColorCorrectionRef']] = None, media: Optional['MediaRef'] = None) -> None:
         """Initialize ColorDecision with ColorCorrection and optional MediaRef.
@@ -754,40 +708,6 @@ class MediaRef(AscXMLBase):
     methods work best with local file paths. The class provides comprehensive
     path parsing and sequence detection for film and TV workflows.
 
-    Class Attributes:
-        members (Dict[str, List[MediaRef]]): Dictionary mapping reference URIs
-            to lists of MediaRef instances that point to them. Multiple
-            MediaRef instances can reference the same URI.
-
-    Attributes:
-        directory (str): Directory portion of the URI without protocol or
-            filename.
-        element (Optional[ElementTree.Element]): XML Element representation.
-            Inherited from AscXMLBase.
-        exists (bool): True if the path exists in the file system.
-        filename (str): Filename portion of the URI without protocol or
-            directory.
-        is_abs (bool): True if directory path is absolute.
-        is_dir (bool): True if path points to a directory (no filename).
-        is_seq (bool): True if path points to image sequence(s). Sequences are
-            detected by files ending with dot/underscore + digits + extension.
-            Also detects # padding and %d padding formats.
-        parent (Optional[ColorDecision]): Parent ColorDecision containing this
-            MediaRef. Should typically be ColorDecision per CDL specification.
-        path (str): Directory joined with filename. Identical to directory if
-            no filename. Identical to ref if no protocol.
-        protocol (str): URI protocol (e.g., 'http', 'file') without '://'
-            suffix. Empty string if no protocol present.
-        ref (str): Complete URI including protocol, directory, and filename.
-        seq (Optional[str]): First found image sequence with # padding notation
-            (e.g., 'image.####.exr'). None if no sequences found.
-        seqs (List[str]): All found image sequences with # padding notation.
-            Single item list for files, multiple items for directories.
-        xml (str): Formatted XML string representation. Inherited from
-            AscXMLBase.
-        xml_root (str): XML string with declaration header. Inherited from
-            AscXMLBase.
-
     Example:
         >>> media = MediaRef("footage/shot_001.0001.exr")
         >>> print(media.is_seq)  # True
@@ -797,6 +717,8 @@ class MediaRef(AscXMLBase):
     """
 
     members: Dict[str, List['MediaRef']] = {}
+    """Dictionary mapping reference URIs to lists of MediaRef instances that 
+    point to them. Multiple MediaRef instances can reference the same URI."""
 
     def __init__(self, ref_uri: str, parent: Optional['ColorDecision'] = None) -> None:
         super(MediaRef, self).__init__()

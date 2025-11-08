@@ -18,7 +18,9 @@ Check {class}`~cdl_convert.correction.ColorCorrection` values for potentially in
 
 ## to_decimal
 
-This is the function we use to convert ints, floats and strings to Decimal objects. We do NOT attempt to use maximum accuracy on floats passed in, as that results in extremely long values more often than not. Better to just truncate the float with a string conversion, than attempt to perfectly represent with a Decimal.
+This is the function we use to convert ints, floats and strings to Decimal 
+objects. This lets us avoid writing scientific notation to files and maintain
+values in to values out.
 
 ```{eval-rst}
 .. autofunction:: cdl_convert.utils.to_decimal

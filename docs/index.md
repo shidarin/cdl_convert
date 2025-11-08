@@ -97,15 +97,15 @@ See {doc}`usage` for command-line examples and {doc}`usage_cc` for Python API us
 :maxdepth: 2
 
 usage
+installation
+usage_otio
+faq
+support
+changelog
+license
+contributing
 usage_cc
 usage_ccc
-usage_otio
-installation
-changelog
-support
-faq
-contributing
-license
 api/index
 ```
 

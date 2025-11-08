@@ -18,9 +18,6 @@ Reset the members dictionary by either calling the `reset_members` method on {cl
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.correction.ColorCorrection
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```
 
 ## ColorCollection
@@ -31,9 +28,6 @@ Setting the `type` of the {class}`~cdl_convert.collection.ColorCollection` to ei
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.collection.ColorCollection
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```
 
 ## ColorDecision
@@ -42,18 +36,12 @@ ColorDecision's are normally found only within {class}`~cdl_convert.collection.C
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.decision.ColorDecision
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```
 
 ## ColorCorrectionRef
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.decision.ColorCorrectionRef
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```
 
 ## MediaRef
@@ -66,9 +54,6 @@ Where possible when writing filetypes that don't support {class}`~cdl_convert.de
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.decision.MediaRef
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```
 
 ## SopNode
@@ -83,9 +68,6 @@ Setting any of the sop node values with a single value as in `offset = 5.4` will
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.correction.SopNode
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```
 
 ## SatNode
@@ -96,9 +78,6 @@ This class is meant only to be created by a {class}`~cdl_convert.correction.Colo
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.correction.SatNode
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```
 
 ## Base Classes
@@ -109,9 +88,6 @@ Classes that deal with input and viewer colorspace can subclass from this class 
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.base.AscColorSpaceBase
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```
 
 ### AscDescBase
@@ -120,18 +96,12 @@ Classes that are allowed to have a description field subclass from this class to
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.base.AscDescBase
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```
 
 ### AscXMLBase
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.base.AscXMLBase
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```
 
 ### ColorNodeBase
@@ -140,7 +110,4 @@ This class only exists to be subclassed by {class}`~cdl_convert.correction.SatNo
 
 ```{eval-rst}
 .. autoclass:: cdl_convert.base.ColorNodeBase
-   :members:
-   :undoc-members:
-   :show-inheritance:
 ```

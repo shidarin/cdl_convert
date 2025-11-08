@@ -258,30 +258,6 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     asc-cdl at theasc dot com
     Order of operations is Slope, Offset, Power, then Saturation.
 
-    Class Attributes:
-        members (Dict[str, ColorCorrection]): All ColorCorrection instances
-            indexed by their unique ID.
-
-    Attributes:
-        desc (List[str]): List of description strings. Inherited from 
-            AscDescBase.
-        element (Optional[ElementTree.Element]): XML Element representation. 
-            Inherited from AscXMLBase.
-        file_in (Optional[Path]): Input file path.
-        file_out (Optional[Path]): Output file path.
-        has_sat (bool): True if saturation node exists.
-        has_sop (bool): True if SOP node exists.
-        id (str): Unique identifier for this color correction.
-        input_desc (Optional[str]): Input colorspace description. Inherited 
-            from AscColorSpaceBase.
-        parent (Optional[Any]): Parent ColorCollection or ColorDecision.
-        sat_node (SatNode): Saturation node containing saturation value.
-        sop_node (SopNode): SOP node containing slope, offset, power values.
-        viewing_desc (Optional[str]): Viewing environment description. 
-            Inherited from AscColorSpaceBase.
-        xml (str): Formatted XML string. Inherited from AscXMLBase.
-        xml_root (str): XML string with declaration. Inherited from AscXMLBase.
-
     Example:
         >>> cc = ColorCorrection("shot_001")
         >>> cc.slope = [1.2, 1.1, 1.0]
@@ -291,6 +267,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     """
 
     members: Dict[str, 'ColorCorrection'] = {}
+    """Class-level dictionary tracking all ColorCorrection instances by their 
+    ID. Used to enforce unique IDs and enable lookup of corrections by name.
+    Automatically populated when ColorCorrection instances are created."""
 
     def __init__(self, id: str, input_file: Optional[Union[str, Path]] = None) -> None:  # pylint: disable=W0622
         """Initialize ColorCorrection with unique ID and optional input file.
@@ -729,24 +708,6 @@ class SatNode(ColorNodeBase):
     The SatNode stores the saturation value which is the last operation
     applied in the CDL color correction process.
 
-    Class Attributes:
-        element_names (List[str]): XML element names that map to this class
-            during parsing ('ASC_SAT', 'SATNode', 'SatNode').
-
-    Attributes:
-        desc (List[str]): List of description strings. Inherited from
-            AscDescBase.
-        element (Optional[ElementTree.Element]): XML Element representation. 
-            Inherited from AscXMLBase.
-        parent (ColorCorrection): Parent ColorCorrection instance that
-            created this node.
-        sat (Decimal): Saturation value applied with Rec 709 coefficients.
-            Must be non-negative. Defaults to 1.0 for unity/no correction.
-        xml (str): Formatted XML string representation. Inherited from
-            AscXMLBase.
-        xml_root (str): XML string with declaration header. Inherited from
-            AscXMLBase.
-
     Example:
         >>> cc = ColorCorrection("test")
         >>> cc.sat = 0.8
@@ -757,6 +718,8 @@ class SatNode(ColorNodeBase):
 
     # XML Fields for SatNodes can be one of these names:
     element_names: List[str] = ['ASC_SAT', 'SATNode', 'SatNode']
+    """XML element names that map to this class during parsing
+    ('ASC_SAT', 'SATNode', 'SatNode')."""
 
     def __init__(self, parent: 'ColorCorrection') -> None:
         super(SatNode, self).__init__()
@@ -846,31 +809,6 @@ class SopNode(ColorNodeBase):
     returned as tuples to prevent direct index modification and maintain
     data integrity.
 
-    Class Attributes:
-        element_names (List[str]): XML element names that map to this class
-            during parsing ('ASC_SOP', 'SOPNode', 'SopNode').
-
-    Attributes:
-        desc (List[str]): List of description strings. Inherited from
-            AscDescBase.
-        element (Optional[ElementTree.Element]): XML Element representation. 
-            Inherited from AscXMLBase.
-        parent (ColorCorrection): Parent ColorCorrection instance that created
-            this node.
-        slope (Tuple[Decimal, Decimal, Decimal]): RGB slope values that change
-            the slope of the input without shifting the black level established
-            by offset. Must be non-negative. Default: (1.0, 1.0, 1.0).
-        offset (Tuple[Decimal, Decimal, Decimal]): RGB offset values that raise
-            or lower input brightness while holding slope constant. Can be
-            negative. Default: (0.0, 0.0, 0.0).
-        power (Tuple[Decimal, Decimal, Decimal]): RGB power values that change
-            the response curve. Note this has opposite response to traditional
-            gamma. Must be non-negative. Default: (1.0, 1.0, 1.0).
-        xml (str): Formatted XML string representation. Inherited from
-            AscXMLBase.
-        xml_root (str): XML string with declaration header. Inherited from
-            AscXMLBase.
-
     Example:
         >>> cc = ColorCorrection("test")
         >>> cc.slope = [1.2, 1.1, 1.0]
@@ -882,6 +820,8 @@ class SopNode(ColorNodeBase):
 
     # XML Fields for SopNodes can be one of these names:
     element_names: List[str] = ['ASC_SOP', 'SOPNode', 'SopNode']
+    """XML element names that map to this class during parsing 
+    ('ASC_SOP', 'SOPNode', 'SopNode')."""
 
     def __init__(self, parent: 'ColorCorrection') -> None:
         super(SopNode, self).__init__()

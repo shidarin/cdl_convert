@@ -76,48 +76,18 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     ColorDecisionList (.cdl) XML formats. It inherits description, colorspace,
     and XML functionality from base classes.
 
-    Class Attributes:
-        members (List[ColorCollection]): All ColorCollection instances are
-            tracked in this list. Used for generating default filenames when 
-            no input file is set.
-
-    Attributes:
-        all_children (List[Union[ColorCorrection, ColorDecision]]): Combined 
-            list of all ColorCorrection and ColorDecision children.
-        color_corrections (List[ColorCorrection]): List of ColorCorrection
-            children.
-        color_decisions (List[ColorDecision]): List of ColorDecision children.
-        desc (List[str]): List of description strings. Inherited from
-            AscDescBase.
-        element (Optional[ElementTree.Element]): XML Element representation. 
-            Inherited from AscXMLBase.
-        file_in (Optional[Path]): Input file path used to create this 
-            collection.
-        file_out (Optional[Path]): Output file path for writing this 
-            collection.
-        input_desc (Optional[str]): Input colorspace description. Inherited
-            from AscColorSpaceBase.
-        is_ccc (bool): True if collection type is set to 'ccc'.
-        is_cdl (bool): True if collection type is set to 'cdl'.
-        type (str): Collection type, either 'ccc' or 'cdl'. Determines export
-            format.
-        viewing_desc (Optional[str]): Viewing environment description.
-            Inherited from AscColorSpaceBase.
-        xml (str): Formatted XML string representation. Inherited from
-            AscXMLBase.
-        xml_root (str): XML string with declaration header. Inherited from
-            AscXMLBase.
-        xmlns (str): XML namespace for ASC CDL schema version.
-
     Example:
         >>> collection = ColorCollection()
         >>> cc = ColorCorrection("shot_001")
         >>> collection.append_child(cc)
         >>> collection.set_to_ccc()
         >>> print(collection.type)  # 'ccc'
+
     """
 
     members: List['ColorCollection'] = []
+    """All ColorCollection instances are tracked in this list. Used for 
+    generating default filenames when no input file is set."""
 
     def __init__(self, input_file: Optional[Union[str, Path]] = None) -> None:
         super(ColorCollection, self).__init__()

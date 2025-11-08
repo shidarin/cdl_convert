@@ -22,7 +22,7 @@ When filing an issue, please include:
 6. **Actual Behavior** - What actually happened
 
 Example:
-```bash
+```
 $ cdl_convert --version
 cdl_convert 1.0.0
 

@@ -61,6 +61,7 @@ class CDLFormat(Enum):
     CDL = "cdl"
     EDL = "edl"
     FLEX = "flex"
+    OTIO = "otio"
     RCDL = "rcdl"
 
 
@@ -75,28 +76,25 @@ class Config:
     
     This class contains all global configuration settings with proper type
     hints and validation.
-    
-    Attributes:
-        halt_on_error: If True, exceptions are raised instead of being handled
-                      with default behavior. Used for strict validation mode.
-        collection_formats: Set of formats that represent ColorCollection
-            objects.
-        single_formats: Set of formats that represent single ColorCorrection
-            objects.
 
     """
     halt_on_error: bool = False
+    """If True, exceptions are raised instead of being handled with default 
+    behavior. Used for strict validation mode."""
     collection_formats: FrozenSet[CDLFormat] = frozenset({
         CDLFormat.ALE,
         CDLFormat.CCC,
         CDLFormat.CDL,
         CDLFormat.EDL,
-        CDLFormat.FLEX
+        CDLFormat.FLEX,
+        CDLFormat.OTIO
     })
+    """Set of formats that represent ColorCollection objects."""
     single_formats: FrozenSet[CDLFormat] = frozenset({
         CDLFormat.CC,
         CDLFormat.RCDL
     })
+    """Set of formats that represent single ColorCorrection objects."""
     
     def is_collection_format(self, format_type: str) -> bool:
         """Check if a format string represents a collection format.

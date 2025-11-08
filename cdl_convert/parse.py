@@ -460,20 +460,15 @@ def parse_cmx(input_file: Union[str, Path]) -> collection.ColorCollection:
     """Parse CMX EDL file for ASC CDL color correction information using OTIO.
     
     Parses a CMX Edit Decision List file to extract ASC CDL color correction
-    data embedded as *ASC_SOP and *ASC_SAT comments. This function uses the
-    OpenTimelineIO otio-cmx3600-adapter for EDL parsing and timeline structure
-    handling
+    data embedded as ``*ASC_SOP`` and ``*ASC_SAT`` comments. This function uses
+    the OpenTimelineIO otio-cmx3600-adapter for EDL parsing and timeline
+    structure handling.
     
-    CDL data appears in CMX EDL files as comment lines following edit entries:
+    CDL data appears in CMX EDL files as comment lines following edit entries::
 
-    ASC_SOP (slope_r slope_g slope_b)(offset_r offset_g offset_b)(power_r power_g power_b)
-    ASC_SAT saturation_value
-    
-    ```
-    001  DS0010.bg1 V     C     00:08:07:23 00:08:16:10 01:00:00:00 01:00:08:11
-    *ASC_SOP (1.45 1.22 1.15)(-0.14 -0.11 -0.11)(1.00 1.00 1.00)
-    *ASC_SAT 0.773000
-    ```
+        001  DS0010.bg1 V     C     00:08:07:23 00:08:16:10 01:00:00:00 01:00:08:11
+        *ASC_SOP (1.45 1.22 1.15)(-0.14 -0.11 -0.11)(1.00 1.00 1.00)
+        *ASC_SAT 0.773000
     
     Args:
         input_file (Union[str, Path]): File path to CMX EDL file to parse.
