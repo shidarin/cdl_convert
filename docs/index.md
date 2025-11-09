@@ -40,7 +40,7 @@ Unofficial Formats:
 
 `cdl_convert` supports parsing ALE, FLEx, CC, CCC, CDL, CMX EDL, OTIO, and RCDL. We can write out CC, CCC, CDL and RCDL.
 
-`cdl_convert` uses the Academy Software Foundation's [OpenTimelineIO](https://github.com/PixarAnimationStudios/OpenTimelineIO) project for reading ALE, CMX, and OTIO files. This dependency was added because OTIO provides robust EDL parsing with much better compatibility.
+`cdl_convert` uses the Academy Software Foundation's [OpenTimelineIO](https://github.com/AcademySoftwareFoundation/OpenTimelineIO) project for reading ALE, CMX, and OTIO files. This dependency was added because OTIO provides robust EDL parsing with much better compatibility.
 
 **cdl_convert is not associated with the American Society of Cinematographers**
 

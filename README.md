@@ -54,7 +54,7 @@ This version of `cdl_convert` has been modernized with:
 - **Context managers** for safe resource management
 - **Match statements** for cleaner control flow
 
-`cdl_convert` uses the Academy Software Foundation's [OpenTimelineIO](https://github.com/PixarAnimationStudios/OpenTimelineIO) project for reading ALE, CMX, and OTIO files.
+`cdl_convert` uses the Academy Software Foundation's [OpenTimelineIO](https://github.com/AcademySoftwareFoundation/OpenTimelineIO) project for reading ALE, CMX, and OTIO files.
 
 **cdl_convert is not associated with the American Society of Cinematographers**
 

@@ -7,19 +7,17 @@ REQUIREMENTS:
 mock
 """
 
-#==============================================================================
+# ==============================================================================
 # IMPORTS
-#==============================================================================
+# ==============================================================================
 
 # Standard Imports
-from decimal import Decimal
-from unittest import mock
 import os
-from pathlib import Path
 import sys
 import tempfile
 import unittest
-from xml.etree import ElementTree
+from pathlib import Path
+from unittest import mock
 
 # Grab our test's path and append the cdL_convert root directory
 
@@ -30,14 +28,14 @@ from xml.etree import ElementTree
 # 4) Joining
 # 5) Appending to our Python path.
 
-sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
+sys.path.append("/".join(os.path.realpath(__file__).split("/")[:-2]))
 
 import cdl_convert
 from cdl_convert.exceptions import CDLConvertError
 
-#==============================================================================
+# ==============================================================================
 # GLOBALS
-#==============================================================================
+# ==============================================================================
 
 # parse_ccc ===================================================================
 
@@ -519,50 +517,49 @@ CCC_BAD_TAG = r"""<?xml version="1.0" encoding="UTF-8"?>
 
 # misc ========================================================================
 
-UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-LOWER = 'abcdefghijklmnopqrstuvwxyz'
+UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+LOWER = "abcdefghijklmnopqrstuvwxyz"
 
 
-
-#==============================================================================
+# ==============================================================================
 # TEST CLASSES
-#==============================================================================
+# ==============================================================================
 
 
 class TestParseCCCFull(unittest.TestCase):
     """Tests a full CCC parse"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.desc = [
-            'CCC description 1',
-            'CCC description 2',
-            'CCC description 3',
-            'CCC description 4'
+            "CCC description 1",
+            "CCC description 2",
+            "CCC description 3",
+            "CCC description 4",
         ]
-        self.input_desc = 'CCC Input Desc Text'
-        self.viewing_desc = 'CCC Viewing Desc Text'
+        self.input_desc = "CCC Input Desc Text"
+        self.viewing_desc = "CCC Viewing Desc Text"
         self.color_correction_ids = [
-            '014_xf_seqGrade_v01',
-            'f51.200',
-            'f55.100',
-            'f54.112',
-            'burp_100.x12',
-            'burp_200.x15',
-            'burp_300.x35'
+            "014_xf_seqGrade_v01",
+            "f51.200",
+            "f55.100",
+            "f54.112",
+            "burp_100.x12",
+            "burp_200.x15",
+            "burp_300.x35",
         ]
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CCC_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.node = cdl_convert.parse_ccc(self.filename)
 
-    #==========================================================================
+    # ==========================================================================
 
     def tearDown(self):
         # The system should clean these up automatically,
@@ -572,89 +569,71 @@ class TestParseCCCFull(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.reset_all()
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def test_file_in(self):
         """Tests that the input_file has been set to the file in value"""
-        self.assertEqual(
-            Path(self.filename).resolve(),
-            self.node.file_in
-        )
+        self.assertEqual(Path(self.filename).resolve(), self.node.file_in)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_type(self):
         """Makes sure type is still set to ccc"""
-        self.assertEqual(
-            'ccc',
-            self.node.type
-        )
+        self.assertEqual("ccc", self.node.type)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_descs(self):
         """Tests that the desc fields have been set correctly"""
-        self.assertEqual(
-            self.desc,
-            self.node.desc
-        )
+        self.assertEqual(self.desc, self.node.desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_viewing_desc(self):
         """Tests that the viewing desc has been set correctly"""
-        self.assertEqual(
-            self.viewing_desc,
-            self.node.viewing_desc
-        )
+        self.assertEqual(self.viewing_desc, self.node.viewing_desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_input_desc(self):
         """Tests that the input desc has been set correctly"""
-        self.assertEqual(
-            self.input_desc,
-            self.node.input_desc
-        )
+        self.assertEqual(self.input_desc, self.node.input_desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_parse_results(self):
         """Tests that the parser picked up all the cc's"""
         id_list = [i.id for i in self.node.color_corrections]
-        self.assertEqual(
-            self.color_correction_ids,
-            id_list
-        )
+        self.assertEqual(self.color_correction_ids, id_list)
 
 
 class TestParseCCCOdd(TestParseCCCFull):
     """Tests an odd CCC parse"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.desc = [
-            'CCC description 1',
-            'Raised1 saturation a little!?! ag... \\/Offset',
-            'Raised2 saturation a little!?! ag... \\/Offset',
+            "CCC description 1",
+            "Raised1 saturation a little!?! ag... \\/Offset",
+            "Raised2 saturation a little!?! ag... \\/Offset",
         ]
         self.input_desc = None
         self.viewing_desc = None
         self.color_correction_ids = [
-            '014_xf_seqGrade_v01',
-            'f51.200',
-            'f55.100',
-            'f54.112',
-            'burp_200.x15',
+            "014_xf_seqGrade_v01",
+            "f51.200",
+            "f55.100",
+            "f54.112",
+            "burp_200.x15",
         ]
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CCC_ODD.encode("utf-8"))
             self.filename = f.name
 
@@ -664,9 +643,9 @@ class TestParseCCCOdd(TestParseCCCFull):
 class TestParseCCCExceptions(unittest.TestCase):
     """Tests that we run into the correct exceptions with bad XMLs"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.filename = None
@@ -676,15 +655,15 @@ class TestParseCCCExceptions(unittest.TestCase):
             os.remove(self.filename)
         cdl_convert.reset_all()
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def testBadTag(self):
         """Tests that a bad root tag raises a ValueError"""
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CCC_BAD_TAG.encode("utf-8"))
             self.filename = f.name
 
@@ -694,17 +673,19 @@ class TestParseCCCExceptions(unittest.TestCase):
             self.filename,
         )
 
-    #==========================================================================
+    # ==========================================================================
 
     def testEmptyCCC(self):
         """Tests that an empty CCC file raises a ValueError"""
 
-        emptyCCC = ('<?xml version="1.0" encoding="UTF-8"?>\n'
-                    '<ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">\n'
-                    '</ColorCorrectionCollection>')
+        emptyCCC = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">\n'
+            "</ColorCorrectionCollection>"
+        )
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(emptyCCC.encode("utf-8"))
             self.filename = f.name
 
@@ -722,79 +703,75 @@ class TestWriteCCCFull(unittest.TestCase):
     working.
 
     """
-    #==========================================================================
+
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CCC_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.ccc = cdl_convert.parse_ccc(self.filename)
 
         self.target_xml_root = CCC_FULL_WRITE
-        self.target_xml = '\n'.join(CCC_FULL_WRITE.split('\n')[1:])
+        self.target_xml = "\n".join(CCC_FULL_WRITE.split("\n")[1:])
 
-    #==========================================================================
+    # ==========================================================================
 
     def tearDown(self):
         os.remove(self.filename)
         cdl_convert.reset_all()
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def test_root_xml(self):
         """Tests that root_xml returns the full XML as expected"""
-        self.assertEqual(
-            self.target_xml_root,
-            self.ccc.xml_root
-        )
+        self.assertEqual(self.target_xml_root, self.ccc.xml_root)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_base_xml(self):
         """Tests that the xml atrib returns the XML minus root as expected"""
-        self.assertEqual(
-            self.target_xml,
-            self.ccc.xml
-        )
+        self.assertEqual(self.target_xml, self.ccc.xml)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_element(self):
         """Tests that the element returned is an etree type"""
-        self.assertEqual(
-            'ColorCorrectionCollection',
-            self.ccc.element.tag
-        )
+        self.assertEqual("ColorCorrectionCollection", self.ccc.element.tag)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_write(self):
         """Tests writing the ccc itself"""
         mockOpen = mock.mock_open()
 
-        self.ccc._file_out = 'bobs_big_file.ccc'
+        self.ccc._file_out = "bobs_big_file.ccc"
 
-        with mock.patch('builtins.open', mockOpen, create=True):
+        with mock.patch("builtins.open", mockOpen, create=True):
             cdl_convert.write_ccc(self.ccc)
 
-        mockOpen.assert_called_once_with('bobs_big_file.ccc', 'w', encoding='utf-8')
+        mockOpen.assert_called_once_with(
+            "bobs_big_file.ccc", "w", encoding="utf-8"
+        )
 
         mockOpen().write.assert_called_once_with(self.target_xml_root)
 
     def test_write_oserror_raises_cdlconverterror(self):
         """Tests that OSError during write raises CDLConvertError"""
-        self.ccc._file_out = 'invalid_path/bobs_big_file.ccc'
+        self.ccc._file_out = "invalid_path/bobs_big_file.ccc"
 
-        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
+        with mock.patch(
+            "builtins.open", side_effect=OSError("Permission denied")
+        ):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_ccc(self.ccc)
-            
+
             self.assertIn("Failed to write CCC file", str(cm.exception))
             self.assertIn("invalid_path/bobs_big_file.ccc", str(cm.exception))
             self.assertIn("Permission denied", str(cm.exception))
@@ -807,13 +784,14 @@ class TestWriteCCCFullAsCDL(TestWriteCCCFull):
     working.
 
     """
-    #==========================================================================
+
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CCC_FULL.encode("utf-8"))
             self.filename = f.name
 
@@ -821,40 +799,41 @@ class TestWriteCCCFullAsCDL(TestWriteCCCFull):
         self.ccc.set_to_cdl()
 
         self.target_xml_root = CCC_FULL_WRITE_CDL
-        self.target_xml = '\n'.join(CCC_FULL_WRITE_CDL.split('\n')[1:])
+        self.target_xml = "\n".join(CCC_FULL_WRITE_CDL.split("\n")[1:])
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_element(self):
         """Tests that the element returned is an etree type"""
-        self.assertEqual(
-            'ColorDecisionList',
-            self.ccc.element.tag
-        )
+        self.assertEqual("ColorDecisionList", self.ccc.element.tag)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_write(self):
         """Tests writing the ccc itself"""
         mockOpen = mock.mock_open()
 
-        self.ccc._file_out = 'bobs_big_file.cdl'
+        self.ccc._file_out = "bobs_big_file.cdl"
 
-        with mock.patch('builtins.open', mockOpen, create=True):
+        with mock.patch("builtins.open", mockOpen, create=True):
             cdl_convert.write_cdl(self.ccc)
 
-        mockOpen.assert_called_once_with('bobs_big_file.cdl', 'w', encoding='utf-8')
+        mockOpen.assert_called_once_with(
+            "bobs_big_file.cdl", "w", encoding="utf-8"
+        )
 
         mockOpen().write.assert_called_once_with(self.target_xml_root)
 
     def test_write_oserror_raises_cdlconverterror(self):
         """Tests that OSError during write raises CDLConvertError"""
-        self.ccc._file_out = 'invalid_path/bobs_big_file.cdl'
+        self.ccc._file_out = "invalid_path/bobs_big_file.cdl"
 
-        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
+        with mock.patch(
+            "builtins.open", side_effect=OSError("Permission denied")
+        ):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_cdl(self.ccc)
-            
+
             self.assertIn("Failed to write CDL file", str(cm.exception))
             self.assertIn("invalid_path/bobs_big_file.cdl", str(cm.exception))
             self.assertIn("Permission denied", str(cm.exception))
@@ -867,22 +846,23 @@ class TestWriteCCCOdd(TestWriteCCCFull):
     working.
 
     """
-    #==========================================================================
+
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         cdl_convert.reset_all()
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CCC_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.ccc = cdl_convert.parse_ccc(self.filename)
 
         self.target_xml_root = CCC_ODD_WRITE
-        self.target_xml = '\n'.join(CCC_ODD_WRITE.split('\n')[1:])
+        self.target_xml = "\n".join(CCC_ODD_WRITE.split("\n")[1:])
 
 
 class TestWriteCCCOddAsCDL(TestWriteCCCFullAsCDL):
@@ -892,13 +872,14 @@ class TestWriteCCCOddAsCDL(TestWriteCCCFullAsCDL):
     working.
 
     """
-    #==========================================================================
+
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CCC_ODD.encode("utf-8"))
             self.filename = f.name
 
@@ -906,10 +887,11 @@ class TestWriteCCCOddAsCDL(TestWriteCCCFullAsCDL):
         self.ccc.set_to_cdl()
 
         self.target_xml_root = CCC_ODD_WRITE_CDL
-        self.target_xml = '\n'.join(CCC_ODD_WRITE_CDL.split('\n')[1:])
+        self.target_xml = "\n".join(CCC_ODD_WRITE_CDL.split("\n")[1:])
 
-#==============================================================================
+
+# ==============================================================================
 # RUNNER
-#==============================================================================
-if __name__ == '__main__':
+# ==============================================================================
+if __name__ == "__main__":
     unittest.main()

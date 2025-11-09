@@ -2,7 +2,7 @@
 """CDL Convert Color Correction Module
 
 This module contains the core ColorCorrection class and supporting node classes
-that form the backbone of CDL Convert. 
+that form the backbone of CDL Convert.
 
 Classes:
     ColorValues: Dataclass for structured color correction data.
@@ -19,15 +19,12 @@ Example Usage:
     >>> from pathlib import Path
     >>> from decimal import Decimal
     >>> from cdl_convert import ColorCorrection, ColorValues
-    >>> 
     >>> cc = ColorCorrection("shot_001", input_file=Path("input.ale"))
     >>> cc.slope = [1.2, 1.1, 1.0]
     >>> cc.sat = 0.9
-    >>> 
     >>> # Use the ColorValues dataclass
     >>> values = cc.get_color_values()
     >>> print(f"Is unity: {values.is_unity()}")
-    >>> 
     >>> # Enhanced error handling
     >>> try:
     ...     cc.slope = [-1.0, 1.0, 1.0]  # Negative slope
@@ -67,23 +64,24 @@ SOFTWARE.
 # ==============================================================================
 
 
-
 # Standard Imports
 
+import re
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-import re
-from typing import Dict, List, Optional, Union, Tuple, Any, cast
+from typing import Any, cast
 from xml.etree import ElementTree
 
 # cdl_convert imports
-
-from .base import AscColorSpaceBase, AscDescBase, AscXMLBase, ColorNodeBase
-from . import config
-from .exceptions import ValidationError
-
-
+from cdl_convert import config
+from cdl_convert.base import (
+    AscColorSpaceBase,
+    AscDescBase,
+    AscXMLBase,
+    ColorNodeBase,
+)
+from cdl_convert.exceptions import ValidationError
 
 # ==============================================================================
 # DATACLASSES
@@ -93,34 +91,34 @@ from .exceptions import ValidationError
 @dataclass
 class ColorValues:
     """Container for ASC CDL color correction values with validation.
-    
+
     This dataclass provides a structured way to store and validate the 10
     ASC CDL color correction numbers. Values are automatically validated during
     initialization to ensure they conform to CDL requirements.
-    
+
     Attributes:
-        slope (Tuple[Decimal, Decimal, Decimal]): RGB slope values. Must be 
+        slope (Tuple[Decimal, Decimal, Decimal]): RGB slope values. Must be
             non-negative. Defaults to (1.0, 1.0, 1.0) for unity.
-        offset (Tuple[Decimal, Decimal, Decimal]): RGB offset values. Can be 
+        offset (Tuple[Decimal, Decimal, Decimal]): RGB offset values. Can be
             negative. Defaults to (0.0, 0.0, 0.0) for unity.
-        power (Tuple[Decimal, Decimal, Decimal]): RGB power values. Must be 
+        power (Tuple[Decimal, Decimal, Decimal]): RGB power values. Must be
             non-negative. Defaults to (1.0, 1.0, 1.0) for unity.
-        saturation (Decimal): Saturation value. Must be non-negative. 
+        saturation (Decimal): Saturation value. Must be non-negative.
             Defaults to 1.0 for unity.
 
     Example:
         >>> # Create with default unity values
         >>> values = ColorValues()
         >>> print(values.is_unity())  # True
-        
+
         >>> # Create with custom values
         >>> from decimal import Decimal
         >>> values = ColorValues(
-        ...     slope=(Decimal('1.2'), Decimal('1.1'), Decimal('1.0')),
-        ...     saturation=Decimal('0.9')
+        ...     slope=(Decimal("1.2"), Decimal("1.1"), Decimal("1.0")),
+        ...     saturation=Decimal("0.9"),
         ... )
         >>> print(f"Slope: {values.slope}")
-        
+
         >>> # Validation occurs automatically during initialization
         >>> try:
         ...     ColorValues(slope=(-1.0, 1.0, 1.0))  # Negative slope
@@ -133,23 +131,36 @@ class ColorValues:
             or invalid data types.
 
     """
-    slope: Tuple[Decimal, Decimal, Decimal] = (Decimal('1.0'), Decimal('1.0'), Decimal('1.0'))
-    offset: Tuple[Decimal, Decimal, Decimal] = (Decimal('0.0'), Decimal('0.0'), Decimal('0.0'))
-    power: Tuple[Decimal, Decimal, Decimal] = (Decimal('1.0'), Decimal('1.0'), Decimal('1.0'))
-    saturation: Decimal = Decimal('1.0')
-    
+
+    slope: tuple[Decimal, Decimal, Decimal] = (
+        Decimal("1.0"),
+        Decimal("1.0"),
+        Decimal("1.0"),
+    )
+    offset: tuple[Decimal, Decimal, Decimal] = (
+        Decimal("0.0"),
+        Decimal("0.0"),
+        Decimal("0.0"),
+    )
+    power: tuple[Decimal, Decimal, Decimal] = (
+        Decimal("1.0"),
+        Decimal("1.0"),
+        Decimal("1.0"),
+    )
+    saturation: Decimal = Decimal("1.0")
+
     def __post_init__(self) -> None:
         """Validate values after initialization."""
         self._validate_values()
-    
+
     def _validate_values(self) -> None:
         """Validate all color correction values according to CDL requirements.
-        
+
         Checks that RGB tuples contain exactly 3 values, that slope and power
         values are non-negative, and that saturation is non-negative.
         Validation behavior depends on the global halt_on_error configuration
         setting.
-        
+
         Raises:
             ValidationError: If any values fail validation checks, including
                 incorrect tuple lengths, negative slope/power values, or
@@ -157,42 +168,46 @@ class ColorValues:
 
         """
         # Validate RGB tuples have exactly 3 values
-        for name, values in [('slope', self.slope), ('offset', self.offset), ('power', self.power)]:
+        for name, values in [
+            ("slope", self.slope),
+            ("offset", self.offset),
+            ("power", self.power),
+        ]:
             if len(values) != 3:
                 raise ValidationError(
-                    f'Invalid {name} values: expected 3 RGB values, got {len(values)}. '
-                    f'Provided values: {values}. '
-                    f'{name.title()} must specify exactly 3 values for Red, Green, and Blue channels.'
+                    f"Invalid {name} values: expected 3 RGB values, got {len(values)}. "
+                    f"Provided values: {values}. "
+                    f"{name.title()} must specify exactly 3 values for Red, Green, and Blue channels."
                 )
-        
+
         # Validate that slope and power values are non-negative
-        for name, values in [('slope', self.slope), ('power', self.power)]:
+        for name, values in [("slope", self.slope), ("power", self.power)]:
             for i, value in enumerate(values):
                 if value < 0:
                     if config.config.halt_on_error:
-                        channel = ['Red', 'Green', 'Blue'][i]
+                        channel = ["Red", "Green", "Blue"][i]
                         raise ValidationError(
-                            f'Invalid {name} value for {channel} channel: {value}. '
-                            f'{name.title()} values must be non-negative (>= 0).'
+                            f"Invalid {name} value for {channel} channel: {value}. "
+                            f"{name.title()} values must be non-negative (>= 0)."
                         )
-        
+
         # Validate saturation is non-negative
         if self.saturation < 0:
             if config.config.halt_on_error:
                 raise ValidationError(
-                    f'Invalid saturation value: {self.saturation}. '
-                    f'Saturation must be non-negative (>= 0).'
+                    f"Invalid saturation value: {self.saturation}. "
+                    f"Saturation must be non-negative (>= 0)."
                 )
-    
-    def to_unity(self) -> 'ColorValues':
+
+    def to_unity(self) -> "ColorValues":
         """Return a new ColorValues instance with unity/identity values.
-        
+
         Unity values represent no color correction applied:
         slope=1.0, offset=0.0, power=1.0, saturation=1.0.
-        
+
         Returns:
             ColorValues: A new instance with all values set to unity defaults.
-                
+
         Example:
             >>> unity = ColorValues().to_unity()
             >>> print(unity.slope)
@@ -200,31 +215,33 @@ class ColorValues:
 
         """
         return ColorValues()
-    
+
     def is_unity(self) -> bool:
         """Check if all values are at unity/identity (no correction applied).
-        
+
         Unity values represent no color correction: slope=1.0, offset=0.0,
         power=1.0, saturation=1.0. This is useful for determining if a
         ColorCorrection actually applies any changes.
-        
+
         Returns:
             bool: True if all values are at unity (no correction applied),
                 False if any values differ from unity defaults.
-                
+
         Example:
             >>> unity_values = ColorValues()
             >>> print(unity_values.is_unity())  # True
-            
-            >>> modified_values = ColorValues(saturation=Decimal('0.8'))
+
+            >>> modified_values = ColorValues(saturation=Decimal("0.8"))
             >>> print(modified_values.is_unity())  # False
 
         """
         unity = self.to_unity()
-        return (self.slope == unity.slope and 
-                self.offset == unity.offset and 
-                self.power == unity.power and 
-                self.saturation == unity.saturation)
+        return (
+            self.slope == unity.slope
+            and self.offset == unity.offset
+            and self.power == unity.power
+            and self.saturation == unity.saturation
+        )
 
 
 # ==============================================================================
@@ -232,10 +249,10 @@ class ColorValues:
 # ==============================================================================
 
 __all__ = [
-    'ColorCorrection',
-    'ColorValues',
-    'SatNode',
-    'SopNode',
+    "ColorCorrection",
+    "ColorValues",
+    "SatNode",
+    "SopNode",
 ]
 
 # ==============================================================================
@@ -266,18 +283,18 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     """
 
-    members: Dict[str, 'ColorCorrection'] = {}
-    """Class-level dictionary tracking all ColorCorrection instances by their 
+    members: dict[str, "ColorCorrection"] = {}
+    """Class-level dictionary tracking all ColorCorrection instances by their
     ID. Used to enforce unique IDs and enable lookup of corrections by name.
     Automatically populated when ColorCorrection instances are created."""
 
-    def __init__(self, id: str, input_file: Optional[Union[str, Path]] = None) -> None:  # pylint: disable=W0622
+    def __init__(self, id: str, input_file: str | Path | None = None) -> None:  # pylint: disable=W0622
         """Initialize ColorCorrection with unique ID and optional input file.
-        
+
         The ID must be unique among all ColorCorrection instances. If a
         duplicate ID is provided, behavior depends on the halt_on_error
         configuration setting.
-        
+
         Args:
             id (str): Unique identifier for this color correction. Often a shot
                 or sequence name. Will be sanitized to remove invalid
@@ -285,58 +302,60 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             input_file (Optional[Union[str, Path]]): Optional path to the input
                 file used to create this ColorCorrection. Can be string or
                 Path.
-                
+
         Raises:
             ValidationError: If ID is empty or duplicate (when halt_on_error is
                 enabled).
 
         """
-        super(ColorCorrection, self).__init__()
+        super().__init__()
 
         # File Attributes
-        self._file_in: Optional[Path] = Path(input_file).resolve() if input_file else None
-        self._file_out: Optional[Path] = None
+        self._file_in: Path | None = (
+            Path(input_file).resolve() if input_file else None
+        )
+        self._file_out: Path | None = None
 
         # If we're under a ColorCorrectionCollection or ColorDecision node:
-        self.parent: Optional[Any] = None
+        self.parent: Any | None = None
 
         # The id is really the only required part of a ColorCorrection node
         # Each ID should be unique
         id = _sanitize(id)
         if id in ColorCorrection.members.keys():
             if config.config.halt_on_error:
-                existing_ids = list(ColorCorrection.members.keys())
+                list(ColorCorrection.members.keys())
                 raise ValidationError(
                     f'Duplicate ColorCorrection ID: "{id}" is already registered. '
-                    f'Each ColorCorrection must have a unique ID.'
+                    f"Each ColorCorrection must have a unique ID."
                 )
             else:
-                id = f'{id}{len([cc for cc in ColorCorrection.members if cc.startswith(id)]):0>3}'
+                id = f"{id}{len([cc for cc in ColorCorrection.members if cc.startswith(id)]):0>3}"
         elif not id:
             if config.config.halt_on_error:
                 raise ValidationError(
-                    'Empty ColorCorrection ID provided. '
-                    'ColorCorrections require a non-empty ID for identification.'
+                    "Empty ColorCorrection ID provided. "
+                    "ColorCorrections require a non-empty ID for identification."
                 )
             else:
-                id = str(len(ColorCorrection.members) + 1).rjust(3, '0')
+                id = str(len(ColorCorrection.members) + 1).rjust(3, "0")
         self._id = id
 
         # Register with member dictionary
         ColorCorrection.members[self._id] = self
 
         # ASC_SAT attribute
-        self._sat_node: Optional['SatNode'] = None
+        self._sat_node: SatNode | None = None
 
         # ASC_SOP attributes
-        self._sop_node: Optional['SopNode'] = None
+        self._sop_node: SopNode | None = None
 
     # Properties ==============================================================
 
     @property
-    def file_in(self) -> Optional[Path]:
+    def file_in(self) -> Path | None:
         """Return absolute path to the input file.
-        
+
         Returns:
             Optional[Path]: Absolute path to input file, or None if no
                 file was specified.
@@ -345,9 +364,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return self._file_in
 
     @file_in.setter
-    def file_in(self, value: Optional[Union[str, Path]]) -> None:
+    def file_in(self, value: str | Path | None) -> None:
         """Set input file path, converting to absolute path.
-        
+
         Args:
             value (Optional[Union[str, Path]]): File path as string or Path
                 object. Will be converted to absolute path. None clears the
@@ -358,9 +377,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             self._file_in = Path(value).resolve()
 
     @property
-    def file_out(self) -> Optional[Path]:
+    def file_out(self) -> Path | None:
         """Return output file path for writing this ColorCorrection.
-        
+
         Returns:
             Optional[Path]: Path where this ColorCorrection will be written,
                 or None if no output path has been set.
@@ -371,7 +390,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def has_sat(self) -> bool:
         """Return True if saturation node has been created.
-        
+
         Returns:
             bool: True if a SatNode instance exists, False otherwise.
 
@@ -384,7 +403,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def has_sop(self) -> bool:
         """Return True if SOP (slope/offset/power) node has been created.
-        
+
         Returns:
             bool: True if a SopNode instance exists, False otherwise.
 
@@ -397,7 +416,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def id(self) -> str:  # pylint: disable=C0103
         """Return unique identifier for this color correction.
-        
+
         Returns:
             str: Unique ID string, often a shot or sequence name.
 
@@ -407,11 +426,11 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @id.setter
     def id(self, value: str) -> None:  # pylint: disable=C0103
         """Set unique identifier after checking for duplicates.
-        
+
         Args:
             value (str): New ID string. Must be unique among all
                 ColorCorrections.
-                
+
         Raises:
             ValidationError: If the new ID already exists in the members
                 dictionary.
@@ -420,12 +439,12 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         self._set_id(value)
 
     @property
-    def offset(self) -> Tuple[Decimal, Decimal, Decimal]:
+    def offset(self) -> tuple[Decimal, Decimal, Decimal]:
         """Return RGB offset values from the SOP node.
-        
+
         Offset values raise or lower input brightness while holding slope
         constant.
-        
+
         Returns:
             Tuple[Decimal, Decimal, Decimal]: RGB offset values as (R, G, B)
                 tuple.
@@ -434,9 +453,17 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return self.sop_node.offset
 
     @offset.setter
-    def offset(self, offset_rgb: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
+    def offset(
+        self,
+        offset_rgb: Decimal
+        | float
+        | int
+        | str
+        | list[Decimal | float | int | str]
+        | tuple[Decimal | float | int | str, ...],
+    ) -> None:
         """Set RGB offset values after validation and conversion.
-        
+
         Args:
             offset_rgb: Single numeric value (applied to all RGB channels) or
                 list/tuple of 3 numeric values for individual RGB channels.
@@ -446,13 +473,13 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         self.sop_node.offset = offset_rgb
 
     @property
-    def power(self) -> Tuple[Decimal, Decimal, Decimal]:
+    def power(self) -> tuple[Decimal, Decimal, Decimal]:
         """Return RGB power values from the SOP node.
-        
+
         Power values change the response curve of the function. Note that this
         has the opposite response to adjustments than a traditional gamma
         operator.
-        
+
         Returns:
             Tuple[Decimal, Decimal, Decimal]: RGB power values as (R, G, B)
                 tuple.
@@ -461,9 +488,17 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return self.sop_node.power
 
     @power.setter
-    def power(self, power_rgb: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
+    def power(
+        self,
+        power_rgb: Decimal
+        | float
+        | int
+        | str
+        | list[Decimal | float | int | str]
+        | tuple[Decimal | float | int | str, ...],
+    ) -> None:
         """Set RGB power values after validation and conversion.
-        
+
         Args:
             power_rgb: Single numeric value (applied to all RGB channels) or
                 list/tuple of 3 numeric values for individual RGB channels.
@@ -474,9 +509,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         self.sop_node.power = power_rgb
 
     @property
-    def sat_node(self) -> 'SatNode':
+    def sat_node(self) -> "SatNode":
         """Return SatNode instance, creating one if it doesn't exist.
-        
+
         Returns:
             SatNode: The saturation node containing saturation value and
                 descriptions.
@@ -487,12 +522,12 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return self._sat_node
 
     @property
-    def slope(self) -> Tuple[Decimal, Decimal, Decimal]:
+    def slope(self) -> tuple[Decimal, Decimal, Decimal]:
         """Return RGB slope values from the SOP node.
-        
+
         Slope values change the slope of the input without shifting the black
         level established by the offset.
-        
+
         Returns:
             Tuple[Decimal, Decimal, Decimal]: RGB slope values as (R, G, B)
                 tuple.
@@ -501,9 +536,17 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return self.sop_node.slope
 
     @slope.setter
-    def slope(self, slope_rgb: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
+    def slope(
+        self,
+        slope_rgb: Decimal
+        | float
+        | int
+        | str
+        | list[Decimal | float | int | str]
+        | tuple[Decimal | float | int | str, ...],
+    ) -> None:
         """Set RGB slope values after validation and conversion.
-        
+
         Args:
             slope_rgb: Single numeric value (applied to all RGB channels) or
                 list/tuple of 3 numeric values for individual RGB channels.
@@ -514,9 +557,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         self.sop_node.slope = slope_rgb
 
     @property
-    def sop_node(self) -> 'SopNode':
+    def sop_node(self) -> "SopNode":
         """Return SopNode instance, creating one if it doesn't exist.
-        
+
         Returns:
             SopNode: The SOP node containing slope, offset, and power values.
         """
@@ -527,7 +570,7 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def sat(self) -> Decimal:
         """Return saturation value from the saturation node.
-        
+
         Returns:
             Decimal
 
@@ -535,9 +578,9 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         return self.sat_node.sat
 
     @sat.setter
-    def sat(self, sat_value: Union[Decimal, float, int, str]) -> None:
+    def sat(self, sat_value: Decimal | float | int | str) -> None:
         """Set saturation value after validation and conversion.
-        
+
         Args:
             sat_value: Saturation value as Decimal, float, int, or numeric
                 string. Must be non-negative.
@@ -549,10 +592,10 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     def _set_id(self, new_id: str) -> None:
         """Change ID after verifying the new ID is unique.
-        
+
         Args:
             new_id (str): New ID string to set.
-            
+
         Raises:
             ValidationError: If the new ID already exists in the members
                 dictionary.
@@ -561,10 +604,10 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         cc_id = _sanitize(new_id)
         # Check if this id is already registered
         if cc_id in ColorCorrection.members.keys():
-            existing_ids = list(ColorCorrection.members.keys())
+            list(ColorCorrection.members.keys())
             raise ValidationError(
                 f'Cannot change ID to "{cc_id}": ID already exists. '
-                f'Each ColorCorrection must have a unique ID. '
+                f"Each ColorCorrection must have a unique ID. "
                 f'Current ID: "{self._id}".'
             )
         else:
@@ -578,42 +621,42 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     def get_color_values(self) -> ColorValues:
         """Get all color correction values as a ColorValues dataclass.
-        
+
         Provides a convenient way to access all color correction values in a
         structured format with validation and utility methods.
-        
+
         Returns:
             ColorValues: Dataclass instance containing current slope, offset,
                 power, and saturation values.
-                
+
         """
         return ColorValues(
             slope=self.slope,
-            offset=self.offset, 
+            offset=self.offset,
             power=self.power,
-            saturation=self.sat
+            saturation=self.sat,
         )
-    
+
     def set_color_values(self, values: ColorValues) -> None:
         """Set all color correction values from a ColorValues dataclass.
-        
+
         Provides a convenient way to set all color correction values at once
         from a validated ColorValues instance.
-        
+
         Args:
             values (ColorValues): ColorValues dataclass instance containing
                 the slope, offset, power, and saturation values to set.
-                
+
         Raises:
             ValidationError: If any values in the ColorValues instance fail
                 validation (e.g., negative slope values).
-                
+
         Example:
             >>> from decimal import Decimal
             >>> cc = ColorCorrection("test_id")
             >>> values = ColorValues(
-            ...     slope=(Decimal('1.2'), Decimal('1.1'), Decimal('1.0')),
-            ...     saturation=Decimal('0.9')
+            ...     slope=(Decimal("1.2"), Decimal("1.1"), Decimal("1.0")),
+            ...     saturation=Decimal("0.9"),
             ... )
             >>> cc.set_color_values(values)
             >>> print(cc.slope)
@@ -623,13 +666,13 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         self.offset = values.offset
         self.power = values.power
         self.sat = values.saturation
-    
+
     def is_unity(self) -> bool:
         """Check if this color correction represents unity/identity values.
-        
+
         Unity values represent no color correction applied. This is useful for
         determining if a ColorCorrection actually modifies the image.
-        
+
         Returns:
             bool: True if all values are at unity (slope=1.0, offset=0.0,
                 power=1.0, saturation=1.0), False otherwise.
@@ -639,25 +682,25 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     def build_element(self) -> ElementTree.Element:
         """Build XML ElementTree Element representing this ColorCorrection.
-        
+
         Creates a ColorCorrection XML element with ID attribute and includes
         any input/viewing descriptions, general descriptions, and
         SOP/SAT nodes.
-        
+
         Returns:
             ElementTree.Element: XML element representing this ColorCorrection.
 
         """
-        cc_xml = ElementTree.Element('ColorCorrection')
-        cc_xml.attrib = {'id': self.id}
+        cc_xml = ElementTree.Element("ColorCorrection")
+        cc_xml.attrib = {"id": self.id}
         if self.input_desc:
-            input_desc = ElementTree.SubElement(cc_xml, 'InputDescription')
+            input_desc = ElementTree.SubElement(cc_xml, "InputDescription")
             input_desc.text = self.input_desc
         if self.viewing_desc:
-            viewing_desc = ElementTree.SubElement(cc_xml, 'ViewingDescription')
+            viewing_desc = ElementTree.SubElement(cc_xml, "ViewingDescription")
             viewing_desc.text = self.viewing_desc
         for description in self.desc:
-            desc = ElementTree.SubElement(cc_xml, 'Description')
+            desc = ElementTree.SubElement(cc_xml, "Description")
             desc.text = description
         # We need to make sure we call the private attributes here, since
         # we don't want to trigger a virgin sop or sat being initialized.
@@ -674,12 +717,12 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def determine_dest(self, output: str, directory: Union[str, Path]) -> None:
+    def determine_dest(self, output: str, directory: str | Path) -> None:
         """Set output file path based on ID and output format.
-        
+
         Constructs the output filename using the ColorCorrection ID and the
         specified output format extension.
-        
+
         Args:
             output (str): File extension for output format (e.g., 'cc', 'ccc').
             directory (Union[str, Path]): Directory path where output file
@@ -696,12 +739,13 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @classmethod
     def reset_members(cls) -> None:
         """Clear the class-level members dictionary.
-        
+
         Removes all ColorCorrection instances from the members dictionary.
         Useful for testing or when starting with a clean state.
 
         """
         cls.members = {}
+
 
 # ==============================================================================
 
@@ -721,22 +765,22 @@ class SatNode(ColorNodeBase):
     """
 
     # XML Fields for SatNodes can be one of these names:
-    element_names: List[str] = ['ASC_SAT', 'SATNode', 'SatNode']
+    element_names: list[str] = ["ASC_SAT", "SATNode", "SatNode"]
     """XML element names that map to this class during parsing
     ('ASC_SAT', 'SATNode', 'SatNode')."""
 
-    def __init__(self, parent: 'ColorCorrection') -> None:
-        super(SatNode, self).__init__()
+    def __init__(self, parent: "ColorCorrection") -> None:
+        super().__init__()
 
-        self._parent: 'ColorCorrection' = parent
-        self._sat: Decimal = Decimal('1.0')
+        self._parent: ColorCorrection = parent
+        self._sat: Decimal = Decimal("1.0")
 
     # Properties ==============================================================
 
     @property
-    def parent(self) -> 'ColorCorrection':
+    def parent(self) -> "ColorCorrection":
         """Return parent ColorCorrection instance that created this SatNode.
-        
+
         Returns:
             ColorCorrection: The ColorCorrection instance that owns this
                 SatNode.
@@ -747,7 +791,7 @@ class SatNode(ColorNodeBase):
     @property
     def sat(self) -> Decimal:
         """Return saturation value.
-        
+
         Returns:
             Decimal: Saturation value applied with Rec 709 coefficients.
 
@@ -755,13 +799,13 @@ class SatNode(ColorNodeBase):
         return self._sat
 
     @sat.setter
-    def sat(self, value: Union[Decimal, float, int, str]) -> None:
+    def sat(self, value: Decimal | float | int | str) -> None:
         """Set saturation value after validation and conversion.
-        
+
         Args:
             value (Union[Decimal, float, int, str]): Saturation value as
                 numeric type or numeric string. Must be non-negative.
-                
+
         Raises:
             ValidationError: If value is not numeric or fails validation
                 checks.
@@ -770,37 +814,38 @@ class SatNode(ColorNodeBase):
         # If given as a string, the string must be convertible to a Decimal
         if type(value) in [Decimal, float, int, str]:
             try:
-                value = self._check_single_value(value, 'saturation')
+                value = self._check_single_value(value, "saturation")
             except (TypeError, ValueError):
                 raise
             else:
                 self._sat = Decimal(value)
         else:
             raise ValidationError(
-                f'Invalid saturation value type: {type(value).__name__}. '
+                f"Invalid saturation value type: {type(value).__name__}. "
                 f'Provided value: "{value}". '
-                f'Saturation must be a numeric value (int, float, str, or Decimal).'
+                f"Saturation must be a numeric value (int, float, str, or Decimal)."
             )
 
     # Public Methods ==========================================================
 
     def build_element(self) -> ElementTree.Element:
         """Build XML ElementTree Element representing this SatNode.
-        
+
         Creates a SATNode XML element containing any descriptions and the
         saturation value.
-        
+
         Returns:
             ElementTree.Element: XML element representing this SatNode.
 
         """
-        sat = ElementTree.Element('SATNode')
+        sat = ElementTree.Element("SATNode")
         for description in self.desc:
-            desc = ElementTree.SubElement(sat, 'Description')
+            desc = ElementTree.SubElement(sat, "Description")
             desc.text = description
-        op_node = ElementTree.SubElement(sat, 'Saturation')
+        op_node = ElementTree.SubElement(sat, "Saturation")
         op_node.text = _de_exponent(self.sat)
         return sat
+
 
 # ==============================================================================
 
@@ -823,25 +868,25 @@ class SopNode(ColorNodeBase):
     """
 
     # XML Fields for SopNodes can be one of these names:
-    element_names: List[str] = ['ASC_SOP', 'SOPNode', 'SopNode']
-    """XML element names that map to this class during parsing 
+    element_names: list[str] = ["ASC_SOP", "SOPNode", "SopNode"]
+    """XML element names that map to this class during parsing
     ('ASC_SOP', 'SOPNode', 'SopNode')."""
 
-    def __init__(self, parent: 'ColorCorrection') -> None:
-        super(SopNode, self).__init__()
+    def __init__(self, parent: "ColorCorrection") -> None:
+        super().__init__()
 
-        self._parent: 'ColorCorrection' = parent
+        self._parent: ColorCorrection = parent
 
-        self._slope: List[Decimal] = [Decimal('1.0')] * 3
-        self._offset: List[Decimal] = [Decimal('0.0')] * 3
-        self._power: List[Decimal] = [Decimal('1.0')] * 3
+        self._slope: list[Decimal] = [Decimal("1.0")] * 3
+        self._offset: list[Decimal] = [Decimal("0.0")] * 3
+        self._power: list[Decimal] = [Decimal("1.0")] * 3
 
     # Properties ==============================================================
 
     @property
-    def parent(self) -> 'ColorCorrection':
+    def parent(self) -> "ColorCorrection":
         """Return parent ColorCorrection instance that created this SopNode.
-        
+
         Returns:
             ColorCorrection: The ColorCorrection instance that owns this
                 SopNode.
@@ -850,44 +895,60 @@ class SopNode(ColorNodeBase):
         return self._parent
 
     @property
-    def slope(self) -> Tuple[Decimal, Decimal, Decimal]:
+    def slope(self) -> tuple[Decimal, Decimal, Decimal]:
         """Return RGB slope values as tuple.
-        
+
         Returns:
             Tuple[Decimal, Decimal, Decimal]: RGB slope values as (R, G, B)
                 tuple. Values change input slope without shifting black level.
 
         """
-        return cast(Tuple[Decimal, Decimal, Decimal], tuple(self._slope))
+        return cast(tuple[Decimal, Decimal, Decimal], tuple(self._slope))
 
     @slope.setter
-    def slope(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
+    def slope(
+        self,
+        value: Decimal
+        | float
+        | int
+        | str
+        | list[Decimal | float | int | str]
+        | tuple[Decimal | float | int | str, ...],
+    ) -> None:
         """Set RGB slope values after validation and conversion.
-        
+
         Args:
             value: Single numeric value (applied to all RGB channels) or
                 list/tuple of 3 numeric values for individual RGB channels.
                 Accepts Decimal, float, int, or numeric string types.
                 Values must be non-negative.
         """
-        self._slope = self._check_setter_value(value, 'slope')
+        self._slope = self._check_setter_value(value, "slope")
 
     @property
-    def offset(self) -> Tuple[Decimal, Decimal, Decimal]:
+    def offset(self) -> tuple[Decimal, Decimal, Decimal]:
         """Return RGB offset values as tuple.
-        
+
         Returns:
             Tuple[Decimal, Decimal, Decimal]: RGB offset values as (R, G, B)
                 tuple. Values raise or lower input brightness while holding
                 slope constant.
 
         """
-        return cast(Tuple[Decimal, Decimal, Decimal], tuple(self._offset))
+        return cast(tuple[Decimal, Decimal, Decimal], tuple(self._offset))
 
     @offset.setter
-    def offset(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
+    def offset(
+        self,
+        value: Decimal
+        | float
+        | int
+        | str
+        | list[Decimal | float | int | str]
+        | tuple[Decimal | float | int | str, ...],
+    ) -> None:
         """Set RGB offset values after validation and conversion.
-        
+
         Args:
             value: Single numeric value (applied to all RGB channels) or
                 list/tuple of 3 numeric values for individual RGB channels.
@@ -895,23 +956,31 @@ class SopNode(ColorNodeBase):
                 Can be negative.
 
         """
-        self._offset = self._check_setter_value(value, 'offset', True)
+        self._offset = self._check_setter_value(value, "offset", True)
 
     @property
-    def power(self) -> Tuple[Decimal, Decimal, Decimal]:
+    def power(self) -> tuple[Decimal, Decimal, Decimal]:
         """Return RGB power values as tuple.
-        
+
         Returns:
             Tuple[Decimal, Decimal, Decimal]: RGB power values as (R, G, B)
                 tuple. Values change response curve with opposite behavior to
                 traditional gamma.
         """
-        return cast(Tuple[Decimal, Decimal, Decimal], tuple(self._power))
+        return cast(tuple[Decimal, Decimal, Decimal], tuple(self._power))
 
     @power.setter
-    def power(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
+    def power(
+        self,
+        value: Decimal
+        | float
+        | int
+        | str
+        | list[Decimal | float | int | str]
+        | tuple[Decimal | float | int | str, ...],
+    ) -> None:
         """Set RGB power values after validation and conversion.
-        
+
         Args:
             value: Single numeric value (applied to all RGB channels) or
                 list/tuple of 3 numeric values for individual RGB channels.
@@ -919,11 +988,17 @@ class SopNode(ColorNodeBase):
                 Values must be non-negative.
 
         """
-        self._power = self._check_setter_value(value, 'power')
+        self._power = self._check_setter_value(value, "power")
 
     # Private Methods =========================================================
 
-    def _check_rgb_values(self, values: Union[List[Union[Decimal, str, float, int]], Tuple[Union[Decimal, str, float, int], ...]], name: str, negative_allow: bool = False) -> List[Decimal]:
+    def _check_rgb_values(
+        self,
+        values: list[Decimal | str | float | int]
+        | tuple[Decimal | str | float | int, ...],
+        name: str,
+        negative_allow: bool = False,
+    ) -> list[Decimal]:
         """Validate list or tuple containing exactly 3 RGB values.
 
         Ensures the provided values list contains exactly 3 numeric values and
@@ -947,19 +1022,17 @@ class SopNode(ColorNodeBase):
         """
         if len(values) != 3:
             raise ValidationError(
-                f'Invalid {name} values: expected 3 RGB values, got {len(values)}. '
-                f'Provided values: {values}. '
-                f'{name.title()} must specify exactly 3 values for Red, Green, and Blue channels.'
+                f"Invalid {name} values: expected 3 RGB values, got {len(values)}. "
+                f"Provided values: {values}. "
+                f"{name.title()} must specify exactly 3 values for Red, Green, and Blue channels."
             )
 
-        result: List[Decimal] = []
-        
+        result: list[Decimal] = []
+
         for value in values:
             try:
                 checked_value = self._check_single_value(
-                    value,
-                    name,
-                    negative_allow
+                    value, name, negative_allow
                 )
                 result.append(checked_value)
             except (TypeError, ValueError):
@@ -969,7 +1042,17 @@ class SopNode(ColorNodeBase):
 
     # =========================================================================
 
-    def _check_setter_value(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]], name: str, negative_allow: bool = False) -> List[Decimal]:
+    def _check_setter_value(
+        self,
+        value: Decimal
+        | float
+        | int
+        | str
+        | list[Decimal | float | int | str]
+        | tuple[Decimal | float | int | str, ...],
+        name: str,
+        negative_allow: bool = False,
+    ) -> list[Decimal]:
         """Validate and convert single value or RGB list for property setting.
 
         Handles both single values (applied to all RGB channels) and RGB
@@ -994,52 +1077,65 @@ class SopNode(ColorNodeBase):
         """
         if type(value) in [Decimal, float, int, str]:
             try:
-                checked_value = self._check_single_value(cast(Union[Decimal, float, int, str], value), name, negative_allow)
+                checked_value = self._check_single_value(
+                    cast(Decimal | float | int | str, value),
+                    name,
+                    negative_allow,
+                )
             except (TypeError, ValueError):
                 raise
             else:
                 return [checked_value] * 3
         elif type(value) in [list, tuple]:
             try:
-                return self._check_rgb_values(cast(Union[List[Union[Decimal, str, float, int]], Tuple[Union[Decimal, str, float, int], ...]], value), name, negative_allow)
+                return self._check_rgb_values(
+                    cast(
+                        list[Decimal | str | float | int]
+                        | tuple[Decimal | str | float | int, ...],
+                        value,
+                    ),
+                    name,
+                    negative_allow,
+                )
             except (TypeError, ValueError):
                 raise
         else:
             raise ValidationError(
-                f'Invalid {name} value type: {type(value).__name__}. '
+                f"Invalid {name} value type: {type(value).__name__}. "
                 f'Provided value: "{value}". '
-                f'{name.title()} must be a numeric value or list of 3 numeric values. '
-                f'Supported types: int, float, str, Decimal, list, or tuple.'
+                f"{name.title()} must be a numeric value or list of 3 numeric values. "
+                f"Supported types: int, float, str, Decimal, list, or tuple."
             )
 
     # Public Methods ==========================================================
 
     def build_element(self) -> ElementTree.Element:
         """Build XML ElementTree Element representing this SopNode.
-        
+
         Creates a SOPNode XML element containing any descriptions and the
         slope, offset, and power values formatted as space-separated strings.
-        
+
         Returns:
             ElementTree.Element: XML element representing this SopNode.
 
         """
-        sop = ElementTree.Element('SOPNode')
-        fields = ['Slope', 'Offset', 'Power']
+        sop = ElementTree.Element("SOPNode")
+        fields = ["Slope", "Offset", "Power"]
         for description in self.desc:
-            desc = ElementTree.SubElement(sop, 'Description')
+            desc = ElementTree.SubElement(sop, "Description")
             desc.text = description
         for i, grade in enumerate([self.slope, self.offset, self.power]):
             op_node = ElementTree.SubElement(sop, fields[i])
-            op_node.text = f'{_de_exponent(grade[0])} {_de_exponent(grade[1])} {_de_exponent(grade[2])}'
+            op_node.text = f"{_de_exponent(grade[0])} {_de_exponent(grade[1])} {_de_exponent(grade[2])}"
         return sop
+
 
 # ==============================================================================
 # PRIVATE FUNCTIONS
 # ==============================================================================
 
 
-def _de_exponent(notation: Union[Decimal, str, int, float]) -> str:
+def _de_exponent(notation: Decimal | str | int | float) -> str:
     """Convert scientific notation to non-normalized decimal string.
 
     Converts numeric values that may be in scientific notation (e.g., 1.5e-3)
@@ -1054,29 +1150,30 @@ def _de_exponent(notation: Union[Decimal, str, int, float]) -> str:
         str: Numeric value as string without scientific notation formatting.
     """
     notation_str = str(notation).lower()
-    if 'e' not in notation_str:
+    if "e" not in notation_str:
         return notation_str
 
-    parts = notation_str.split('e')
+    parts = notation_str.split("e")
     # Grab the exponent value
     digits = int(parts[-1])
     # Grab the value we'll be adding 0s to
     value = parts[0]
 
-    if value.startswith('-'):
-        negative = '-'
-        value = value.removeprefix('-')
+    if value.startswith("-"):
+        negative = "-"
+        value = value.removeprefix("-")
     else:
-        negative = ''
+        negative = ""
 
-    value = value.replace('.', '')
+    value = value.replace(".", "")
 
     if digits < 0:
-        new_value = negative + '0.0' + '0' * (abs(digits) - 2) + value
+        new_value = negative + "0.0" + "0" * (abs(digits) - 2) + value
     else:
         zeros = len(value)
-        new_value = negative + value + '0' * (abs(digits) - zeros) + '0.0'
+        new_value = negative + value + "0" * (abs(digits) - zeros) + "0.0"
     return new_value
+
 
 # ==============================================================================
 
@@ -1095,16 +1192,16 @@ def _sanitize(name: str) -> str:
     Returns:
         str: Sanitized name string safe for use as CDL ID, or original
             string if it was empty.
-            
+
     """
     if not name:
         # If not name, it's probably an empty string, but let's throw back
         # exactly what we got.
         return name
     # Replace any spaces with underscores
-    name = name.replace(' ', '_')
+    name = name.replace(" ", "_")
     # If we start our string with an underscore or period, remove it
-    name = name.removeprefix('_').removeprefix('.')
+    name = name.removeprefix("_").removeprefix(".")
     # a-z is all lowercase
     # A-Z is all uppercase
     # 0-9 is all digits
@@ -1112,4 +1209,4 @@ def _sanitize(name: str) -> str:
     # _ is an underscore
     # Put them together, negate them by leading with an ^
     # and our sub will mark every non alnum, non ., _ character
-    return re.sub(r'[^a-zA-Z0-9\._-]+', '', name)
+    return re.sub(r"[^a-zA-Z0-9\._-]+", "", name)

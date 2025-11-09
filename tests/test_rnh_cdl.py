@@ -7,17 +7,17 @@ REQUIREMENTS:
 mock
 """
 
-#==============================================================================
+# ==============================================================================
 # IMPORTS
-#==============================================================================
+# ==============================================================================
 
 # Standard Imports
-from decimal import Decimal
-from unittest import mock
 import os
 import sys
 import tempfile
 import unittest
+from decimal import Decimal
+from unittest import mock
 
 # Grab our test's path and append the cdL_convert root directory
 
@@ -28,14 +28,14 @@ import unittest
 # 4) Joining
 # 5) Appending to our Python path.
 
-sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
+sys.path.append("/".join(os.path.realpath(__file__).split("/")[:-2]))
 
 import cdl_convert
 from cdl_convert.exceptions import CDLConvertError
 
-#==============================================================================
+# ==============================================================================
 # GLOBALS
-#==============================================================================
+# ==============================================================================
 
 # We'll build what we know if a valid XML tree by hand, so we can test that our
 # fancy etree code is working correctly
@@ -56,39 +56,38 @@ CC_CLOSE = "</ColorCorrection>\n"
 
 # misc ========================================================================
 
-UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-LOWER = 'abcdefghijklmnopqrstuvwxyz'
+UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+LOWER = "abcdefghijklmnopqrstuvwxyz"
 
 
-
-#==============================================================================
+# ==============================================================================
 # TEST CLASSES
-#==============================================================================
+# ==============================================================================
 
 
 class TestParseRnHCDLBasic(unittest.TestCase):
     """Tests parsing a space separated cdl, a Rhythm & Hues format"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.slope = decimalize(1.329, 0.9833, 1.003)
         self.offset = decimalize(0.011, 0.013, 0.11)
-        self.power = decimalize(.993, .998, 1.0113)
-        self.sat = Decimal('1.01')
+        self.power = decimalize(0.993, 0.998, 1.0113)
+        self.sat = Decimal("1.01")
 
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_rnh_cdl(self.filename)
 
-    #==========================================================================
+    # ==========================================================================
 
     def tearDown(self):
         # The system should clean these up automatically,
@@ -98,61 +97,46 @@ class TestParseRnHCDLBasic(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.reset_all()
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def testId(self):
         """Tests that id was set to the filename without extension"""
-        id = os.path.basename(self.filename).split('.')[0]
-        self.assertEqual(
-            id,
-            self.cdl.id
-        )
+        id = os.path.basename(self.filename).split(".")[0]
+        self.assertEqual(id, self.cdl.id)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testSlope(self):
         """Tests that slope was set correctly"""
-        self.assertEqual(
-            self.slope,
-            self.cdl.slope
-        )
+        self.assertEqual(self.slope, self.cdl.slope)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testOffset(self):
         """Tests that offset was set correctly"""
-        self.assertEqual(
-            self.offset,
-            self.cdl.offset
-        )
+        self.assertEqual(self.offset, self.cdl.offset)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testPower(self):
         """Tests that power was set correctly"""
-        self.assertEqual(
-            self.power,
-            self.cdl.power
-        )
+        self.assertEqual(self.power, self.cdl.power)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testSat(self):
         """Tests that sat was set correctly"""
-        self.assertEqual(
-            self.sat,
-            self.cdl.sat
-        )
+        self.assertEqual(self.sat, self.cdl.sat)
 
 
 class TestParseRnHCDLOdd(TestParseRnHCDLBasic):
     """Tests parsing a space separated cdl with odd but valid numbers"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         # Note that there are limits to the floating point precision here.
@@ -160,13 +144,13 @@ class TestParseRnHCDLOdd(TestParseRnHCDLBasic):
         # significant whole and decimal digits
         self.slope = decimalize(137829.329, 4327890.9833, 3489031.003)
         self.offset = decimalize(-3424.011, -342789423.013, -4238923.11)
-        self.power = decimalize(3271893.993, .0000998, 0.0000000000000000113)
-        self.sat = Decimal('1798787.01')
+        self.power = decimalize(3271893.993, 0.0000998, 0.0000000000000000113)
+        self.sat = Decimal("1798787.01")
 
         self.file = buildCDL(self.slope, self.offset, self.power, self.sat)
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(self.file.encode("utf-8"))
             self.filename = f.name
 
@@ -176,22 +160,21 @@ class TestParseRnHCDLOdd(TestParseRnHCDLBasic):
 class TestWriteRnHCDLBasic(unittest.TestCase):
     """Tests writing a space separated cdl with basic values"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.slope = list(decimalize(1.329, 0.9833, 1.003))
         self.offset = list(decimalize(0.011, 0.013, 0.11))
-        self.power = list(decimalize(.993, .998, 1.0113))
-        self.sat = Decimal('1.01')
+        self.power = list(decimalize(0.993, 0.998, 1.0113))
+        self.sat = Decimal("1.01")
 
         self.cdl = cdl_convert.ColorCorrection(
-            'uniqueId',
-            '../theVeryBestFile.ale'
+            "uniqueId", "../theVeryBestFile.ale"
         )
 
-        self.cdl.determine_dest('cdl', '../converted/')
+        self.cdl.determine_dest("cdl", "../converted/")
         self.cdl.slope = self.slope
         self.cdl.offset = self.offset
         self.cdl.power = self.power
@@ -201,7 +184,7 @@ class TestWriteRnHCDLBasic(unittest.TestCase):
 
         self.mockOpen = mock.mock_open()
 
-        with mock.patch('builtins.open', self.mockOpen, create=True):
+        with mock.patch("builtins.open", self.mockOpen, create=True):
             cdl_convert.write_rnh_cdl(self.cdl)
 
     def tearDown(self):
@@ -209,15 +192,17 @@ class TestWriteRnHCDLBasic(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.reset_all()
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def testOpen(self):
         """Tests that open was called correctly"""
-        self.mockOpen.assert_called_once_with(self.cdl.file_out, 'w', encoding='utf-8')
+        self.mockOpen.assert_called_once_with(
+            self.cdl.file_out, "w", encoding="utf-8"
+        )
 
-    #==========================================================================
+    # ==========================================================================
 
     def testContent(self):
         """Tests that write_rnh_cdl wrote the correct CDL"""
@@ -226,12 +211,14 @@ class TestWriteRnHCDLBasic(unittest.TestCase):
 
     def test_write_oserror_raises_cdlconverterror(self):
         """Tests that OSError during write raises CDLConvertError"""
-        self.cdl._file_out = 'invalid_path/bobs_big_file.cdl'
+        self.cdl._file_out = "invalid_path/bobs_big_file.cdl"
 
-        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
+        with mock.patch(
+            "builtins.open", side_effect=OSError("Permission denied")
+        ):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_rnh_cdl(self.cdl)
-            
+
             self.assertIn("Failed to write RNH CDL file", str(cm.exception))
             self.assertIn("invalid_path/bobs_big_file.cdl", str(cm.exception))
             self.assertIn("Permission denied", str(cm.exception))
@@ -240,9 +227,9 @@ class TestWriteRnHCDLBasic(unittest.TestCase):
 class TestWriteRnHCDLOdd(TestWriteRnHCDLBasic):
     """Tests writing a space separated cdl with basic values"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         # Note that there are limits to the floating point precision here.
@@ -250,14 +237,14 @@ class TestWriteRnHCDLOdd(TestWriteRnHCDLBasic):
         # significant whole and decimal digits
         self.slope = list(decimalize(137829.329, 4327890.9833, 3489031.003))
         self.offset = list(decimalize(-3424.011, -342789423.013, -4238923.11))
-        self.power = list(decimalize(0.993, .0000998, 0.0000000000000000113))
-        self.sat = Decimal('1798787.01')
+        self.power = list(decimalize(0.993, 0.0000998, 0.0000000000000000113))
+        self.sat = Decimal("1798787.01")
 
         self.cdl = cdl_convert.ColorCorrection(
-            'uniqueId', '../theVeryBestFile.ale'
+            "uniqueId", "../theVeryBestFile.ale"
         )
 
-        self.cdl.determine_dest('cdl', '../converted/')
+        self.cdl.determine_dest("cdl", "../converted/")
         self.cdl.slope = self.slope
         self.cdl.offset = self.offset
         self.cdl.power = self.power
@@ -267,12 +254,13 @@ class TestWriteRnHCDLOdd(TestWriteRnHCDLBasic):
 
         self.mockOpen = mock.mock_open()
 
-        with mock.patch('builtins.open', self.mockOpen, create=True):
+        with mock.patch("builtins.open", self.mockOpen, create=True):
             cdl_convert.write_rnh_cdl(self.cdl)
 
-#==============================================================================
+
+# ==============================================================================
 # FUNCTIONS
-#==============================================================================
+# ==============================================================================
 
 
 def buildCDL(slope, offset, power, sat):
@@ -287,7 +275,7 @@ def buildCDL(slope, offset, power, sat):
     # Use _de_exponent to avoid scientific notation
     values = [_de_exponent(i) for i in values]
 
-    ss_cdl = ' '.join(values)
+    ss_cdl = " ".join(values)
 
     return ss_cdl
 
@@ -296,8 +284,9 @@ def decimalize(*args):
     """Converts a list of floats/ints to Decimal list"""
     return tuple(Decimal(str(i)) for i in args)
 
-#==============================================================================
+
+# ==============================================================================
 # RUNNER
-#==============================================================================
-if __name__ == '__main__':
+# ==============================================================================
+if __name__ == "__main__":
     unittest.main()

@@ -10,7 +10,7 @@ Exception Classes:
     FormatError: Specialized exception for unsupported format detection and
         compatibility issues.
 
-    ParseError: Comprehensive parsing exception with context about file 
+    ParseError: Comprehensive parsing exception with context about file
         structure issues, malformed data, and specific parsing failures
         with line numbers and element information where available.
 
@@ -20,7 +20,7 @@ Exception Classes:
 
 Example Usage:
     >>> from cdl_convert import ColorCorrection, ValidationError, ParseError
-    >>> 
+    >>>
     >>> # Validation error handling
     >>> try:
     ...     cc = ColorCorrection("test")
@@ -28,16 +28,17 @@ Example Usage:
     ... except ValidationError as e:
     ...     print(f"Validation failed: {e}")
     ...     # Error with context about which value failed and why
-    >>> 
+    >>>
     >>> # Parsing error handling
     >>> try:
     ...     from cdl_convert import parse_file
     ...     from pathlib import Path
+    ...
     ...     collection = parse_file(Path("malformed.xml"))
     ... except ParseError as e:
     ...     print(f"Parse error: {e}")
     ...     # Context about parsing failure location and cause
-    >>> 
+    >>>
     >>> # Exception chaining for debugging
     >>> try:
     ...     # Some operation that might fail
@@ -78,11 +79,11 @@ SOFTWARE.
 # ==============================================================================
 
 __all__ = [
-    'CDLConvertError',
-    'ParseError',
-    'ValidationError',
-    'FormatError',
-    'OTIOAdapterError',
+    "CDLConvertError",
+    "ParseError",
+    "ValidationError",
+    "FormatError",
+    "OTIOAdapterError",
 ]
 
 # ==============================================================================
@@ -92,60 +93,66 @@ __all__ = [
 
 class CDLConvertError(Exception):
     """Base exception for CDL Convert operations.
-    
+
     This is the base class for all CDL Convert specific exceptions.
     It provides a common interface for handling errors that occur
     during CDL file processing, parsing, validation, and conversion.
 
     """
+
     pass
+
 
 class FormatError(CDLConvertError, ValueError):
     """Raised when unsupported format is encountered.
-    
+
     This exception is raised when attempting to work with unsupported
     file formats or when format detection fails. It helps identify
     issues with file format compatibility and supported operations.
-    
+
     Inherits from ValueError for backward compatibility.
 
     """
+
     pass
+
 
 class ParseError(CDLConvertError, ValueError):
     """Raised when parsing CDL files fails.
-    
+
     This exception is raised when there are issues parsing CDL files,
     such as malformed XML, missing required elements, or invalid file
     structure. It includes context about what went wrong during parsing.
-    
+
     Inherits from ValueError for backward compatibility.
 
     """
+
     pass
 
 
 class ValidationError(CDLConvertError, ValueError, TypeError):
     """Raised when CDL values fail validation.
-    
+
     This exception is raised when CDL color correction values fail
     validation checks, such as negative slope values, invalid ranges,
     or incorrect data types. It provides detailed information about
     which values failed validation and why.
-    
+
     Inherits from ValueError and TypeError for backward compatibility.
-    
+
     """
+
     pass
 
 
 class OTIOAdapterError(CDLConvertError):
     """Raised when OpenTimelineIO adapter operations fail.
-    
+
     This exception is raised when there are issues with OpenTimelineIO
     adapter availability, installation, or parsing operations. It provides
     clear error messages with installation instructions for missing adapters.
-    
-    """
-    pass
 
+    """
+
+    pass

@@ -13,14 +13,13 @@ import sys
 import unittest
 
 # Grab our test's path and append the cdl_convert root directory
-sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
+sys.path.append("/".join(os.path.realpath(__file__).split("/")[:-2]))
 
-import cdl_convert
 from cdl_convert.exceptions import (
     CDLConvertError,
+    FormatError,
     ParseError,
     ValidationError,
-    FormatError
 )
 
 # ==============================================================================
@@ -166,36 +165,36 @@ class TestUtilsValidationError(unittest.TestCase):
     def test_to_decimal_invalid_string(self):
         """Tests that to_decimal raises ValidationError for invalid string values"""
         from cdl_convert.utils import to_decimal
-        
+
         # Test invalid string that cannot be converted to decimal
         with self.assertRaises(ValidationError) as cm:
             to_decimal("not_a_number", "slope")
-        
+
         error_msg = str(cm.exception)
         self.assertIn("not_a_number", error_msg)
-        
+
         # Verify exception chaining
         self.assertIsNotNone(cm.exception.__cause__)
 
     def test_to_decimal_invalid_type(self):
         """Tests that to_decimal raises ValidationError for invalid types"""
         from cdl_convert.utils import to_decimal
-        
+
         # Test with a list (invalid type)
         with self.assertRaises(ValidationError) as cm:
             to_decimal([1, 2, 3], "offset")
-        
+
         error_msg = str(cm.exception)
         self.assertIn("[1, 2, 3]", error_msg)
 
     def test_to_decimal_invalid_dict_type(self):
         """Tests that to_decimal raises ValidationError for dict type"""
         from cdl_convert.utils import to_decimal
-        
+
         # Test with a dict (invalid type)
         with self.assertRaises(ValidationError) as cm:
             to_decimal({"value": 1.0}, "power")
-        
+
         error_msg = str(cm.exception)
         self.assertIn("dict", error_msg)
 
@@ -206,22 +205,22 @@ class TestParseFileError(unittest.TestCase):
     def test_parse_file_unsupported_format(self):
         """Tests that parse_file raises ParseError for unsupported file formats"""
         from cdl_convert.parse import parse_file
-        
+
         # Test with unsupported file extension
         with self.assertRaises(ParseError) as cm:
             parse_file("test.xyz", "xyz")
-        
+
         error_msg = str(cm.exception)
         self.assertIn("xyz", error_msg)
 
     def test_parse_file_unsupported_format_from_extension(self):
         """Tests that parse_file raises ParseError when deriving unsupported format from file extension"""
         from cdl_convert.parse import parse_file
-        
+
         # Test with unsupported file extension (no explicit filetype)
         with self.assertRaises(ParseError) as cm:
             parse_file("test.unknown")
-        
+
         error_msg = str(cm.exception)
         self.assertIn("unknown", error_msg)
 
@@ -230,5 +229,5 @@ class TestParseFileError(unittest.TestCase):
 # MAIN
 # ==============================================================================
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

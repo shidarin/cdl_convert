@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 cdl_convert documentation build configuration.
 Modernized with MyST support for Markdown documentation.
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add project to path for autodoc
@@ -16,56 +14,56 @@ import cdl_convert as cdl
 
 # -- Project information -----------------------------------------------------
 
-project = 'cdl_convert'
+project = "cdl_convert"
 copyright = cdl.__copyright__
-author = 'Sean Wallitsch'
+author = "Sean Wallitsch"
 version = cdl.__version__
 release = cdl.__version__
 
 # -- General configuration ---------------------------------------------------
 
 extensions = [
-    'sphinx.ext.autodoc',           # Auto-generate docs from docstrings
-    'sphinx.ext.napoleon',          # Support for Google/NumPy style docstrings
-    'sphinx.ext.viewcode',          # Add links to source code
-    'sphinx.ext.intersphinx',       # Link to other project docs
-    'myst_parser',                  # Markdown support via MyST
+    "sphinx.ext.autodoc",  # Auto-generate docs from docstrings
+    "sphinx.ext.napoleon",  # Support for Google/NumPy style docstrings
+    "sphinx.ext.viewcode",  # Add links to source code
+    "sphinx.ext.intersphinx",  # Link to other project docs
+    "myst_parser",  # Markdown support via MyST
 ]
 
 # MyST configuration
 myst_enable_extensions = [
-    'colon_fence',      # ::: fences for directives
-    'deflist',          # Definition lists
-    'fieldlist',        # Field lists
-    'substitution',     # Variable substitutions
-    'tasklist',         # Task lists with checkboxes
+    "colon_fence",  # ::: fences for directives
+    "deflist",  # Definition lists
+    "fieldlist",  # Field lists
+    "substitution",  # Variable substitutions
+    "tasklist",  # Task lists with checkboxes
 ]
 
 # Support both .rst and .md files
 source_suffix = {
-    '.rst': 'restructuredtext',
-    '.md': 'markdown',
+    ".rst": "restructuredtext",
+    ".md": "markdown",
 }
 
 # The master toctree document
-master_doc = 'index'
+master_doc = "index"
 
 # Patterns to exclude
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # Pygments syntax highlighting style
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # -- Autodoc configuration ---------------------------------------------------
 
 autodoc_default_options = {
-    'members': True,
-    'member-order': 'groupwise',
-    'special-members': '__init__',
-    'inherited-members': True,
-    'undoc-members': True,
-    'show-inheritance': True,
-    'exclude-members': '__weakref__'
+    "members": True,
+    "member-order": "groupwise",
+    "special-members": "__init__",
+    "inherited-members": True,
+    "undoc-members": True,
+    "show-inheritance": True,
+    "exclude-members": "__weakref__",
 }
 
 from sphinx.ext import autodoc
@@ -93,51 +91,64 @@ autodoc.ExceptionDocumenter.member_order = 60
 # -- Intersphinx configuration -----------------------------------------------
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'opentimelineio': ('https://opentimelineio.readthedocs.io/en/latest/', None),
+    "python": ("https://docs.python.org/3", None),
+    "opentimelineio": (
+        "https://opentimelineio.readthedocs.io/en/latest/",
+        None,
+    ),
 }
 
 # -- HTML output options -----------------------------------------------------
 
 # Use the modern Furo theme (clean, fast, mobile-friendly)
-html_theme = 'furo'
+html_theme = "furo"
 
 html_theme_options = {
-    'light_css_variables': {
-        'color-brand-primary': '#2962ff',
-        'color-brand-content': '#2962ff',
+    "light_css_variables": {
+        "color-brand-primary": "#2962ff",
+        "color-brand-content": "#2962ff",
     },
 }
 
-html_title = f'{project} {version}'
+html_title = f"{project} {version}"
 # html_static_path = ['_static']  # Uncomment and create directory if custom CSS/JS needed
 
 # Add last updated timestamp
-html_last_updated_fmt = '%b %d, %Y'
+html_last_updated_fmt = "%b %d, %Y"
 
 # -- LaTeX output options ----------------------------------------------------
 
 latex_elements = {
-    'papersize': 'letterpaper',
-    'pointsize': '10pt',
+    "papersize": "letterpaper",
+    "pointsize": "10pt",
 }
 
 latex_documents = [
-    (master_doc, 'cdl_convert.tex', 'cdl\\_convert Documentation',
-     'Sean Wallitsch', 'manual'),
+    (
+        master_doc,
+        "cdl_convert.tex",
+        "cdl\\_convert Documentation",
+        "Sean Wallitsch",
+        "manual",
+    ),
 ]
 
 # -- Manual page output options ----------------------------------------------
 
 man_pages = [
-    (master_doc, 'cdl_convert', 'cdl_convert Documentation',
-     [author], 1)
+    (master_doc, "cdl_convert", "cdl_convert Documentation", [author], 1)
 ]
 
 # -- Texinfo output options --------------------------------------------------
 
 texinfo_documents = [
-    (master_doc, 'cdl_convert', 'cdl_convert Documentation',
-     author, 'cdl_convert', 'Convert between ASC CDL formats.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        "cdl_convert",
+        "cdl_convert Documentation",
+        author,
+        "cdl_convert",
+        "Convert between ASC CDL formats.",
+        "Miscellaneous",
+    ),
 ]

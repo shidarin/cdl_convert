@@ -7,18 +7,17 @@ REQUIREMENTS:
 mock
 """
 
-#==============================================================================
+# ==============================================================================
 # IMPORTS
-#==============================================================================
+# ==============================================================================
 
 # Standard Imports
-from decimal import Decimal
-from unittest import mock
 import os
 import sys
 import tempfile
 import unittest
-from xml.etree import ElementTree
+from decimal import Decimal
+from unittest import mock
 
 # Grab our test's path and append the cdL_convert root directory
 
@@ -29,14 +28,14 @@ from xml.etree import ElementTree
 # 4) Joining
 # 5) Appending to our Python path.
 
-sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
+sys.path.append("/".join(os.path.realpath(__file__).split("/")[:-2]))
 
 import cdl_convert
 from cdl_convert.exceptions import CDLConvertError
 
-#==============================================================================
+# ==============================================================================
 # GLOBALS
-#==============================================================================
+# ==============================================================================
 
 # We'll save out different and broken XMLs by hand.
 
@@ -261,14 +260,13 @@ CC_NO_SAT_WRITE = """<?xml version="1.0" encoding="UTF-8"?>
 
 # misc ========================================================================
 
-UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-LOWER = 'abcdefghijklmnopqrstuvwxyz'
+UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+LOWER = "abcdefghijklmnopqrstuvwxyz"
 
 
-
-#==============================================================================
+# ==============================================================================
 # TEST CLASSES
-#==============================================================================
+# ==============================================================================
 
 # parse_cc ====================================================================
 
@@ -276,38 +274,41 @@ LOWER = 'abcdefghijklmnopqrstuvwxyz'
 class TestParseCCBasic(unittest.TestCase):
     """Tests parsing a cc xml"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.cdl_test_id = "014_xf_seqGrade_v01"
         self.desc = [
-            'CC description 1', 'CC description 2', 'CC description 3',
-            'CC description 4', 'CC description 5'
+            "CC description 1",
+            "CC description 2",
+            "CC description 3",
+            "CC description 4",
+            "CC description 5",
         ]
-        self.input_desc = 'Input Desc Text'
-        self.viewing_desc = 'Viewing Desc Text'
+        self.input_desc = "Input Desc Text"
+        self.viewing_desc = "Viewing Desc Text"
 
         self.sop_node_desc = [
-            'Sop description 1', 'Sop description 2', 'Sop description 3'
+            "Sop description 1",
+            "Sop description 2",
+            "Sop description 3",
         ]
         self.slope = decimalize(1.014, 1.0104, 0.62)
         self.offset = decimalize(-0.00315, -0.00124, 0.3103)
         self.power = decimalize(1.0, 0.9983, 1.0)
-        self.sat_node_desc = [
-            'Sat description 1', 'Sat description 2'
-        ]
-        self.sat = Decimal('1.09')
+        self.sat_node_desc = ["Sat description 1", "Sat description 2"]
+        self.sat = Decimal("1.09")
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CC_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
 
-    #==========================================================================
+    # ==========================================================================
 
     def tearDown(self):
         # The system should clean these up automatically,
@@ -317,142 +318,112 @@ class TestParseCCBasic(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.reset_all()
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def testId(self):
         """Tests that id was set to id attrib"""
-        self.assertEqual(
-            self.cdl_test_id,
-            self.cdl.id
-        )
+        self.assertEqual(self.cdl_test_id, self.cdl.id)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testDesc(self):
         """Tests that desc was set to desc element"""
-        self.assertEqual(
-            self.desc,
-            self.cdl.desc
-        )
+        self.assertEqual(self.desc, self.cdl.desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testInputDesc(self):
         """Tests that input description was set"""
-        self.assertEqual(
-            self.input_desc,
-            self.cdl.input_desc
-        )
+        self.assertEqual(self.input_desc, self.cdl.input_desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testViewingDesc(self):
         """Tests that viewing description was set"""
-        self.assertEqual(
-            self.viewing_desc,
-            self.cdl.viewing_desc
-        )
+        self.assertEqual(self.viewing_desc, self.cdl.viewing_desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testSopDesc(self):
         """Tests that desc was set to sop node's desc element"""
-        self.assertEqual(
-            self.sop_node_desc,
-            self.cdl.sop_node.desc
-        )
+        self.assertEqual(self.sop_node_desc, self.cdl.sop_node.desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testSatDesc(self):
         """Tests that desc was set to sat node's desc element"""
-        self.assertEqual(
-            self.sat_node_desc,
-            self.cdl.sat_node.desc
-        )
+        self.assertEqual(self.sat_node_desc, self.cdl.sat_node.desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testSlope(self):
         """Tests that slope was set correctly"""
-        self.assertEqual(
-            self.slope,
-            self.cdl.slope
-        )
+        self.assertEqual(self.slope, self.cdl.slope)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testOffset(self):
         """Tests that offset was set correctly"""
-        self.assertEqual(
-            self.offset,
-            self.cdl.offset
-        )
+        self.assertEqual(self.offset, self.cdl.offset)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testPower(self):
         """Tests that power was set correctly"""
-        self.assertEqual(
-            self.power,
-            self.cdl.power
-        )
+        self.assertEqual(self.power, self.cdl.power)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testSat(self):
         """Tests that sat was set correctly"""
-        self.assertEqual(
-            self.sat,
-            self.cdl.sat
-        )
+        self.assertEqual(self.sat, self.cdl.sat)
 
-#==============================================================================
+
+# ==============================================================================
 
 
 class TestParseCCOdd(TestParseCCBasic):
     """Tests parsing a cc xml with odd values"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.cdl_test_id = "f55.100"  # This will have been _sanitized()
         self.desc = [
-            r'Raised saturation a little!?! ag... \/Offset',
-            r'Raised saturation a little!?! ag... \/Offset',
+            r"Raised saturation a little!?! ag... \/Offset",
+            r"Raised saturation a little!?! ag... \/Offset",
         ]
-        self.input_desc = r'METAL VIEWER!!! \/\/'
-        self.viewing_desc = 'WOOD VIEWER!? ////'
+        self.input_desc = r"METAL VIEWER!!! \/\/"
+        self.viewing_desc = "WOOD VIEWER!? ////"
 
-        self.sop_node_desc = [
-            r'Raised saturation a little!?! ag... \/Offset'
-        ]
+        self.sop_node_desc = [r"Raised saturation a little!?! ag... \/Offset"]
         self.slope = decimalize(137829.329, 4327890.9833, 3489031.003)
         self.offset = decimalize(-3424.011, -342789423.013, -4238923.11)
-        self.power = decimalize(3271893.993, .0000998, 0.0000000000000000113)
+        self.power = decimalize(3271893.993, 0.0000998, 0.0000000000000000113)
         self.sat_node_desc = []
-        self.sat = Decimal('1798787.01')
+        self.sat = Decimal("1798787.01")
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CC_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
 
-#==============================================================================
+
+# ==============================================================================
 
 
 class TestParseCCBasic(TestParseCCBasic):
     """Tests parsing a cc xml with minimal values"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.cdl_test_id = "f51.200"
@@ -465,24 +436,25 @@ class TestParseCCBasic(TestParseCCBasic):
         self.offset = decimalize(0.031, 0.128, -0.096)
         self.power = decimalize(1.8, 0.97, 0.961)
         self.sat_node_desc = []
-        self.sat = Decimal('1.01')
+        self.sat = Decimal("1.01")
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CC_BASIC.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
 
-#==============================================================================
+
+# ==============================================================================
 
 
 class TestParseCCBasicOrder(TestParseCCBasic):
     """Tests parsing a cc xml with minimal, but out of order values"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.cdl_test_id = "f54.112"
@@ -495,24 +467,25 @@ class TestParseCCBasicOrder(TestParseCCBasic):
         self.offset = decimalize(0.031, 0.128, -0.096)
         self.power = decimalize(1.8, 0.97, 0.961)
         self.sat_node_desc = []
-        self.sat = Decimal('1.01')
+        self.sat = Decimal("1.01")
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CC_BASIC_ORDER.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
 
-#==============================================================================
+
+# ==============================================================================
 
 
 class TestParseCCBlankMetadata(TestParseCCBasic):
     """Tests parsing a cc xml with blank metadata fields"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.cdl_test_id = "burp_100.x12"
@@ -525,24 +498,25 @@ class TestParseCCBlankMetadata(TestParseCCBasic):
         self.offset = decimalize(-0.00315, -0.00124, 0.3103)
         self.power = decimalize(1.0, 0.9983, 1.0)
         self.sat_node_desc = []
-        self.sat = Decimal('1.09')
+        self.sat = Decimal("1.09")
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CC_BLANK_METADATA.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
 
-#==============================================================================
+
+# ==============================================================================
 
 
 class TestParseCCNoSop(TestParseCCBasic):
     """Tests parsing a cc xml with no SOP data"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.cdl_test_id = "burp_200.x15"
@@ -554,28 +528,29 @@ class TestParseCCNoSop(TestParseCCBasic):
         self.slope = decimalize(1.0, 1.0, 1.0)
         self.offset = decimalize(0.0, 0.0, 0.0)
         self.power = decimalize(1.0, 1.0, 1.0)
-        self.sat_node_desc = ['I am a lovely sat node']
-        self.sat = Decimal('1.01')
+        self.sat_node_desc = ["I am a lovely sat node"]
+        self.sat = Decimal("1.01")
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CC_NO_SOP.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
 
-        # We need to call a SOP value to initialize the SOP subnode
-        self.cdl.slope
+        # Access property to trigger lazy initialization of SOP subnode
+        self.cdl.slope  # noqa: B018
 
-#==============================================================================
+
+# ==============================================================================
 
 
 class TestParseCCNoSat(TestParseCCBasic):
     """Tests parsing a cc xml with no sat data"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.cdl_test_id = "burp_300.x35"
@@ -588,135 +563,113 @@ class TestParseCCNoSat(TestParseCCBasic):
         self.offset = decimalize(0.031, 0.128, -0.096)
         self.power = decimalize(1.8, 0.97, 0.961)
         self.sat_node_desc = []
-        self.sat = Decimal('1.0')
+        self.sat = Decimal("1.0")
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CC_NO_SAT.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cc(self.filename)
 
-        # We need to call a SAT value to initialize the SAT subnode
-        self.cdl.sat
+        # Access property to trigger lazy initialization of SAT subnode
+        self.cdl.sat  # noqa: B018
 
-#==============================================================================
+
+# ==============================================================================
 
 
 class TestParseCCExceptions(unittest.TestCase):
     """Tests parse_cc's response to some bad xml files"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.file = None
 
-    #==========================================================================
+    # ==========================================================================
 
     def tearDown(self):
         cdl_convert.reset_all()
         if self.file:
             os.remove(self.file)
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def testNoId(self):
         """Tests that not finding an id attrib works"""
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CC_NO_ID.encode("utf-8"))
             self.file = f.name
 
         cc = cdl_convert.parse_cc(self.file)
-        self.assertEqual(
-            '001',
-            cc.id
-        )
+        self.assertEqual("001", cc.id)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testNotColorCorrection(self):
         """Tests that an XML with a root tag that's not ColorCorrection"""
         xml = "<ColorBlurection>\n</ColorBlurection>\n"
 
-
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(xml.encode("utf-8"))
             self.file = f.name
 
-        self.assertRaises(
-            ValueError,
-            cdl_convert.parse_cc,
-            self.file
-        )
+        self.assertRaises(ValueError, cdl_convert.parse_cc, self.file)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testEmptyColorCorrection(self):
         """Tests that an empty XML raises ValueError"""
         xml = '<ColorCorrection id="hdjshd">\n</ColorCorrection>\n'
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(xml.encode("utf-8"))
             self.file = f.name
 
-        self.assertRaises(
-            ValueError,
-            cdl_convert.parse_cc,
-            self.file
-        )
+        self.assertRaises(ValueError, cdl_convert.parse_cc, self.file)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testBlankId(self):
         """Tests that a blank id field ValueError"""
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CC_BLANK_ID.encode("utf-8"))
             self.file = f.name
 
         cdl_convert.config.config.halt_on_error = True
 
-        self.assertRaises(
-            ValueError,
-            cdl_convert.parse_cc,
-            self.file
-        )
+        self.assertRaises(ValueError, cdl_convert.parse_cc, self.file)
 
         cdl_convert.config.config.halt_on_error = False
 
         cdl = cdl_convert.parse_cc(self.file)
 
-        self.assertEqual(
-            '001',
-            cdl.id
-        )
+        self.assertEqual("001", cdl.id)
 
-    #==========================================================================
+    # ==========================================================================
 
     def testNegativeSlope(self):
         """Tests that a negative slope raises a ValueError"""
 
         # Build our cc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CC_NEGATIVE_SLOPE.encode("utf-8"))
             self.file = f.name
 
         cdl_convert.config.config.halt_on_error = True
 
-        self.assertRaises(
-            ValueError,
-            cdl_convert.parse_cc,
-            self.file
-        )
+        self.assertRaises(ValueError, cdl_convert.parse_cc, self.file)
 
         cdl_convert.config.config.halt_on_error = False
         cdl_convert.reset_all()
@@ -728,98 +681,97 @@ class TestParseCCExceptions(unittest.TestCase):
             cdl.slope,
         )
 
+
 # write_cc ====================================================================
 
 
 class TestWriteCCFull(unittest.TestCase):
     """Tests full writing of CC XML"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         cdl_convert.reset_all()
-        self.cdl = cdl_convert.ColorCorrection("014_xf_seqGrade_v01", '')
+        self.cdl = cdl_convert.ColorCorrection("014_xf_seqGrade_v01", "")
         self.cdl.desc = [
-            'CC description 1', 'CC description 2', 'CC description 3',
-            'CC description 4', 'CC description 5'
+            "CC description 1",
+            "CC description 2",
+            "CC description 3",
+            "CC description 4",
+            "CC description 5",
         ]
-        self.cdl.input_desc = 'Input Desc Text'
-        self.cdl.viewing_desc = 'Viewing Desc Text'
+        self.cdl.input_desc = "Input Desc Text"
+        self.cdl.viewing_desc = "Viewing Desc Text"
 
         self.cdl.slope = (1.014, 1.0104, 0.62)
         self.cdl.offset = (-0.00315, -0.00124, 0.3103)
         self.cdl.power = (1.0, 0.9983, 1.0)
         self.cdl.sop_node.desc = [
-            'Sop description 1', 'Sop description 2', 'Sop description 3'
+            "Sop description 1",
+            "Sop description 2",
+            "Sop description 3",
         ]
 
         self.cdl.sat = 1.09
-        self.cdl.sat_node.desc = [
-            'Sat description 1', 'Sat description 2'
-        ]
+        self.cdl.sat_node.desc = ["Sat description 1", "Sat description 2"]
 
         self.target_xml_root = CC_FULL_WRITE
-        self.target_xml = '\n'.join(CC_FULL_WRITE.split('\n')[1:])
+        self.target_xml = "\n".join(CC_FULL_WRITE.split("\n")[1:])
 
-    #==========================================================================
+    # ==========================================================================
 
     def tearDown(self):
         cdl_convert.reset_all()
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def test_root_xml(self):
         """Tests that root_xml returns the full XML as expected"""
-        self.assertEqual(
-            self.target_xml_root,
-            self.cdl.xml_root
-        )
+        self.assertEqual(self.target_xml_root, self.cdl.xml_root)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_base_xml(self):
         """Tests that the xml atrib returns the XML minus root as expected"""
-        self.assertEqual(
-            self.target_xml,
-            self.cdl.xml
-        )
+        self.assertEqual(self.target_xml, self.cdl.xml)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_element(self):
         """Tests that the element returned is an etree type"""
-        self.assertEqual(
-            'ColorCorrection',
-            self.cdl.element.tag
-        )
+        self.assertEqual("ColorCorrection", self.cdl.element.tag)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_write(self):
         """Tests writing the cc itself"""
         mockOpen = mock.mock_open()
 
-        self.cdl._file_out = 'bobs_big_file.cc'
+        self.cdl._file_out = "bobs_big_file.cc"
 
-        with mock.patch('builtins.open', mockOpen, create=True):
+        with mock.patch("builtins.open", mockOpen, create=True):
             cdl_convert.write_cc(self.cdl)
 
-        mockOpen.assert_called_once_with('bobs_big_file.cc', 'w', encoding='utf-8')
+        mockOpen.assert_called_once_with(
+            "bobs_big_file.cc", "w", encoding="utf-8"
+        )
 
         mockOpen().write.assert_called_once_with(self.target_xml_root)
 
     def test_write_oserror_raises_cdlconverterror(self):
         """Tests that OSError during write raises CDLConvertError"""
-        self.cdl._file_out = 'invalid_path/bobs_big_file.cc'
+        self.cdl._file_out = "invalid_path/bobs_big_file.cc"
 
-        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
+        with mock.patch(
+            "builtins.open", side_effect=OSError("Permission denied")
+        ):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_cc(self.cdl)
-            
+
             self.assertIn("Failed to write CC file", str(cm.exception))
             self.assertIn("invalid_path/bobs_big_file.cc", str(cm.exception))
             self.assertIn("Permission denied", str(cm.exception))
@@ -828,81 +780,83 @@ class TestWriteCCFull(unittest.TestCase):
 class TestWriteCCOdd(TestWriteCCFull):
     """Tests odd writing of CC XML"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         cdl_convert.reset_all()
-        self.cdl = cdl_convert.ColorCorrection("f55.100", '')
+        self.cdl = cdl_convert.ColorCorrection("f55.100", "")
         self.cdl.desc = [
-            'Raised saturation1 a little!?! ag... \\/Offset',
-            'Raised saturation2 a little!?! ag... \\/Offset',
+            "Raised saturation1 a little!?! ag... \\/Offset",
+            "Raised saturation2 a little!?! ag... \\/Offset",
         ]
-        self.cdl.input_desc = 'METAL VIEWER!!! \\/\\/'
-        self.cdl.viewing_desc = 'WOOD VIEWER!? ////'
+        self.cdl.input_desc = "METAL VIEWER!!! \\/\\/"
+        self.cdl.viewing_desc = "WOOD VIEWER!? ////"
 
         self.cdl.slope = (137829.329, 4327890.9833, 3489031.003)
         self.cdl.offset = (-3424.011, -342789423.013, -4238923.11)
-        self.cdl.power = (3271893.993, .0000998, 0.0000000000000000113)
+        self.cdl.power = (3271893.993, 0.0000998, 0.0000000000000000113)
         self.cdl.sop_node.desc = [
-            'Raised saturation a little!?! ag... \\/Offset'
+            "Raised saturation a little!?! ag... \\/Offset"
         ]
 
         self.cdl.sat = 1798787.01
         self.cdl.sat_node.desc = []
 
         self.target_xml_root = CC_ODD_WRITE
-        self.target_xml = '\n'.join(CC_ODD_WRITE.split('\n')[1:])
+        self.target_xml = "\n".join(CC_ODD_WRITE.split("\n")[1:])
 
 
 class TestWriteCCNoSop(TestWriteCCFull):
     """Tests writing a CC XML with no SOP node"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         cdl_convert.reset_all()
-        self.cdl = cdl_convert.ColorCorrection("burp_200.x15", '')
+        self.cdl = cdl_convert.ColorCorrection("burp_200.x15", "")
 
         self.cdl.sat = 1.0128109381
-        self.cdl.sat_node.desc = ['I am a lovely sat node']
+        self.cdl.sat_node.desc = ["I am a lovely sat node"]
 
         self.target_xml_root = CC_NO_SOP_WRITE
-        self.target_xml = '\n'.join(CC_NO_SOP_WRITE.split('\n')[1:])
+        self.target_xml = "\n".join(CC_NO_SOP_WRITE.split("\n")[1:])
 
 
 class TestWriteCCNoSat(TestWriteCCFull):
     """Tests writing a CC XML with no SAT node"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         cdl_convert.reset_all()
-        self.cdl = cdl_convert.ColorCorrection("burp_300.x35", '')
+        self.cdl = cdl_convert.ColorCorrection("burp_300.x35", "")
 
         self.cdl.slope = (1.233321, 0.678669, 1.0758)
         self.cdl.offset = (0.031, 0.128, -0.096)
         self.cdl.power = (1.8, 0.97, 0.961)
 
         self.target_xml_root = CC_NO_SAT_WRITE
-        self.target_xml = '\n'.join(CC_NO_SAT_WRITE.split('\n')[1:])
+        self.target_xml = "\n".join(CC_NO_SAT_WRITE.split("\n")[1:])
 
-#==============================================================================
+
+# ==============================================================================
 # FUNCTIONS
-#==============================================================================
+# ==============================================================================
 
 
 def decimalize(*args):
     """Converts a list of floats/ints to Decimal list"""
     return tuple([Decimal(str(i)) for i in args])
 
-#==============================================================================
+
+# ==============================================================================
 # RUNNER
-#==============================================================================
-if __name__ == '__main__':
+# ==============================================================================
+if __name__ == "__main__":
     unittest.main()

@@ -53,7 +53,7 @@ If you need support for a specific format, please [create an issue](https://gith
 
 ### Does cdl_convert support OpenTimelineIO?
 
-Yes, CDL Convert uses [OpenTimelineIO](https://github.com/PixarAnimationStudios/OpenTimelineIO) for EDL parsing and can also read OTIO timeline files with embedded CDL metadata. See {doc}`usage_otio` for details.
+Yes, CDL Convert uses [OpenTimelineIO](https://github.com/AcademySoftwareFoundation/OpenTimelineIO) for EDL parsing and can also read OTIO timeline files with embedded CDL metadata. See {doc}`usage_otio` for details.
 
 ## Project Structure
 

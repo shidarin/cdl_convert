@@ -6,7 +6,7 @@ in ASC CDL workflows, providing type-safe containers for linking color
 corrections with reference media.
 
 Classes:
-    ColorCorrectionRef: Reference to existing ColorCorrection instances. 
+    ColorCorrectionRef: Reference to existing ColorCorrection instances.
         References are validated when accessed if strict mode is enabled.
 
     ColorDecision: Container linking ColorCorrections with MediaRefs.
@@ -18,17 +18,17 @@ Classes:
 Example Usage:
     >>> from pathlib import Path
     >>> from cdl_convert import ColorCorrection, ColorDecision, MediaRef
-    >>> 
+    >>>
     >>> # Create correction and media reference
     >>> cc = ColorCorrection("shot_001")
     >>> media = MediaRef(Path("footage/shot_001.%04d.exr"))
-    >>> 
+    >>>
     >>> # Create decision linking correction to media
     >>> decision = ColorDecision(cc, media_ref=media)
-    >>> 
+    >>>
     >>> if media.exists():
     ...     print(f"Media found: {media.ref}")
-    >>> 
+    >>>
     >>> try:
     ...     decision.validate_references()
     ... except ValidationError as e:
@@ -67,21 +67,19 @@ SOFTWARE.
 # ==============================================================================
 
 
-
 # Standard Imports
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
-import re
-from typing import Dict, List, Optional, Union, Any, Tuple
+from typing import Any, Optional, Union
 from xml.etree import ElementTree
 
 # cdl_convert imports
-
-from .base import AscColorSpaceBase, AscDescBase, AscXMLBase
-from . import config
-from .correction import ColorCorrection
-from .exceptions import ValidationError, ParseError
+from cdl_convert import config
+from cdl_convert.base import AscColorSpaceBase, AscDescBase, AscXMLBase
+from cdl_convert.correction import ColorCorrection
+from cdl_convert.exceptions import ParseError, ValidationError
 
 # ==============================================================================
 # DATACLASSES
@@ -91,31 +89,32 @@ from .exceptions import ValidationError, ParseError
 @dataclass
 class MediaRefInfo:
     """Container for parsed media reference URI components.
-    
+
     Stores the individual components of a media reference URI after parsing,
     allowing separate access to protocol, directory, and filename parts.
-    
+
     """
-    protocol: str = ''
+
+    protocol: str = ""
     """URI protocol (e.g., 'http', 'file') without the '://' suffix.
     Empty string if no protocol is present."""
-    directory: str = ''
-    """Directory path component of the URI. May be relative or 
+    directory: str = ""
+    """Directory path component of the URI. May be relative or
     absolute path."""
-    filename: str = ''
-    """Filename component of the URI. Empty string if URI points to a 
+    filename: str = ""
+    """Filename component of the URI. Empty string if URI points to a
     directory only."""
-    original_uri: str = ''
-    """Complete original URI as provided during initialization. Used to 
+    original_uri: str = ""
+    """Complete original URI as provided during initialization. Used to
     preserve exact path separator formatting across platforms."""
-    
+
     def to_uri(self) -> str:
         """Reconstruct the full URI from individual components.
-        
+
         Returns the original URI if available to preserve exact formatting,
         otherwise reconstructs from components using intelligent separator
         detection based on the directory's existing separator pattern.
-        
+
         Returns:
             str: Complete URI string. Returns original_uri if available,
                 otherwise reconstructed from components.
@@ -124,13 +123,13 @@ class MediaRefInfo:
         # Return original URI if available to preserve exact formatting
         if self.original_uri:
             return self.original_uri
-            
+
         # Fallback to reconstruction for backward compatibility
         if self.protocol:
             prefix = f"{self.protocol}://"
         else:
-            prefix = ''
-        
+            prefix = ""
+
         # Intelligent separator detection for reconstruction
         if self.filename:
             if self.directory:
@@ -139,53 +138,54 @@ class MediaRefInfo:
             else:
                 path = self.filename
         else:
-            path = self.directory if self.directory else '.'
-            
+            path = self.directory if self.directory else "."
+
         return prefix + path
-    
+
     def _detect_separator(self, directory: str) -> str:
         """Detect the appropriate path separator based on directory pattern.
-        
+
         Analyzes the directory string to determine whether to use forward
         slashes, backslashes, or default to forward slash for mixed patterns.
-        
+
         Args:
             directory (str): Directory path to analyze.
-            
+
         Returns:
             str: '\\' for Windows-style paths, '/' for Unix-style or mixed paths.
         """
         if not directory:
-            return '/'
-            
-        has_forward = '/' in directory
-        has_backward = '\\' in directory
-        
+            return "/"
+
+        has_forward = "/" in directory
+        has_backward = "\\" in directory
+
         if has_backward and not has_forward:
             # Pure Windows-style path
-            return '\\'
+            return "\\"
         else:
             # Unix-style or mixed - default to forward slash
-            return '/'
+            return "/"
 
 
 @dataclass
 class SequenceInfo:
     """Container for image sequence detection results.
-    
+
     Stores information about detected image sequences, including whether
     sequences were found and their patterns with frame padding notation.
 
     """
+
     is_sequence: bool = False
     """True if image sequences were detected in the media reference path."""
-    sequences: Optional[List[str]] = None
+    sequences: list[str] | None = None
     """List of sequence patterns using # padding notation ('image.####.exr').
     None is converted to empty list during initialization."""
-    
+
     def __post_init__(self) -> None:
         """Initialize sequences list after dataclass creation.
-        
+
         Ensures sequences attribute is always a list, converting None
         to an empty list for consistent behavior.
 
@@ -199,11 +199,11 @@ class SequenceInfo:
 # ==============================================================================
 
 __all__ = [
-    'ColorCorrectionRef',
-    'ColorDecision', 
-    'MediaRef',
-    'MediaRefInfo',
-    'SequenceInfo'
+    "ColorCorrectionRef",
+    "ColorDecision",
+    "MediaRef",
+    "MediaRefInfo",
+    "SequenceInfo",
 ]
 
 # ==============================================================================
@@ -226,24 +226,24 @@ class ColorCorrectionRef(AscXMLBase):
         >>> cc = ColorCorrection("shot_001")
         >>> ref = ColorCorrectionRef("shot_001")
         >>> print(ref.cc.id)  # "shot_001"
-        >>> print(ref.id)     # "shot_001"
+        >>> print(ref.id)  # "shot_001"
 
     """
 
-    members: Dict[str, List['ColorCorrectionRef']] = {}
+    members: dict[str, list["ColorCorrectionRef"]] = {}
     """Dictionary mapping ColorCorrection IDs to lists of ColorCorrectionRef
-    instances that reference them. Multiple references can point to the 
+    instances that reference them. Multiple references can point to the
     same ID."""
 
     def __init__(self, id: str) -> None:  # pylint: disable=W0622
         """Initialize ColorCorrectionRef with target ColorCorrection ID.
-        
+
         Args:
             id (str): ID of the ColorCorrection this reference should point to.
                 The ColorCorrection doesn't need to exist at creation time.
         """
-        super(ColorCorrectionRef, self).__init__()
-        self._id: Optional[str] = None
+        super().__init__()
+        self._id: str | None = None
         # Bypass cc id existence checks on first set by calling private
         # method directly.
         self._set_id(id)
@@ -251,14 +251,14 @@ class ColorCorrectionRef(AscXMLBase):
         # While all ColorCorrectionReferences should be under a
         # ColorDecision node, we won't strictly enforce that a
         # parent must exist.
-        self.parent: Optional['ColorDecision'] = None
+        self.parent: ColorDecision | None = None
 
     # Properties ==============================================================
 
     @property
-    def cc(self) -> Optional[ColorCorrection]:  # pylint: disable=C0103
+    def cc(self) -> ColorCorrection | None:  # pylint: disable=C0103
         """Return the referenced ColorCorrection instance if it exists.
-        
+
         Returns:
             Optional[ColorCorrection]: The ColorCorrection instance with
                 matching ID, or None if reference cannot be resolved.
@@ -266,9 +266,9 @@ class ColorCorrectionRef(AscXMLBase):
         return self.resolve_reference()
 
     @property
-    def id(self) -> Optional[str]:  # pylint: disable=C0103
+    def id(self) -> str | None:  # pylint: disable=C0103
         """Return the ID of the referenced ColorCorrection.
-        
+
         Returns:
             Optional[str]: ColorCorrection ID this reference points to.
         """
@@ -277,15 +277,18 @@ class ColorCorrectionRef(AscXMLBase):
     @id.setter
     def id(self, ref_id: str) -> None:  # pylint: disable=C0103
         """Set the ID of the ColorCorrection to reference.
-        
+
         Args:
             ref_id (str): ID of the ColorCorrection to reference.
-            
+
         Raises:
             ValidationError: If ref_id doesn't match existing ColorCorrection
                 and halt_on_error is enabled.
         """
-        if ref_id not in ColorCorrection.members and config.config.halt_on_error:
+        if (
+            ref_id not in ColorCorrection.members
+            and config.config.halt_on_error
+        ):
             raise ValidationError(
                 f"Reference id '{ref_id}' does not match any existing "
                 f"ColorCorrection id in ColorCorrection.members "
@@ -298,7 +301,7 @@ class ColorCorrectionRef(AscXMLBase):
 
     def _set_id(self, new_ref: str) -> None:
         """Change reference ID and update class members dictionary.
-        
+
         Args:
             new_ref (str): New ColorCorrection ID to reference.
         """
@@ -322,17 +325,17 @@ class ColorCorrectionRef(AscXMLBase):
 
     def build_element(self) -> ElementTree.Element:
         """Build XML ElementTree Element representing this reference.
-        
+
         Creates a ColorCorrectionRef XML element with ref attribute containing
         the referenced ColorCorrection ID.
-        
+
         Returns:
             ElementTree.Element: XML element representing this reference.
 
         """
-        cc_ref_xml = ElementTree.Element('ColorCorrectionRef')
+        cc_ref_xml = ElementTree.Element("ColorCorrectionRef")
         if self.id is not None:
-            cc_ref_xml.attrib = {'ref': self.id}
+            cc_ref_xml.attrib = {"ref": self.id}
 
         return cc_ref_xml
 
@@ -341,7 +344,7 @@ class ColorCorrectionRef(AscXMLBase):
     @classmethod
     def reset_members(cls) -> None:
         """Clear the class-level members dictionary.
-        
+
         Removes all ColorCorrectionRef instances from the members dictionary.
         Useful for testing or when starting with a clean state.
 
@@ -350,16 +353,16 @@ class ColorCorrectionRef(AscXMLBase):
 
     # =========================================================================
 
-    def resolve_reference(self) -> Optional[ColorCorrection]:
+    def resolve_reference(self) -> ColorCorrection | None:
         """Resolve reference to return the actual ColorCorrection instance.
-        
+
         Attempts to find and return the ColorCorrection instance with matching
         ID from the ColorCorrection.members dictionary.
-        
+
         Returns:
             Optional[ColorCorrection]: The referenced ColorCorrection if found,
                 None if not found (when halt_on_error is False).
-                
+
         Raises:
             ValidationError: If reference cannot be resolved and halt_on_error
                 is enabled.
@@ -376,6 +379,7 @@ class ColorCorrectionRef(AscXMLBase):
                 )
             else:
                 return None
+
 
 # ==============================================================================
 
@@ -419,14 +423,19 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     """
 
-    members: Dict[str, List['ColorDecision']] = {}
-    """Dictionary mapping ColorCorrection IDs to lists of ColorDecision 
-    instances that contain them. Multiple decisions can reference the same 
+    members: dict[str, list["ColorDecision"]] = {}
+    """Dictionary mapping ColorCorrection IDs to lists of ColorDecision
+    instances that contain them. Multiple decisions can reference the same
     correction."""
 
-    def __init__(self, color_correct: Optional[Union[ColorCorrection, 'ColorCorrectionRef']] = None, media: Optional['MediaRef'] = None) -> None:
+    def __init__(
+        self,
+        color_correct: Union[ColorCorrection, "ColorCorrectionRef"]
+        | None = None,
+        media: Optional["MediaRef"] = None,
+    ) -> None:
         """Initialize ColorDecision with ColorCorrection and optional MediaRef.
-        
+
         Args:
             color_correct (Optional[Union[ColorCorrection, ColorCorrectionRef]]):
                 ColorCorrection or ColorCorrectionRef to associate with media.
@@ -435,11 +444,11 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
                 with the color correction.
 
         """
-        super(ColorDecision, self).__init__()
-        self.parent: Optional[Any] = None
-        self._cc: Optional[Union[ColorCorrection, 'ColorCorrectionRef']] = None
+        super().__init__()
+        self.parent: Any | None = None
+        self._cc: ColorCorrection | ColorCorrectionRef | None = None
         self._set_cc(color_correct)
-        self._media_ref: Optional['MediaRef'] = media
+        self._media_ref: MediaRef | None = media
 
         if self.cc:
             self.set_parentage()
@@ -447,9 +456,9 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     # Properties ==============================================================
 
     @property
-    def cc(self) -> Optional[Union[ColorCorrection, 'ColorCorrectionRef']]:  # pylint: disable=C0103
+    def cc(self) -> Union[ColorCorrection, "ColorCorrectionRef"] | None:  # pylint: disable=C0103
         """Return the contained ColorCorrection or ColorCorrectionRef.
-        
+
         Returns:
             Optional[Union[ColorCorrection, ColorCorrectionRef]]: The color
                 correction instance or reference, or None if not set.
@@ -458,9 +467,11 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         return self._cc
 
     @cc.setter
-    def cc(self, new_cc: Optional[Union[ColorCorrection, 'ColorCorrectionRef']]) -> None:  # pylint: disable=C0103
+    def cc(
+        self, new_cc: Union[ColorCorrection, "ColorCorrectionRef"] | None
+    ) -> None:  # pylint: disable=C0103
         """Set the ColorCorrection or ColorCorrectionRef and update links.
-        
+
         Args:
             new_cc (Optional[Union[ColorCorrection, ColorCorrectionRef]]):
                 New color correction to associate with this decision.
@@ -471,16 +482,16 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     @property
     def is_ref(self) -> bool:
         """Return True if contains ColorCorrectionRef.
-        
+
         Returns:
             bool: True if cc is a ColorCorrectionRef, False if ColorCorrection.
         """
         return type(self.cc) is ColorCorrectionRef
 
     @property
-    def media_ref(self) -> Optional['MediaRef']:
+    def media_ref(self) -> Optional["MediaRef"]:
         """Return the associated MediaRef instance if present.
-        
+
         Returns:
             Optional[MediaRef]: The media reference associated with this
                 decision, or None if no media reference is set.
@@ -489,9 +500,9 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         return self._media_ref
 
     @media_ref.setter
-    def media_ref(self, new_media_ref: Optional['MediaRef']) -> None:
+    def media_ref(self, new_media_ref: Optional["MediaRef"]) -> None:
         """Set the MediaRef and update parent relationship.
-        
+
         Args:
             new_media_ref (Optional[MediaRef]): New media reference to
                 associate with this decision.
@@ -503,9 +514,11 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # Private Methods =========================================================
 
-    def _set_cc(self, new_cc: Optional[Union[ColorCorrection, 'ColorCorrectionRef']]) -> None:
+    def _set_cc(
+        self, new_cc: Union[ColorCorrection, "ColorCorrectionRef"] | None
+    ) -> None:
         """Set ColorCorrection and update class members dictionary.
-        
+
         Args:
             new_cc (Optional[Union[ColorCorrection, ColorCorrectionRef]]):
                 New color correction to set and register in members dictionary.
@@ -538,28 +551,28 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     def build_element(self, resolve: bool = False) -> ElementTree.Element:  # pylint: disable=W0221
         """Build XML ElementTree Element representing this ColorDecision.
-        
+
         Creates a ColorDecision XML element containing descriptions, MediaRef
         (if present), and ColorCorrection or ColorCorrectionRef.
-        
+
         Args:
             resolve (bool): If True and this contains a ColorCorrectionRef,
                 resolve the reference and include the actual ColorCorrection
                 element instead of the reference element.
-                
+
         Returns:
             ElementTree.Element: XML element representing this ColorDecision.
 
         """
-        cd_xml = ElementTree.Element('ColorDecision')
+        cd_xml = ElementTree.Element("ColorDecision")
         if self.input_desc:
-            input_desc = ElementTree.SubElement(cd_xml, 'InputDescription')
+            input_desc = ElementTree.SubElement(cd_xml, "InputDescription")
             input_desc.text = self.input_desc
         if self.viewing_desc:
-            viewing_desc = ElementTree.SubElement(cd_xml, 'ViewingDescription')
+            viewing_desc = ElementTree.SubElement(cd_xml, "ViewingDescription")
             viewing_desc.text = self.viewing_desc
         for description in self.desc:
-            desc = ElementTree.SubElement(cd_xml, 'Description')
+            desc = ElementTree.SubElement(cd_xml, "Description")
             desc.text = description
         # Customary for the Media Ref element to go first (if there is one)
         if self.media_ref and self.media_ref.element is not None:
@@ -585,35 +598,38 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # =========================================================================
 
-    def parse_xml_color_correction(self, xml_element: ElementTree.Element) -> bool:
+    def parse_xml_color_correction(
+        self, xml_element: ElementTree.Element
+    ) -> bool:
         """Parse ColorDecision XML element to find ColorCorrection or reference.
-        
+
         Searches for either a ColorCorrection or ColorCorrectionRef element
         within the ColorDecision and creates the appropriate object.
-        
+
         Args:
             xml_element (ElementTree.Element): ColorDecision XML element to
                 parse.
-            
+
         Returns:
             bool: True if ColorCorrection or ColorCorrectionRef was found and
                 parsed successfully, False otherwise.
 
         """
-        cc_elem = xml_element.find('ColorCorrection')
+        cc_elem = xml_element.find("ColorCorrection")
         if cc_elem is None:
             # Perhaps we're a ColorCorrectionRef?
-            cc_elem = xml_element.find('ColorCorrectionRef')
+            cc_elem = xml_element.find("ColorCorrectionRef")
             if cc_elem is None:
                 # No ColorCorrection or CCRef? This is a bad ColorDecision
                 return False
             else:
                 # Parse the ColorCorrectionRef
-                ref_id = cc_elem.attrib['ref']
+                ref_id = cc_elem.attrib["ref"]
                 self.cc = ColorCorrectionRef(ref_id)  # pylint: disable=C0103
                 self.cc.parent = self
         else:
             from . import parse
+
             # Parse the ColorCorrection
             self.cc = parse.parse_cc(cc_elem)
             self.cc.parent = self
@@ -622,17 +638,19 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     # =========================================================================
 
-    def parse_xml_color_decision(self, xml_element: ElementTree.Element) -> None:
+    def parse_xml_color_decision(
+        self, xml_element: ElementTree.Element
+    ) -> None:
         """Parse ColorDecision XML element and populate this instance.
-        
+
         Parses a ColorDecision XML element to extract descriptions,
         input/viewing descriptions, ColorCorrection or ColorCorrectionRef, and
         MediaRef.
-        
+
         Args:
             xml_element (ElementTree.Element): ColorDecision XML element to
                 parse.
-            
+
         Raises:
             ParseError: If ColorDecision element is missing required
                 ColorCorrection or ColorCorrectionRef child element.
@@ -648,8 +666,8 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         # Grab our ColorCorrection
         if not self.parse_xml_color_correction(xml_element):
             raise ParseError(
-                'ColorDecisions require at least one ColorCorrection or '
-                'ColorCorrectionRef node, but neither was found.'
+                "ColorDecisions require at least one ColorCorrection or "
+                "ColorCorrectionRef node, but neither was found."
             )
 
         # Grab our MediaRef (if found)
@@ -659,18 +677,18 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     def parse_xml_media_ref(self, xml_element: ElementTree.Element) -> None:
         """Parse ColorDecision XML element to find and create MediaRef.
-        
+
         Searches for a MediaRef element within the ColorDecision and creates
         a MediaRef instance if found.
-        
+
         Args:
             xml_element (ElementTree.Element): ColorDecision XML element to
                 parse.
 
         """
-        media_ref_elem = xml_element.find('MediaRef')
+        media_ref_elem = xml_element.find("MediaRef")
         if media_ref_elem is not None:
-            ref_uri = media_ref_elem.attrib['ref']
+            ref_uri = media_ref_elem.attrib["ref"]
             self.media_ref = MediaRef(ref_uri=ref_uri)
 
     # =========================================================================
@@ -678,7 +696,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
     @classmethod
     def reset_members(cls) -> None:
         """Clear the class-level members dictionary.
-        
+
         Removes all ColorDecision instances from the members dictionary.
         Useful for testing or when starting with a clean state.
 
@@ -689,7 +707,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
 
     def set_parentage(self) -> None:
         """Set parent attribute of child objects to reference this instance.
-        
+
         Updates the parent attribute of the contained ColorCorrection or
         ColorCorrectionRef and MediaRef (if present) to point to this
         ColorDecision instance.
@@ -699,6 +717,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             self.cc.parent = self
         if self.media_ref:  # Media ref objects are optional
             self.media_ref.parent = self
+
 
 # ==============================================================================
 
@@ -718,29 +737,31 @@ class MediaRef(AscXMLBase):
     Example:
         >>> media = MediaRef("footage/shot_001.0001.exr")
         >>> print(media.is_seq)  # True
-        >>> print(media.seq)     # "shot_001.####.exr"
-        >>> print(media.exists) 
+        >>> print(media.seq)  # "shot_001.####.exr"
+        >>> print(media.exists)
 
     """
 
-    members: Dict[str, List['MediaRef']] = {}
-    """Dictionary mapping reference URIs to lists of MediaRef instances that 
+    members: dict[str, list["MediaRef"]] = {}
+    """Dictionary mapping reference URIs to lists of MediaRef instances that
     point to them. Multiple MediaRef instances can reference the same URI."""
 
-    def __init__(self, ref_uri: str, parent: Optional['ColorDecision'] = None) -> None:
-        super(MediaRef, self).__init__()
+    def __init__(
+        self, ref_uri: str, parent: Optional["ColorDecision"] = None
+    ) -> None:
+        super().__init__()
         # Parse URI components and store original URI for preservation
         protocol, directory, filename = self._split_uri(ref_uri)
         self._ref_info = MediaRefInfo(
             protocol=protocol,
-            directory=directory, 
+            directory=directory,
             filename=filename,
-            original_uri=ref_uri
+            original_uri=ref_uri,
         )
-        self.parent: Optional['ColorDecision'] = parent
+        self.parent: ColorDecision | None = parent
 
         # Cache for sequence information - computed lazily
-        self._sequence_info: Optional[SequenceInfo] = None
+        self._sequence_info: SequenceInfo | None = None
 
         self._change_membership()
 
@@ -749,7 +770,7 @@ class MediaRef(AscXMLBase):
     @property
     def directory(self) -> str:
         """Return directory portion of the URI path.
-        
+
         Returns:
             str: Directory path without protocol or filename. Empty string
                 if URI points to a file in the current directory.
@@ -760,14 +781,14 @@ class MediaRef(AscXMLBase):
     @directory.setter
     def directory(self, value: str) -> None:
         """Set directory portion of the URI path.
-        
+
         Updates the directory component and resets cached sequence information.
         Also updates class membership dictionary with new URI. Clears
         original_uri since the URI is being modified.
-        
+
         Args:
             value (str): New directory path to set.
-            
+
         Raises:
             ValidationError: If value is not a string.
 
@@ -776,18 +797,18 @@ class MediaRef(AscXMLBase):
             old_ref = self.ref
             self._ref_info.directory = value
             # Clear original URI since we're modifying components
-            self._ref_info.original_uri = ''
+            self._ref_info.original_uri = ""
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
             raise ValidationError(
-                f'Directory must be set with a string, not {type(value)}'
+                f"Directory must be set with a string, not {type(value)}"
             )
 
     @property
     def exists(self) -> bool:
         """Check if the referenced path exists in the file system.
-        
+
         Returns:
             bool: True if the file or directory exists, False otherwise.
 
@@ -797,7 +818,7 @@ class MediaRef(AscXMLBase):
     @property
     def filename(self) -> str:
         """Return filename portion of the URI path.
-        
+
         Returns:
             str: Filename with extension, or empty string if URI points
                 to a directory only.
@@ -808,14 +829,14 @@ class MediaRef(AscXMLBase):
     @filename.setter
     def filename(self, value: str) -> None:
         """Set filename portion of the URI path.
-        
+
         Updates the filename component and resets cached sequence information.
         Also updates class membership dictionary with new URI. Clears
         original_uri since the URI is being modified.
-        
+
         Args:
             value (str): New filename to set, including extension.
-            
+
         Raises:
             ValidationError: If value is not a string.
 
@@ -824,18 +845,18 @@ class MediaRef(AscXMLBase):
             old_ref = self.ref
             self._ref_info.filename = value
             # Clear original URI since we're modifying components
-            self._ref_info.original_uri = ''
+            self._ref_info.original_uri = ""
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
             raise ValidationError(
-                f'Filename must be set with a string, not {type(value)}'
+                f"Filename must be set with a string, not {type(value)}"
             )
 
     @property
     def is_abs(self) -> bool:
         """Check if the path is absolute.
-        
+
         Returns:
             bool: True if path is absolute, False if relative.
 
@@ -845,7 +866,7 @@ class MediaRef(AscXMLBase):
     @property
     def is_dir(self) -> bool:
         """Check if the path points to a directory.
-        
+
         Returns:
             bool: True if path is a directory, False if file or non-existent.
 
@@ -855,11 +876,11 @@ class MediaRef(AscXMLBase):
     @property
     def is_seq(self) -> bool:
         """Check if the path represents an image sequence.
-        
+
         Detects sequences by analyzing filenames for frame number patterns
         like digits, # padding, or %d formatting. For directories, scans
         contained files for sequence patterns.
-        
+
         Returns:
             bool: True if path represents an image sequence, False otherwise.
 
@@ -871,11 +892,11 @@ class MediaRef(AscXMLBase):
     @property
     def path(self) -> str:
         """Return complete file path without URI protocol.
-        
+
         Uses the original URI if available to preserve exact formatting.
         If original_uri has been cleared due to property changes, uses
         intelligent separator detection based on directory pattern.
-        
+
         Returns:
             str: Complete file path without protocol. Returns directory
                 if no filename, or '.' if both directory and filename are
@@ -886,24 +907,26 @@ class MediaRef(AscXMLBase):
         if self._ref_info.original_uri:
             uri = self._ref_info.original_uri
             # Remove protocol if present
-            if '://' in uri:
-                uri = uri.split('://', 1)[1]
+            if "://" in uri:
+                uri = uri.split("://", 1)[1]
             return uri
-        
+
         # Fallback to reconstruction using intelligent separator detection
         if self._ref_info.filename:
             if self._ref_info.directory:
-                separator = self._ref_info._detect_separator(self._ref_info.directory)
+                separator = self._ref_info._detect_separator(
+                    self._ref_info.directory
+                )
                 return f"{self._ref_info.directory}{separator}{self._ref_info.filename}"
             else:
                 return self._ref_info.filename
         else:
-            return self._ref_info.directory if self._ref_info.directory else '.'
+            return self._ref_info.directory if self._ref_info.directory else "."
 
     @property
     def protocol(self) -> str:
         """Return URI protocol without '://' suffix.
-        
+
         Returns:
             str: Protocol portion of URI (e.g., 'http', 'file', 'ftp').
                 Empty string if no protocol is present.
@@ -914,40 +937,40 @@ class MediaRef(AscXMLBase):
     @protocol.setter
     def protocol(self, value: str) -> None:
         """Set URI protocol.
-        
+
         Automatically removes '://' suffix if present. Updates class
         membership dictionary and resets cached properties. Clears original_uri
         since the URI is being modified.
-        
+
         Args:
             value (str): Protocol to set (e.g., 'http', 'file'). Can include
                 '://' suffix which will be automatically removed.
-                
+
         Raises:
             ValidationError: If value is not a string.
 
         """
         if type(value) is str:
             # If :// was appended we'll remove it.
-            if value.endswith('://'):
-                value = value.removesuffix('://')
+            if value.endswith("://"):
+                value = value.removesuffix("://")
             old_ref = self.ref
             self._ref_info.protocol = value
             # Clear original URI since we're modifying components
-            self._ref_info.original_uri = ''
+            self._ref_info.original_uri = ""
             self._change_membership(old_ref=old_ref)
             # We probably don't need to reset the cached properties, but we
             # will just to be safe.
             self._reset_cached_properties()
         else:
             raise ValidationError(
-                f'Protocol must be set with a string, not {type(value)}'
+                f"Protocol must be set with a string, not {type(value)}"
             )
 
     @property
     def ref(self) -> str:
         """Return complete URI including protocol, directory, and filename.
-        
+
         Returns:
             str: Complete URI string. Includes protocol with '://' if present,
                 followed by directory and filename components.
@@ -958,14 +981,14 @@ class MediaRef(AscXMLBase):
     @ref.setter
     def ref(self, uri: str) -> None:
         """Set complete URI and parse into components.
-        
+
         Parses the URI into protocol, directory, and filename components
         while preserving the original URI format for exact reconstruction.
         Updates class membership dictionary and resets all cached properties.
-        
+
         Args:
             uri (str): Complete URI string to parse and set.
-            
+
         Raises:
             ValidationError: If uri is not a string.
 
@@ -978,22 +1001,22 @@ class MediaRef(AscXMLBase):
                 protocol=protocol,
                 directory=directory,
                 filename=filename,
-                original_uri=uri
+                original_uri=uri,
             )
             self._change_membership(old_ref=old_ref)
             self._reset_cached_properties()
         else:
             raise ValidationError(
-                f'URI must be set with a string, not {type(uri)}'
+                f"URI must be set with a string, not {type(uri)}"
             )
 
     @property
-    def seq(self) -> Optional[str]:
+    def seq(self) -> str | None:
         """Return first detected image sequence with # padding notation.
-        
+
         Converts frame number patterns to # padding format (e.g.,
         'image.0001.exr' becomes 'image.####.exr').
-        
+
         Returns:
             Optional[str]: First sequence with # padding, or None if no
                 sequences detected.
@@ -1004,15 +1027,19 @@ class MediaRef(AscXMLBase):
         if not self._sequence_info or not self._sequence_info.is_sequence:
             return None
 
-        return self._sequence_info.sequences[0] if self._sequence_info.sequences else None
+        return (
+            self._sequence_info.sequences[0]
+            if self._sequence_info.sequences
+            else None
+        )
 
     @property
-    def seqs(self) -> List[str]:
+    def seqs(self) -> list[str]:
         """Return all detected image sequences with # padding notation.
-        
+
         For directories, returns all unique sequence patterns found.
         For files, returns single-item list if file is part of a sequence.
-        
+
         Returns:
             List[str]: All sequences with # padding notation. Empty list
                 if no sequences detected.
@@ -1023,21 +1050,25 @@ class MediaRef(AscXMLBase):
         if not self._sequence_info or not self._sequence_info.is_sequence:
             return []
 
-        return self._sequence_info.sequences if self._sequence_info.sequences else []
+        return (
+            self._sequence_info.sequences
+            if self._sequence_info.sequences
+            else []
+        )
 
     # Private Methods =========================================================
 
-    def _change_membership(self, old_ref: Optional[str] = None) -> None:
+    def _change_membership(self, old_ref: str | None = None) -> None:
         """Update class members dictionary when URI reference changes.
-        
+
         Removes this instance from the old URI's member list and adds it
         to the new URI's member list. Creates new member list if the new
         URI is not already tracked. Cleans up empty member lists.
-        
+
         Args:
             old_ref (Optional[str]): Previous URI reference to remove this
                 instance from. If None or not found, removal is skipped.
-                
+
         """
         if old_ref:
             try:
@@ -1060,67 +1091,79 @@ class MediaRef(AscXMLBase):
 
     def _get_sequences(self) -> None:  # pylint: disable=R0912
         """Analyze path to detect image sequences and cache results.
-        
+
         Examines the path to determine if it represents an image sequence
         by looking for frame number patterns. For directories, scans all
         files to find sequence patterns. Results are cached in _sequence_info.
-        
+
         Sequence detection patterns:
         - Numeric frame numbers: image.0001.exr -> image.####.exr
         - Percent formatting: image.%04d.exr (preserved as-is)
         - Hash padding: image.####.exr (already in target format)
 
         """
-        re_exp = r'(^[ \w_.-]+[_.])([0-9]+)(\.[a-zA-Z0-9]{3}$)'
-        re_exp_percent = r'(^[ \w_.-]+[_.])(%[0-9]+d)(\.[a-zA-Z0-9]{3}$)'
+        re_exp = r"(^[ \w_.-]+[_.])([0-9]+)(\.[a-zA-Z0-9]{3}$)"
+        re_exp_percent = r"(^[ \w_.-]+[_.])(%[0-9]+d)(\.[a-zA-Z0-9]{3}$)"
         match = re.compile(re_exp)
 
         if self.is_dir and not self.exists:
             # It doesn't exist, so we can't tell if it's a sequence
             if config.config.halt_on_error:
                 raise ValidationError(
-                    f'Cannot determine if non-existent directory {self.path} '
-                    f'contains an image sequence.'
+                    f"Cannot determine if non-existent directory {self.path} "
+                    f"contains an image sequence."
                 )
             else:
-                self._sequence_info = SequenceInfo(is_sequence=False, sequences=[])
+                self._sequence_info = SequenceInfo(
+                    is_sequence=False, sequences=[]
+                )
         elif self.is_dir and self.exists:
-            file_list = [f.name for f in Path(self.path).iterdir() if f.is_file()]
+            file_list = [
+                f.name for f in Path(self.path).iterdir() if f.is_file()
+            ]
             files = [f for f in file_list if match.search(f)]
             if not files:
-                self._sequence_info = SequenceInfo(is_sequence=False, sequences=[])
+                self._sequence_info = SequenceInfo(
+                    is_sequence=False, sequences=[]
+                )
             else:
                 seqs = []
                 for image in files:
                     found = match.search(image)
                     if found is not None:
-                        padding = '#' * len(found.group(2))
+                        padding = "#" * len(found.group(2))
                         filename = found.group(1) + padding + found.group(3)
                         if filename not in seqs:
                             seqs.append(filename)
-                self._sequence_info = SequenceInfo(is_sequence=True, sequences=seqs)
+                self._sequence_info = SequenceInfo(
+                    is_sequence=True, sequences=seqs
+                )
         else:
             found = match.search(self.filename)
             if found is not None:
-                padding = '#' * len(found.group(2))
+                padding = "#" * len(found.group(2))
                 self._sequence_info = SequenceInfo(
-                    is_sequence=True, 
-                    sequences=[found.group(1) + padding + found.group(3)]
+                    is_sequence=True,
+                    sequences=[found.group(1) + padding + found.group(3)],
                 )
             else:
                 # We'll finally check for %d style padding
                 match = re.compile(re_exp_percent)
                 found = match.search(self.filename)
                 if found is not None:
-                    self._sequence_info = SequenceInfo(is_sequence=True, sequences=[self.filename])
+                    self._sequence_info = SequenceInfo(
+                        is_sequence=True, sequences=[self.filename]
+                    )
                 else:
-                    self._sequence_info = SequenceInfo(is_sequence=False, sequences=[])
+                    self._sequence_info = SequenceInfo(
+                        is_sequence=False, sequences=[]
+                    )
 
     # =========================================================================
 
     def _reset_cached_properties(self) -> None:
         """Reset cached sequence information to force re-computation.
-        
+
         Clears the _sequence_info cache so that sequence detection will
         be performed again on next access to sequence-related properties.
 
@@ -1130,46 +1173,46 @@ class MediaRef(AscXMLBase):
     # =========================================================================
 
     @staticmethod
-    def _split_uri(uri: str) -> Tuple[str, str, str]:
+    def _split_uri(uri: str) -> tuple[str, str, str]:
         """Parse URI into protocol, directory, and filename components.
-        
+
         Separates a URI into its constituent parts while preserving the
         original path format including relative path indicators. Handles
         both Unix (/) and Windows (\\) path separators.
-        
+
         Args:
             uri (str): URI string to parse.
-            
+
         Returns:
-            Tuple[str, str, str]: Three-tuple of (protocol, directory, 
+            Tuple[str, str, str]: Three-tuple of (protocol, directory,
                 filename). Protocol is empty string if not present.
                 Directory preserves original format including './' prefixes.
 
         """
-        if '://' in uri:
-            protocol = uri.split('://')[0]
-            uri = uri.split('://')[1]
+        if "://" in uri:
+            protocol = uri.split("://")[0]
+            uri = uri.split("://")[1]
         else:
-            protocol = ''
+            protocol = ""
 
         # Handle both Unix and Windows path separators
         # Find the last occurrence of either separator type
-        last_forward_slash = uri.rfind('/')
-        last_backslash = uri.rfind('\\')
-        
+        last_forward_slash = uri.rfind("/")
+        last_backslash = uri.rfind("\\")
+
         # Use the separator that appears last in the string
         if last_forward_slash == -1 and last_backslash == -1:
             # No separators found - entire URI is filename
-            directory = ''
+            directory = ""
             ref_file = uri
         elif last_forward_slash > last_backslash:
             # Forward slash is the last separator
             directory = uri[:last_forward_slash]
-            ref_file = uri[last_forward_slash + 1:]
+            ref_file = uri[last_forward_slash + 1 :]
         else:
             # Backslash is the last separator (or they're equal and both exist)
             directory = uri[:last_backslash]
-            ref_file = uri[last_backslash + 1:]
+            ref_file = uri[last_backslash + 1 :]
 
         return protocol, directory, ref_file
 
@@ -1177,17 +1220,17 @@ class MediaRef(AscXMLBase):
 
     def build_element(self) -> ElementTree.Element:
         """Build XML ElementTree Element representing this MediaRef.
-        
+
         Creates a MediaRef XML element with the 'ref' attribute containing
         the complete URI.
-        
+
         Returns:
             ElementTree.Element: XML element with MediaRef tag and ref
                 attribute.
 
         """
-        media_ref_xml = ElementTree.Element('MediaRef')
-        media_ref_xml.attrib = {'ref': self.ref}
+        media_ref_xml = ElementTree.Element("MediaRef")
+        media_ref_xml.attrib = {"ref": self.ref}
 
         return media_ref_xml
 
@@ -1196,9 +1239,9 @@ class MediaRef(AscXMLBase):
     @classmethod
     def reset_members(cls) -> None:
         """Clear the class-level members dictionary.
-        
+
         Removes all MediaRef instances from the members dictionary.
         Useful for testing or when starting with a clean state.
-        
+
         """
         cls.members = {}

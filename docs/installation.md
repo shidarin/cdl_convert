@@ -22,7 +22,7 @@ pip install git+https://github.com/shidarin/cdl_convert.git
 
 CDL Convert requires:
 - **Python 3.11 or higher** (supports 3.11, 3.12, 3.13, 3.14)
-- [OpenTimelineIO](https://github.com/PixarAnimationStudios/OpenTimelineIO)
+- [OpenTimelineIO](https://github.com/AcademySoftwareFoundation/OpenTimelineIO)
 - **otio-cmx3600-adapter** - CMX EDL format support
 - **otio-ale-adapter** - ALE format support
 - **defusedxml** - Secure XML parsing

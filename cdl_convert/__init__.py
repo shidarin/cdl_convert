@@ -13,7 +13,7 @@ various programs and facilities in the film and television industry.
 
 Supported Input Formats:
     * Avid Log Exchange (ALE)
-    * Film Log EDL Exchange (FLEx) 
+    * Film Log EDL Exchange (FLEx)
     * CMX EDL
     * XML Color Correction (cc)
     * XML Color Correction Collection (ccc)
@@ -31,16 +31,16 @@ ToDo:
 
 Example Usage:
     >>> from cdl_convert import parse_file, ColorCorrection
-    >>> 
+    >>>
     >>> # Parse any supported format
     >>> collection = parse_file("input.ale")
     >>> print(f"Found {len(collection.color_corrections)} corrections")
-    >>> 
+    >>>
     >>> # Create and modify corrections
     >>> cc = ColorCorrection("my_shot")
     >>> cc.slope = [1.2, 1.1, 1.0]
     >>> cc.sat = 0.9
-    >>> 
+    >>>
     >>> # Use ColorValues dataclass
     >>> values = cc.get_color_values()
     >>> print(f"Is unity: {values.is_unity()}")
@@ -86,17 +86,28 @@ SOFTWARE.
 
 # cdl_convert imports
 
-from .collection import ColorCollection
-from .correction import ColorCorrection, SatNode, SopNode
-from .decision import ColorCorrectionRef, ColorDecision, MediaRef
-from .exceptions import CDLConvertError, ParseError, ValidationError, FormatError
-from .parse import (
-    parse_ale, parse_cc, parse_ccc,
-    parse_cdl, parse_cmx, parse_file, parse_flex,
-    parse_otio, parse_rnh_cdl
+from cdl_convert.collection import ColorCollection
+from cdl_convert.correction import ColorCorrection, SatNode, SopNode
+from cdl_convert.decision import ColorCorrectionRef, ColorDecision, MediaRef
+from cdl_convert.exceptions import (
+    CDLConvertError,
+    FormatError,
+    ParseError,
+    ValidationError,
 )
-from .utils import sanity_check, to_decimal
-from .write import write_cc, write_ccc, write_cdl, write_rnh_cdl
+from cdl_convert.parse import (
+    parse_ale,
+    parse_cc,
+    parse_ccc,
+    parse_cdl,
+    parse_cmx,
+    parse_file,
+    parse_flex,
+    parse_otio,
+    parse_rnh_cdl,
+)
+from cdl_convert.utils import sanity_check, to_decimal
+from cdl_convert.write import write_cc, write_ccc, write_cdl, write_rnh_cdl
 
 # ==============================================================================
 # GLOBALS
@@ -104,7 +115,7 @@ from .write import write_cc, write_ccc, write_cdl, write_rnh_cdl
 
 __author__ = "Sean Wallitsch"
 __copyright__ = "Copyright 2015-2025, Sean Wallitsch"
-__credits__ = ["Sean Wallitsch", ]
+__credits__ = ["Sean Wallitsch"]
 __license__ = "MIT"
 __version__ = "0.9.2"
 __maintainer__ = "Sean Wallitsch"
@@ -116,33 +127,33 @@ __status__ = "Development"
 # ==============================================================================
 
 __all__ = [
-    'CDLConvertError',
-    'ColorCorrection',
-    'ColorCorrectionRef',
-    'ColorCollection',
-    'ColorDecision',
-    'FormatError',
-    'MediaRef',
-    'ParseError',
-    'parse_ale',
-    'parse_cc',
-    'parse_ccc',
-    'parse_cdl',
-    'parse_cmx',
-    'parse_file',
-    'parse_flex',
-    'parse_otio',
-    'parse_rnh_cdl',
-    'reset_all',
-    'sanity_check',
-    'SatNode',
-    'SopNode',
-    'to_decimal',
-    'ValidationError',
-    'write_cc',
-    'write_ccc',
-    'write_cdl',
-    'write_rnh_cdl',
+    "CDLConvertError",
+    "ColorCorrection",
+    "ColorCorrectionRef",
+    "ColorCollection",
+    "ColorDecision",
+    "FormatError",
+    "MediaRef",
+    "ParseError",
+    "parse_ale",
+    "parse_cc",
+    "parse_ccc",
+    "parse_cdl",
+    "parse_cmx",
+    "parse_file",
+    "parse_flex",
+    "parse_otio",
+    "parse_rnh_cdl",
+    "reset_all",
+    "sanity_check",
+    "SatNode",
+    "SopNode",
+    "to_decimal",
+    "ValidationError",
+    "write_cc",
+    "write_ccc",
+    "write_cdl",
+    "write_rnh_cdl",
 ]
 
 # ==============================================================================
@@ -152,19 +163,19 @@ __all__ = [
 
 def reset_all() -> None:
     """Reset all class level member lists and dictionaries.
-    
+
     This function clears all registered ColorCorrection, ColorCollection,
     ColorDecision, and related class instances. Useful for testing or
     when you need to start with a clean state.
-    
+
     Example:
         >>> from cdl_convert import ColorCorrection, reset_all
         >>> cc1 = ColorCorrection("test1")
-        >>> cc2 = ColorCorrection("test2") 
+        >>> cc2 = ColorCorrection("test2")
         >>> print(len(ColorCorrection.members))  # 2
         >>> reset_all()
         >>> print(len(ColorCorrection.members))  # 0
-        
+
     """
     # Import these here to avoid cyclic imports
 

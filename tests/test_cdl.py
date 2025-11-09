@@ -7,18 +7,17 @@ REQUIREMENTS:
 mock
 """
 
-#==============================================================================
+# ==============================================================================
 # IMPORTS
-#==============================================================================
+# ==============================================================================
 
 # Standard Imports
-from unittest import mock
 import os
-from pathlib import Path
 import sys
 import tempfile
 import unittest
-from xml.etree import ElementTree
+from pathlib import Path
+from unittest import mock
 
 # Grab our test's path and append the cdL_convert root directory
 
@@ -29,14 +28,14 @@ from xml.etree import ElementTree
 # 4) Joining
 # 5) Appending to our Python path.
 
-sys.path.append('/'.join(os.path.realpath(__file__).split('/')[:-2]))
+sys.path.append("/".join(os.path.realpath(__file__).split("/")[:-2]))
 
 import cdl_convert
 from cdl_convert.exceptions import CDLConvertError
 
-#==============================================================================
+# ==============================================================================
 # GLOBALS
-#==============================================================================
+# ==============================================================================
 
 # parse_cdl ===================================================================
 
@@ -624,41 +623,40 @@ CDL_BAD_TAG = r"""<?xml version="1.0" encoding="UTF-8"?>
 
 # misc ========================================================================
 
-UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-LOWER = 'abcdefghijklmnopqrstuvwxyz'
+UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+LOWER = "abcdefghijklmnopqrstuvwxyz"
 
 
-
-#==============================================================================
+# ==============================================================================
 # TEST CLASSES
-#==============================================================================
+# ==============================================================================
 
 
 class TestParseCDLFull(unittest.TestCase):
     """Tests a full CDL parse"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.desc = [
-            'CDL description 1',
-            'CDL description 2',
-            'CDL description 3',
-            'CDL description 4',
-            'CDL description 5'
+            "CDL description 1",
+            "CDL description 2",
+            "CDL description 3",
+            "CDL description 4",
+            "CDL description 5",
         ]
-        self.input_desc = 'CDL Input Desc Text'
-        self.viewing_desc = 'CDL Viewing Desc Text'
+        self.input_desc = "CDL Input Desc Text"
+        self.viewing_desc = "CDL Viewing Desc Text"
         self.color_correction_ids = [
-            '014_xf_seqGrade_v01',
-            'f51.200',
-            'f51.200',
-            'f55.100',
-            'f54.112',
-            'burp_100.x12',
-            'f54.112',
+            "014_xf_seqGrade_v01",
+            "f51.200",
+            "f51.200",
+            "f55.100",
+            "f54.112",
+            "burp_100.x12",
+            "f54.112",
         ]
         self.media_ref_refs = [
             "/best/path/ever.dpx",
@@ -670,31 +668,31 @@ class TestParseCDLFull(unittest.TestCase):
             None,
         ]
         self.color_decision_descs = [
-            ['CD description 1', 'CD description 2', 'CD description 3'],
+            ["CD description 1", "CD description 2", "CD description 3"],
             [],
             [],
             [],
-            ['CD description 1', 'CD description 2'],
+            ["CD description 1", "CD description 2"],
             [],
             [],
         ]
         self.color_decision_input_descs = [
-            'CD Input Desc Text',
+            "CD Input Desc Text",
             None,
             None,
             None,
-            'CD Input Desc Text 2',
+            "CD Input Desc Text 2",
             None,
             None,
         ]
         self.color_decision_viewing_descs = [
-            'CD WOOD VIEWER!? ////',
+            "CD WOOD VIEWER!? ////",
             None,
             None,
             None,
             None,
             None,
-            '12345'
+            "12345",
         ]
         self.color_decision_is_ref = [
             False,
@@ -707,13 +705,13 @@ class TestParseCDLFull(unittest.TestCase):
         ]
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CDL_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.node = cdl_convert.parse_cdl(self.filename)
 
-    #==========================================================================
+    # ==========================================================================
 
     def tearDown(self):
         # The system should clean these up automatically,
@@ -723,147 +721,107 @@ class TestParseCDLFull(unittest.TestCase):
         # have to worry about non-unique ids.
         cdl_convert.reset_all()
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def test_file_in(self):
         """Tests that the input_file has been set to the file in value"""
-        self.assertEqual(
-            Path(self.filename).resolve(),
-            self.node.file_in
-        )
+        self.assertEqual(Path(self.filename).resolve(), self.node.file_in)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_type(self):
         """Makes sure type is still set to ccc"""
-        self.assertEqual(
-            'cdl',
-            self.node.type
-        )
+        self.assertEqual("cdl", self.node.type)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_descs(self):
         """Tests that the desc fields have been set correctly"""
-        self.assertEqual(
-            self.desc,
-            self.node.desc
-        )
+        self.assertEqual(self.desc, self.node.desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_viewing_desc(self):
         """Tests that the viewing desc has been set correctly"""
-        self.assertEqual(
-            self.viewing_desc,
-            self.node.viewing_desc
-        )
+        self.assertEqual(self.viewing_desc, self.node.viewing_desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_input_desc(self):
         """Tests that the input desc has been set correctly"""
-        self.assertEqual(
-            self.input_desc,
-            self.node.input_desc
-        )
+        self.assertEqual(self.input_desc, self.node.input_desc)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_parse_cc_results(self):
         """Tests that the parser picked up all the cc's"""
         id_list = [i.cc.id for i in self.node.color_decisions]
-        self.assertEqual(
-            self.color_correction_ids,
-            id_list
-        )
+        self.assertEqual(self.color_correction_ids, id_list)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_media_ref_refs(self):
         """Tests that all media ref refs were parsed correctly"""
         ref_list = [
-            i.media_ref.ref if i.media_ref else None for i in self.node.color_decisions
+            i.media_ref.ref if i.media_ref else None
+            for i in self.node.color_decisions
         ]
-        self.assertEqual(
-            self.media_ref_refs,
-            ref_list
-        )
+        self.assertEqual(self.media_ref_refs, ref_list)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_color_decision_descs(self):
         """Tests that color decision descs are parsed correctly"""
-        desc_list = [
-            i.desc for i in self.node.color_decisions
-        ]
-        self.assertEqual(
-            self.color_decision_descs,
-            desc_list
-        )
+        desc_list = [i.desc for i in self.node.color_decisions]
+        self.assertEqual(self.color_decision_descs, desc_list)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_color_decision_input_descs(self):
         """Tests that color decision input descs are parsed correctly"""
-        desc_list = [
-            i.input_desc for i in self.node.color_decisions
-        ]
-        self.assertEqual(
-            self.color_decision_input_descs,
-            desc_list
-        )
+        desc_list = [i.input_desc for i in self.node.color_decisions]
+        self.assertEqual(self.color_decision_input_descs, desc_list)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_color_decision_viewing_descs(self):
         """Tests that color decision viewing descs are parsed correctly"""
-        desc_list = [
-            i.viewing_desc for i in self.node.color_decisions
-        ]
-        self.assertEqual(
-            self.color_decision_viewing_descs,
-            desc_list
-        )
+        desc_list = [i.viewing_desc for i in self.node.color_decisions]
+        self.assertEqual(self.color_decision_viewing_descs, desc_list)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_color_decision_is_ref(self):
         """Tests that color decision references are parsed correctly"""
-        ref_list = [
-            i.is_ref for i in self.node.color_decisions
-        ]
-        self.assertEqual(
-            self.color_decision_is_ref,
-            ref_list
-        )
+        ref_list = [i.is_ref for i in self.node.color_decisions]
+        self.assertEqual(self.color_decision_is_ref, ref_list)
 
 
 class TestParseCDLOdd(TestParseCDLFull):
     """Tests an odd CDL parse"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.desc = [
-            'CDL description 1',
-            'Raised1 saturation a little!?! ag... \\/Offset',
-            'Raised2 saturation a little!?! ag... \\/Offset',
+            "CDL description 1",
+            "Raised1 saturation a little!?! ag... \\/Offset",
+            "Raised2 saturation a little!?! ag... \\/Offset",
         ]
         self.input_desc = None
         self.viewing_desc = None
         self.color_correction_ids = [
-            '014_xf_seqGrade_v01',
-            'f51.200',
-            '014_xf_seqGrade_v01',
-            'missingRef',
-            'alsoMissingRef',
-            'burp_200.x15',
-            'f51.200'
+            "014_xf_seqGrade_v01",
+            "f51.200",
+            "014_xf_seqGrade_v01",
+            "missingRef",
+            "alsoMissingRef",
+            "burp_200.x15",
+            "f51.200",
         ]
         self.media_ref_refs = [
             "C:\\\\Windows\\File\\Path",
@@ -872,16 +830,16 @@ class TestParseCDLOdd(TestParseCDLFull):
             "../lateralDirectory/file.lives.here.0120.dpx",
             "http://www.google.com/logo.jpg",
             "serv://proto/uri:area:full?query=result#fragment",
-            "..\\.\\..\\..\\..\\This\\should\\not\\be\\legal\\"
+            "..\\.\\..\\..\\..\\This\\should\\not\\be\\legal\\",
         ]
         self.color_decision_descs = [
             [],
             [],
-            ['CD description 1'],
+            ["CD description 1"],
             [],
             [],
             [],
-            ['Raised2 saturation a little!?! ag... \\/Offset']
+            ["Raised2 saturation a little!?! ag... \\/Offset"],
         ]
         self.color_decision_input_descs = [
             None,
@@ -912,7 +870,7 @@ class TestParseCDLOdd(TestParseCDLFull):
         ]
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CDL_ODD.encode("utf-8"))
             self.filename = f.name
 
@@ -922,9 +880,9 @@ class TestParseCDLOdd(TestParseCDLFull):
 class TestParseCDLExceptions(unittest.TestCase):
     """Tests that we run into the correct exceptions with bad XMLs"""
 
-    #==========================================================================
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         self.filename = None
@@ -934,15 +892,15 @@ class TestParseCDLExceptions(unittest.TestCase):
             os.remove(self.filename)
         cdl_convert.reset_all()
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def testBadTag(self):
         """Tests that a bad root tag raises a ValueError"""
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CDL_BAD_TAG.encode("utf-8"))
             self.filename = f.name
 
@@ -952,18 +910,20 @@ class TestParseCDLExceptions(unittest.TestCase):
             self.filename,
         )
 
-    #==========================================================================
+    # ==========================================================================
 
     def testEmptyCDL(self):
         """Tests that an empty CCC file raises a ValueError"""
 
-        emptyCDL = ('<?xml version="1.0" encoding="UTF-8"?>\n'
-                    '<ColorDecisionList xmlns="urn:ASC:CDL:v1.01">\n'
-                    '</ColorDecisionList>')
+        emptyCDL = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<ColorDecisionList xmlns="urn:ASC:CDL:v1.01">\n'
+            "</ColorDecisionList>"
+        )
 
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(emptyCDL.encode('utf-8'))
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
+            f.write(emptyCDL.encode("utf-8"))
             self.filename = f.name
 
         self.assertRaises(
@@ -972,21 +932,23 @@ class TestParseCDLExceptions(unittest.TestCase):
             self.filename,
         )
 
-    #==========================================================================
+    # ==========================================================================
 
     def testEmptyCD(self):
         """Tests that an empty ColorDecision file raises a ValueError"""
 
-        emptyCDL = ('<?xml version="1.0" encoding="UTF-8"?>\n'
-                    '<ColorDecisionList xmlns="urn:ASC:CDL:v1.01">\n'
-                    '\t<ColorDecision>\n'
-                    '\t\t<MediaRef ref="bestref.dpx"/>\n'
-                    '\t</ColorDecision>\n'
-                    '</ColorDecisionList>')
+        emptyCDL = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<ColorDecisionList xmlns="urn:ASC:CDL:v1.01">\n'
+            "\t<ColorDecision>\n"
+            '\t\t<MediaRef ref="bestref.dpx"/>\n'
+            "\t</ColorDecision>\n"
+            "</ColorDecisionList>"
+        )
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            f.write(emptyCDL.encode('utf-8'))
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
+            f.write(emptyCDL.encode("utf-8"))
             self.filename = f.name
 
         self.assertRaises(
@@ -994,6 +956,7 @@ class TestParseCDLExceptions(unittest.TestCase):
             cdl_convert.parse_cdl,
             self.filename,
         )
+
 
 class TestWriteCDLFull(unittest.TestCase):
     """Tests a full write of the CDL file
@@ -1002,79 +965,75 @@ class TestWriteCDLFull(unittest.TestCase):
     working.
 
     """
-    #==========================================================================
+
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         # Build our cdl
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CDL_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cdl(self.filename)
 
         self.target_xml_root = CDL_FULL_WRITE
-        self.target_xml = '\n'.join(CDL_FULL_WRITE.split('\n')[1:])
+        self.target_xml = "\n".join(CDL_FULL_WRITE.split("\n")[1:])
 
-    #==========================================================================
+    # ==========================================================================
 
     def tearDown(self):
         os.remove(self.filename)
         cdl_convert.reset_all()
 
-    #==========================================================================
+    # ==========================================================================
     # TESTS
-    #==========================================================================
+    # ==========================================================================
 
     def test_root_xml(self):
         """Tests that root_xml returns the full XML as expected"""
-        self.assertEqual(
-            self.target_xml_root,
-            self.cdl.xml_root
-        )
+        self.assertEqual(self.target_xml_root, self.cdl.xml_root)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_base_xml(self):
         """Tests that the xml atrib returns the XML minus root as expected"""
-        self.assertEqual(
-            self.target_xml,
-            self.cdl.xml
-        )
+        self.assertEqual(self.target_xml, self.cdl.xml)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_element(self):
         """Tests that the element returned is an etree type"""
-        self.assertEqual(
-            'ColorDecisionList',
-            self.cdl.element.tag
-        )
+        self.assertEqual("ColorDecisionList", self.cdl.element.tag)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_write(self):
         """Tests writing the cdl itself"""
         mockOpen = mock.mock_open()
 
-        self.cdl._file_out = 'bobs_big_file.cdl'
+        self.cdl._file_out = "bobs_big_file.cdl"
 
-        with mock.patch('builtins.open', mockOpen, create=True):
+        with mock.patch("builtins.open", mockOpen, create=True):
             cdl_convert.write_cdl(self.cdl)
 
-        mockOpen.assert_called_once_with('bobs_big_file.cdl', 'w', encoding='utf-8')
+        mockOpen.assert_called_once_with(
+            "bobs_big_file.cdl", "w", encoding="utf-8"
+        )
 
         mockOpen().write.assert_called_once_with(self.target_xml_root)
 
     def test_write_oserror_raises_cdlconverterror(self):
         """Tests that OSError during write raises CDLConvertError"""
-        self.cdl._file_out = 'invalid_path/bobs_big_file.cdl'
+        self.cdl._file_out = "invalid_path/bobs_big_file.cdl"
 
-        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
+        with mock.patch(
+            "builtins.open", side_effect=OSError("Permission denied")
+        ):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_cdl(self.cdl)
-            
+
             self.assertIn("Failed to write CDL file", str(cm.exception))
             self.assertIn("invalid_path/bobs_big_file.cdl", str(cm.exception))
             self.assertIn("Permission denied", str(cm.exception))
@@ -1087,56 +1046,58 @@ class TestWriteCDLFullAsCCC(TestWriteCDLFull):
     working.
 
     """
-    #==========================================================================
+
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         cdl_convert.reset_all()
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CDL_FULL.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cdl(self.filename)
         self.cdl.set_to_ccc()
 
-        self.target_xml_root = (CDL_FULL_WRITE_CCC)
-        self.target_xml = ('\n'.join(CDL_FULL_WRITE_CCC.split('\n')[1:]))
+        self.target_xml_root = CDL_FULL_WRITE_CCC
+        self.target_xml = "\n".join(CDL_FULL_WRITE_CCC.split("\n")[1:])
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_element(self):
         """Tests that the element returned is an etree type"""
-        self.assertEqual(
-            'ColorCorrectionCollection',
-            self.cdl.element.tag
-        )
+        self.assertEqual("ColorCorrectionCollection", self.cdl.element.tag)
 
-    #==========================================================================
+    # ==========================================================================
 
     def test_write(self):
         """Tests writing the cdl itself"""
         mockOpen = mock.mock_open()
 
-        self.cdl._file_out = 'bobs_big_file.cdl'
+        self.cdl._file_out = "bobs_big_file.cdl"
 
-        with mock.patch('builtins.open', mockOpen, create=True):
+        with mock.patch("builtins.open", mockOpen, create=True):
             cdl_convert.write_ccc(self.cdl)
 
-        mockOpen.assert_called_once_with('bobs_big_file.cdl', 'w', encoding='utf-8')
+        mockOpen.assert_called_once_with(
+            "bobs_big_file.cdl", "w", encoding="utf-8"
+        )
 
         mockOpen().write.assert_called_once_with(self.target_xml_root)
 
     def test_write_oserror_raises_cdlconverterror(self):
         """Tests that OSError during write raises CDLConvertError"""
-        self.cdl._file_out = 'invalid_path/bobs_big_file.cdl'
+        self.cdl._file_out = "invalid_path/bobs_big_file.cdl"
 
-        with mock.patch('builtins.open', side_effect=OSError("Permission denied")):
+        with mock.patch(
+            "builtins.open", side_effect=OSError("Permission denied")
+        ):
             with self.assertRaises(CDLConvertError) as cm:
                 cdl_convert.write_ccc(self.cdl)
-            
+
             self.assertIn("Failed to write CCC file", str(cm.exception))
             self.assertIn("invalid_path/bobs_big_file.cdl", str(cm.exception))
             self.assertIn("Permission denied", str(cm.exception))
@@ -1149,15 +1110,16 @@ class TestWriteCDLOddAsCCC(TestWriteCDLFullAsCCC):
     working.
 
     """
-    #==========================================================================
+
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         cdl_convert.reset_all()
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CDL_ODD.encode("utf-8"))
             self.filename = f.name
 
@@ -1165,7 +1127,7 @@ class TestWriteCDLOddAsCCC(TestWriteCDLFullAsCCC):
         self.cdl.set_to_ccc()
 
         self.target_xml_root = CDL_ODD_WRITE_CCC
-        self.target_xml = '\n'.join(CDL_ODD_WRITE_CCC.split('\n')[1:])
+        self.target_xml = "\n".join(CDL_ODD_WRITE_CCC.split("\n")[1:])
 
 
 class TestWriteCDLOdd(TestWriteCDLFull):
@@ -1175,22 +1137,24 @@ class TestWriteCDLOdd(TestWriteCDLFull):
     working.
 
     """
-    #==========================================================================
+
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         cdl_convert.reset_all()
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CDL_ODD.encode("utf-8"))
             self.filename = f.name
 
         self.cdl = cdl_convert.parse_cdl(self.filename)
 
         self.target_xml_root = CDL_ODD_WRITE
-        self.target_xml = '\n'.join(CDL_ODD_WRITE.split('\n')[1:])
+        self.target_xml = "\n".join(CDL_ODD_WRITE.split("\n")[1:])
+
 
 class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
     """Tests an odd write of the CDL file
@@ -1202,15 +1166,16 @@ class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
     id.
 
     """
-    #==========================================================================
+
+    # ==========================================================================
     # SETUP & TEARDOWN
-    #==========================================================================
+    # ==========================================================================
 
     def setUp(self):
         cdl_convert.reset_all()
 
         # Build our ccc
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             f.write(CDL_ODD.encode("utf-8"))
             self.filename = f.name
 
@@ -1219,9 +1184,9 @@ class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
         cc.slope = [1.0, 2.0, 1.0]
 
         self.target_xml_root = CDL_ODD_WRITE_RESOLVED
-        self.target_xml = '\n'.join(CDL_ODD_WRITE_RESOLVED.split('\n')[1:])
+        self.target_xml = "\n".join(CDL_ODD_WRITE_RESOLVED.split("\n")[1:])
 
-    #==========================================================================
+    # ==========================================================================
 
     def testMissingRef(self):
         """Tests what happens with a missing ref and HALT"""
@@ -1230,19 +1195,22 @@ class TestWriteCDLOddReferenceFix(TestWriteCDLFull):
         # We shouldn't stop just because a ref is missing
         mockOpen = mock.mock_open()
 
-        self.cdl._file_out = 'bobs_big_file.cdl'
+        self.cdl._file_out = "bobs_big_file.cdl"
 
-        with mock.patch('builtins.open', mockOpen, create=True):
+        with mock.patch("builtins.open", mockOpen, create=True):
             cdl_convert.write_cdl(self.cdl)
 
-        mockOpen.assert_called_once_with('bobs_big_file.cdl', 'w', encoding='utf-8')
+        mockOpen.assert_called_once_with(
+            "bobs_big_file.cdl", "w", encoding="utf-8"
+        )
 
         mockOpen().write.assert_called_once_with(self.target_xml_root)
 
         cdl_convert.config.config.halt_on_error = False
 
-#==============================================================================
+
+# ==============================================================================
 # RUNNER
-#==============================================================================
-if __name__ == '__main__':
+# ==============================================================================
+if __name__ == "__main__":
     unittest.main()

@@ -19,18 +19,18 @@ Public Functions:
 Example Usage:
     >>> from pathlib import Path
     >>> from cdl_convert import ColorCorrection, ColorCollection, write_cc, write_ccc
-    >>> 
+    >>>
     >>> # Write single correction
     >>> cc = ColorCorrection("shot_001")
     >>> cc.file_out = Path("output.cc")
     >>> cc.slope = [1.2, 1.1, 1.0]
-    >>> 
+    >>>
     >>> try:
     ...     write_cc(cc)
     ...     print(f"Successfully wrote {cc.file_out}")
     ... except CDLConvertError as e:
     ...     print(f"Write error: {e}")
-    >>> 
+    >>>
     >>> # Write collection with format handling
     >>> collection = ColorCollection()
     >>> collection.append_child(cc)
@@ -71,23 +71,20 @@ SOFTWARE.
 
 # Standard Imports
 
-from pathlib import Path
-from typing import Union
-
 # cdl_convert imports
-from .collection import ColorCollection
-from .correction import ColorCorrection
-from .exceptions import CDLConvertError
+from cdl_convert.collection import ColorCollection
+from cdl_convert.correction import ColorCorrection
+from cdl_convert.exceptions import CDLConvertError
 
 # ==============================================================================
 # EXPORTS
 # ==============================================================================
 
 __all__ = [
-    'write_cc',
-    'write_ccc',
-    'write_cdl',
-    'write_rnh_cdl',
+    "write_cc",
+    "write_ccc",
+    "write_cdl",
+    "write_rnh_cdl",
 ]
 
 # ==============================================================================
@@ -97,17 +94,17 @@ __all__ = [
 
 def _temp_container(cdl: ColorCorrection) -> ColorCollection:
     """Build a temporary collection container for a single CDL file.
-    
+
     This helper function creates a temporary ColorCollection to wrap a single
     ColorCorrection for writing operations that require collection format.
-    
+
     Args:
         cdl (ColorCorrection): The ColorCorrection to wrap in a collection.
-        
+
     Returns:
         ColorCollection: A temporary collection containing the single
             correction.
-        
+
     """
     temp_cdl = ColorCollection()
     orig_parent = cdl.parent
@@ -115,6 +112,7 @@ def _temp_container(cdl: ColorCorrection) -> ColorCollection:
     cdl.parent = orig_parent  # Restore original parentage away from temp cdl
     temp_cdl._file_out = cdl.file_out
     return temp_cdl
+
 
 # ==============================================================================
 # PUBLIC FUNCTIONS
@@ -145,22 +143,23 @@ def write_cc(cdl: ColorCorrection) -> None:
         raise CDLConvertError(
             "Output file path not set. Set cdl.file_out before writing."
         )
-    
+
     try:
-        with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:
+        with open(cdl.file_out, "w", encoding="utf-8") as cdl_f:
             cdl_f.write(cdl.xml_root)
     except OSError as e:
         raise CDLConvertError(
             f"Failed to write CC file '{cdl.file_out}': {e}"
         ) from e
 
+
 # ==============================================================================
 
 
-def write_ccc(cdl: Union[ColorCorrection, ColorCollection]) -> None:
+def write_ccc(cdl: ColorCorrection | ColorCollection) -> None:
     """Write a ColorCollection to a .ccc XML file.
 
-    Accepts either a single ColorCorrection (which gets wrapped in a 
+    Accepts either a single ColorCorrection (which gets wrapped in a
     temporary collection) or a full ColorCollection.
 
     Args:
@@ -179,7 +178,7 @@ def write_ccc(cdl: Union[ColorCorrection, ColorCollection]) -> None:
         >>> cc = ColorCorrection("test_id")
         >>> cc.file_out = Path("output.ccc")
         >>> write_ccc(cc)
-        
+
         >>> # Write a collection
         >>> collection = ColorCollection()
         >>> collection.append_child(cc)
@@ -198,7 +197,7 @@ def write_ccc(cdl: Union[ColorCorrection, ColorCollection]) -> None:
     collection_type = cdl.type
     cdl.set_to_ccc()
     try:
-        with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:
+        with open(cdl.file_out, "w", encoding="utf-8") as cdl_f:
             cdl_f.write(cdl.xml_root)
     except OSError as e:
         raise CDLConvertError(
@@ -207,13 +206,14 @@ def write_ccc(cdl: Union[ColorCorrection, ColorCollection]) -> None:
     finally:
         cdl.type = collection_type
 
+
 # ==============================================================================
 
 
-def write_cdl(cdl: Union[ColorCorrection, ColorCollection]) -> None:
+def write_cdl(cdl: ColorCorrection | ColorCollection) -> None:
     """Write a ColorCollection to a .cdl XML file.
 
-    Accepts either a single ColorCorrection (which gets wrapped in a 
+    Accepts either a single ColorCorrection (which gets wrapped in a
     temporary collection) or a full ColorCollection.
 
     Args:
@@ -232,7 +232,7 @@ def write_cdl(cdl: Union[ColorCorrection, ColorCollection]) -> None:
         >>> cc = ColorCorrection("test_id")
         >>> cc.file_out = Path("output.cdl")
         >>> write_cdl(cc)
-        
+
         >>> # Write a collection as CDL
         >>> collection = ColorCollection()
         >>> collection.append_child(cc)
@@ -251,7 +251,7 @@ def write_cdl(cdl: Union[ColorCorrection, ColorCollection]) -> None:
     collection_type = cdl.type
     cdl.set_to_cdl()
     try:
-        with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:
+        with open(cdl.file_out, "w", encoding="utf-8") as cdl_f:
             cdl_f.write(cdl.xml_root)
     except OSError as e:
         raise CDLConvertError(
@@ -259,6 +259,7 @@ def write_cdl(cdl: Union[ColorCorrection, ColorCollection]) -> None:
         ) from e
     finally:
         cdl.type = collection_type
+
 
 # ==============================================================================
 
@@ -280,26 +281,26 @@ def write_rnh_cdl(cdl: ColorCorrection) -> None:
     # Use _de_exponent to avoid scientific notation (consistent with XML output)
     str_values = [_de_exponent(i) for i in values]
 
-
     str_values = [_de_exponent(i) for i in values]
 
-    ss_cdl = ' '.join(str_values)
+    ss_cdl = " ".join(str_values)
 
     try:
-        with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:
+        with open(cdl.file_out, "w", encoding="utf-8") as cdl_f:
             cdl_f.write(ss_cdl)
     except OSError as e:
         raise CDLConvertError(
             f"Failed to write RNH CDL file '{cdl.file_out}': {e}"
         ) from e
 
+
 # ==============================================================================
 # GLOBALS
 # ==============================================================================
 
 OUTPUT_FORMATS = {
-    'cc': write_cc,
-    'ccc': write_ccc,
-    'cdl': write_cdl,
-    'rcdl': write_rnh_cdl,
+    "cc": write_cc,
+    "ccc": write_ccc,
+    "cdl": write_cdl,
+    "rcdl": write_rnh_cdl,
 }

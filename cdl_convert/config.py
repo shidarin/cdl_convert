@@ -46,7 +46,6 @@ SOFTWARE.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import FrozenSet
 
 # ==============================================================================
 # ENUMS
@@ -55,6 +54,7 @@ from typing import FrozenSet
 
 class CDLFormat(Enum):
     """Supported CDL format types."""
+
     ALE = "ale"
     CC = "cc"
     CCC = "ccc"
@@ -73,35 +73,37 @@ class CDLFormat(Enum):
 @dataclass
 class Config:
     """Type-safe configuration for CDL Convert.
-    
+
     This class contains all global configuration settings with proper type
     hints and validation.
 
     """
+
     halt_on_error: bool = False
-    """If True, exceptions are raised instead of being handled with default 
+    """If True, exceptions are raised instead of being handled with default
     behavior. Used for strict validation mode."""
-    collection_formats: FrozenSet[CDLFormat] = frozenset({
-        CDLFormat.ALE,
-        CDLFormat.CCC,
-        CDLFormat.CDL,
-        CDLFormat.EDL,
-        CDLFormat.FLEX,
-        CDLFormat.OTIO
-    })
+    collection_formats: frozenset[CDLFormat] = frozenset(
+        {
+            CDLFormat.ALE,
+            CDLFormat.CCC,
+            CDLFormat.CDL,
+            CDLFormat.EDL,
+            CDLFormat.FLEX,
+            CDLFormat.OTIO,
+        }
+    )
     """Set of formats that represent ColorCollection objects."""
-    single_formats: FrozenSet[CDLFormat] = frozenset({
-        CDLFormat.CC,
-        CDLFormat.RCDL
-    })
+    single_formats: frozenset[CDLFormat] = frozenset(
+        {CDLFormat.CC, CDLFormat.RCDL}
+    )
     """Set of formats that represent single ColorCorrection objects."""
-    
+
     def is_collection_format(self, format_type: str) -> bool:
         """Check if a format string represents a collection format.
-        
+
         Args:
             format_type: Format string to check (e.g., 'ccc', 'cdl')
-            
+
         Returns:
             True if the format is a collection format, False otherwise.
 
@@ -111,16 +113,16 @@ class Config:
             return fmt in self.collection_formats
         except ValueError:
             return False
-    
+
     def is_single_format(self, format_type: str) -> bool:
         """Check if a format string represents a single correction format.
-        
+
         Args:
             format_type: Format string to check (e.g., 'cc', 'rcdl')
-            
+
         Returns:
             True if the format is a single format, False otherwise.
-            
+
         """
         try:
             fmt = CDLFormat(format_type.lower())
@@ -141,7 +143,7 @@ config = Config()
 # ==============================================================================
 
 __all__ = [
-    'CDLFormat',
-    'Config', 
-    'config',
+    "CDLFormat",
+    "Config",
+    "config",
 ]
