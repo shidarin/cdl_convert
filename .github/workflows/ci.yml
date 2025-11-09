@@ -25,42 +25,10 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Get pip cache dir (Unix)
-      if: runner.os != 'Windows'
-      id: pip-cache-unix
-      run: |
-        echo "dir=$(python -m pip cache dir)" >> $GITHUB_OUTPUT
-
-    - name: Get pip cache dir (Windows)
-      if: runner.os == 'Windows'
-      id: pip-cache-windows
-      run: |
-        $cache_dir = python -m pip cache dir
-        echo "dir=$cache_dir" >> $env:GITHUB_OUTPUT
-
-    - name: Cache pip dependencies (Unix)
-      if: runner.os != 'Windows'
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pip-cache-unix.outputs.dir }}
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', '**/dev-requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
-          ${{ runner.os }}-pip-
-
-    - name: Cache pip dependencies (Windows)
-      if: runner.os == 'Windows'
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pip-cache-windows.outputs.dir }}
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', '**/dev-requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
-          ${{ runner.os }}-pip-
+        cache: 'pip'
 
     - name: Cache virtual environment
       uses: actions/cache@v4

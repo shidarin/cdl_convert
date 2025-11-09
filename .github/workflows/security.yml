@@ -1,0 +1,46 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  # schedule:
+  #   # Run every Monday at 9:00 AM UTC
+  #   - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+# Set permissions for the workflow
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  bandit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.13'
+        cache: 'pip'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit[toml,sarif]
+        
+    - name: Run Bandit security scan
+      run: |
+        bandit -c pyproject.toml -r cdl_convert -f sarif -o bandit-results.sarif
+        
+    - name: Upload Bandit results to GitHub Security
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: bandit-results.sarif
+        category: bandit
