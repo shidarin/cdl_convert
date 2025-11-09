@@ -177,7 +177,10 @@ hatch run format
 
 - **Python 3.11+ Required** - Dropped support for Python 2.7-3.10 and PyPy
 - **OpenTimelineIO Required** - We've moved to using OpenTimelineIO's robust EDL adaptor system to parse ALE, CMX, and OTIO EDL files
-- **Windows 3.13 and 3.14 are not supported** - Due to an OTIO build issue, running on Windows with Python 3.13 and 3.14 is at your own risk
+- **Windows w/ Python 3.14 is not supported** - Due to an OTIO build issue, running on Windows with Python 3.14 is at your own risk
+- **MediaRef URI behavior has changed** - Previously, MediaRef URIs could be
+impacted based on the OS you were running cdl_convert on. cdl_convert now attempts
+to maintain the original os behavior which wrote the URI to start with.
 
 **New Features:**
 

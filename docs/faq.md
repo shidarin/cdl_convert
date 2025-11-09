@@ -103,7 +103,8 @@ If you encounter compatibility issues, please [report them on GitHub](https://gi
 
 - **Python 3.11+ required** - Dropped Python 2.7-3.10 and PyPy
 - **OpenTimelineIO required** - Now a core dependency for EDL parsing
-- **Windows 3.13/3.14 not supported** - Due to OTIO build issues
+- **Windows 3.14 is not supported** - Due to OTIO build issues
+- **MediaRef URIs better preserved** - Filenames now OS independent
 
 ## Technical Questions
 
