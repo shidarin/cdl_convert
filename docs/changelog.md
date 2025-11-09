@@ -27,7 +27,7 @@ All notable changes to CDL Convert are documented in this file.
 
 - **Build System:** Migrated from setup.py to pyproject.toml with Hatch
 - **CI/CD:** Migrated from Travis CI to GitHub Actions
-- **Dependencies:** Upgraded OpenTimelineIO to v0.17+
+- **Dependencies:** Upgraded OpenTimelineIO to 18.1+
 - **Documentation:** Modernized to Sphinx + MyST Parser with Furo theme
 
 ### Compatibility
