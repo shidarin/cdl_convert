@@ -71,6 +71,7 @@ SOFTWARE.
 
 # Standard Imports
 
+from pathlib import Path
 from typing import Union
 
 # cdl_convert imports
@@ -140,6 +141,11 @@ def write_cc(cdl: ColorCorrection) -> None:
         >>> write_cc(cc)  # Writes XML to output.cc
 
     """
+    if cdl.file_out is None:
+        raise CDLConvertError(
+            "Output file path not set. Set cdl.file_out before writing."
+        )
+    
     try:
         with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:
             cdl_f.write(cdl.xml_root)
@@ -183,6 +189,11 @@ def write_ccc(cdl: Union[ColorCorrection, ColorCollection]) -> None:
     """
     if not isinstance(cdl, ColorCollection):
         cdl = _temp_container(cdl)
+
+    if cdl.file_out is None:
+        raise CDLConvertError(
+            "Output file path not set. Set cdl.file_out before writing."
+        )
 
     collection_type = cdl.type
     cdl.set_to_ccc()
@@ -232,6 +243,11 @@ def write_cdl(cdl: Union[ColorCorrection, ColorCollection]) -> None:
     if not isinstance(cdl, ColorCollection):
         cdl = _temp_container(cdl)
 
+    if cdl.file_out is None:
+        raise CDLConvertError(
+            "Output file path not set. Set cdl.file_out before writing."
+        )
+
     collection_type = cdl.type
     cdl.set_to_cdl()
     try:
@@ -252,14 +268,22 @@ def write_rnh_cdl(cdl: ColorCorrection) -> None:
     # Import here to avoid circular imports
     from .correction import _de_exponent
 
+    if cdl.file_out is None:
+        raise CDLConvertError(
+            "Output file path not set. Set cdl.file_out before writing."
+        )
+
     values = list(cdl.slope)
     values.extend(cdl.offset)
     values.extend(cdl.power)
     values.append(cdl.sat)
     # Use _de_exponent to avoid scientific notation (consistent with XML output)
-    values = [_de_exponent(i) for i in values]
+    str_values = [_de_exponent(i) for i in values]
 
-    ss_cdl = ' '.join(values)
+
+    str_values = [_de_exponent(i) for i in values]
+
+    ss_cdl = ' '.join(str_values)
 
     try:
         with open(cdl.file_out, 'w', encoding='utf-8') as cdl_f:

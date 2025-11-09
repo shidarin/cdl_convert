@@ -134,9 +134,10 @@ class TestAscColorSpaceBase(unittest.TestCase):
             self.node.input_desc
         )
 
-        # Now we'll make the Element.find raise an AttributeError,
+        # Now we'll make the Element.find return None,
         # mocking that the element has no elem with that name.
-        mock_elem.find.side_effect = AttributeError('')
+        mock_elem.find.return_value = None
+        mock_elem.find.side_effect = None
 
         self.node.input_desc = 'Ralph'
 
@@ -182,9 +183,10 @@ class TestAscColorSpaceBase(unittest.TestCase):
             self.node.viewing_desc
         )
 
-        # Now we'll make the Element.find raise an AttributeError,
+        # Now we'll make the Element.find return None,
         # mocking that the element has no elem with that name.
-        mock_elem.find.side_effect = AttributeError('')
+        mock_elem.find.return_value = None
+        mock_elem.find.side_effect = None
 
         self.node.viewing_desc = 'Ralph'
 

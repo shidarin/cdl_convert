@@ -127,12 +127,11 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
         """
         # If the text field is empty, this will return None, which is the
         # default value of viewing_desc and input_desc anyway.
-        try:
-            self.input_desc = xml_element.find('InputDescription').text
+        input_elem = xml_element.find('InputDescription')
+        if input_elem is not None:
+            self.input_desc = input_elem.text
             return True
-        except AttributeError:
-            # We don't have an InputDescription and that's ok.
-            return False
+        return False
 
     # =========================================================================
 
@@ -151,12 +150,11 @@ class AscColorSpaceBase(object):  # pylint: disable=R0903
         """
         # If the text field is empty, this will return None, which is the
         # default value of viewing_desc and input_desc anyway.
-        try:
-            self.viewing_desc = xml_element.find('ViewingDescription').text
+        viewing_elem = xml_element.find('ViewingDescription')
+        if viewing_elem is not None:
+            self.viewing_desc = viewing_elem.text
             return True
-        except AttributeError:
-            # We don't have a ViewingDescription and that's ok.
-            return False
+        return False
 
 # ==============================================================================
 
@@ -213,7 +211,7 @@ class AscDescBase(object):  # pylint: disable=R0903
         elif type(value) in [list, tuple]:
             self._desc = list(value)
         else:
-            self._desc.append(value)
+            self._desc.append(value)  # type: ignore[arg-type]
 
     # Public Methods ==========================================================
 
@@ -286,7 +284,15 @@ class AscXMLBase(object):
     @property
     def xml_root(self) -> str:
         """A nicely formatted XML string with a root element ready to write"""
-        xml_string = ElementTree.tostring(self.element, 'UTF-8')
+        element = self.element
+        if element is None:
+            raise NotImplementedError(
+                f"{self.__class__.__name__}.build_element() must be "
+                f"implemented to return a valid ElementTree.Element, not "
+                f"None. This is an abstract method that subclasses of "
+                f"AscXMLBase are required to override."
+            )
+        xml_string = ElementTree.tostring(element, 'UTF-8')
         dom_xml = minidom.parseString(xml_string)
         dom_string = dom_xml.toprettyxml(indent="    ", encoding='UTF-8')
         return dom_string.decode('utf-8')
@@ -361,6 +367,7 @@ class ColorNodeBase(AscDescBase, AscXMLBase):  # pylint: disable=R0903
             ...     ColorNodeBase._check_single_value(-0.5, 'slope')
             ... except ValidationError as e:
             ...     print(f"Validation failed: {e}")
+            
         """
         value = to_decimal(value, name)
         # If given as a single number, that number must be positive

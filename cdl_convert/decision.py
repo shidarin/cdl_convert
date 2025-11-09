@@ -179,7 +179,7 @@ class SequenceInfo:
     """
     is_sequence: bool = False
     """True if image sequences were detected in the media reference path."""
-    sequences: List[str] = None
+    sequences: Optional[List[str]] = None
     """List of sequence patterns using # padding notation ('image.####.exr').
     None is converted to empty list during initialization."""
     
@@ -331,7 +331,8 @@ class ColorCorrectionRef(AscXMLBase):
 
         """
         cc_ref_xml = ElementTree.Element('ColorCorrectionRef')
-        cc_ref_xml.attrib = {'ref': self.id}
+        if self.id is not None:
+            cc_ref_xml.attrib = {'ref': self.id}
 
         return cc_ref_xml
 
@@ -513,7 +514,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         if self.cc:
             # If we have a cc, we've already been added to the member's list,
             # and need to update membership.
-            if self.cc.id in ColorDecision.members:
+            if self.cc.id is not None and self.cc.id in ColorDecision.members:
                 ColorDecision.members[self.cc.id].remove(self)
                 # If the remaining list is empty, we'll pop it out
                 if not ColorDecision.members[self.cc.id]:
@@ -523,10 +524,11 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             # assign this ColorDecision to the member dictionary.
             #
             # Check if this id is already registered
-            if new_cc.id in ColorDecision.members:
-                ColorDecision.members[new_cc.id].append(self)
-            else:
-                ColorDecision.members[new_cc.id] = [self]
+            if new_cc.id is not None:
+                if new_cc.id in ColorDecision.members:
+                    ColorDecision.members[new_cc.id].append(self)
+                else:
+                    ColorDecision.members[new_cc.id] = [self]
 
             new_cc.parent = self
 
@@ -560,7 +562,7 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
             desc = ElementTree.SubElement(cd_xml, 'Description')
             desc.text = description
         # Customary for the Media Ref element to go first (if there is one)
-        if self.media_ref:
+        if self.media_ref and self.media_ref.element is not None:
             cd_xml.append(self.media_ref.element)
 
         # The resolve arg should only be applied to reference color decisions.
@@ -568,12 +570,16 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         # Our behavior for non-reference CDs is the same as our behavior
         # for non-resolving.
         if not resolve or not self.is_ref:
-            cd_xml.append(self.cc.element)
+            if self.cc and self.cc.element is not None:
+                cd_xml.append(self.cc.element)
         elif resolve:
             # We're a reference and we need to be resolved
             # Note that this will raise an exception if called when a reference
             # cannot be resolve due to a non-existent ColorCorrection.
-            cd_xml.append(self.cc.cc.element)
+            if self.cc and isinstance(self.cc, ColorCorrectionRef):
+                resolved_cc = self.cc.cc
+                if resolved_cc and resolved_cc.element is not None:
+                    cd_xml.append(resolved_cc.element)
 
         return cd_xml
 
@@ -689,7 +695,8 @@ class ColorDecision(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: disa
         ColorDecision instance.
 
         """
-        self.cc.parent = self
+        if self.cc is not None:
+            self.cc.parent = self
         if self.media_ref:  # Media ref objects are optional
             self.media_ref.parent = self
 
@@ -1016,7 +1023,7 @@ class MediaRef(AscXMLBase):
         if not self._sequence_info or not self._sequence_info.is_sequence:
             return []
 
-        return self._sequence_info.sequences
+        return self._sequence_info.sequences if self._sequence_info.sequences else []
 
     # Private Methods =========================================================
 
@@ -1086,14 +1093,15 @@ class MediaRef(AscXMLBase):
                 seqs = []
                 for image in files:
                     found = match.search(image)
-                    padding = '#' * len(found.group(2))
-                    filename = found.group(1) + padding + found.group(3)
-                    if filename not in seqs:
-                        seqs.append(filename)
+                    if found is not None:
+                        padding = '#' * len(found.group(2))
+                        filename = found.group(1) + padding + found.group(3)
+                        if filename not in seqs:
+                            seqs.append(filename)
                 self._sequence_info = SequenceInfo(is_sequence=True, sequences=seqs)
         else:
             found = match.search(self.filename)
-            if found:
+            if found is not None:
                 padding = '#' * len(found.group(2))
                 self._sequence_info = SequenceInfo(
                     is_sequence=True, 
@@ -1103,7 +1111,7 @@ class MediaRef(AscXMLBase):
                 # We'll finally check for %d style padding
                 match = re.compile(re_exp_percent)
                 found = match.search(self.filename)
-                if found:
+                if found is not None:
                     self._sequence_info = SequenceInfo(is_sequence=True, sequences=[self.filename])
                 else:
                     self._sequence_info = SequenceInfo(is_sequence=False, sequences=[])

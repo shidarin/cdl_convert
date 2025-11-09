@@ -58,7 +58,7 @@ SOFTWARE.
 # Standard Imports
 
 import sys
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from pathlib import Path
 from typing import Optional
 
@@ -66,6 +66,7 @@ from typing import Optional
 
 from . import config, parse, write
 from .collection import ColorCollection
+from .correction import ColorCorrection
 from .exceptions import FormatError
 from .utils import sanity_check
 
@@ -135,7 +136,7 @@ def print_success(message: str) -> None:
 # ==============================================================================
 
 
-def parse_args(validate_files=True):
+def parse_args(validate_files: bool = True) -> Namespace:
     """Uses argparse to parse command line arguments
     
     Args:
@@ -285,12 +286,13 @@ def parse_args(validate_files=True):
 # ==============================================================================
 
 
-def main(validate_files=True):  # pylint: disable=R0912
+def main(validate_files: bool = True) -> None:  # pylint: disable=R0912
     """Main conversion function with enhanced error reporting and output
     
     Args:
         validate_files (bool): Whether to validate that input files exist.
             Default True.
+            
     """
     try:
         args = parse_args(validate_files=validate_files)
@@ -348,7 +350,7 @@ def main(validate_files=True):  # pylint: disable=R0912
             traceback.print_exc()
         sys.exit(1)
 
-    def write_single_file(cdl, ext):
+    def write_single_file(cdl: ColorCorrection, ext: str) -> None:
         """Writes a single color correction file with error handling"""
         try:
             cdl.determine_dest(ext, destination_dir)
@@ -366,14 +368,14 @@ def main(validate_files=True):  # pylint: disable=R0912
             if args.halt:
                 sys.exit(1)
 
-    def write_collection_file(col, ext):
+    def write_collection_file(col: ColorCollection, ext: str) -> None:
         """Writes a collection file with enhanced error handling"""
         try:
             col.type = ext
             col.determine_dest(destination_dir)
             print_info(f"Writing collection to {col.file_out}", verbose)
             if not args.no_output:
-                write.OUTPUT_FORMATS[ext](col)
+                write.OUTPUT_FORMATS[ext](col)  # type: ignore[arg-type]  # OUTPUT_FORMATS has mixed signatures
                 print_success(f"Wrote collection as {ext} format")
             else:
                 print_info(f"Dry run: would write collection to {col.file_out}", verbose)
@@ -391,13 +393,15 @@ def main(validate_files=True):  # pylint: disable=R0912
             print_info("Performing sanity checks on color correction values...", verbose)
             try:
                 if config.config.is_collection_format(filetype_in):
-                    for color_correct in color_decisions.color_corrections:
-                        sanity_check(color_correct)
-                    for decision in color_decisions.color_decisions:
-                        if not decision.is_ref:
-                            sanity_check(decision.cc)
+                    # Type guard: color_decisions has collection attributes
+                    if hasattr(color_decisions, 'color_corrections'):
+                        for color_correct in color_decisions.color_corrections:  # type: ignore[union-attr]
+                            sanity_check(color_correct)
+                        for decision in color_decisions.color_decisions:  # type: ignore[union-attr]
+                            if not decision.is_ref and decision.cc is not None and isinstance(decision.cc, ColorCorrection):
+                                sanity_check(decision.cc)
                 else:
-                    sanity_check(color_decisions)
+                    sanity_check(color_decisions)  # type: ignore[arg-type]
                 print_success("Sanity checks completed")
             except Exception as e:
                 print_warning(f"Sanity check found issues: {e}")
@@ -408,18 +412,20 @@ def main(validate_files=True):  # pylint: disable=R0912
         for ext in args.output:
             if config.config.is_single_format(ext) or args.single:
                 if config.config.is_collection_format(filetype_in):
-                    for color_correct in color_decisions.color_corrections:
-                        write_single_file(color_correct, ext)
-                    for decision in color_decisions.color_decisions:
-                        if not decision.is_ref:
-                            write_single_file(decision.cc, ext)
+                    # Type guard: color_decisions has collection attributes
+                    if hasattr(color_decisions, 'color_corrections'):
+                        for color_correct in color_decisions.color_corrections:  # type: ignore[union-attr]
+                            write_single_file(color_correct, ext)
+                        for decision in color_decisions.color_decisions:  # type: ignore[union-attr]
+                            if not decision.is_ref and decision.cc is not None and isinstance(decision.cc, ColorCorrection):
+                                write_single_file(decision.cc, ext)
                 else:
-                    write_single_file(color_decisions, ext)
+                    write_single_file(color_decisions, ext)  # type: ignore[arg-type]
             else:
                 if config.config.is_collection_format(filetype_in):
                     # If we read a collection type, color_decisions is
                     # already a ColorCollection.
-                    write_collection_file(color_decisions, ext)
+                    write_collection_file(color_decisions, ext)  # type: ignore[arg-type]
                 else:
                     # If we read a single, non-collection file, we need to
                     # create a collection for exporting.
@@ -429,15 +435,15 @@ def main(validate_files=True):  # pylint: disable=R0912
                     #
                     # If we read a group of files, we would want to default to
                     # the generic collection naming.
-                    collection = ColorCollection(input_file=filepath)
-                    collection.append_child(color_decisions)
-                    write_collection_file(collection, ext)
+                    collection_obj = ColorCollection(input_file=filepath)
+                    collection_obj.append_child(color_decisions)  # type: ignore[arg-type]
+                    write_collection_file(collection_obj, ext)
     else:
         print_error("No color decisions found in input file")
         sys.exit(1)
 
 
-def cli_main():
+def cli_main() -> None:
     """CLI entry point with backward-compatible error handling"""
     try:
         main()

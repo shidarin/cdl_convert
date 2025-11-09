@@ -46,7 +46,7 @@ SOFTWARE.
 # Standard Imports
 
 from pathlib import Path
-from typing import List, Optional, Union, Any, Tuple
+from typing import List, Optional, Union, Any, Tuple, Sequence, Type
 from xml.etree import ElementTree
 
 # cdl_convert imports
@@ -54,7 +54,7 @@ from xml.etree import ElementTree
 from .base import AscColorSpaceBase, AscDescBase, AscXMLBase
 from . import config
 from .correction import ColorCorrection
-from .decision import ColorDecision
+from .decision import ColorDecision, ColorCorrectionRef
 from .exceptions import ValidationError
 
 # ==============================================================================
@@ -151,8 +151,8 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     @property
     def id_list(self) -> List[str]:
         """Return sorted list of IDs from all ColorCorrection children."""
-        current_ids = [i.cc.id for i in self.color_decisions if not i.is_ref]
-        current_ids.extend([i.id for i in self.color_corrections])
+        current_ids = [i.cc.id for i in self.color_decisions if not i.is_ref and i.cc is not None and i.cc.id is not None]
+        current_ids.extend([i.id for i in self.color_corrections if i.id is not None])
         current_ids.sort()
         return current_ids
 
@@ -190,7 +190,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     # Private Methods =========================================================
 
     @staticmethod
-    def _list_setter(list_name: str, color_class: type, values: Union[None, Any, List[Any], Tuple[Any, ...], set]) -> List[Any]:
+    def _list_setter(list_name: str, color_class: Type[Any], values: Union[None, Any, List[Any], Tuple[Any, ...], set]) -> List[Any]:
         """Set list to provided values after validating."""
         if values is None:
             return []
@@ -243,14 +243,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         # ColorCorrection with the same id, etc.
         dup = False
 
-        if child.__class__ == ColorCorrection:
+        if isinstance(child, ColorCorrection):
             if child.id in self.id_list:
                 dup = True
             else:
                 self._color_corrections.append(child)
 
-        elif child.__class__ == ColorDecision:
-            if not child.is_ref and child.cc.id in self.id_list:
+        elif isinstance(child, ColorDecision):
+            if not child.is_ref and child.cc is not None and child.cc.id is not None and child.cc.id in self.id_list:
                 dup = True
             else:
                 self._color_decisions.append(child)
@@ -277,11 +277,11 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
     # =========================================================================
 
-    def append_children(self, children: List[Union[ColorCorrection, ColorDecision]]) -> None:
+    def append_children(self, children: Sequence[Union[ColorCorrection, ColorDecision]]) -> None:
         """Add multiple ColorCorrection and ColorDecision objects to lists.
         
         Args:
-            children: List of ColorCorrection and/or ColorDecision instances
+            children: Sequence of ColorCorrection and/or ColorDecision instances
                 to add.
 
         """
@@ -302,6 +302,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             return self.build_element_ccc()
         elif self.is_cdl:
             return self.build_element_cdl()
+        return None
 
     # =========================================================================
 
@@ -326,21 +327,24 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             desc.text = description
         if self.color_corrections:
             for color_correct in self.color_corrections:
-                ccc_xml.append(color_correct.element)
+                if color_correct.element is not None:
+                    ccc_xml.append(color_correct.element)
         if self.color_decisions:
             # We'll need to extract the ColorCorrections from the
             # ColorDecisions
             for color_decision in self.color_decisions:
-                if color_decision.is_ref:
+                if color_decision.is_ref and color_decision.cc is not None and isinstance(color_decision.cc, ColorCorrectionRef):
                     color_correction = color_decision.cc.cc
-                else:
+                elif color_decision.cc is not None and isinstance(color_decision.cc, ColorCorrection):
                     color_correction = color_decision.cc
+                else:
+                    color_correction = None
 
                 # We do one last check to ensure that we actually have a
                 # returned ColorCorrection, as ColorCorrectionRef will
                 # return None if it's an unresolved reference and no
                 # HALT behavior was set.
-                if color_correction:
+                if color_correction and color_correction.element is not None:
                     ccc_xml.append(color_correction.element)
 
         return ccc_xml
@@ -368,11 +372,14 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
             desc.text = description
         if self.color_decisions:
             for color_decision in self.color_decisions:
-                if color_decision.cc.id in self.id_list:
+                if color_decision.cc is not None and color_decision.cc.id is not None and color_decision.cc.id in self.id_list:
                     resolve = False
                 else:
                     try:
-                        color_correction = color_decision.cc.cc
+                        if color_decision.cc is not None and isinstance(color_decision.cc, ColorCorrectionRef):
+                            color_correction = color_decision.cc.cc
+                        else:
+                            color_correction = None
                     except ValueError:
                         # ValueError will be raised if we can't resolve the
                         # reference. This shouldn't be a game-stopper here.
@@ -382,7 +389,9 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                     else:
                         resolve = True if color_correction else False
 
-                cdl_xml.append(color_decision.build_element(resolve=resolve))
+                element = color_decision.build_element(resolve=resolve)
+                if element is not None:
+                    cdl_xml.append(element)
 
         if self.color_corrections:
             # We'll create some temporary ColorDecision instances, and place
@@ -395,7 +404,8 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
 
             for color_correction in self.color_corrections:
                 color_decision = ColorDecision(color_correction)
-                cdl_xml.append(color_decision.element)
+                if color_decision.element is not None:
+                    cdl_xml.append(color_decision.element)
 
             # Now reset the ColorDecision member dictionary to the state it was
             # in prior to us creating temp ColorDecisions

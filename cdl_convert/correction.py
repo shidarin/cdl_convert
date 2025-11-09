@@ -74,7 +74,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 import re
-from typing import Dict, List, Optional, Union, Tuple, Any
+from typing import Dict, List, Optional, Union, Tuple, Any, cast
 from xml.etree import ElementTree
 
 # cdl_convert imports
@@ -662,9 +662,13 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         # We need to make sure we call the private attributes here, since
         # we don't want to trigger a virgin sop or sat being initialized.
         if self._sop_node:
-            cc_xml.append(self.sop_node.element)
+            sop_element = self.sop_node.element
+            if sop_element is not None:
+                cc_xml.append(sop_element)
         if self._sat_node:
-            cc_xml.append(self.sat_node.element)
+            sat_element = self.sat_node.element
+            if sat_element is not None:
+                cc_xml.append(sat_element)
 
         return cc_xml
 
@@ -854,7 +858,7 @@ class SopNode(ColorNodeBase):
                 tuple. Values change input slope without shifting black level.
 
         """
-        return tuple(self._slope)
+        return cast(Tuple[Decimal, Decimal, Decimal], tuple(self._slope))
 
     @slope.setter
     def slope(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
@@ -866,8 +870,7 @@ class SopNode(ColorNodeBase):
                 Accepts Decimal, float, int, or numeric string types.
                 Values must be non-negative.
         """
-        value = self._check_setter_value(value, 'slope')
-        self._slope = value
+        self._slope = self._check_setter_value(value, 'slope')
 
     @property
     def offset(self) -> Tuple[Decimal, Decimal, Decimal]:
@@ -879,7 +882,7 @@ class SopNode(ColorNodeBase):
                 slope constant.
 
         """
-        return tuple(self._offset)
+        return cast(Tuple[Decimal, Decimal, Decimal], tuple(self._offset))
 
     @offset.setter
     def offset(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
@@ -892,8 +895,7 @@ class SopNode(ColorNodeBase):
                 Can be negative.
 
         """
-        value = self._check_setter_value(value, 'offset', True)
-        self._offset = value
+        self._offset = self._check_setter_value(value, 'offset', True)
 
     @property
     def power(self) -> Tuple[Decimal, Decimal, Decimal]:
@@ -904,7 +906,7 @@ class SopNode(ColorNodeBase):
                 tuple. Values change response curve with opposite behavior to
                 traditional gamma.
         """
-        return tuple(self._power)
+        return cast(Tuple[Decimal, Decimal, Decimal], tuple(self._power))
 
     @power.setter
     def power(self, value: Union[Decimal, float, int, str, List[Union[Decimal, float, int, str]], Tuple[Union[Decimal, float, int, str], ...]]) -> None:
@@ -917,8 +919,7 @@ class SopNode(ColorNodeBase):
                 Values must be non-negative.
 
         """
-        value = self._check_setter_value(value, 'power')
-        self._power = value
+        self._power = self._check_setter_value(value, 'power')
 
     # Private Methods =========================================================
 
@@ -951,19 +952,20 @@ class SopNode(ColorNodeBase):
                 f'{name.title()} must specify exactly 3 values for Red, Green, and Blue channels.'
             )
 
-        values = list(values)
-
-        for i in range(len(values)):
+        result: List[Decimal] = []
+        
+        for value in values:
             try:
-                values[i] = self._check_single_value(
-                    values[i],
+                checked_value = self._check_single_value(
+                    value,
                     name,
                     negative_allow
                 )
+                result.append(checked_value)
             except (TypeError, ValueError):
                 raise
 
-        return values
+        return result
 
     # =========================================================================
 
@@ -992,18 +994,16 @@ class SopNode(ColorNodeBase):
         """
         if type(value) in [Decimal, float, int, str]:
             try:
-                value = self._check_single_value(value, name, negative_allow)
+                checked_value = self._check_single_value(cast(Union[Decimal, float, int, str], value), name, negative_allow)
             except (TypeError, ValueError):
                 raise
             else:
-                set_value = [value] * 3
+                return [checked_value] * 3
         elif type(value) in [list, tuple]:
             try:
-                value = self._check_rgb_values(value, name, negative_allow)
+                return self._check_rgb_values(cast(Union[List[Union[Decimal, str, float, int]], Tuple[Union[Decimal, str, float, int], ...]], value), name, negative_allow)
             except (TypeError, ValueError):
                 raise
-            else:
-                set_value = value
         else:
             raise ValidationError(
                 f'Invalid {name} value type: {type(value).__name__}. '
@@ -1011,8 +1011,6 @@ class SopNode(ColorNodeBase):
                 f'{name.title()} must be a numeric value or list of 3 numeric values. '
                 f'Supported types: int, float, str, Decimal, list, or tuple.'
             )
-
-        return set_value
 
     # Public Methods ==========================================================
 
@@ -1055,15 +1053,15 @@ def _de_exponent(notation: Union[Decimal, str, int, float]) -> str:
     Returns:
         str: Numeric value as string without scientific notation formatting.
     """
-    notation = str(notation).lower()
-    if 'e' not in notation:
-        return notation
+    notation_str = str(notation).lower()
+    if 'e' not in notation_str:
+        return notation_str
 
-    notation = notation.split('e')
+    parts = notation_str.split('e')
     # Grab the exponent value
-    digits = int(notation[-1])
+    digits = int(parts[-1])
     # Grab the value we'll be adding 0s to
-    value = notation[0]
+    value = parts[0]
 
     if value.startswith('-'):
         negative = '-'
@@ -1115,5 +1113,3 @@ def _sanitize(name: str) -> str:
     # Put them together, negate them by leading with an ^
     # and our sub will mark every non alnum, non ., _ character
     return re.sub(r'[^a-zA-Z0-9\._-]+', '', name)
-
-    return fixed

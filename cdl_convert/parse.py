@@ -90,7 +90,7 @@ SOFTWARE.
 
 from pathlib import Path
 import re
-from typing import List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 from xml.etree import ElementTree
 
 # Secure XML parsing
@@ -211,6 +211,7 @@ def parse_cc(input_file: Union[str, Path, ElementTree.Element]) -> correction.Co
 
     """
     # Use match statement for input type handling
+    file_in: Optional[Union[str, Path]]
     match input_file:
         case str() | Path():
             root = _remove_xmlns(input_file)
@@ -246,7 +247,7 @@ def parse_cc(input_file: Union[str, Path, ElementTree.Element]) -> correction.Co
             cc_id = None
 
     cdl = correction.ColorCorrection(cc_id)
-    if file_in:
+    if file_in is not None:
         cdl.file_in = file_in
 
     # Grab our descriptions and add them to the cdl.
@@ -552,17 +553,17 @@ def parse_flex(input_file: Union[str, Path]) -> collection.ColorCollection:  # p
 
     """
 
-    cdls = []
+    cdls: List[correction.ColorCorrection] = []
 
     filename = Path(input_file).stem
 
-    title = None
+    title: Optional[str] = None
     # Metadata will store, in order, the various scene, take, reel fields
     # it finds.
-    metadata = []
+    metadata: List[str] = []
 
-    sop = {}
-    sat = None
+    sop: dict = {}
+    sat: Optional[str] = None
 
     def build_cc(line_id, edl_path, sop_dict, sat_value, title_line):
         """Build ColorCorrection from FLEx EDL data if CDL values are present.
@@ -768,22 +769,23 @@ def parse_rnh_cdl(input_file: Union[str, Path]) -> correction.ColorCorrection:
     with open(input_file, 'r') as cdl_f:
         # We only need to read the first line
         line = cdl_f.readline()
-        line = line.split()
+        parts = line.split()
 
         # The filename without extension will become the id
         filename = Path(input_file).stem
 
-        slope = [line[0], line[1], line[2]]
-        offset = [line[3], line[4], line[5]]
-        power = [line[6], line[7], line[8]]
+        slope: List[str] = [parts[0], parts[1], parts[2]]
+        offset: List[str] = [parts[3], parts[4], parts[5]]
+        power: List[str] = [parts[6], parts[7], parts[8]]
 
-        sat = line[9]
+        sat: str = parts[9]
 
         cdl = correction.ColorCorrection(filename, input_file)
 
-        cdl.slope = slope
-        cdl.offset = offset
-        cdl.power = power
+        # Setter accepts List[str] and converts
+        cdl.slope = slope  # type: ignore[assignment]
+        cdl.offset = offset  # type: ignore[assignment]
+        cdl.power = power  # type: ignore[assignment]
         cdl.sat = sat
 
     return cdl
@@ -1060,7 +1062,7 @@ def _remove_xmlns(input_file):
 # GLOBALS
 # ==============================================================================
 
-INPUT_FORMATS = {
+INPUT_FORMATS: Dict[str, Callable[[Union[str, Path]], Union[correction.ColorCorrection, collection.ColorCollection]]] = {
     'ale': parse_ale,
     'ccc': parse_ccc,
     'cc': parse_cc,
@@ -1108,12 +1110,10 @@ def parse_file(filepath: Union[str, Path], filetype: Optional[str] = None) -> Un
     if not filetype:
         filetype = Path(filepath).suffix.removeprefix('.').lower()
 
-    # Use match statement for format validation with better error handling
-    match filetype:
-        case filetype if filetype in INPUT_FORMATS:
-            return INPUT_FORMATS[filetype](filepath)
-        case _:
-            raise ParseError(
-                f"Unsupported file format: '{filetype}'. "
-                f"Supported formats are: {', '.join(INPUT_FORMATS.keys())}"
-            )
+    if filetype in INPUT_FORMATS:
+        return INPUT_FORMATS[filetype](filepath)
+    else:
+        raise ParseError(
+            f"Unsupported file format: '{filetype}'. "
+            f"Supported formats are: {', '.join(INPUT_FORMATS.keys())}"
+        )

@@ -64,10 +64,14 @@ DEALINGS IN THE SOFTWARE.
 # Standard Imports
 
 from decimal import Decimal, InvalidOperation
+from typing import Union, TYPE_CHECKING
 
 # cdl_convert Imports
 
 from .exceptions import ValidationError
+# Avoid circular imports
+if TYPE_CHECKING:
+    from .correction import ColorCorrection
 
 # ==============================================================================
 # EXPORTS
@@ -83,7 +87,7 @@ __all__ = [
 # ==============================================================================
 
 
-def sanity_check(colcor):
+def sanity_check(colcor: ColorCorrection) -> bool:
     """Check ColorCorrection values against reasonable ranges.
     
     Validates CDL parameter values against typical ranges used in color
@@ -150,7 +154,7 @@ def sanity_check(colcor):
 # ==============================================================================
 
 
-def to_decimal(value, name='Value'):
+def to_decimal(value: Union[Decimal, str, float, int], name: str = 'Value') -> Decimal:
     """Convert numeric value to Decimal with validation and error handling.
     
     Converts various numeric types to Decimal format with appropriate
