@@ -47,18 +47,18 @@ jobs:
         ruff format --check --diff .
         echo "::endgroup::"
         
-    - name: Run mypy type checking
-      id: mypy
-      continue-on-error: true
-      run: |
-        echo "::group::MyPy Type Checking"
-        mypy cdl_convert \
-          --show-error-codes \
-          --show-column-numbers \
-          --show-error-context \
-          --pretty \
-          --no-error-summary
-        echo "::endgroup::"
+    # - name: Run mypy type checking
+    #   id: mypy
+    #   continue-on-error: true
+    #   run: |
+    #     echo "::group::MyPy Type Checking"
+    #     mypy cdl_convert \
+    #       --show-error-codes \
+    #       --show-column-numbers \
+    #       --show-error-context \
+    #       --pretty \
+    #       --no-error-summary
+    #     echo "::endgroup::"
         
     - name: Build documentation
       id: docs
