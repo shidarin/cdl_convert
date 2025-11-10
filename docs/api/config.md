@@ -75,9 +75,15 @@ The {class}`~cdl_convert.config.Config` class is a dataclass that contains all g
 **single_formats** : `FrozenSet[CDLFormat]`
 : Immutable set of formats that represent single {class}`~cdl_convert.correction.ColorCorrection` objects. Includes: CC and RCDL.
 
+**sop_tag_name** : `str`
+: XML element tag name for SOP (Slope/Offset/Power) nodes. Valid values: `'SOPNode'` (default), `'ASC_SOP'`. Controls the XML tag used when generating SOP elements in output files.
+
+**sat_tag_name** : `str`
+: XML element tag name for Saturation nodes. Valid values: `'SatNode'` (default), `'SATNode'` (legacy), `'ASC_SAT'`. Controls the XML tag used when generating Saturation elements in output files. Default changed from `'SATNode'` to `'SatNode'` in v1.0 to finally adhere correctly to specification.
+
 ### Methods
 
-The {class}`~cdl_convert.config.Config` class provides helper methods for format type checking:
+The {class}`~cdl_convert.config.Config` class provides helper methods for format type checking and tag name configuration:
 
 ```python
 from cdl_convert.config import config
@@ -89,6 +95,10 @@ if config.is_collection_format('ccc'):
 # Check if a format string is a single correction format
 if config.is_single_format('cc'):
     print("CC is a single correction format")
+
+# Configure XML tag names
+config.set_sop_tag_name('ASC_SOP')
+config.set_sat_tag_name('ASC_SAT')
 ```
 
 ```{eval-rst}
@@ -153,6 +163,42 @@ def get_parser(format_type: CDLFormat):
 # Use with enum
 parser = get_parser(CDLFormat.CCC)
 ```
+
+### Configurable XML Tag Names
+
+Configure the XML element tag names used for SOP and Saturation nodes to improve compatibility with different color correction systems:
+
+```python
+from cdl_convert.config import config
+from cdl_convert import write_cc, ColorCorrection
+
+# Use ASC CDL specification-compliant tag names
+config.set_sop_tag_name('ASC_SOP')
+config.set_sat_tag_name('ASC_SAT')
+
+# Create and write a color correction
+cc = ColorCorrection('shot_001')
+cc.slope = [1.2, 1.1, 1.0]
+cc.sat = 0.9
+write_cc(cc)  # Will use ASC_SOP and ASC_SAT tags
+
+# Use legacy SATNode tag for backward compatibility
+config.set_sat_tag_name('SATNode')
+write_cc(cc)  # Will use SOPNode and SATNode tags
+```
+
+**Available SOP Tag Names:**
+- `'SOPNode'` (default) - Standard format
+- `'ASC_SOP'` - ASC CDL specification format
+
+**Available Saturation Tag Names:**
+- `'SatNode'` (default) - Standard format (new in v1.0)
+- `'SATNode'` - Legacy format (pre-v1.0)
+- `'ASC_SAT'` - ASC CDL specification format
+
+:::{note}
+The default Saturation tag changed from `'SATNode'` to `'SatNode'` in v1.0 to adhere to the CDL specification. Use `config.set_sat_tag_name('SATNode')` to maintain legacy behavior.
+:::
 
 ## Migration from Legacy Configuration
 

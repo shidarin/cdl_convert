@@ -831,14 +831,15 @@ class SatNode(ColorNodeBase):
     def build_element(self) -> ElementTree.Element:
         """Build XML ElementTree Element representing this SatNode.
 
-        Creates a SATNode XML element containing any descriptions and the
+        Creates a Saturation XML element using the configured tag name from
+        config.sat_tag_name. The element contains any descriptions and the
         saturation value.
 
         Returns:
             ElementTree.Element: XML element representing this SatNode.
 
         """
-        sat = ElementTree.Element("SATNode")
+        sat = ElementTree.Element(config.config.sat_tag_name)
         for description in self.desc:
             desc = ElementTree.SubElement(sat, "Description")
             desc.text = description
@@ -1112,14 +1113,15 @@ class SopNode(ColorNodeBase):
     def build_element(self) -> ElementTree.Element:
         """Build XML ElementTree Element representing this SopNode.
 
-        Creates a SOPNode XML element containing any descriptions and the
+        Creates a SOP XML element using the configured tag name from
+        config.sop_tag_name. The element contains any descriptions and the
         slope, offset, and power values formatted as space-separated strings.
 
         Returns:
             ElementTree.Element: XML element representing this SopNode.
 
         """
-        sop = ElementTree.Element("SOPNode")
+        sop = ElementTree.Element(config.config.sop_tag_name)
         fields = ["Slope", "Offset", "Power"]
         for description in self.desc:
             desc = ElementTree.SubElement(sop, "Description")

@@ -239,6 +239,21 @@ def parse_args(validate_files: bool = True) -> Namespace:
         help="Enable debug output with extensive diagnostic information",
     )
 
+    parser.add_argument(
+        "--sop-tag",
+        choices=["SOPNode", "ASC_SOP"],
+        help="XML tag name for SOP nodes. Default: SOPNode. "
+        "Use 'ASC_SOP' for ASC CDL specification compliance.",
+    )
+
+    parser.add_argument(
+        "--sat-tag",
+        choices=["SatNode", "SATNode", "ASC_SAT"],
+        help="XML tag name for Saturation nodes. Default: SatNode. "
+        "Use 'SATNode' for legacy behavior (pre-v1.0) or 'ASC_SAT' "
+        "for ASC CDL specification compliance.",
+    )
+
     try:
         args = parser.parse_args()
     except SystemExit as e:
@@ -314,6 +329,21 @@ def parse_args(validate_files: bool = True) -> Namespace:
     # Apply halt configuration (backward compatibility)
     if args.halt:
         config.config.halt_on_error = True
+
+    # Apply tag name configuration
+    if args.sop_tag:
+        try:
+            config.config.set_sop_tag_name(args.sop_tag)
+        except Exception as e:
+            print_error(str(e))
+            raise FormatError(str(e)) from e
+
+    if args.sat_tag:
+        try:
+            config.config.set_sat_tag_name(args.sat_tag)
+        except Exception as e:
+            print_error(str(e))
+            raise FormatError(str(e)) from e
 
     return args
 

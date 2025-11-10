@@ -63,11 +63,11 @@ CDL_FULL = r"""<?xml version="1.0" encoding="UTF-8"?>
                 <Description>Sop description 3</Description>
             </SOPNode>
             <Description>CC description 3</Description>
-            <SATNode>
+            <SatNode>
                 <Description>Sat description 1</Description>
                 <Saturation>1.09</Saturation>
                 <Description>Sat description 2</Description>
-            </SATNode>
+            </SatNode>
             <Description>CC description 4</Description>
             <ViewingDescription>Viewing Desc Text</ViewingDescription>
             <Description>CC description 5</Description>
@@ -258,11 +258,11 @@ CDL_FULL_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
                 <Offset>-0.00315 -0.00124 0.3103</Offset>
                 <Power>1.0 0.9983 1.0</Power>
             </SOPNode>
-            <SATNode>
+            <SatNode>
                 <Description>Sat description 1</Description>
                 <Description>Sat description 2</Description>
                 <Saturation>1.09</Saturation>
-            </SATNode>
+            </SatNode>
         </ColorCorrection>
     </ColorDecision>
     <ColorDecision>
@@ -272,9 +272,9 @@ CDL_FULL_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
                 <Offset>0.031 0.128 -0.096</Offset>
                 <Power>1.8 0.97 0.961</Power>
             </SOPNode>
-            <SATNode>
+            <SatNode>
                 <Saturation>1.01</Saturation>
-            </SATNode>
+            </SatNode>
         </ColorCorrection>
     </ColorDecision>
     <ColorDecision>
@@ -293,9 +293,9 @@ CDL_FULL_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
                 <Offset>-3424.011 -342789423.013 -4238923.11</Offset>
                 <Power>3271893.993 0.0000998 0.0000000000000000113</Power>
             </SOPNode>
-            <SATNode>
+            <SatNode>
                 <Saturation>1798787.01</Saturation>
-            </SATNode>
+            </SatNode>
         </ColorCorrection>
     </ColorDecision>
     <ColorDecision>
@@ -308,9 +308,9 @@ CDL_FULL_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
                 <Offset>0.031 0.128 -0.096</Offset>
                 <Power>1.8 0.97 0.961</Power>
             </SOPNode>
-            <SATNode>
+            <SatNode>
                 <Saturation>1.01</Saturation>
-            </SATNode>
+            </SatNode>
         </ColorCorrection>
     </ColorDecision>
     <ColorDecision>
@@ -320,9 +320,9 @@ CDL_FULL_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
                 <Offset>-0.00315 -0.00124 0.3103</Offset>
                 <Power>1.0 0.9983 1.0</Power>
             </SOPNode>
-            <SATNode>
+            <SatNode>
                 <Saturation>1.09</Saturation>
-            </SATNode>
+            </SatNode>
         </ColorCorrection>
     </ColorDecision>
     <ColorDecision>
@@ -357,11 +357,11 @@ CDL_FULL_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
             <Offset>-0.00315 -0.00124 0.3103</Offset>
             <Power>1.0 0.9983 1.0</Power>
         </SOPNode>
-        <SATNode>
+        <SatNode>
             <Description>Sat description 1</Description>
             <Description>Sat description 2</Description>
             <Saturation>1.09</Saturation>
-        </SATNode>
+        </SatNode>
     </ColorCorrection>
     <ColorCorrection id="f51.200">
         <SOPNode>
@@ -369,9 +369,9 @@ CDL_FULL_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
             <Offset>0.031 0.128 -0.096</Offset>
             <Power>1.8 0.97 0.961</Power>
         </SOPNode>
-        <SATNode>
+        <SatNode>
             <Saturation>1.01</Saturation>
-        </SATNode>
+        </SatNode>
     </ColorCorrection>
     <ColorCorrection id="f51.200">
         <SOPNode>
@@ -379,9 +379,9 @@ CDL_FULL_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
             <Offset>0.031 0.128 -0.096</Offset>
             <Power>1.8 0.97 0.961</Power>
         </SOPNode>
-        <SATNode>
+        <SatNode>
             <Saturation>1.01</Saturation>
-        </SATNode>
+        </SatNode>
     </ColorCorrection>
     <ColorCorrection id="f55.100">
         <InputDescription>METAL VIEWER!!! \/\/</InputDescription>
@@ -394,9 +394,9 @@ CDL_FULL_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
             <Offset>-3424.011 -342789423.013 -4238923.11</Offset>
             <Power>3271893.993 0.0000998 0.0000000000000000113</Power>
         </SOPNode>
-        <SATNode>
+        <SatNode>
             <Saturation>1798787.01</Saturation>
-        </SATNode>
+        </SatNode>
     </ColorCorrection>
     <ColorCorrection id="f54.112">
         <SOPNode>
@@ -404,9 +404,9 @@ CDL_FULL_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
             <Offset>0.031 0.128 -0.096</Offset>
             <Power>1.8 0.97 0.961</Power>
         </SOPNode>
-        <SATNode>
+        <SatNode>
             <Saturation>1.01</Saturation>
-        </SATNode>
+        </SatNode>
     </ColorCorrection>
     <ColorCorrection id="burp_100.x12">
         <SOPNode>
@@ -414,9 +414,9 @@ CDL_FULL_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
             <Offset>-0.00315 -0.00124 0.3103</Offset>
             <Power>1.0 0.9983 1.0</Power>
         </SOPNode>
-        <SATNode>
+        <SatNode>
             <Saturation>1.09</Saturation>
-        </SATNode>
+        </SatNode>
     </ColorCorrection>
     <ColorCorrection id="f54.112">
         <SOPNode>
@@ -424,9 +424,9 @@ CDL_FULL_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
             <Offset>0.031 0.128 -0.096</Offset>
             <Power>1.8 0.97 0.961</Power>
         </SOPNode>
-        <SATNode>
+        <SatNode>
             <Saturation>1.01</Saturation>
-        </SATNode>
+        </SatNode>
     </ColorCorrection>
 </ColorCorrectionCollection>
 """
@@ -475,10 +475,10 @@ CDL_ODD_WRITE = r"""<?xml version="1.0" encoding="UTF-8"?>
     <ColorDecision>
         <MediaRef ref="serv://proto/uri:area:full?query=result#fragment"/>
         <ColorCorrection id="burp_200.x15">
-            <SATNode>
+            <SatNode>
                 <Description>I am a lovely sat node</Description>
                 <Saturation>1.01</Saturation>
-            </SATNode>
+            </SatNode>
         </ColorCorrection>
     </ColorDecision>
     <ColorDecision>
@@ -539,10 +539,10 @@ CDL_ODD_WRITE_RESOLVED = r"""<?xml version="1.0" encoding="UTF-8"?>
     <ColorDecision>
         <MediaRef ref="serv://proto/uri:area:full?query=result#fragment"/>
         <ColorCorrection id="burp_200.x15">
-            <SATNode>
+            <SatNode>
                 <Description>I am a lovely sat node</Description>
                 <Saturation>1.01</Saturation>
-            </SATNode>
+            </SatNode>
         </ColorCorrection>
     </ColorDecision>
     <ColorDecision>
@@ -586,10 +586,10 @@ CDL_ODD_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
         </SOPNode>
     </ColorCorrection>
     <ColorCorrection id="burp_200.x15">
-        <SATNode>
+        <SatNode>
             <Description>I am a lovely sat node</Description>
             <Saturation>1.01</Saturation>
-        </SATNode>
+        </SatNode>
     </ColorCorrection>
     <ColorCorrection id="f51.200">
         <SOPNode>

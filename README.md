@@ -181,6 +181,7 @@ hatch run format
 - **MediaRef URI behavior has changed** - Previously, MediaRef URIs could be
 impacted based on the OS you were running cdl_convert on. cdl_convert now attempts
 to maintain the original os behavior which wrote the URI to start with.
+- **SatNode XML tag default changed** - The default XML element tag for Saturation nodes has changed from `SATNode` to `SatNode` for consistency with `SOPNode` naming. Use `--sat-tag SATNode` to maintain legacy behavior.
 
 **New Features:**
 
@@ -191,6 +192,7 @@ to maintain the original os behavior which wrote the URI to start with.
 - **ColorValues dataclass** - Structured color correction data with validation
 - **Enhanced error handling** - Specific exception types (`ValidationError`, `ParseError`, `FormatError`)
 - **Colored CLI output** - Enhanced command-line experience with colored error messages
+- **Configurable XML tag names** - Choose between different XML element tag conventions for SOP and Saturation nodes to improve compatibility with various color correction systems
 
 **CLI and API should be compatible with with tools written for 0.9.2, however
 no warranties or gaurantees are given.**

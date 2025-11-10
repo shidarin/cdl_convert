@@ -7,8 +7,6 @@ We welcome contributions to CDL Convert! Whether you're fixing bugs, adding feat
 Please, *please*, **please** submit samples of the following formats:
 
 - FLEx
-- ALE
-- CMX
 - CCC
 - CDL
 

@@ -22,6 +22,33 @@ Specify output directory:
 $ cdl_convert ./input.flex -d ./output_directory/ -o cc,ccc,cdl
 ```
 
+## Configurable XML Tag Names
+
+Control the XML element tag names used for SOP and Saturation nodes to improve compatibility with different color correction systems.
+
+Use ASC CDL specification-compliant tag names:
+
+```bash
+$ cdl_convert ./input.ale --sop-tag ASC_SOP --sat-tag ASC_SAT -o cc
+```
+
+This will generate XML with `<ASC_SOP>` and `<ASC_SAT>` tags instead of the default `<SOPNode>` and `<SatNode>` tags.
+
+Maintain legacy `SATNode` tag for backward compatibility:
+
+```bash
+$ cdl_convert ./input.flex --sat-tag SATNode -o ccc
+```
+
+**Available Options:**
+
+- `--sop-tag {SOPNode,ASC_SOP}` - XML tag name for SOP nodes (default: `SOPNode`)
+- `--sat-tag {SatNode,SATNode,ASC_SAT}` - XML tag name for Saturation nodes (default: `SatNode`)
+
+:::{note}
+The default Saturation tag changed from `SATNode` to `SatNode` in v1.0 for consistency. Use `--sat-tag SATNode` to maintain legacy behavior if needed.
+:::
+
 ## Specifying Input Format
 
 Sometimes it might be necessary to disable cdl_convert's auto-detection of the input file format. This can be done with the `-i` flag:
@@ -109,18 +136,22 @@ Convert between ASC Color Decision List (CDL) formats
 positional arguments:
   input_file            Path to the CDL file to be converted
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  -i INPUT, --input INPUT
-                        Specify input format when auto-detection fails.
+  -i, --input INPUT     Specify input format when auto-detection fails.
                         Choices: ale, cc, ccc, cdl, edl, flex, otio, rcdl
-  -o OUTPUT, --output OUTPUT
-                        Output format(s), comma-separated for multiple outputs.
+  -o, --output OUTPUT   Output format(s), comma-separated for multiple outputs.
                         Choices: cc, ccc, cdl, rcdl. Default: cc
-  -d DESTINATION, --destination DESTINATION
+  -d, --destination DESTINATION
                         Output directory for converted files. Default: ./converted/
   --halt                Stop processing on first error instead of using default
-                        values. Useful for strict validation of CDL files.
+                        values. Useful for strict validation of CDL files. Turn
+                        this on if you want the conversion process to fail and
+                        not continue,rather than relying on default behavior
+                        for bad values. Examples are clipping negative values
+                        to 0.0 for Slope, Power and Saturation, and
+                        automatically generating a new id for a ColorCorrect
+                        if no or a bad id is given.
   --no-output           Parse files without writing output. Useful with --halt
                         and --check for validation-only runs.
   --check               Check for unusual color correction values. Flags
@@ -131,6 +162,10 @@ optional arguments:
                         files.
   -v, --verbose         Enable verbose output with detailed processing information
   --debug               Enable debug output with extensive diagnostic information
+  --sop-tag {SOPNode,ASC_SOP}
+                        XML tag name for SOP nodes. Default: SOPNode. Use 'ASC_SOP' for ASC CDL specification compliance.
+  --sat-tag {SatNode,SATNode,ASC_SAT}
+                        XML tag name for Saturation nodes. Default: SatNode. Use 'SATNode' for legacy behavior (pre-v1.0) or 'ASC_SAT' for ASC CDL specification compliance.
 
 Supported input formats: ale, cc, ccc, cdl, edl, flex, otio, rcdl
 Supported output formats: cc, ccc, cdl, rcdl

@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import cdl_convert.config as config
 from cdl_convert.config import CDLFormat, Config
+from cdl_convert.correction import ColorCorrection
 
 
 class TestCDLFormat(unittest.TestCase):
@@ -117,6 +118,48 @@ class TestConfig(unittest.TestCase):
         self.config.halt_on_error = False
         self.assertFalse(self.config.halt_on_error)
 
+    def test_default_tag_names(self):
+        """Test that tag names have correct default values."""
+        self.assertEqual(self.config.sop_tag_name, "SOPNode")
+        self.assertEqual(self.config.sat_tag_name, "SatNode")
+
+    def test_set_sop_tag_name_valid(self):
+        """Test setting valid SOP tag names."""
+        self.config.set_sop_tag_name("SOPNode")
+        self.assertEqual(self.config.sop_tag_name, "SOPNode")
+
+        self.config.set_sop_tag_name("ASC_SOP")
+        self.assertEqual(self.config.sop_tag_name, "ASC_SOP")
+
+    def test_set_sop_tag_name_invalid(self):
+        """Test that invalid SOP tag names raise ValidationError."""
+        from cdl_convert.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError) as cm:
+            self.config.set_sop_tag_name("InvalidTag")
+        self.assertIn("Invalid SOP tag name", str(cm.exception))
+        self.assertIn("SOPNode, ASC_SOP", str(cm.exception))
+
+    def test_set_sat_tag_name_valid(self):
+        """Test setting valid Saturation tag names."""
+        self.config.set_sat_tag_name("SatNode")
+        self.assertEqual(self.config.sat_tag_name, "SatNode")
+
+        self.config.set_sat_tag_name("SATNode")
+        self.assertEqual(self.config.sat_tag_name, "SATNode")
+
+        self.config.set_sat_tag_name("ASC_SAT")
+        self.assertEqual(self.config.sat_tag_name, "ASC_SAT")
+
+    def test_set_sat_tag_name_invalid(self):
+        """Test that invalid Saturation tag names raise ValidationError."""
+        from cdl_convert.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError) as cm:
+            self.config.set_sat_tag_name("InvalidTag")
+        self.assertIn("Invalid Saturation tag name", str(cm.exception))
+        self.assertIn("SatNode, SATNode, ASC_SAT", str(cm.exception))
+
 
 class TestGlobalConfigInstance(unittest.TestCase):
     """Tests for the global config instance."""
@@ -125,11 +168,15 @@ class TestGlobalConfigInstance(unittest.TestCase):
         """Set up test fixtures."""
         # Reset config to default state
         config.config.halt_on_error = False
+        config.config.sop_tag_name = "SOPNode"
+        config.config.sat_tag_name = "SatNode"
 
     def tearDown(self):
         """Clean up after tests."""
         # Reset config to default state
         config.config.halt_on_error = False
+        config.config.sop_tag_name = "SOPNode"
+        config.config.sat_tag_name = "SatNode"
 
     def test_global_config_exists(self):
         """Test that global config instance exists and is correct type."""
@@ -141,6 +188,100 @@ class TestGlobalConfigInstance(unittest.TestCase):
 
         config.config.halt_on_error = True
         self.assertTrue(config.config.halt_on_error)
+
+
+class TestSopNodeTagNames(unittest.TestCase):
+    """Tests for SopNode XML tag name configuration."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        # Reset config to default state
+        config.config.sop_tag_name = "SOPNode"
+        config.config.sat_tag_name = "SatNode"
+        ColorCorrection.reset_members()
+
+    def tearDown(self):
+        """Clean up after tests."""
+        # Reset config to default state
+        config.config.sop_tag_name = "SOPNode"
+        config.config.sat_tag_name = "SatNode"
+        ColorCorrection.reset_members()
+
+    def test_sop_default_tag_name(self):
+        """Test SopNode uses default 'SOPNode' tag."""
+        cc = ColorCorrection("test_id")
+        cc.slope = [1.2, 1.1, 1.0]
+
+        element = cc.sop_node.build_element()
+
+        self.assertEqual(element.tag, "SOPNode")
+        self.assertIsNotNone(element.find("Slope"))
+
+    def test_sop_asc_tag_name(self):
+        """Test SopNode uses 'ASC_SOP' tag when configured."""
+        config.config.set_sop_tag_name("ASC_SOP")
+
+        cc = ColorCorrection("test_id")
+        cc.slope = [1.2, 1.1, 1.0]
+
+        element = cc.sop_node.build_element()
+
+        self.assertEqual(element.tag, "ASC_SOP")
+        self.assertIsNotNone(element.find("Slope"))
+        self.assertIsNotNone(element.find("Offset"))
+        self.assertIsNotNone(element.find("Power"))
+
+
+class TestSatNodeTagNames(unittest.TestCase):
+    """Tests for SatNode XML tag name configuration."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        # Reset config to default state
+        config.config.sop_tag_name = "SOPNode"
+        config.config.sat_tag_name = "SatNode"
+        ColorCorrection.reset_members()
+
+    def tearDown(self):
+        """Clean up after tests."""
+        # Reset config to default state
+        config.config.sop_tag_name = "SOPNode"
+        config.config.sat_tag_name = "SatNode"
+        ColorCorrection.reset_members()
+
+    def test_sat_default_tag_name(self):
+        """Test SatNode uses default 'SatNode' tag."""
+        cc = ColorCorrection("test_id")
+        cc.sat = 0.9
+
+        element = cc.sat_node.build_element()
+
+        self.assertEqual(element.tag, "SatNode")
+        self.assertIsNotNone(element.find("Saturation"))
+
+    def test_sat_legacy_tag_name(self):
+        """Test SatNode uses legacy 'SATNode' tag when configured."""
+        config.config.set_sat_tag_name("SATNode")
+
+        cc = ColorCorrection("test_id")
+        cc.sat = 0.9
+
+        element = cc.sat_node.build_element()
+
+        self.assertEqual(element.tag, "SATNode")
+        self.assertIsNotNone(element.find("Saturation"))
+
+    def test_sat_asc_tag_name(self):
+        """Test SatNode uses 'ASC_SAT' tag when configured."""
+        config.config.set_sat_tag_name("ASC_SAT")
+
+        cc = ColorCorrection("test_id")
+        cc.sat = 0.9
+
+        element = cc.sat_node.build_element()
+
+        self.assertEqual(element.tag, "ASC_SAT")
+        self.assertIsNotNone(element.find("Saturation"))
 
 
 if __name__ == "__main__":

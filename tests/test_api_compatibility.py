@@ -233,7 +233,7 @@ class TestCDLFormatOutputConsistency(unittest.TestCase):
         self.assertIn("<Slope>1.02401 1.00804 0.89562</Slope>", content)
         self.assertIn("<Offset>-0.00864 -0.00261 0.03612</Offset>", content)
         self.assertIn("<Power>1.0 1.0 1.0</Power>", content)
-        self.assertIn("<SATNode>", content)
+        self.assertIn("<SatNode>", content)
         self.assertIn("<Saturation>1.2</Saturation>", content)
 
     def test_ccc_format_output_consistency(self):

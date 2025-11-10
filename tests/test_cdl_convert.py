@@ -281,6 +281,9 @@ class TestParseArgs(unittest.TestCase):
         self.sysargv = sys.argv
         self.stdout = sys.stdout
         sys.stdout = StringIO()
+        # Reset tag names to defaults
+        cdl_convert.config.config.sop_tag_name = "SOPNode"
+        cdl_convert.config.config.sat_tag_name = "SatNode"
 
     # ==========================================================================
 
@@ -288,6 +291,9 @@ class TestParseArgs(unittest.TestCase):
         sys.stdout = self.stdout
         sys.argv = self.sysargv
         cdl_convert.reset_all()
+        # Reset tag names to defaults
+        cdl_convert.config.config.sop_tag_name = "SOPNode"
+        cdl_convert.config.config.sat_tag_name = "SatNode"
 
     # ==========================================================================
     # TESTS
@@ -441,6 +447,83 @@ class TestParseArgs(unittest.TestCase):
         args = main.parse_args(validate_files=False)
 
         self.assertEqual(Path("/best/folder/"), args.destination)
+
+    # ==========================================================================
+
+    def testSopTagDefault(self):
+        """Tests that SOP tag defaults correctly"""
+
+        sys.argv = ["scriptname", "inputFile"]
+
+        main.parse_args(validate_files=False)
+
+        self.assertEqual("SOPNode", cdl_convert.config.config.sop_tag_name)
+
+    # ==========================================================================
+
+    def testSopTagSOPNode(self):
+        """Tests that --sop-tag SOPNode sets configuration"""
+
+        sys.argv = ["scriptname", "inputFile", "--sop-tag", "SOPNode"]
+
+        main.parse_args(validate_files=False)
+
+        self.assertEqual("SOPNode", cdl_convert.config.config.sop_tag_name)
+
+    # ==========================================================================
+
+    def testSopTagASC_SOP(self):
+        """Tests that --sop-tag ASC_SOP sets configuration"""
+
+        sys.argv = ["scriptname", "inputFile", "--sop-tag", "ASC_SOP"]
+
+        main.parse_args(validate_files=False)
+
+        self.assertEqual("ASC_SOP", cdl_convert.config.config.sop_tag_name)
+
+    # ==========================================================================
+
+    def testSatTagDefault(self):
+        """Tests that SAT tag defaults correctly"""
+
+        sys.argv = ["scriptname", "inputFile"]
+
+        main.parse_args(validate_files=False)
+
+        self.assertEqual("SatNode", cdl_convert.config.config.sat_tag_name)
+
+    # ==========================================================================
+
+    def testSatTagSatNode(self):
+        """Tests that --sat-tag SatNode sets configuration"""
+
+        sys.argv = ["scriptname", "inputFile", "--sat-tag", "SatNode"]
+
+        main.parse_args(validate_files=False)
+
+        self.assertEqual("SatNode", cdl_convert.config.config.sat_tag_name)
+
+    # ==========================================================================
+
+    def testSatTagSATNode(self):
+        """Tests that --sat-tag SATNode sets configuration (legacy)"""
+
+        sys.argv = ["scriptname", "inputFile", "--sat-tag", "SATNode"]
+
+        main.parse_args(validate_files=False)
+
+        self.assertEqual("SATNode", cdl_convert.config.config.sat_tag_name)
+
+    # ==========================================================================
+
+    def testSatTagASC_SAT(self):
+        """Tests that --sat-tag ASC_SAT sets configuration"""
+
+        sys.argv = ["scriptname", "inputFile", "--sat-tag", "ASC_SAT"]
+
+        main.parse_args(validate_files=False)
+
+        self.assertEqual("ASC_SAT", cdl_convert.config.config.sat_tag_name)
 
 
 # parse_args() ================================================================

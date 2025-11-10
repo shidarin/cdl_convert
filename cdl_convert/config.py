@@ -97,6 +97,13 @@ class Config:
         {CDLFormat.CC, CDLFormat.RCDL}
     )
     """Set of formats that represent single ColorCorrection objects."""
+    sop_tag_name: str = "SOPNode"
+    """XML element tag name for SOP nodes. Valid values: 'SOPNode', 'ASC_SOP'.
+    Default is 'SOPNode' for standard format."""
+    sat_tag_name: str = "SatNode"
+    """XML element tag name for Saturation nodes. Valid values: 'SatNode',
+    'SATNode', 'ASC_SAT'. Default is 'SatNode' (changed from 'SATNode' in v1.0
+    for consistency). Use 'SATNode' for legacy behavior."""
 
     def is_collection_format(self, format_type: str) -> bool:
         """Check if a format string represents a collection format.
@@ -129,6 +136,58 @@ class Config:
             return fmt in self.single_formats
         except ValueError:
             return False
+
+    def set_sop_tag_name(self, tag_name: str) -> None:
+        """Set SOP tag name with validation.
+
+        Args:
+            tag_name: Tag name to use. Must be 'SOPNode' or 'ASC_SOP'.
+
+        Raises:
+            ValidationError: If tag_name is not a valid option.
+
+        Example:
+            >>> config.set_sop_tag_name("ASC_SOP")
+            >>> config.set_sop_tag_name("InvalidTag")  # Raises ValidationError
+
+        """
+        # Import here to avoid circular dependency
+        from cdl_convert.exceptions import ValidationError
+
+        valid_tags = ["SOPNode", "ASC_SOP"]
+        if tag_name not in valid_tags:
+            raise ValidationError(
+                f"Invalid SOP tag name: '{tag_name}'. "
+                f"Valid options: {', '.join(valid_tags)}"
+            )
+        self.sop_tag_name = tag_name
+
+    def set_sat_tag_name(self, tag_name: str) -> None:
+        """Set Saturation tag name with validation.
+
+        Args:
+            tag_name: Tag name to use. Must be 'SatNode', 'SATNode', or
+                'ASC_SAT'.
+
+        Raises:
+            ValidationError: If tag_name is not a valid option.
+
+        Example:
+            >>> config.set_sat_tag_name("ASC_SAT")
+            >>> config.set_sat_tag_name("SATNode")  # Legacy behavior
+            >>> config.set_sat_tag_name("InvalidTag")  # Raises ValidationError
+
+        """
+        # Import here to avoid circular dependency
+        from cdl_convert.exceptions import ValidationError
+
+        valid_tags = ["SatNode", "SATNode", "ASC_SAT"]
+        if tag_name not in valid_tags:
+            raise ValidationError(
+                f"Invalid Saturation tag name: '{tag_name}'. "
+                f"Valid options: {', '.join(valid_tags)}"
+            )
+        self.sat_tag_name = tag_name
 
 
 # ==============================================================================
