@@ -26,6 +26,8 @@ class TestCDLFormat(unittest.TestCase):
         self.assertEqual(CDLFormat.CDL.value, "cdl")
         self.assertEqual(CDLFormat.EDL.value, "edl")
         self.assertEqual(CDLFormat.FLEX.value, "flex")
+        self.assertEqual(CDLFormat.NK.value, "nk")
+        self.assertEqual(CDLFormat.OTIO.value, "otio")
         self.assertEqual(CDLFormat.RCDL.value, "rcdl")
 
     def test_format_creation_from_string(self):
@@ -36,6 +38,8 @@ class TestCDLFormat(unittest.TestCase):
         self.assertEqual(CDLFormat("cdl"), CDLFormat.CDL)
         self.assertEqual(CDLFormat("edl"), CDLFormat.EDL)
         self.assertEqual(CDLFormat("flex"), CDLFormat.FLEX)
+        self.assertEqual(CDLFormat("nk"), CDLFormat.NK)
+        self.assertEqual(CDLFormat("otio"), CDLFormat.OTIO)
         self.assertEqual(CDLFormat("rcdl"), CDLFormat.RCDL)
 
     def test_invalid_format_raises_error(self):
@@ -67,7 +71,7 @@ class TestConfig(unittest.TestCase):
             set(self.config.collection_formats), expected_collection
         )
 
-        expected_single = {CDLFormat.CC, CDLFormat.RCDL}
+        expected_single = {CDLFormat.CC, CDLFormat.NK, CDLFormat.RCDL}
         self.assertEqual(set(self.config.single_formats), expected_single)
 
     def test_is_collection_format(self):
@@ -94,6 +98,7 @@ class TestConfig(unittest.TestCase):
         """Test is_single_format method."""
         # Test single formats
         self.assertTrue(self.config.is_single_format("cc"))
+        self.assertTrue(self.config.is_single_format("nk"))
         self.assertTrue(self.config.is_single_format("rcdl"))
 
         # Test collection formats (should return False)
@@ -108,6 +113,7 @@ class TestConfig(unittest.TestCase):
 
         # Test case insensitivity
         self.assertTrue(self.config.is_single_format("CC"))
+        self.assertTrue(self.config.is_single_format("NK"))
         self.assertTrue(self.config.is_single_format("RCDL"))
 
     def test_halt_on_error_modification(self):

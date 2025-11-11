@@ -26,6 +26,16 @@ Write XML Color Decision List (cdl) files.
 .. autofunction:: cdl_convert.write.write_cdl
 ```
 
+## write_nk
+
+Write Foundry Nuke OCIOCDLTransform node files.
+
+This writes a Nuke script file containing an OCIOCDLTransform node with the CDL color correction values. The generated file can be directly loaded into Nuke and will apply the specified color correction.
+
+```{eval-rst}
+.. autofunction:: cdl_convert.write.write_nk
+```
+
 ## write_rnh_cdl
 
 Write Rhythm & Hues CDL format.

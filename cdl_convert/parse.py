@@ -25,6 +25,9 @@ Public Functions:
     parse_flex(Union[str, Path]) -> ColorCollection: Parse Film Log EDL
         Exchange files.
 
+    parse_nk(Union[str, Path]) -> ColorCorrection: Parse Foundry Nuke
+        OCIOCDLTransform node files.
+
     parse_otio(Union[str, Path]) -> ColorCollection: Parse OpenTimelineIO
         timeline files.
 
@@ -112,6 +115,7 @@ __all__ = [
     "parse_cmx",
     "parse_file",
     "parse_flex",
+    "parse_nk",
     "parse_otio",
     "parse_rnh_cdl",
 ]
@@ -681,6 +685,147 @@ def parse_flex(input_file: str | Path) -> collection.ColorCollection:  # pylint:
 # ==============================================================================
 
 
+def parse_nk(input_file: str | Path) -> correction.ColorCorrection:
+    """Parse Foundry Nuke OCIOCDLTransform node file.
+
+    Parses a Nuke script file containing an OCIOCDLTransform node to extract
+    ASC CDL color correction values.
+
+    The parser extracts slope, offset, power (as RGB triples), saturation
+    (as a single value), and the node name. This format is commonly used
+    for exchanging CDL corrections in Nuke-based VFX and compositing workflows.
+
+    OCIOCDLTransform Format Structure:
+        OCIOCDLTransform {
+          slope {R G B}
+          offset {R G B}
+          power {R G B}
+          saturation S
+          name node_name
+        }
+
+    Args:
+        input_file (Union[str, Path]): File path to .nk file containing
+            OCIOCDLTransform node.
+
+    Returns:
+        ColorCorrection: ColorCorrection instance with parsed CDL values
+            and node name as ID.
+
+    Raises:
+        ParseError: If file does not contain OCIOCDLTransform node, has
+            malformed syntax, or is missing required fields.
+        ValidationError: If CDL values fail validation checks.
+        FileNotFoundError: If input file path does not exist.
+
+    Example:
+        >>> cc = parse_nk("shot_001.nk")
+        >>> print(f"ID: {cc.id}, Slope: {cc.slope}")
+
+    """
+    input_path = Path(input_file)
+
+    # Read file content
+    try:
+        content = input_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        # Fallback to default encoding if UTF-8 fails
+        content = input_path.read_text()
+
+    # Extract OCIOCDLTransform block
+    # Match the entire node including nested braces
+    node_pattern = r"OCIOCDLTransform\s*\{(.*?)\n\}"
+    node_match = re.search(node_pattern, content, re.DOTALL)
+
+    if not node_match:
+        raise ParseError(
+            f"No OCIOCDLTransform node found in '{input_file}'. "
+            f"File must contain a valid OCIOCDLTransform node."
+        )
+
+    node_content = node_match.group(1)
+
+    def parse_triple(pattern: str, field_name: str) -> list[str] | str | None:
+        """Extract RGB triple values from node content.
+
+        Returns:
+            - None if field is missing
+            - Single string if field has 1 value (setter will handle it)
+            - List of 3 strings if field has 3 values
+            - Raises ParseError if field has 2 values (always an error)
+        """
+        match = re.search(pattern, node_content)
+        if not match:
+            if config.config.halt_on_error:
+                raise ParseError(
+                    f"Missing required field '{field_name}' in OCIOCDLTransform node "
+                    f"from file '{input_file}'"
+                )
+            return None
+
+        values_str = match.group(1).strip()
+        values = values_str.split()
+
+        if len(values) == 0:
+            # Field exists but not set, return default
+            return None
+        elif len(values) == 1:
+            # Single value - return as string, setter will handle it
+            return values[0]
+        elif len(values) == 3:
+            # 3 values - return as list
+            return values
+        else:
+            # 2 or 4+ values is always an error
+            raise ParseError(
+                f"Invalid {field_name} format in '{input_file}': "
+                f"expected 1 or 3 values, got {len(values)}"
+            )
+
+    def parse_single(pattern: str, field_name: str) -> str | None:
+        """Extract single numeric value from node content."""
+        match = re.search(pattern, node_content)
+        if not match:
+            if config.config.halt_on_error:
+                raise ParseError(
+                    f"Missing required field '{field_name}' in OCIOCDLTransform node "
+                    f"from file '{input_file}'"
+                )
+            return None
+
+        return match.group(1)
+
+    # Extract values using regex patterns
+    slope = parse_triple(r"slope\s*\{([^}]+)\}", "slope")
+    offset = parse_triple(r"offset\s*\{([^}]+)\}", "offset")
+    power = parse_triple(r"power\s*\{([^}]+)\}", "power")
+    saturation = parse_single(r"saturation\s+([\d.\-]+)", "saturation")
+
+    # Extract name (optional)
+    name_match = re.search(r"name\s+(\S+)", node_content)
+    if name_match:
+        cc_id = name_match.group(1)
+    else:
+        # Use filename without extension as fallback
+        cc_id = input_path.stem
+
+    cdl = correction.ColorCorrection(cc_id, input_file)
+
+    if slope is not None:
+        cdl.slope = slope  # type: ignore[assignment]
+    if offset is not None:
+        cdl.offset = offset  # type: ignore[assignment]
+    if power is not None:
+        cdl.power = power  # type: ignore[assignment]
+    if saturation is not None:
+        cdl.sat = saturation
+
+    return cdl
+
+
+# ==============================================================================
+
+
 def parse_otio(input_file: str | Path) -> collection.ColorCollection:
     """Parse OpenTimelineIO (.otio) timeline file for ASC CDL color corrections.
 
@@ -1094,6 +1239,7 @@ INPUT_FORMATS: dict[
     "cdl": parse_cdl,
     "edl": parse_cmx,
     "flex": parse_flex,
+    "nk": parse_nk,
     "otio": parse_otio,
     "rcdl": parse_rnh_cdl,
 }

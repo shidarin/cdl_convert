@@ -13,6 +13,9 @@ Public Functions:
     write_cdl(Union[ColorCorrection, ColorCollection]) -> None: Write to .cdl
         XML format (ColorDecisionList).
 
+    write_nk(ColorCorrection) -> None: Write ColorCorrection to Nuke
+        OCIOCDLTransform format.
+
     write_rnh_cdl(ColorCorrection) -> None: Write to Rhythm & Hues
         space-separated format.
 
@@ -84,6 +87,7 @@ __all__ = [
     "write_cc",
     "write_ccc",
     "write_cdl",
+    "write_nk",
     "write_rnh_cdl",
 ]
 
@@ -264,6 +268,72 @@ def write_cdl(cdl: ColorCorrection | ColorCollection) -> None:
 # ==============================================================================
 
 
+def write_nk(cdl: ColorCorrection) -> None:
+    """Write ColorCorrection to Nuke OCIOCDLTransform format.
+
+    Generates a Nuke script file containing an OCIOCDLTransform node with
+    the CDL color correction values. The output format uses Nuke's standard
+    node syntax with curly braces for structure.
+
+    The generated OCIOCDLTransform node can be directly loaded into Nuke
+    and will apply the specified color correction values.
+
+    Args:
+        cdl (ColorCorrection): The ColorCorrection instance to write. Must have
+            a valid file_out attribute set to the target file path.
+
+    Raises:
+        CDLConvertError: If file_out is not set or if the file cannot be
+            written, with the original OSError chained for context.
+
+    Example:
+        >>> from pathlib import Path
+        >>> cc = ColorCorrection("shot_001")
+        >>> cc.file_out = Path("output.nk")
+        >>> cc.slope = [1.2, 1.1, 1.0]
+        >>> cc.sat = 0.9
+        >>> write_nk(cc)  # Writes Nuke node to output.nk
+
+    """
+    # Import here to avoid circular imports
+    from cdl_convert.correction import _de_exponent, _sanitize
+
+    if cdl.file_out is None:
+        raise CDLConvertError(
+            "Output file path not set. Set cdl.file_out before writing."
+        )
+
+    # Format values with _de_exponent to avoid scientific notation
+    slope_str = " ".join([_de_exponent(i) for i in cdl.slope])
+    offset_str = " ".join([_de_exponent(i) for i in cdl.offset])
+    power_str = " ".join([_de_exponent(i) for i in cdl.power])
+    sat_str = _de_exponent(cdl.sat)
+
+    # Sanitize name for Nuke
+    name = _sanitize(cdl.id)
+
+    # Generate Nuke OCIOCDLTransform node content
+    nk_cdl = f"""OCIOCDLTransform {{
+  slope {{{slope_str}}}
+  offset {{{offset_str}}}
+  power {{{power_str}}}
+  saturation {sat_str}
+  name {name}
+}}
+"""
+
+    try:
+        with open(cdl.file_out, "w", encoding="utf-8") as cdl_f:
+            cdl_f.write(nk_cdl)
+    except OSError as e:
+        raise CDLConvertError(
+            f"Failed to write Nuke file '{cdl.file_out}': {e}"
+        ) from e
+
+
+# ==============================================================================
+
+
 def write_rnh_cdl(cdl: ColorCorrection) -> None:
     """Writes the ColorCorrection to a space separated .cdl file"""
     # Import here to avoid circular imports
@@ -302,5 +372,6 @@ OUTPUT_FORMATS = {
     "cc": write_cc,
     "ccc": write_ccc,
     "cdl": write_cdl,
+    "nk": write_nk,
     "rcdl": write_rnh_cdl,
 }

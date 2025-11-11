@@ -15,6 +15,7 @@ to maintain the original os behavior which wrote the URI to start with.
 
 ### New Features
 
+- **Nuke OCIOCDLTransform support** - Full bidirectional support for Foundry Nuke's OCIOCDLTransform node format (.nk files)
 - **OTIO support** - Now ingests .otio files with CDL metadata
 - **Hatch & pyproject.toml** - Modern Python packaging and building
 - **Type hints throughout** - Full type annotation for better IDE support

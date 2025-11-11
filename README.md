@@ -29,14 +29,14 @@ The ASC has defined schemas for including the 10 basic numbers in 6 different fo
 Unofficial Formats:
 
 - OpenTimelineIO (OTIO) timeline files with embedded CDL metadata
-- OCIOCDLTransform, a [Foundry Nuke](http://www.thefoundry.co.uk/nuke/) node
-- Space separated CDL, a Rhythm & Hues internal cdl format
+- Nuke's OCIOCDLTransform nodes, from [The Foundry Nuke](http://www.thefoundry.co.uk/nuke/)
+- Space separated CDL (RCDL), a Rhythm & Hues internal cdl format
 
 `cdl_convert` converts ASC CDL information between these basic formats to 
 further facilitate the ease of exchange of color data within the Film and TV industries.
 
-`cdl_convert` supports parsing ALE, FLEx, CC, CCC, CDL, CMX EDL, OTIO, and RCDL.
-`cdl_convert` can write out CC, CCC, CDL and RCDL.
+`cdl_convert` supports parsing ALE, FLEx, CC, CCC, CDL, CMX EDL, Nuke (.nk), OTIO, and RCDL.
+`cdl_convert` can write out CC, CCC, CDL, Nuke (.nk), and RCDL.
 
 ### New in 1.0
 
@@ -76,6 +76,12 @@ Override the default output format or provide multiple outputs:
 $ cdl_convert ./di_v001.flex -o cc,cdl
 ```
 
+Convert to Nuke OCIOCDLTransform format:
+
+```bash
+$ cdl_convert ./input.ccc -o nk
+```
+
 Use enhanced error checking and validation:
 
 ```bash
@@ -85,7 +91,7 @@ $ cdl_convert --check --halt-on-error ./input.ale -o ccc
 Specify output directory:
 
 ```bash
-$ cdl_convert ./input.flex -d ./output_directory/ -o cc,ccc,cdl
+$ cdl_convert ./input.flex -d ./output_directory/ -o cc,ccc,cdl,nk
 ```
 
 ## Installation
@@ -185,6 +191,7 @@ to maintain the original os behavior which wrote the URI to start with.
 
 **New Features:**
 
+- **Nuke OCIOCDLTransform support** - Full bidirectional support for Foundry Nuke's OCIOCDLTransform node format (.nk files)
 - **OTIO support** - Now ingests .otio files with CDL metadata
 - **Hatch & pyproject.toml** - Modern python packaging and building
 - **Type hints throughout** - Full type annotation for better IDE support

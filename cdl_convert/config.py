@@ -61,6 +61,7 @@ class CDLFormat(Enum):
     CDL = "cdl"
     EDL = "edl"
     FLEX = "flex"
+    NK = "nk"
     OTIO = "otio"
     RCDL = "rcdl"
 
@@ -94,7 +95,7 @@ class Config:
     )
     """Set of formats that represent ColorCollection objects."""
     single_formats: frozenset[CDLFormat] = frozenset(
-        {CDLFormat.CC, CDLFormat.RCDL}
+        {CDLFormat.CC, CDLFormat.NK, CDLFormat.RCDL}
     )
     """Set of formats that represent single ColorCorrection objects."""
     sop_tag_name: str = "SOPNode"

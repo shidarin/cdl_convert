@@ -62,6 +62,24 @@ Parse Film Log EDL Exchange (FLEx) files.
 .. autofunction:: cdl_convert.parse.parse_flex
 ```
 
+## parse_nk
+
+Parse Foundry Nuke OCIOCDLTransform node files.
+
+Nuke's OCIOCDLTransform node format is a simple text-based format used for exchanging CDL corrections in Nuke-based VFX and compositing workflows.
+
+```{eval-rst}
+.. autofunction:: cdl_convert.parse.parse_nk
+```
+
+## parse_otio
+
+Parse OpenTimelineIO timeline files with embedded CDL metadata.
+
+```{eval-rst}
+.. autofunction:: cdl_convert.parse.parse_otio
+```
+
 ## parse_rnh_cdl
 
 Parse Rhythm & Hues CDL format.

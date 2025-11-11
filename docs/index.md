@@ -33,12 +33,12 @@ The ASC has defined schemas for including the 10 basic numbers in 6 different fo
 Unofficial Formats:
 
 - OpenTimelineIO (OTIO) timeline files with embedded CDL metadata
-- OCIOCDLTransform, a [Foundry Nuke](http://www.thefoundry.co.uk/nuke/) node
-- Space separated CDL, a Rhythm & Hues internal cdl format
+- Nuke's OCIOCDLTransform nodes, from [The Foundry Nuke](http://www.thefoundry.co.uk/nuke/)
+- Space separated CDL (RCDL), a Rhythm & Hues internal cdl format
 
 `cdl_convert` converts ASC CDL information between these basic formats to further facilitate the ease of exchange of color data within the Film and TV industries.
 
-`cdl_convert` supports parsing ALE, FLEx, CC, CCC, CDL, CMX EDL, OTIO, and RCDL. We can write out CC, CCC, CDL and RCDL.
+`cdl_convert` supports parsing ALE, FLEx, CC, CCC, CDL, CMX EDL, Nuke (.nk), OTIO, and RCDL. We can write out CC, CCC, CDL, Nuke (.nk), and RCDL.
 
 `cdl_convert` uses the Academy Software Foundation's [OpenTimelineIO](https://github.com/AcademySoftwareFoundation/OpenTimelineIO) project for reading ALE, CMX, and OTIO files. This dependency was added because OTIO provides robust EDL parsing with much better compatibility.
 
@@ -46,9 +46,11 @@ Unofficial Formats:
 
 ## New in 1.0
 
+- **Nuke OCIOCDLTransform support** - Full bidirectional support for Foundry Nuke's OCIOCDLTransform node format (.nk files)
 - **OTIO backend for ALE and CMX** allows for more robust EDL parsing
 - **OTIO EDL support** for OpenTimelineIO files with CDL metadata
 - **Python 3.11-3.14 support**
+- **XML tag control** now defaults to `SatNode` for specification compatibility
 
 This version of `cdl_convert` has been modernized with:
 
@@ -98,6 +100,7 @@ See {doc}`usage` for command-line examples and {doc}`usage_cc` for Python API us
 
 usage
 installation
+usage_nuke
 usage_otio
 faq
 support

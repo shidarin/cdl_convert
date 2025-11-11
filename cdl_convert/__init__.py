@@ -18,16 +18,16 @@ Supported Input Formats:
     * XML Color Correction (cc)
     * XML Color Correction Collection (ccc)
     * XML Color Decision List (cdl)
+    * Nuke OCIOCDLTransform (nk)
+    * OpenTimelineIO (otio)
     * Space Separated CDL (RCDL) - Rhythm and Hues format
 
 Supported Output Formats:
     * XML Color Correction (cc)
     * XML Color Correction Collection (ccc)
     * XML Color Decision List (cdl)
+    * Nuke OCIOCDLTransform (nk)
     * Space Separated CDL (RCDL)
-
-ToDo:
-    * OCIOCDLTransform (Foundry Nuke node)
 
 Example Usage:
     >>> from cdl_convert import parse_file, ColorCorrection
@@ -103,11 +103,18 @@ from cdl_convert.parse import (
     parse_cmx,
     parse_file,
     parse_flex,
+    parse_nk,
     parse_otio,
     parse_rnh_cdl,
 )
 from cdl_convert.utils import sanity_check, to_decimal
-from cdl_convert.write import write_cc, write_ccc, write_cdl, write_rnh_cdl
+from cdl_convert.write import (
+    write_cc,
+    write_ccc,
+    write_cdl,
+    write_nk,
+    write_rnh_cdl,
+)
 
 # ==============================================================================
 # GLOBALS
@@ -142,6 +149,7 @@ __all__ = [
     "parse_cmx",
     "parse_file",
     "parse_flex",
+    "parse_nk",
     "parse_otio",
     "parse_rnh_cdl",
     "reset_all",
@@ -153,6 +161,7 @@ __all__ = [
     "write_cc",
     "write_ccc",
     "write_cdl",
+    "write_nk",
     "write_rnh_cdl",
 ]
 
