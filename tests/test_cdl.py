@@ -373,16 +373,6 @@ CDL_FULL_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
             <Saturation>1.01</Saturation>
         </SatNode>
     </ColorCorrection>
-    <ColorCorrection id="f51.200">
-        <SOPNode>
-            <Slope>0.2331 0.678669 1.0758</Slope>
-            <Offset>0.031 0.128 -0.096</Offset>
-            <Power>1.8 0.97 0.961</Power>
-        </SOPNode>
-        <SatNode>
-            <Saturation>1.01</Saturation>
-        </SatNode>
-    </ColorCorrection>
     <ColorCorrection id="f55.100">
         <InputDescription>METAL VIEWER!!! \/\/</InputDescription>
         <ViewingDescription>WOOD VIEWER!? ////</ViewingDescription>
@@ -416,16 +406,6 @@ CDL_FULL_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
         </SOPNode>
         <SatNode>
             <Saturation>1.09</Saturation>
-        </SatNode>
-    </ColorCorrection>
-    <ColorCorrection id="f54.112">
-        <SOPNode>
-            <Slope>0.2331 0.678669 1.0758</Slope>
-            <Offset>0.031 0.128 -0.096</Offset>
-            <Power>1.8 0.97 0.961</Power>
-        </SOPNode>
-        <SatNode>
-            <Saturation>1.01</Saturation>
         </SatNode>
     </ColorCorrection>
 </ColorCorrectionCollection>
@@ -575,28 +555,11 @@ CDL_ODD_WRITE_CCC = r"""<?xml version="1.0" encoding="UTF-8"?>
             <Power>1.8 0.97 0.961</Power>
         </SOPNode>
     </ColorCorrection>
-    <ColorCorrection id="014_xf_seqGrade_v01">
-        <SOPNode>
-            <Description>Sop description 1</Description>
-            <Description>Sop description 2</Description>
-            <Description>Sop description 3</Description>
-            <Slope>1.014 1.0104 0.62</Slope>
-            <Offset>-0.00315 -0.00124 0.3103</Offset>
-            <Power>1.0 0.9983 1.0</Power>
-        </SOPNode>
-    </ColorCorrection>
     <ColorCorrection id="burp_200.x15">
         <SatNode>
             <Description>I am a lovely sat node</Description>
             <Saturation>1.01</Saturation>
         </SatNode>
-    </ColorCorrection>
-    <ColorCorrection id="f51.200">
-        <SOPNode>
-            <Slope>0.2331 0.678669 1.0758</Slope>
-            <Offset>0.031 0.128 -0.096</Offset>
-            <Power>1.8 0.97 0.961</Power>
-        </SOPNode>
     </ColorCorrection>
 </ColorCorrectionCollection>
 """

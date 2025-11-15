@@ -51,6 +51,7 @@ Unofficial Formats:
 - **OTIO EDL support** for OpenTimelineIO files with CDL metadata
 - **Python 3.11-3.14 support**
 - **XML tag control** now defaults to `SatNode` for specification compatibility
+- **Deduplication in CDL to CCC conversion** - ColorCorrections are no longer duplicated when converting from CDL to CCC format
 
 This version of `cdl_convert` has been modernized with:
 

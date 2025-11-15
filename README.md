@@ -188,6 +188,7 @@ hatch run format
 impacted based on the OS you were running cdl_convert on. cdl_convert now attempts
 to maintain the original os behavior which wrote the URI to start with.
 - **SatNode XML tag default changed** - The default XML element tag for Saturation nodes has changed from `SATNode` to `SatNode` for consistency with `SOPNode` naming. Use `--sat-tag SATNode` to maintain legacy behavior.
+- **CDL to CCC conversion deduplicates ColorCorrections** - When converting from CDL (ColorDecisionList) to CCC (ColorCorrectionCollection) format, ColorCorrections are no longer duplicated. Previously, if a ColorCorrection appeared both directly in a ColorDecision and was referenced by a ColorCorrectionRef in another ColorDecision, it would appear twice in the output. Now each unique ColorCorrection appears only once.
 
 **New Features:**
 
@@ -207,8 +208,10 @@ to maintain the original os behavior which wrote the URI to start with.
 - **#55:** Fixed parsing of CCC files with multiple xmlns attributes - previously only the first ColorCorrection with xmlns would be parsed
 - **#61:** Removed deprecated 'rU' file open mode that caused failures on Python 3.11+
 
-**CLI and API should be compatible with with tools written for 0.9.2, however
-no warranties or gaurantees are given.**
+**CLI and API should be mostly compatible with with tools written for 0.9.2,
+however there are breaking behavior changes above such as the SatNode XML tag
+and the deduplication of ColorCorrections in CDL->CCC exports that might 
+impact how CDLs export through this tool.**
 
 ### New in version 0.9.2
 

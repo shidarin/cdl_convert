@@ -12,6 +12,7 @@ All notable changes to CDL Convert are documented in this file.
 - **MediaRef URI behavior has changed** - Previously, MediaRef URIs could be
 impacted based on the OS you were running cdl_convert on. cdl_convert now attempts
 to maintain the original os behavior which wrote the URI to start with.
+- **CDL to CCC conversion deduplicates ColorCorrections** - When converting from CDL (ColorDecisionList) to CCC (ColorCorrectionCollection) format, ColorCorrections are no longer duplicated. Previously, if a ColorCorrection appeared both directly in a ColorDecision and was referenced by a ColorCorrectionRef in another ColorDecision, it would appear twice in the output. Now each unique ColorCorrection appears only once.
 
 ### New Features
 

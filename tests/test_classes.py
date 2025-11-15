@@ -3814,6 +3814,78 @@ class TestGitHubIssue46(unittest.TestCase):
         self.assertEqual("006", cc6.id)
 
 
+class TestGitHubIssue36(unittest.TestCase):
+    """Regression test for GitHub issue #36 - duplicate CCs when converting CDL to CCC."""
+
+    def setUp(self):
+        """Clear ColorCorrection members before each test."""
+        cdl_convert.ColorCorrection.members.clear()
+        cdl_convert.ColorDecision.members.clear()
+
+    def tearDown(self):
+        """Clear ColorCorrection members after each test."""
+        cdl_convert.ColorCorrection.members.clear()
+        cdl_convert.ColorDecision.members.clear()
+
+    def test_no_duplicate_cc_when_converting_cdl_to_ccc(self):
+        """Test that ColorCorrections aren't duplicated when converting CDL to CCC.
+        
+        Regression test for GitHub issue #36 where a ColorCorrectionRef pointing
+        to a ColorCorrection that's also directly included would cause the
+        ColorCorrection to appear twice in the CCC output.
+        """
+        # Create a CDL collection
+        cdl = cdl_convert.ColorCollection()
+        cdl.type = "cdl"
+        
+        # Create ColorCorrections
+        cc1 = cdl_convert.ColorCorrection(id="001")
+        cc1.slope = (Decimal("2.9"), Decimal("2.9"), Decimal("2.9"))
+        cc1.offset = (Decimal("-0.1"), Decimal("0.9"), Decimal("2.9"))
+        
+        cc2 = cdl_convert.ColorCorrection(id="002")
+        cc2.slope = (Decimal("1.0"), Decimal("2.0"), Decimal("10.0"))
+        
+        # Create ColorDecisions
+        # CD1: ColorCorrectionRef pointing to cc1
+        ccref1 = cdl_convert.ColorCorrectionRef("001")
+        cd1 = cdl_convert.ColorDecision(ccref1)
+        
+        # CD2: Direct ColorCorrection cc2
+        cd2 = cdl_convert.ColorDecision(cc2)
+        
+        # CD3: Direct ColorCorrection cc1 (same as what ccref1 points to)
+        cd3 = cdl_convert.ColorDecision(cc1)
+        
+        # Add ColorDecisions to the CDL collection
+        cdl.append_children([cd1, cd2, cd3])
+        
+        # Convert to CCC
+        cdl.set_to_ccc()
+        
+        # Get the XML output
+        xml_element = cdl.element
+        self.assertIsNotNone(xml_element)
+        
+        # Count ColorCorrection elements in the output
+        cc_elements = xml_element.findall("ColorCorrection")
+        
+        # Should only have 2 ColorCorrections (001 and 002), not 3
+        self.assertEqual(
+            2, 
+            len(cc_elements),
+            f"Expected 2 unique ColorCorrections, got {len(cc_elements)}. "
+            "ColorCorrection '001' should not be duplicated."
+        )
+        
+        # Verify the IDs are unique
+        cc_ids = [cc.get("id") for cc in cc_elements]
+        self.assertEqual(["001", "002"], sorted(cc_ids))
+        
+        # Verify no duplicate IDs
+        self.assertEqual(len(cc_ids), len(set(cc_ids)), "Found duplicate IDs in output")
+
+
 # ==============================================================================
 # RUNNER
 # ==============================================================================
