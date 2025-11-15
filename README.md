@@ -164,6 +164,9 @@ hatch run type-check
 
 # Format code
 hatch run format
+
+# Build docs
+hatch run docs:build
 ```
 
 ### Dependencies

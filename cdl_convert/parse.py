@@ -698,7 +698,8 @@ def parse_nk(input_file: str | Path) -> correction.ColorCorrection:
     (as a single value), and the node name. This format is commonly used
     for exchanging CDL corrections in Nuke-based VFX and compositing workflows.
 
-    OCIOCDLTransform Format Structure:
+    OCIOCDLTransform Format Structure::
+
         OCIOCDLTransform {
           slope {R G B}
           offset {R G B}
@@ -832,15 +833,16 @@ def parse_otio(input_file: str | Path) -> collection.ColorCollection:
     deserialization to read .otio files and extract CDL metadata from all
     clips in the timeline structure.
 
-    CDL data appears in OTIO files as clip metadata:
-    clip.metadata['cdl'] = {
-        'asc_sop': {
-            'slope': [float, float, float],
-            'offset': [float, float, float],
-            'power': [float, float, float]
-        },
-        'asc_sat': float
-    }
+    CDL data appears in OTIO files as clip metadata::
+
+        clip.metadata['cdl'] = {
+            'asc_sop': {
+                'slope': [float, float, float],
+                'offset': [float, float, float],
+                'power': [float, float, float]
+            },
+            'asc_sat': float
+        }
 
     Args:
         input_file (Union[str, Path]): The filepath to the .otio file.
