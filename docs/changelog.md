@@ -12,6 +12,7 @@ All notable changes to CDL Convert are documented in this file.
 - **MediaRef URI behavior has changed** - Previously, MediaRef URIs could be
 impacted based on the OS you were running cdl_convert on. cdl_convert now attempts
 to maintain the original os behavior which wrote the URI to start with.
+- **SatNode XML tag default changed** - The default XML element tag for Saturation nodes has changed from `SATNode` to `SatNode` for consistency with `SOPNode` naming. Use `--sat-tag SATNode` to maintain legacy behavior.
 - **CDL to CCC conversion deduplicates ColorCorrections** - When converting from CDL (ColorDecisionList) to CCC (ColorCorrectionCollection) format, ColorCorrections are no longer duplicated. Previously, if a ColorCorrection appeared both directly in a ColorDecision and was referenced by a ColorCorrectionRef in another ColorDecision, it would appear twice in the output. Now each unique ColorCorrection appears only once.
 
 ### New Features
@@ -43,7 +44,8 @@ to maintain the original os behavior which wrote the URI to start with.
 
 ### Compatibility
 
-CLI and API should be compatible with tools written for 0.9.2, however no warranties or guarantees are given.
+CLI and API should be generally compatible with tools written for 0.9.2, however see the breaking changes listed above which
+could result in changed output your tools may have been expecting.
 
 See {doc}`installation` for updated installation instructions.
 

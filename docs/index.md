@@ -44,25 +44,6 @@ Unofficial Formats:
 
 **cdl_convert is not associated with the American Society of Cinematographers**
 
-## New in 1.0
-
-- **Nuke OCIOCDLTransform support** - Full bidirectional support for Foundry Nuke's OCIOCDLTransform node format (.nk files)
-- **OTIO backend for ALE and CMX** allows for more robust EDL parsing
-- **OTIO EDL support** for OpenTimelineIO files with CDL metadata
-- **Python 3.11-3.14 support**
-- **XML tag control** now defaults to `SatNode` for specification compatibility
-- **Deduplication in CDL to CCC conversion** - ColorCorrections are no longer duplicated when converting from CDL to CCC format
-
-This version of `cdl_convert` has been modernized with:
-
-- **Type hints** throughout the codebase for better IDE support and code clarity
-- **pathlib.Path** for robust cross-platform file operations
-- **Dataclasses** for structured color correction data (`ColorValues`)
-- **Enhanced error handling** with specific exception types (`ValidationError`, `ParseError`, `FormatError`)
-- **f-string formatting** for improved string operations
-- **Context managers** for safe resource management
-- **Match statements** for cleaner control flow
-
 ## Quick Start
 
 Install via pip:
@@ -110,6 +91,8 @@ license
 contributing
 usage_cc
 usage_ccc
+usage_cdl
+usage_mediaref
 api/index
 ```
 
