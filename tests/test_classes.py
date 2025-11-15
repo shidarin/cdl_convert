@@ -3670,7 +3670,7 @@ class TestGitHubIssue55(unittest.TestCase):
 
     def test_multiple_xmlns_in_ccc(self):
         """Test that CCC files with multiple xmlns attributes are parsed correctly.
-        
+
         Regression test for GitHub issue #55 where only the first ColorCorrection
         with xmlns was being parsed when multiple ColorCorrections each had their
         own xmlns attribute.
@@ -3700,46 +3700,118 @@ class TestGitHubIssue55(unittest.TestCase):
     </ColorCorrection>
 </ColorCorrectionCollection>
 """
-        
+
         # Write test file
         import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.ccc', delete=False) as f:
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".ccc", delete=False
+        ) as f:
             f.write(ccc_content)
             test_file = f.name
-        
+
         try:
             # Parse the file
             collection = cdl_convert.parse_ccc(test_file)
-            
+
             # Verify both ColorCorrections were parsed
             self.assertEqual(
-                2, 
+                2,
                 len(collection.color_corrections),
-                f"Expected 2 color corrections, got {len(collection.color_corrections)}"
+                f"Expected 2 color corrections, got {len(collection.color_corrections)}",
             )
-            
+
             # Verify the IDs
             self.assertEqual("ccA", collection.color_corrections[0].id)
             self.assertEqual("ccB", collection.color_corrections[1].id)
-            
+
             # Verify the values are different (to ensure we got both, not duplicates)
             cc_a = collection.color_corrections[0]
             cc_b = collection.color_corrections[1]
-            
-            self.assertEqual((Decimal('1.0'), Decimal('1.0'), Decimal('1.0')), cc_a.slope)
-            self.assertEqual((Decimal('2.0'), Decimal('2.0'), Decimal('2.0')), cc_b.slope)
-            
-            self.assertEqual((Decimal('0.0'), Decimal('0.0'), Decimal('0.0')), cc_a.offset)
-            self.assertEqual((Decimal('0.1'), Decimal('0.1'), Decimal('0.1')), cc_b.offset)
-            
-            self.assertEqual((Decimal('1.0'), Decimal('1.0'), Decimal('1.0')), cc_a.power)
-            self.assertEqual((Decimal('1.5'), Decimal('1.5'), Decimal('1.5')), cc_b.power)
-            
-            self.assertEqual(Decimal('1.0'), cc_a.sat)
-            self.assertEqual(Decimal('0.9'), cc_b.sat)
+
+            self.assertEqual(
+                (Decimal("1.0"), Decimal("1.0"), Decimal("1.0")), cc_a.slope
+            )
+            self.assertEqual(
+                (Decimal("2.0"), Decimal("2.0"), Decimal("2.0")), cc_b.slope
+            )
+
+            self.assertEqual(
+                (Decimal("0.0"), Decimal("0.0"), Decimal("0.0")), cc_a.offset
+            )
+            self.assertEqual(
+                (Decimal("0.1"), Decimal("0.1"), Decimal("0.1")), cc_b.offset
+            )
+
+            self.assertEqual(
+                (Decimal("1.0"), Decimal("1.0"), Decimal("1.0")), cc_a.power
+            )
+            self.assertEqual(
+                (Decimal("1.5"), Decimal("1.5"), Decimal("1.5")), cc_b.power
+            )
+
+            self.assertEqual(Decimal("1.0"), cc_a.sat)
+            self.assertEqual(Decimal("0.9"), cc_b.sat)
         finally:
             # Clean up temp file
             os.unlink(test_file)
+
+
+class TestGitHubIssue46(unittest.TestCase):
+    """Regression test for GitHub issue #46 - ID collision with auto-generated IDs."""
+
+    def setUp(self):
+        """Clear ColorCorrection members before each test."""
+        cdl_convert.ColorCorrection.members.clear()
+
+    def tearDown(self):
+        """Clear ColorCorrection members after each test."""
+        cdl_convert.ColorCorrection.members.clear()
+
+    def test_auto_generated_id_no_collision(self):
+        """Test that auto-generated IDs don't collide with explicit IDs.
+
+        Regression test for GitHub issue #46 where user pointed out
+        that auto-generated numeric IDs could collide with explicitly specified
+        IDs if they happened to use the same numbering scheme.
+        """
+        # Create a ColorCorrection with explicit ID "002"
+        cc1 = cdl_convert.ColorCorrection(id="002")
+        self.assertEqual("002", cc1.id)
+
+        # Create a ColorCorrection with no ID (should auto-generate)
+        # This should NOT generate "002" even though len(members) + 1 = 2
+        cc2 = cdl_convert.ColorCorrection(id=None)
+        self.assertEqual("001", cc2.id)  # Should get "001" since "002" is taken
+
+        # Create another with no ID
+        cc3 = cdl_convert.ColorCorrection(id=None)
+        self.assertEqual("003", cc3.id)  # Should skip "002" and use "003"
+
+        # Verify all three are registered with unique IDs
+        self.assertEqual(3, len(cdl_convert.ColorCorrection.members))
+        self.assertIn("001", cdl_convert.ColorCorrection.members)
+        self.assertIn("002", cdl_convert.ColorCorrection.members)
+        self.assertIn("003", cdl_convert.ColorCorrection.members)
+
+    def test_auto_generated_id_fills_gaps(self):
+        """Test that auto-generated IDs fill gaps in the numbering sequence."""
+        # Create CCs with IDs that have gaps
+        cc1 = cdl_convert.ColorCorrection(id="001")  # noqa: F841
+        cc2 = cdl_convert.ColorCorrection(id="003")  # noqa: F841
+        cc3 = cdl_convert.ColorCorrection(id="005")  # noqa: F841
+
+        # Auto-generate should fill the first gap
+        cc4 = cdl_convert.ColorCorrection(id=None)
+        self.assertEqual("002", cc4.id)
+
+        # Next auto-generate should fill the next gap
+        cc5 = cdl_convert.ColorCorrection(id=None)
+        self.assertEqual("004", cc5.id)
+
+        # Next should continue after the last explicit ID
+        cc6 = cdl_convert.ColorCorrection(id=None)
+        self.assertEqual("006", cc6.id)
 
 
 # ==============================================================================

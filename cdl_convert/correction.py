@@ -338,7 +338,14 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                     "ColorCorrections require a non-empty ID for identification."
                 )
             else:
-                id = str(len(ColorCorrection.members) + 1).rjust(3, "0")
+                # Generate a unique numeric ID by finding the first available number
+                counter = 1
+                while True:
+                    candidate_id = str(counter).rjust(3, "0")
+                    if candidate_id not in ColorCorrection.members:
+                        id = candidate_id
+                        break
+                    counter += 1
         self._id = id
 
         # Register with member dictionary
