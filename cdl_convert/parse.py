@@ -1212,7 +1212,7 @@ def _remove_xmlns(input_file):
         with open(input_file) as xml_file:
             xml_string = xml_file.read()
 
-    xml_string = re.sub(' xmlns="[^"]+"', "", xml_string, count=1)
+    xml_string = re.sub(' xmlns="[^"]+"', "", xml_string)
 
     try:
         return ElementTree.fromstring(xml_string)

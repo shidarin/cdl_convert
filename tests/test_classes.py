@@ -3661,6 +3661,88 @@ class TestMediaRefDataclassIntegration(unittest.TestCase):
 
 
 # ==============================================================================
+# REGRESSION TESTS
+# ==============================================================================
+
+
+class TestGitHubIssue55(unittest.TestCase):
+    """Regression test for GitHub issue #55 - multiple xmlns in CCC files."""
+
+    def test_multiple_xmlns_in_ccc(self):
+        """Test that CCC files with multiple xmlns attributes are parsed correctly.
+        
+        Regression test for GitHub issue #55 where only the first ColorCorrection
+        with xmlns was being parsed when multiple ColorCorrections each had their
+        own xmlns attribute.
+        """
+        # Create test CCC file with multiple xmlns attributes
+        ccc_content = """<?xml version="1.0" ?>
+<ColorCorrectionCollection>
+    <ColorCorrection xmlns="urn:ASC:CDL:v1.2" id="ccA">
+        <SOPNode>
+            <Slope> 1.000000 1.000000 1.000000</Slope>
+            <Offset> 0.000000 0.000000 0.000000</Offset>
+            <Power> 1.000000 1.000000 1.000000</Power>
+        </SOPNode>
+        <SatNode>
+            <Saturation> 1.000000</Saturation>
+        </SatNode>
+    </ColorCorrection>
+    <ColorCorrection xmlns="urn:ASC:CDL:v1.2" id="ccB">
+        <SOPNode>
+            <Slope> 2.000000 2.000000 2.000000</Slope>
+            <Offset> 0.100000 0.100000 0.100000</Offset>
+            <Power> 1.500000 1.500000 1.500000</Power>
+        </SOPNode>
+        <SatNode>
+            <Saturation> 0.900000</Saturation>
+        </SatNode>
+    </ColorCorrection>
+</ColorCorrectionCollection>
+"""
+        
+        # Write test file
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.ccc', delete=False) as f:
+            f.write(ccc_content)
+            test_file = f.name
+        
+        try:
+            # Parse the file
+            collection = cdl_convert.parse_ccc(test_file)
+            
+            # Verify both ColorCorrections were parsed
+            self.assertEqual(
+                2, 
+                len(collection.color_corrections),
+                f"Expected 2 color corrections, got {len(collection.color_corrections)}"
+            )
+            
+            # Verify the IDs
+            self.assertEqual("ccA", collection.color_corrections[0].id)
+            self.assertEqual("ccB", collection.color_corrections[1].id)
+            
+            # Verify the values are different (to ensure we got both, not duplicates)
+            cc_a = collection.color_corrections[0]
+            cc_b = collection.color_corrections[1]
+            
+            self.assertEqual((Decimal('1.0'), Decimal('1.0'), Decimal('1.0')), cc_a.slope)
+            self.assertEqual((Decimal('2.0'), Decimal('2.0'), Decimal('2.0')), cc_b.slope)
+            
+            self.assertEqual((Decimal('0.0'), Decimal('0.0'), Decimal('0.0')), cc_a.offset)
+            self.assertEqual((Decimal('0.1'), Decimal('0.1'), Decimal('0.1')), cc_b.offset)
+            
+            self.assertEqual((Decimal('1.0'), Decimal('1.0'), Decimal('1.0')), cc_a.power)
+            self.assertEqual((Decimal('1.5'), Decimal('1.5'), Decimal('1.5')), cc_b.power)
+            
+            self.assertEqual(Decimal('1.0'), cc_a.sat)
+            self.assertEqual(Decimal('0.9'), cc_b.sat)
+        finally:
+            # Clean up temp file
+            os.unlink(test_file)
+
+
+# ==============================================================================
 # RUNNER
 # ==============================================================================
 if __name__ == "__main__":
