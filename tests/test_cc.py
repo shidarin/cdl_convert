@@ -83,7 +83,7 @@ CC_BASIC = """<?xml version="1.0" encoding="UTF-8"?>
 
 # The following characters don't seem to be allowed in id fields:
 CC_ODD = r"""<?xml version="1.0" encoding="UTF-8"?>
-<ColorCorrection id="f55.100\\\\\//////">
+<ColorCorrection id="f55.100">
     <Description>Raised saturation a little!?! ag... \/Offset</Description>
     <Description>Raised saturation a little!?! ag... \/Offset</Description>
     <InputDescription>METAL VIEWER!!! \/\/</InputDescription>

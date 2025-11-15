@@ -365,17 +365,17 @@ class TestParseFLExTitleOnly(TestParseFLExBasic):
         """Tests that filenames were parsed correctly"""
 
         self.assertEqual(
-            "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H001",
+            "Bobs_Big_Apple_Break,_into_the_big_apple!_Part.365___H001",
             self.cdl1.id,
         )
 
         self.assertEqual(
-            "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H002",
+            "Bobs_Big_Apple_Break,_into_the_big_apple!_Part.365___H002",
             self.cdl2.id,
         )
 
         self.assertEqual(
-            "Bobs_Big_Apple_Break_into_the_big_apple_Part.365___H003",
+            "Bobs_Big_Apple_Break,_into_the_big_apple!_Part.365___H003",
             self.cdl3.id,
         )
 

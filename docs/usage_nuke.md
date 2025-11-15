@@ -115,20 +115,6 @@ cdl.write_nk(cc)
 
 ## Format Characteristics
 
-### Node Name Sanitization
-
-When writing Nuke files, ColorCorrection IDs are sanitized to ensure valid Nuke node names:
-
-- Spaces are replaced with underscores
-- Special characters (except `-`, `.`, `_`) are replaced with underscores
-- Alphanumeric characters, hyphens, periods, and underscores are preserved
-
-Example:
-```python
-cc = cdl.ColorCorrection('Shot 001 (final)')
-# Node name will be: Shot_001_final
-```
-
 ### Single Node Per File
 
 The current implementation supports one OCIOCDLTransform node per .nk file:

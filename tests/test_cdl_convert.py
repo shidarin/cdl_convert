@@ -155,11 +155,35 @@ class TestSanitize(unittest.TestCase):
 
     # ==========================================================================
 
-    def testCommonBadChars(self):
-        """Tests that common bad characters are removed"""
-        result = _sanitize("a@$#b!)(*$%&^c`/\\\"';:<>,d")
+    def testXMLSpecialCharsRemoved(self):
+        """Tests that XML special characters are removed"""
+        result = _sanitize("a<b>c&d\"e'f")
 
-        self.assertEqual("abcd", result)
+        self.assertEqual("abcdef", result)
+
+    # ==========================================================================
+
+    def testControlCharsRemoved(self):
+        """Tests that control characters are removed"""
+        result = _sanitize("a\x00b\x01c\x1fd\x7fe")
+
+        self.assertEqual("abcde", result)
+
+    # ==========================================================================
+
+    def testUnicodePreserved(self):
+        """Tests that Unicode characters are preserved"""
+        result = _sanitize("test_éñü")
+
+        self.assertEqual("test_éñü", result)
+
+    # ==========================================================================
+
+    def testCommonPunctuationPreserved(self):
+        """Tests that common punctuation is preserved (except XML special chars)"""
+        result = _sanitize("a@$#b!)(*$%^c`/\\;:,d")
+
+        self.assertEqual("a@$#b!)(*$%^c`/\\;:,d", result)
 
     # ==========================================================================
 

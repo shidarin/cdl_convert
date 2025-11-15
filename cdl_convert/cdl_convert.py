@@ -254,6 +254,22 @@ def parse_args(validate_files: bool = True) -> Namespace:
         "for ASC CDL specification compliance.",
     )
 
+    parser.add_argument(
+        "--input-encoding",
+        default=None,
+        help="Character encoding for reading input files. "
+        "Default: auto-detect from XML declaration for XML files, UTF-8 for others. "
+        "Specify to override auto-detection. "
+        "Examples: utf-8, latin-1, iso-8859-1, cp1252",
+    )
+
+    parser.add_argument(
+        "--output-encoding",
+        default="utf-8",
+        help="Character encoding for writing output files. Default: utf-8. "
+        "Examples: utf-8, latin-1, iso-8859-1, cp1252",
+    )
+
     try:
         args = parser.parse_args()
     except SystemExit as e:
@@ -344,6 +360,29 @@ def parse_args(validate_files: bool = True) -> Namespace:
         except Exception as e:
             print_error(str(e))
             raise FormatError(str(e)) from e
+
+    # Set encoding configuration (validation happens in setters)
+    if args.input_encoding:
+        try:
+            config.config.input_encoding = args.input_encoding
+        except LookupError as err:
+            if args.verbose or args.debug:
+                print_error(
+                    f"Unknown input encoding: '{args.input_encoding}'",
+                    "Use a valid Python codec name (e.g., utf-8, latin-1, iso-8859-1, cp1252)",
+                )
+            raise FormatError(str(err)) from err
+
+    if args.output_encoding:
+        try:
+            config.config.output_encoding = args.output_encoding
+        except LookupError as err:
+            if args.verbose or args.debug:
+                print_error(
+                    f"Unknown output encoding: '{args.output_encoding}'",
+                    "Use a valid Python codec name (e.g., utf-8, latin-1, iso-8859-1, cp1252)",
+                )
+            raise FormatError(str(err)) from err
 
     return args
 

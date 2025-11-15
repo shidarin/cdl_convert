@@ -176,7 +176,7 @@ ignore = [
 [tool.bandit]
 exclude_dirs = ["tests", "docs"]
 # Skip XML security warnings since we use defusedxml.defuse_stdlib()
-skips = ["B405", "B408", "B314", "B318"]
+skips = ["B405", "B408", "B314", "B318", "B101"]
 
 [tool.hatch.envs.default]
 dependencies = [

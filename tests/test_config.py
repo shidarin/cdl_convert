@@ -238,6 +238,92 @@ class TestSopNodeTagNames(unittest.TestCase):
         self.assertIsNotNone(element.find("Power"))
 
 
+class TestEncodingConfiguration(unittest.TestCase):
+    """Tests for encoding configuration."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.config = Config()
+
+    def test_default_encoding_values(self):
+        """Test that encoding has correct default values."""
+        self.assertIsNone(self.config.input_encoding)
+        self.assertEqual(self.config.output_encoding, "utf-8")
+
+    def test_normalize_encoding_latin1(self):
+        """Test that latin-1 variants are normalized to ISO-8859-1."""
+        self.assertEqual(
+            Config.normalize_encoding_name("latin-1"), "ISO-8859-1"
+        )
+        self.assertEqual(Config.normalize_encoding_name("latin1"), "ISO-8859-1")
+        self.assertEqual(
+            Config.normalize_encoding_name("iso-8859-1"), "ISO-8859-1"
+        )
+        self.assertEqual(
+            Config.normalize_encoding_name("iso8859-1"), "ISO-8859-1"
+        )
+
+    def test_normalize_encoding_utf8(self):
+        """Test that utf-8 variants are normalized to UTF-8."""
+        self.assertEqual(Config.normalize_encoding_name("utf-8"), "UTF-8")
+        self.assertEqual(Config.normalize_encoding_name("utf8"), "UTF-8")
+
+    def test_normalize_encoding_ascii(self):
+        """Test that ascii variants are normalized to US-ASCII."""
+        self.assertEqual(Config.normalize_encoding_name("ascii"), "US-ASCII")
+        self.assertEqual(Config.normalize_encoding_name("us-ascii"), "US-ASCII")
+
+    def test_normalize_encoding_windows1252(self):
+        """Test that windows-1252 variants are normalized."""
+        self.assertEqual(
+            Config.normalize_encoding_name("windows-1252"), "windows-1252"
+        )
+        self.assertEqual(
+            Config.normalize_encoding_name("cp1252"), "windows-1252"
+        )
+
+    def test_invalid_encoding_raises_error(self):
+        """Test that setting an invalid encoding raises LookupError."""
+        with self.assertRaises(LookupError) as cm:
+            self.config.output_encoding = "some-custom-encoding"
+        self.assertIn("Unknown encoding", str(cm.exception))
+        self.assertIn("some-custom-encoding", str(cm.exception))
+
+        with self.assertRaises(LookupError) as cm:
+            self.config.input_encoding = "invalid-encoding-name"
+        self.assertIn("Unknown encoding", str(cm.exception))
+        self.assertIn("invalid-encoding-name", str(cm.exception))
+
+    def test_output_encoding_xml_property(self):
+        """Test output_encoding_xml property returns normalized name."""
+        self.config.output_encoding = "utf-8"
+        self.assertEqual(self.config.output_encoding_xml, "UTF-8")
+
+        self.config.output_encoding = "latin-1"
+        self.assertEqual(self.config.output_encoding_xml, "ISO-8859-1")
+
+        self.config.output_encoding = "ascii"
+        self.assertEqual(self.config.output_encoding_xml, "US-ASCII")
+
+    def test_valid_encoding_assignment(self):
+        """Test that valid encodings can be assigned."""
+        # These should all work without raising errors
+        self.config.input_encoding = "utf-8"
+        self.assertEqual(self.config.input_encoding, "utf-8")
+
+        self.config.input_encoding = "latin-1"
+        self.assertEqual(self.config.input_encoding, "latin-1")
+
+        self.config.input_encoding = None
+        self.assertIsNone(self.config.input_encoding)
+
+        self.config.output_encoding = "iso-8859-1"
+        self.assertEqual(self.config.output_encoding, "iso-8859-1")
+
+        self.config.output_encoding = "cp1252"
+        self.assertEqual(self.config.output_encoding, "cp1252")
+
+
 class TestSatNodeTagNames(unittest.TestCase):
     """Tests for SatNode XML tag name configuration."""
 

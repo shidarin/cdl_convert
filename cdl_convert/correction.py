@@ -1218,8 +1218,8 @@ def _sanitize(name: str) -> str:
 
     Sanitizes strings to be valid CDL identifiers by replacing spaces with
     underscores, removing leading underscores/periods, and filtering out
-    invalid characters. Only alphanumeric characters, underscores, periods,
-    and hyphens are preserved.
+    invalid XML characters. Preserves Unicode characters as they are valid
+    in XML URIs per the ASC CDL specification.
 
     Args:
         name (str): String to sanitize for use as CDL identifier.
@@ -1237,11 +1237,7 @@ def _sanitize(name: str) -> str:
     name = name.replace(" ", "_")
     # If we start our string with an underscore or period, remove it
     name = name.removeprefix("_").removeprefix(".")
-    # a-z is all lowercase
-    # A-Z is all uppercase
-    # 0-9 is all digits
-    # \. is an escaped period
-    # _ is an underscore
-    # Put them together, negate them by leading with an ^
-    # and our sub will mark every non alnum, non ., _ character
-    return re.sub(r"[^a-zA-Z0-9\._-]+", "", name)
+    # Remove control characters and other invalid XML characters
+    # This preserves Unicode letters, numbers, and common punctuation
+    # while removing only truly problematic characters
+    return re.sub(r"[\x00-\x1F\x7F<>&\"']+", "", name)

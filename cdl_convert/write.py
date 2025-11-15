@@ -75,6 +75,7 @@ SOFTWARE.
 # Standard Imports
 
 # cdl_convert imports
+from cdl_convert import config
 from cdl_convert.collection import ColorCollection
 from cdl_convert.correction import ColorCorrection
 from cdl_convert.exceptions import CDLConvertError
@@ -149,7 +150,9 @@ def write_cc(cdl: ColorCorrection) -> None:
         )
 
     try:
-        with open(cdl.file_out, "w", encoding="utf-8") as cdl_f:
+        with open(
+            cdl.file_out, "w", encoding=config.config.output_encoding
+        ) as cdl_f:
             cdl_f.write(cdl.xml_root)
     except OSError as e:
         raise CDLConvertError(
@@ -201,7 +204,9 @@ def write_ccc(cdl: ColorCorrection | ColorCollection) -> None:
     collection_type = cdl.type
     cdl.set_to_ccc()
     try:
-        with open(cdl.file_out, "w", encoding="utf-8") as cdl_f:
+        with open(
+            cdl.file_out, "w", encoding=config.config.output_encoding
+        ) as cdl_f:
             cdl_f.write(cdl.xml_root)
     except OSError as e:
         raise CDLConvertError(
@@ -255,7 +260,9 @@ def write_cdl(cdl: ColorCorrection | ColorCollection) -> None:
     collection_type = cdl.type
     cdl.set_to_cdl()
     try:
-        with open(cdl.file_out, "w", encoding="utf-8") as cdl_f:
+        with open(
+            cdl.file_out, "w", encoding=config.config.output_encoding
+        ) as cdl_f:
             cdl_f.write(cdl.xml_root)
     except OSError as e:
         raise CDLConvertError(
@@ -323,7 +330,9 @@ def write_nk(cdl: ColorCorrection) -> None:
 """
 
     try:
-        with open(cdl.file_out, "w", encoding="utf-8") as cdl_f:
+        with open(
+            cdl.file_out, "w", encoding=config.config.output_encoding
+        ) as cdl_f:
             cdl_f.write(nk_cdl)
     except OSError as e:
         raise CDLConvertError(
@@ -356,7 +365,9 @@ def write_rnh_cdl(cdl: ColorCorrection) -> None:
     ss_cdl = " ".join(str_values)
 
     try:
-        with open(cdl.file_out, "w", encoding="utf-8") as cdl_f:
+        with open(
+            cdl.file_out, "w", encoding=config.config.output_encoding
+        ) as cdl_f:
             cdl_f.write(ss_cdl)
     except OSError as e:
         raise CDLConvertError(

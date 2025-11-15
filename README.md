@@ -189,6 +189,7 @@ impacted based on the OS you were running cdl_convert on. cdl_convert now attemp
 to maintain the original os behavior which wrote the URI to start with.
 - **SatNode XML tag default changed** - The default XML element tag for Saturation nodes has changed from `SATNode` to `SatNode` for consistency with `SOPNode` naming. Use `--sat-tag SATNode` to maintain legacy behavior.
 - **CDL to CCC conversion deduplicates ColorCorrections** - When converting from CDL (ColorDecisionList) to CCC (ColorCorrectionCollection) format, ColorCorrections are no longer duplicated. Previously, if a ColorCorrection appeared both directly in a ColorDecision and was referenced by a ColorCorrectionRef in another ColorDecision, it would appear twice in the output. Now each unique ColorCorrection appears only once.
+- **ColorCorrection ID sanitization now preserves Unicode characters** - Previously, IDs were sanitized to ASCII-only characters. Now, Unicode characters (e.g., accented letters, CJK characters) are preserved in IDs, with only invalid XML characters being removed. This allows for international character support in CDL identifiers while maintaining XML validity.
 
 **New Features:**
 
@@ -201,6 +202,8 @@ to maintain the original os behavior which wrote the URI to start with.
 - **Enhanced error handling** - Specific exception types (`ValidationError`, `ParseError`, `FormatError`)
 - **Colored CLI output** - Enhanced command-line experience with colored error messages
 - **Configurable XML tag names** - Choose between different XML element tag conventions for SOP and Saturation nodes to improve compatibility with various color correction systems
+- **Configurable character encoding** - Set input and output file encodings with CLI options
+
 
 **Bug Fixes:**
 

@@ -407,50 +407,6 @@ class TestWriteNukeOdd(TestWriteNukeBasic):
             cdl_convert.write_nk(self.cdl)
 
 
-class TestWriteNukeNameSanitization(unittest.TestCase):
-    """Tests that special characters in IDs are sanitized for Nuke"""
-
-    # ==========================================================================
-    # SETUP & TEARDOWN
-    # ==========================================================================
-
-    def setUp(self):
-        # Create CDL with special characters in ID
-        self.cdl = cdl_convert.ColorCorrection(
-            "shot 001 (final)", "../input.ale"
-        )
-
-        self.cdl.determine_dest("nk", "../converted/")
-        self.cdl.slope = [1.0, 1.0, 1.0]
-        self.cdl.offset = [0.0, 0.0, 0.0]
-        self.cdl.power = [1.0, 1.0, 1.0]
-        self.cdl.sat = 1.0
-
-        self.mockOpen = mock.mock_open()
-
-        with mock.patch("builtins.open", self.mockOpen, create=True):
-            cdl_convert.write_nk(self.cdl)
-
-    # ==========================================================================
-
-    def tearDown(self):
-        cdl_convert.reset_all()
-
-    # ==========================================================================
-    # TESTS
-    # ==========================================================================
-
-    def testNameSanitized(self):
-        """Tests that special characters are removed from node name"""
-        handle = self.mockOpen()
-        written_content = handle.write.call_args[0][0]
-
-        # The name should be sanitized (spaces and parens removed/replaced)
-        self.assertIn("name shot_001_final", written_content)
-        # Should not contain the original special characters
-        self.assertNotIn("shot 001 (final)", written_content)
-
-
 class TestWriteNukeNoFileOut(unittest.TestCase):
     """Tests that write_nk raises error when file_out is not set"""
 

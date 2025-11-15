@@ -297,10 +297,15 @@ class AscXMLBase:
                 f"None. This is an abstract method that subclasses of "
                 f"AscXMLBase are required to override."
             )
-        xml_string = ElementTree.tostring(element, "UTF-8")
+        # Use XML standard encoding name for the XML declaration
+        xml_encoding = config.config.output_encoding_xml
+
+        xml_string = ElementTree.tostring(
+            element, config.config.output_encoding
+        )
         dom_xml = minidom.parseString(xml_string)
-        dom_string = dom_xml.toprettyxml(indent="    ", encoding="UTF-8")
-        return dom_string.decode("utf-8")
+        dom_string = dom_xml.toprettyxml(indent="    ", encoding=xml_encoding)
+        return dom_string.decode(config.config.output_encoding)
 
     # Public Methods ==========================================================
 

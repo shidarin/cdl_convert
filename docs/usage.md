@@ -22,6 +22,70 @@ Specify output directory:
 $ cdl_convert ./input.flex -d ./output_directory/ -o cc,ccc,cdl
 ```
 
+## Character Encoding Configuration
+
+`cdl_convert` supports configurable character encoding for both input and output files, allowing you to work with CDL files in various text encodings.
+
+### Input Encoding
+
+By default, `cdl_convert` automatically detects the encoding of XML files (`.cc`, `.ccc`, `.cdl`) from their XML declaration. For non-XML formats (`.ale`, `.flex`, `.nk`, `.rcdl`), UTF-8 is used by default.
+
+Override the automatic detection with the `--input-encoding` option:
+
+```bash
+$ cdl_convert ./input.cc --input-encoding latin-1
+```
+
+This is useful when:
+- Working with legacy files that use non-UTF-8 encodings
+- The XML declaration is missing or incorrect
+- Processing files with special characters in non-standard encodings
+
+### Output Encoding
+
+Control the character encoding used when writing output files with the `--output-encoding` option:
+
+```bash
+$ cdl_convert ./input.flex --output-encoding latin-1 -o cc
+```
+
+The output encoding affects:
+- The XML declaration in output files (e.g., `<?xml version="1.0" encoding="ISO-8859-1"?>`)
+- How characters are encoded in the output file
+
+:::{note}
+`cdl_convert` automatically converts Python encoding names to their IANA standard equivalents in XML declarations. For example, `latin-1` becomes `ISO-8859-1` in the XML declaration, ensuring compatibility with XML standards and other tools.
+:::
+
+### Python API Usage
+
+Configure encoding programmatically:
+
+```python
+import cdl_convert as cdl
+
+# Set input encoding (None for auto-detection)
+cdl.config.config.input_encoding = 'latin-1'
+
+# Set output encoding
+cdl.config.config.output_encoding = 'utf-8'
+
+# Parse with configured encoding
+cc = cdl.parse_cc('path/to/file.cc')
+
+# Write with configured encoding
+cdl.write_cc(cc)
+```
+
+The encoding configuration is validated when set:
+
+```python
+try:
+    cdl.config.config.output_encoding = 'invalid-encoding'
+except LookupError as e:
+    print(f"Error: {e}")
+```
+
 ## Configurable XML Tag Names
 
 Control the XML element tag names used for SOP and Saturation nodes to improve compatibility with different color correction systems.
@@ -166,6 +230,10 @@ options:
                         XML tag name for SOP nodes. Default: SOPNode. Use 'ASC_SOP' for ASC CDL specification compliance.
   --sat-tag {SatNode,SATNode,ASC_SAT}
                         XML tag name for Saturation nodes. Default: SatNode. Use 'SATNode' for legacy behavior (pre-v1.0) or 'ASC_SAT' for ASC CDL specification compliance.
+  --input-encoding INPUT_ENCODING
+                        Character encoding for reading input files. Default: auto-detect from XML declaration for XML files, UTF-8 for others. Specify to override auto-detection. Examples: utf-8, latin-1, iso-8859-1, cp1252
+  --output-encoding OUTPUT_ENCODING
+                        Character encoding for writing output files. Default: utf-8. Examples: utf-8, latin-1, iso-8859-1, cp1252
 
 Supported input formats: ale, cc, ccc, cdl, edl, flex, otio, rcdl
 Supported output formats: cc, ccc, cdl, rcdl

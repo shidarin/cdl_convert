@@ -606,61 +606,64 @@ def parse_flex(input_file: str | Path) -> collection.ColorCollection:  # pylint:
 
         return col_cor
 
-    with open(input_file) as edl:
-        for line in edl:
-            # Use match statement for line prefix detection
-            line_prefix = line[:3]
-            match line_prefix:
-                case "100":
-                    # This is the start of a take/shot
-                    # We need to dump the previous records to a CDL
-                    # Then clear the records.
-                    # Note that the first data line will also hit this.
-                    metadata = [i for i in metadata if i != ""]
-                    if metadata:
-                        cc_id = "_".join(metadata)
-                    else:
-                        field = title if title else filename
-                        cc_id = field + str(len(cdls) + 1).rjust(3, "0")
+    # Read file with encoding handling
+    lines = _read_file_with_encoding(input_file, "readlines")
 
-                    # If we already have values:
-                    if sop or sat:
-                        cdl = build_cc(cc_id, input_file, sop, sat, title)
-                        cdls.append(cdl)
+    # Process lines
+    for line in lines:
+        # Use match statement for line prefix detection
+        line_prefix = line[:3]
+        match line_prefix:
+            case "100":
+                # This is the start of a take/shot
+                # We need to dump the previous records to a CDL
+                # Then clear the records.
+                # Note that the first data line will also hit this.
+                metadata = [i for i in metadata if i != ""]
+                if metadata:
+                    cc_id = "_".join(metadata)
+                else:
+                    field = title if title else filename
+                    cc_id = field + str(len(cdls) + 1).rjust(3, "0")
 
-                    metadata = []
-                    sop = {}
-                    sat = None
+                # If we already have values:
+                if sop or sat:
+                    cdl = build_cc(cc_id, input_file, sop, sat, title)
+                    cdls.append(cdl)
 
-                case "010":
-                    # Title Line
-                    # 10-79 Title
-                    title = line[10:80].strip()
+                metadata = []
+                sop = {}
+                sat = None
 
-                case "110":
-                    # Slate Information
-                    # 10-17 Scene
-                    # 24-31 Take ID
-                    # 42-49 Camera Reel ID
-                    metadata = [
-                        line[10:18].strip(),  # Scene
-                        line[24:32].strip(),  # Take
-                        line[42:50].strip(),  # Reel
-                    ]
+            case "010":
+                # Title Line
+                # 10-79 Title
+                title = line[10:80].strip()
 
-                case "701":
-                    # ASC SOP
-                    # 701 ASC_SOP(# # #)(-# -# -#)(# # #)
-                    sop = {
-                        "slope": line[12:32].split(),
-                        "offset": line[34:57].split(),
-                        "power": line[59:79].split(),
-                    }
+            case "110":
+                # Slate Information
+                # 10-17 Scene
+                # 24-31 Take ID
+                # 42-49 Camera Reel ID
+                metadata = [
+                    line[10:18].strip(),  # Scene
+                    line[24:32].strip(),  # Take
+                    line[42:50].strip(),  # Reel
+                ]
 
-                case "702":
-                    # ASC SAT
-                    # 702 ASC_SAT ######
-                    sat = line.split()[-1]
+            case "701":
+                # ASC SOP
+                # 701 ASC_SOP(# # #)(-# -# -#)(# # #)
+                sop = {
+                    "slope": line[12:32].split(),
+                    "offset": line[34:57].split(),
+                    "power": line[59:79].split(),
+                }
+
+            case "702":
+                # ASC SAT
+                # 702 ASC_SAT ######
+                sat = line.split()[-1]
 
     # We need to dump the last record to the cdl list
     metadata = [i for i in metadata if i != ""]
@@ -723,14 +726,9 @@ def parse_nk(input_file: str | Path) -> correction.ColorCorrection:
         >>> print(f"ID: {cc.id}, Slope: {cc.slope}")
 
     """
-    input_path = Path(input_file)
-
-    # Read file content
-    try:
-        content = input_path.read_text(encoding="utf-8")
-    except UnicodeDecodeError:
-        # Fallback to default encoding if UTF-8 fails
-        content = input_path.read_text()
+    # Read file content with configured encoding
+    content = _read_file_with_encoding(input_file, "r")
+    assert isinstance(content, str)  # read mode "r" always returns str
 
     # Extract OCIOCDLTransform block
     # Match the entire node including nested braces
@@ -807,7 +805,7 @@ def parse_nk(input_file: str | Path) -> correction.ColorCorrection:
         cc_id = name_match.group(1)
     else:
         # Use filename without extension as fallback
-        cc_id = input_path.stem
+        cc_id = Path(input_file).stem
 
     cdl = correction.ColorCorrection(cc_id, input_file)
 
@@ -920,27 +918,29 @@ def parse_rnh_cdl(input_file: str | Path) -> correction.ColorCorrection:
         >>> print(f"Slope: {cc.slope}, Saturation: {cc.sat}")
     """
 
-    with open(input_file) as cdl_f:
-        # We only need to read the first line
-        line = cdl_f.readline()
-        parts = line.split()
+    # Read file with encoding handling
+    line = _read_file_with_encoding(input_file, "readline")
+    assert isinstance(line, str)  # read mode "readline" always returns str
 
-        # The filename without extension will become the id
-        filename = Path(input_file).stem
+    # Parse the line
+    parts = line.split()
 
-        slope: list[str] = [parts[0], parts[1], parts[2]]
-        offset: list[str] = [parts[3], parts[4], parts[5]]
-        power: list[str] = [parts[6], parts[7], parts[8]]
+    # The filename without extension will become the id
+    filename = Path(input_file).stem
 
-        sat: str = parts[9]
+    slope: list[str] = [parts[0], parts[1], parts[2]]
+    offset: list[str] = [parts[3], parts[4], parts[5]]
+    power: list[str] = [parts[6], parts[7], parts[8]]
 
-        cdl = correction.ColorCorrection(filename, input_file)
+    sat: str = parts[9]
 
-        # Setter accepts List[str] and converts
-        cdl.slope = slope  # type: ignore[assignment]
-        cdl.offset = offset  # type: ignore[assignment]
-        cdl.power = power  # type: ignore[assignment]
-        cdl.sat = sat
+    cdl = correction.ColorCorrection(filename, input_file)
+
+    # Setter accepts List[str] and converts
+    cdl.slope = slope  # type: ignore[assignment]
+    cdl.offset = offset  # type: ignore[assignment]
+    cdl.power = power  # type: ignore[assignment]
+    cdl.sat = sat
 
     return cdl
 
@@ -1183,12 +1183,72 @@ def _extract_cdl_from_ale_collection(
 # ==============================================================================
 
 
+def _read_file_with_encoding(
+    input_file: str | Path, read_mode: str = "r"
+) -> str | list[str]:
+    """Read file content with configured encoding and fallback handling.
+
+    Reads a file using config.input_encoding (or UTF-8 default) with automatic
+    fallback to system default encoding if decoding fails. This provides
+    consistent encoding handling across all non-XML parsers.
+
+    Args:
+        input_file: File path to read.
+        read_mode: Read mode - 'r' for full content, 'readline' for first line,
+            'readlines' for list of lines.
+
+    Returns:
+        str or list[str]: File content as string or list of lines depending on
+            read_mode.
+
+    Raises:
+        ParseError: If encoding name is invalid.
+        FileNotFoundError: If input file does not exist.
+
+    Example:
+        >>> content = _read_file_with_encoding("input.nk", "r")
+        >>> line = _read_file_with_encoding("input.cdl", "readline")
+        >>> lines = _read_file_with_encoding("input.flex", "readlines")
+
+    """
+    encoding = config.config.input_encoding or "utf-8"
+
+    try:
+        with open(input_file, encoding=encoding) as f:
+            if read_mode == "readline":
+                return f.readline()
+            elif read_mode == "readlines":
+                return f.readlines()
+            else:  # 'r' or default
+                return f.read()
+    except UnicodeDecodeError:
+        # Fallback to default encoding if specified encoding fails
+        with open(input_file) as f:
+            if read_mode == "readline":
+                return f.readline()
+            elif read_mode == "readlines":
+                return f.readlines()
+            else:
+                return f.read()
+    except LookupError as e:
+        raise ParseError(
+            f"Invalid input encoding '{encoding}': {e}. "
+            f"Use a valid Python codec name (e.g., utf-8, latin-1, iso-8859-1)."
+        ) from e
+
+
 def _remove_xmlns(input_file):
     """Remove xmlns namespace attribute from XML file, return parsed element.
 
     Reads XML file content, strips the xmlns namespace declaration to simplify
-    parsing, and returns the parsed ElementTree root element. Handles encoding
-    issues by falling back from UTF-8 to default encoding if needed.
+    parsing, and returns the parsed ElementTree root element.
+
+    When config.input_encoding is None (default), reads file as bytes to allow
+    ElementTree to auto-detect encoding from XML declaration (defaults to UTF-8
+    per XML spec if no declaration present).
+
+    When config.input_encoding is set, reads file as text with the specified
+    encoding, overriding any XML declaration.
 
     Args:
         input_file: File path to XML file to process.
@@ -1197,29 +1257,56 @@ def _remove_xmlns(input_file):
         ElementTree.Element: Parsed XML root element with xmlns removed.
 
     Raises:
-        ParseError: If XML cannot be parsed after xmlns removal.
+        ParseError: If XML cannot be parsed after xmlns removal, or if encoding
+            is invalid.
         FileNotFoundError: If input file does not exist.
 
     """
     # We're going to open the file as a string and remove the xmlns, as
     # it doesn't do a lot for us when working with CDLs, and in fact
     # just clutters everything the hell up.
-    try:
-        with open(input_file, encoding="utf-8") as xml_file:
-            xml_string = xml_file.read()
-    except UnicodeDecodeError:
-        # Fallback to default encoding if UTF-8 fails
-        with open(input_file) as xml_file:
-            xml_string = xml_file.read()
 
-    xml_string = re.sub(' xmlns="[^"]+"', "", xml_string)
+    if config.config.input_encoding is None:
+        # Auto-detect: read as bytes, let ElementTree handle encoding from
+        # XML declaration. Defaults to UTF-8 if no declaration (per XML spec).
+        with open(input_file, "rb") as xml_file:
+            xml_bytes = xml_file.read()
 
-    try:
-        return ElementTree.fromstring(xml_string)
-    except ElementTree.ParseError as e:
-        raise ParseError(
-            f"Invalid XML format in file '{input_file}': {e}"
-        ) from e
+        # Remove xmlns from bytes (regex works on ASCII-compatible encodings)
+        # The xmlns attribute is always ASCII, so we can safely work with bytes
+        xml_bytes_no_xmlns = re.sub(b' xmlns="[^"]+"', b"", xml_bytes)
+
+        try:
+            # Let ElementTree parse with auto-detected encoding
+            return ElementTree.fromstring(xml_bytes_no_xmlns)
+        except ElementTree.ParseError as e:
+            raise ParseError(
+                f"Invalid XML format in file '{input_file}': {e}. "
+                f"The file may have an incorrect encoding declaration or be corrupted."
+            ) from e
+    else:
+        # User specified encoding - override auto-detection
+        try:
+            with open(
+                input_file, encoding=config.config.input_encoding
+            ) as xml_file:
+                xml_string = xml_file.read()
+        except LookupError as e:
+            raise ParseError(
+                f"Invalid input encoding '{config.config.input_encoding}': {e}. "
+                f"Use a valid Python codec name (e.g., utf-8, latin-1, iso-8859-1)."
+            ) from e
+
+        xml_string = re.sub(' xmlns="[^"]+"', "", xml_string)
+
+        try:
+            # Re-encode to bytes for ElementTree parsing
+            return ElementTree.fromstring(xml_string)
+        except ElementTree.ParseError as e:
+            raise ParseError(
+                f"Invalid XML format in file '{input_file}': {e}. "
+                f"The file may have an incorrect encoding declaration or be corrupted."
+            ) from e
 
 
 # ==============================================================================
