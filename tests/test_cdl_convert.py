@@ -975,6 +975,66 @@ class TestMain(unittest.TestCase):
     # ==========================================================================
 
     @mock.patch("pathlib.Path.mkdir")
+    @mock.patch("cdl_convert.write_cc")
+    @mock.patch("cdl_convert.parse_cdl")
+    def testSingleExportFromCDLWithColorDecisions(
+        self, mockParse, mockWrite, mockMkdir
+    ):
+        """Tests that CDL files with ColorDecisions export to individual CC files.
+
+        Regression test for GitHub issue #42 where CDL files containing
+        ColorDecisions would not export to individual CC files because the
+        script only iterated over color_corrections, not color_decisions.
+        """
+        # Create a CDL collection with ColorDecisions
+        cdl = cdl_convert.ColorCollection()
+        cdl.type = "cdl"
+
+        # Create ColorCorrections
+        cc1 = cdl_convert.ColorCorrection(
+            id="shot001", input_file="../test.cdl"
+        )
+        cc2 = cdl_convert.ColorCorrection(
+            id="shot002", input_file="../test.cdl"
+        )
+        cc3 = cdl_convert.ColorCorrection(
+            id="shot003", input_file="../test.cdl"
+        )
+
+        # Create ColorDecisions with these ColorCorrections
+        cd1 = cdl_convert.ColorDecision(cc1)
+        cd2 = cdl_convert.ColorDecision(cc2)
+        cd3 = cdl_convert.ColorDecision(cc3)
+
+        # Add ColorDecisions to the CDL collection
+        cdl.append_children([cd1, cd2, cd3])
+
+        mockParse.return_value = cdl
+        sys.argv = ["scriptname", "file.cdl", "-o", "cc"]
+
+        mockInputs = dict(self.inputFormats)
+        mockInputs["cdl"] = mockParse
+        parse.INPUT_FORMATS = mockInputs
+
+        mockOutputs = dict(self.outputFormats)
+        mockOutputs["cc"] = mockWrite
+        write.OUTPUT_FORMATS = mockOutputs
+
+        main.main(validate_files=False)
+
+        # Check that write was called three times, once for each ColorDecision's CC
+        calls = [mock.call(cc1), mock.call(cc2), mock.call(cc3)]
+        try:
+            mockWrite.assert_has_calls(calls)
+        except AssertionError:
+            self.fail(
+                "write_cc was not called for every ColorCorrection in ColorDecisions! "
+                f"Expected 3 calls, got {mockWrite.call_count}"
+            )
+
+    # ==========================================================================
+
+    @mock.patch("pathlib.Path.mkdir")
     @mock.patch("cdl_convert.cdl_convert.sanity_check")
     @mock.patch("cdl_convert.write_cc")
     @mock.patch("cdl_convert.parse_flex")
