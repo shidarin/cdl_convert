@@ -357,12 +357,12 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
         for description in self.desc:
             desc = ElementTree.SubElement(ccc_xml, "Description")
             desc.text = description
-        
+
         # Track which ColorCorrection objects have been added to avoid duplicates
         # Use object identity (id()) rather than ColorCorrection.id to handle
         # cases where ColorCorrections might not have IDs
         added_objects: set[int] = set()
-        
+
         if self.color_corrections:
             for color_correct in self.color_corrections:
                 if color_correct.element is not None:
@@ -391,7 +391,7 @@ class ColorCollection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                 # HALT behavior was set.
                 # Also check if this ColorCorrection object has already been added
                 if (
-                    color_correction 
+                    color_correction
                     and color_correction.element is not None
                     and id(color_correction) not in added_objects
                 ):

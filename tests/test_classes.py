@@ -3829,7 +3829,7 @@ class TestGitHubIssue36(unittest.TestCase):
 
     def test_no_duplicate_cc_when_converting_cdl_to_ccc(self):
         """Test that ColorCorrections aren't duplicated when converting CDL to CCC.
-        
+
         Regression test for GitHub issue #36 where a ColorCorrectionRef pointing
         to a ColorCorrection that's also directly included would cause the
         ColorCorrection to appear twice in the CCC output.
@@ -3837,53 +3837,331 @@ class TestGitHubIssue36(unittest.TestCase):
         # Create a CDL collection
         cdl = cdl_convert.ColorCollection()
         cdl.type = "cdl"
-        
+
         # Create ColorCorrections
         cc1 = cdl_convert.ColorCorrection(id="001")
         cc1.slope = (Decimal("2.9"), Decimal("2.9"), Decimal("2.9"))
         cc1.offset = (Decimal("-0.1"), Decimal("0.9"), Decimal("2.9"))
-        
+
         cc2 = cdl_convert.ColorCorrection(id="002")
         cc2.slope = (Decimal("1.0"), Decimal("2.0"), Decimal("10.0"))
-        
+
         # Create ColorDecisions
         # CD1: ColorCorrectionRef pointing to cc1
         ccref1 = cdl_convert.ColorCorrectionRef("001")
         cd1 = cdl_convert.ColorDecision(ccref1)
-        
+
         # CD2: Direct ColorCorrection cc2
         cd2 = cdl_convert.ColorDecision(cc2)
-        
+
         # CD3: Direct ColorCorrection cc1 (same as what ccref1 points to)
         cd3 = cdl_convert.ColorDecision(cc1)
-        
+
         # Add ColorDecisions to the CDL collection
         cdl.append_children([cd1, cd2, cd3])
-        
+
         # Convert to CCC
         cdl.set_to_ccc()
-        
+
         # Get the XML output
         xml_element = cdl.element
         self.assertIsNotNone(xml_element)
-        
+
         # Count ColorCorrection elements in the output
         cc_elements = xml_element.findall("ColorCorrection")
-        
+
         # Should only have 2 ColorCorrections (001 and 002), not 3
         self.assertEqual(
-            2, 
+            2,
             len(cc_elements),
             f"Expected 2 unique ColorCorrections, got {len(cc_elements)}. "
-            "ColorCorrection '001' should not be duplicated."
+            "ColorCorrection '001' should not be duplicated.",
         )
-        
+
         # Verify the IDs are unique
         cc_ids = [cc.get("id") for cc in cc_elements]
         self.assertEqual(["001", "002"], sorted(cc_ids))
-        
+
         # Verify no duplicate IDs
-        self.assertEqual(len(cc_ids), len(set(cc_ids)), "Found duplicate IDs in output")
+        self.assertEqual(
+            len(cc_ids), len(set(cc_ids)), "Found duplicate IDs in output"
+        )
+
+
+class TestGitHubIssue26(unittest.TestCase):
+    """Regression test for GitHub issue #26 - ColorCorrection ID changes don't update references.
+
+    When ColorCorrection.id is changed, the ColorDecision.members and
+    ColorCorrectionRef.members dictionaries should be updated to reflect
+    the new ID.
+
+    GitHub Issue: https://github.com/shidarin/cdl_convert/issues/26
+    """
+
+    def setUp(self):
+        """Reset all class-level member dictionaries before each test"""
+        cdl_convert.ColorCorrection.reset_members()
+        cdl_convert.ColorDecision.reset_members()
+        cdl_convert.ColorCorrectionRef.reset_members()
+
+    def tearDown(self):
+        """Clean up after each test"""
+        cdl_convert.ColorCorrection.reset_members()
+        cdl_convert.ColorDecision.reset_members()
+        cdl_convert.ColorCorrectionRef.reset_members()
+
+    # ==========================================================================
+    # TESTS: ColorCorrection.members dictionary
+    # ==========================================================================
+
+    def test_cc_members_dict_updated_on_id_change(self):
+        """Test that ColorCorrection.members dict is updated when ID changes"""
+        # Create a ColorCorrection
+        cc = cdl_convert.ColorCorrection("original_id")
+
+        # Verify it's registered under original ID
+        self.assertIn("original_id", cdl_convert.ColorCorrection.members)
+        self.assertEqual(cdl_convert.ColorCorrection.members["original_id"], cc)
+
+        # Change the ID
+        cc.id = "new_id"
+
+        # Verify old ID is removed and new ID is registered
+        self.assertNotIn("original_id", cdl_convert.ColorCorrection.members)
+        self.assertIn("new_id", cdl_convert.ColorCorrection.members)
+        self.assertEqual(cdl_convert.ColorCorrection.members["new_id"], cc)
+
+    # ==========================================================================
+    # TESTS: ColorDecision.members dictionary
+    # ==========================================================================
+
+    def test_color_decision_members_dict_updated_on_cc_id_change(self):
+        """Test that ColorDecision.members dict updates when contained CC ID changes"""
+        # Create a ColorCorrection and ColorDecision
+        cc = cdl_convert.ColorCorrection("original_id")
+        cd = cdl_convert.ColorDecision(cc)
+
+        # Verify ColorDecision is registered under original CC ID
+        self.assertIn("original_id", cdl_convert.ColorDecision.members)
+        self.assertIn(cd, cdl_convert.ColorDecision.members["original_id"])
+
+        # Change the ColorCorrection ID
+        cc.id = "new_id"
+
+        # EXPECTED: ColorDecision.members should be updated
+        # Old ID should be removed, new ID should contain the ColorDecision
+        self.assertNotIn(
+            "original_id",
+            cdl_convert.ColorDecision.members,
+            "ColorDecision.members still contains old ID after CC ID change",
+        )
+        self.assertIn(
+            "new_id",
+            cdl_convert.ColorDecision.members,
+            "ColorDecision.members doesn't contain new ID after CC ID change",
+        )
+        self.assertIn(
+            cd,
+            cdl_convert.ColorDecision.members["new_id"],
+            "ColorDecision not found under new ID in ColorDecision.members",
+        )
+
+    def test_multiple_color_decisions_updated_on_cc_id_change(self):
+        """Test that multiple ColorDecisions are updated when shared CC ID changes"""
+        # Create one ColorCorrection and multiple ColorDecisions referencing it
+        cc = cdl_convert.ColorCorrection("original_id")
+        cd1 = cdl_convert.ColorDecision(cc)
+        cd2 = cdl_convert.ColorDecision(cc)
+
+        # Verify both ColorDecisions are registered under original ID
+        self.assertIn("original_id", cdl_convert.ColorDecision.members)
+        self.assertEqual(
+            len(cdl_convert.ColorDecision.members["original_id"]), 2
+        )
+        self.assertIn(cd1, cdl_convert.ColorDecision.members["original_id"])
+        self.assertIn(cd2, cdl_convert.ColorDecision.members["original_id"])
+
+        # Change the ColorCorrection ID
+        cc.id = "new_id"
+
+        # EXPECTED: Both ColorDecisions should be under new ID
+        self.assertNotIn(
+            "original_id",
+            cdl_convert.ColorDecision.members,
+            "ColorDecision.members still contains old ID",
+        )
+        self.assertIn(
+            "new_id",
+            cdl_convert.ColorDecision.members,
+            "ColorDecision.members doesn't contain new ID",
+        )
+        self.assertEqual(
+            len(cdl_convert.ColorDecision.members["new_id"]),
+            2,
+            "Not all ColorDecisions moved to new ID",
+        )
+        self.assertIn(
+            cd1,
+            cdl_convert.ColorDecision.members["new_id"],
+            "First ColorDecision not found under new ID",
+        )
+        self.assertIn(
+            cd2,
+            cdl_convert.ColorDecision.members["new_id"],
+            "Second ColorDecision not found under new ID",
+        )
+
+    # ==========================================================================
+    # TESTS: ColorCorrectionRef.members dictionary
+    # ==========================================================================
+
+    def test_color_correction_ref_members_dict_updated_on_cc_id_change(self):
+        """Test that ColorCorrectionRef.members dict updates when referenced CC ID changes"""
+        # Create a ColorCorrection and a reference to it
+        cc = cdl_convert.ColorCorrection("original_id")
+        ref = cdl_convert.ColorCorrectionRef("original_id")
+
+        # Verify reference is registered under original ID
+        self.assertIn("original_id", cdl_convert.ColorCorrectionRef.members)
+        self.assertIn(
+            ref, cdl_convert.ColorCorrectionRef.members["original_id"]
+        )
+
+        # Change the ColorCorrection ID
+        cc.id = "new_id"
+
+        # EXPECTED: ColorCorrectionRef should be updated to point to new ID
+        # The ref.id should be updated automatically
+        self.assertEqual(
+            ref.id,
+            "new_id",
+            "ColorCorrectionRef.id not updated after CC ID change",
+        )
+        self.assertNotIn(
+            "original_id",
+            cdl_convert.ColorCorrectionRef.members,
+            "ColorCorrectionRef.members still contains old ID",
+        )
+        self.assertIn(
+            "new_id",
+            cdl_convert.ColorCorrectionRef.members,
+            "ColorCorrectionRef.members doesn't contain new ID",
+        )
+        self.assertIn(
+            ref,
+            cdl_convert.ColorCorrectionRef.members["new_id"],
+            "ColorCorrectionRef not found under new ID",
+        )
+
+    def test_multiple_refs_updated_on_cc_id_change(self):
+        """Test that multiple ColorCorrectionRefs are updated when referenced CC ID changes"""
+        # Create one ColorCorrection and multiple references to it
+        cc = cdl_convert.ColorCorrection("original_id")
+        ref1 = cdl_convert.ColorCorrectionRef("original_id")
+        ref2 = cdl_convert.ColorCorrectionRef("original_id")
+        ref3 = cdl_convert.ColorCorrectionRef("original_id")
+
+        # Verify all references are registered under original ID
+        self.assertIn("original_id", cdl_convert.ColorCorrectionRef.members)
+        self.assertEqual(
+            len(cdl_convert.ColorCorrectionRef.members["original_id"]), 3
+        )
+
+        # Change the ColorCorrection ID
+        cc.id = "new_id"
+
+        # EXPECTED: All refs should be updated to new ID
+        self.assertEqual(ref1.id, "new_id", "First ref ID not updated")
+        self.assertEqual(ref2.id, "new_id", "Second ref ID not updated")
+        self.assertEqual(ref3.id, "new_id", "Third ref ID not updated")
+
+        self.assertNotIn(
+            "original_id",
+            cdl_convert.ColorCorrectionRef.members,
+            "ColorCorrectionRef.members still contains old ID",
+        )
+        self.assertIn(
+            "new_id",
+            cdl_convert.ColorCorrectionRef.members,
+            "ColorCorrectionRef.members doesn't contain new ID",
+        )
+        self.assertEqual(
+            len(cdl_convert.ColorCorrectionRef.members["new_id"]),
+            3,
+            "Not all refs moved to new ID",
+        )
+
+    # ==========================================================================
+    # TESTS: Reference resolution after ID change
+    # ==========================================================================
+
+    def test_ref_resolution_works_after_cc_id_change(self):
+        """Test that ColorCorrectionRef can still resolve after CC ID changes"""
+        # Create a ColorCorrection and a reference to it
+        cc = cdl_convert.ColorCorrection("original_id")
+        ref = cdl_convert.ColorCorrectionRef("original_id")
+
+        # Verify reference resolves correctly before ID change
+        resolved_cc = ref.cc
+        self.assertIsNotNone(
+            resolved_cc, "Reference failed to resolve before ID change"
+        )
+        self.assertEqual(
+            resolved_cc, cc, "Reference resolved to wrong CC before ID change"
+        )
+
+        # Change the ColorCorrection ID
+        cc.id = "new_id"
+
+        # EXPECTED: Reference should still resolve correctly
+        resolved_cc_after = ref.cc
+        self.assertIsNotNone(
+            resolved_cc_after, "Reference failed to resolve after CC ID change"
+        )
+        self.assertEqual(
+            resolved_cc_after,
+            cc,
+            "Reference resolved to wrong CC after ID change",
+        )
+        self.assertEqual(
+            resolved_cc_after.id,
+            "new_id",
+            "Resolved CC has wrong ID after change",
+        )
+
+    def test_color_decision_with_ref_works_after_cc_id_change(self):
+        """Test that ColorDecision with ColorCorrectionRef works after CC ID changes"""
+        # Create a ColorCorrection, a reference, and a ColorDecision with that ref
+        cc = cdl_convert.ColorCorrection("original_id")
+        ref = cdl_convert.ColorCorrectionRef("original_id")
+        cd = cdl_convert.ColorDecision(ref)
+
+        # Verify the ColorDecision can access the CC before ID change
+        self.assertTrue(cd.is_ref, "ColorDecision should contain a ref")
+        resolved_cc = cd.cc.cc if cd.is_ref else cd.cc
+        self.assertEqual(
+            resolved_cc, cc, "ColorDecision ref didn't resolve correctly"
+        )
+
+        # Change the ColorCorrection ID
+        cc.id = "new_id"
+
+        # EXPECTED: ColorDecision should still be able to resolve the reference
+        resolved_cc_after = cd.cc.cc if cd.is_ref else cd.cc
+        self.assertIsNotNone(
+            resolved_cc_after,
+            "ColorDecision ref failed to resolve after CC ID change",
+        )
+        self.assertEqual(
+            resolved_cc_after,
+            cc,
+            "ColorDecision ref resolved to wrong CC after ID change",
+        )
+        self.assertEqual(
+            resolved_cc_after.id,
+            "new_id",
+            "Resolved CC has wrong ID after change",
+        )
 
 
 # ==============================================================================

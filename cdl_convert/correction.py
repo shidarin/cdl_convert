@@ -600,6 +600,11 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
     def _set_id(self, new_id: str) -> None:
         """Change ID after verifying the new ID is unique.
 
+        Updates all references when ID changes:
+        - ColorCorrection.members dictionary
+        - ColorDecision.members dictionary for any ColorDecisions containing this CC
+        - ColorCorrectionRef instances that reference this CC
+
         Args:
             new_id (str): New ID string to set.
 
@@ -618,11 +623,32 @@ class ColorCorrection(AscDescBase, AscColorSpaceBase, AscXMLBase):  # pylint: di
                 f'Current ID: "{self._id}".'
             )
         else:
+            old_id = self._id
+
             # Clear the current id from the dictionary
             ColorCorrection.members.pop(self._id)
             self._id = cc_id
             # Register the new id with the dictionary
             ColorCorrection.members[self._id] = self
+
+            # Update ColorDecision.members dictionary
+            # Import here to avoid circular dependency
+            from cdl_convert.decision import ColorCorrectionRef, ColorDecision
+
+            if old_id in ColorDecision.members:
+                # Move all ColorDecisions from old ID to new ID
+                color_decisions = ColorDecision.members.pop(old_id)
+                ColorDecision.members[cc_id] = color_decisions
+
+            # Update all ColorCorrectionRef instances that reference this CC
+            if old_id in ColorCorrectionRef.members:
+                # Get all refs pointing to the old ID
+                refs = ColorCorrectionRef.members[old_id].copy()
+                # Update each ref's ID using _set_id to properly update the members dict
+                # We use _set_id instead of the id setter to bypass validation that
+                # checks if the ColorCorrection exists (it does, but under the new ID now)
+                for ref in refs:
+                    ref._set_id(cc_id)
 
     # Public Methods ==========================================================
 
